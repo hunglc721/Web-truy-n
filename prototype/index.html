@@ -221,7 +221,8 @@
           <h2 class="section-title">📚 Latest Chapter Updates</h2>
           <a href="genres.html" class="see-all">See All <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></a>
         </div>
-        <div class="comics-grid" id="new-updates-grid">
+        <div class="comics-grid-wrap is-collapsed" id="comics-grid-wrap">
+          <div class="comics-grid" id="new-updates-grid">
 
           <a href="detail.html?id=1" class="comic-card-sm" data-genre="action">
             <div class="sm-cover">
@@ -343,6 +344,16 @@
             </div>
           </a>
 
+          </div>
+          <!-- Gradient Fade Overlay & Navigate to Schedule Page -->
+          <div class="grid-fade-overlay" id="grid-fade-overlay">
+            <a href="schedule.html" class="btn-expand-grid" id="btn-expand-grid" aria-label="Xem thêm lịch phát sóng toàn bộ truyện">
+              <span class="expand-text" id="expand-text">Xem Thêm Lịch Phát Sóng (Schedule)</span>
+              <svg class="expand-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="9 18 15 12 9 6"></polyline>
+              </svg>
+            </a>
+          </div>
         </div>
       </div>
     </section>

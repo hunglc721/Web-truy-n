@@ -79,55 +79,78 @@ let MOCK_LATEST = [
   { id: 60, title: 'Code Geass: Lelouch of the Rebellion', genre: 'sci-fi', genreText: 'Mecha · Psychological', author: 'CLAMP & Sunrise', rating: '4.9', views: '21.4M', likes: '1.6M', status: 'COMPLETED', timeAgo: '3d ago', chapter: 'Ch.50', badgeClass: 'hot-badge', cover: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&q=80' }
 ];
 
-// Dữ liệu Lịch phát sóng theo ngày
+// Dữ liệu Lịch phát sóng theo ngày (phân bổ đa dạng từ kho 60 bộ truyện)
 const SCHEDULE_DATA = {
-  monday: [
-    { id: 1, title: 'Solo Leveling', author: 'Updated 2h ago', genre: 'Action', chapter: 'Ch.200', desc: 'Chapter 200: Shadow Monarch ultimate battle.', cover: 'https://upload.wikimedia.org/wikipedia/en/6/6c/Solo_Leveling_Volume_1_Cover.jpg' },
-    { id: 4, title: 'Lore Olympus', author: 'Updated 6h ago', genre: 'Romance', chapter: 'Ch.280', desc: 'Chapter 280: The Underworld coronation.', cover: 'https://upload.wikimedia.org/wikipedia/en/7/72/Lore_Olympus_Banner_Art.png' },
-    { id: 7, title: 'Spy × Family', author: 'Updated 12h ago', genre: 'Comedy', chapter: 'Ch.102', desc: 'Chapter 102: Anya secret mission.', cover: 'https://upload.wikimedia.org/wikipedia/en/5/51/Spy_Family_vol_1.jpg' },
-    { id: 11, title: 'unOrdinary', author: 'Updated 5h ago', genre: 'Supernatural', chapter: 'Ch.340', desc: 'Chapter 340: Wellston High hierarchy war.', cover: 'https://images.unsplash.com/photo-1563089145-599997674d42?w=600&auto=format&fit=crop&q=80' },
-    { id: 28, title: 'Return of the Mount Hua Sect', author: 'Updated 2h ago', genre: 'Martial Arts', chapter: 'Ch.130', desc: 'Chapter 130: Mount Hua revival tournament.', cover: 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?w=600&auto=format&fit=crop&q=80' }
-  ],
-  tuesday: [
-    { id: 2, title: 'Tower of God', author: 'Updated 3h ago', genre: 'Fantasy', chapter: 'Ch.590', desc: 'Chapter 590: Floor 77 War climax.', cover: 'https://upload.wikimedia.org/wikipedia/en/7/7d/Tower_of_God_Volume_1_Cover.jpg' },
-    { id: 5, title: 'Demon Slayer', author: 'Updated 8h ago', genre: 'Supernatural', chapter: 'Ch.205', desc: 'Chapter 205: Final sunrise after battle.', cover: 'https://upload.wikimedia.org/wikipedia/en/0/09/Demon_Slayer_-_Kimetsu_no_Yaiba%2C_volume_1.jpg' },
-    { id: 8, title: 'Chainsaw Man', author: 'Updated 1d ago', genre: 'Horror', chapter: 'Ch.172', desc: 'Chapter 172: Devil fusion awakening.', cover: 'https://upload.wikimedia.org/wikipedia/en/2/24/Chainsawman.jpg' },
-    { id: 17, title: 'Eleceed', author: 'Updated 3h ago', genre: 'Comedy', chapter: 'Ch.305', desc: 'Chapter 305: Kayden feline power clash.', cover: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=600&auto=format&fit=crop&q=80' },
-    { id: 31, title: 'Mercenary Enrollment', author: 'Updated 3h ago', genre: 'Action', chapter: 'Ch.195', desc: 'Chapter 195: Ijin bodyguard operation.', cover: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&auto=format&fit=crop&q=80' }
-  ],
-  wednesday: [
-    { id: 3, title: 'Omniscient Reader', author: 'Updated 5h ago', genre: 'Fantasy', chapter: 'Ch.185', desc: 'Chapter 185: Demon King scenario.', cover: 'https://upload.wikimedia.org/wikipedia/en/6/69/Omniscient_Reader%27s_Viewpoint_Volume_1_Cover.jpg' },
-    { id: 6, title: 'Jujutsu Kaisen', author: 'Updated 10h ago', genre: 'Action', chapter: 'Ch.265', desc: 'Chapter 265: Shinjuku showdown.', cover: 'https://upload.wikimedia.org/wikipedia/en/4/46/Jujutsu_kaisen.jpg' },
-    { id: 9, title: 'Attack on Titan', author: 'Updated 2d ago', genre: 'Drama', chapter: 'Ch.139', desc: 'Chapter 139: Freedom finale.', cover: 'https://upload.wikimedia.org/wikipedia/en/d/d6/Shingeki_no_Kyojin_manga_volume_1.jpg' },
-    { id: 22, title: 'Nano Machine', author: 'Updated 4h ago', genre: 'Martial Arts', chapter: 'Ch.215', desc: 'Chapter 215: Demon Cult Heavenly Lord.', cover: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&auto=format&fit=crop&q=80' },
-    { id: 35, title: 'The Greatest Estate Developer', author: 'Updated 2h ago', genre: 'Comedy', chapter: 'Ch.150', desc: 'Chapter 150: Lloyd civil engineering magic.', cover: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=600&auto=format&fit=crop&q=80' }
-  ],
-  thursday: [
-    { id: 1, title: 'Solo Leveling', author: 'Updated 2h ago', genre: 'Action', chapter: 'Ch.200', desc: 'Chapter 200: Shadow Monarch ultimate battle.', cover: 'https://upload.wikimedia.org/wikipedia/en/6/6c/Solo_Leveling_Volume_1_Cover.jpg' },
-    { id: 2, title: 'Tower of God', author: 'Updated 4h ago', genre: 'Fantasy', chapter: 'Ch.590', desc: 'Chapter 590: Floor 77 War climax.', cover: 'https://upload.wikimedia.org/wikipedia/en/7/7d/Tower_of_God_Volume_1_Cover.jpg' },
-    { id: 3, title: 'Omniscient Reader', author: 'Updated 5h ago', genre: 'Action', chapter: 'Ch.185', desc: 'Chapter 185: The Demon King scenario.', cover: 'https://upload.wikimedia.org/wikipedia/en/6/69/Omniscient_Reader%27s_Viewpoint_Volume_1_Cover.jpg' },
-    { id: 10, title: 'The Beginning After The End', author: 'Updated 4h ago', genre: 'Fantasy', chapter: 'Ch.180', desc: 'Chapter 180: Relictombs exploration.', cover: 'https://upload.wikimedia.org/wikipedia/en/8/87/The_Beginning_After_The_End_vol_1.jpg' },
-    { id: 14, title: 'Lookism', author: 'Updated 11h ago', genre: 'Drama', chapter: 'Ch.510', desc: 'Chapter 510: Workers First Affiliate climax.', cover: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&auto=format&fit=crop&q=80' },
-    { id: 21, title: 'Wind Breaker', author: 'Updated 5h ago', genre: 'Sports', chapter: 'Ch.490', desc: 'Chapter 490: Hummingbird final lap.', cover: 'https://images.unsplash.com/photo-1485965120184-e220f721d03e?w=600&auto=format&fit=crop&q=80' }
-  ],
-  friday: [
-    { id: 4, title: 'Lore Olympus', author: 'Updated 1h ago', genre: 'Romance', chapter: 'Ch.280', desc: 'Chapter 280: Love story unfolds.', cover: 'https://upload.wikimedia.org/wikipedia/en/7/72/Lore_Olympus_Banner_Art.png' },
-    { id: 7, title: 'Spy × Family', author: 'Updated 4h ago', genre: 'Comedy', chapter: 'Ch.102', desc: 'Chapter 102: Operation Strix update.', cover: 'https://upload.wikimedia.org/wikipedia/en/5/51/Spy_Family_vol_1.jpg' },
-    { id: 12, title: 'True Beauty', author: 'Updated 7h ago', genre: 'Romance', chapter: 'Ch.223', desc: 'Chapter 223: Makeup artist career high.', cover: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600&auto=format&fit=crop&q=80' },
-    { id: 18, title: 'The Remarried Empress', author: 'Updated 6h ago', genre: 'Fantasy', chapter: 'Ch.175', desc: 'Chapter 175: Empress Navier kingdom decree.', cover: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?w=600&auto=format&fit=crop&q=80' }
-  ],
-  saturday: [
-    { id: 1, title: 'Solo Leveling', author: 'Updated 3h ago', genre: 'Action', chapter: 'Ch.201', desc: 'Chapter 201: Arise awakening.', cover: 'https://upload.wikimedia.org/wikipedia/en/6/6c/Solo_Leveling_Volume_1_Cover.jpg' },
-    { id: 6, title: 'Jujutsu Kaisen', author: 'Updated 5h ago', genre: 'Action', chapter: 'Ch.265', desc: 'Chapter 265: Black flash strike.', cover: 'https://upload.wikimedia.org/wikipedia/en/4/46/Jujutsu_kaisen.jpg' },
-    { id: 16, title: 'Sweet Home', author: 'Updated 1d ago', genre: 'Horror', chapter: 'Ch.140', desc: 'Chapter 140: Monsterization survival.', cover: 'https://images.unsplash.com/photo-1509248961158-e54f6934749c?w=600&auto=format&fit=crop&q=80' },
-    { id: 26, title: 'The Boxer', author: 'Updated 3d ago', genre: 'Sports', chapter: 'Ch.124', desc: 'Chapter 124: Yu world championship belt.', cover: 'https://images.unsplash.com/photo-1517649763962-0c623266010b?w=600&auto=format&fit=crop&q=80' }
-  ],
-  sunday: [
-    { id: 2, title: 'Tower of God', author: 'Updated 2h ago', genre: 'Fantasy', chapter: 'Ch.591', desc: 'Chapter 591: High Ranker duel.', cover: 'https://upload.wikimedia.org/wikipedia/en/7/7d/Tower_of_God_Volume_1_Cover.jpg' },
-    { id: 3, title: 'Omniscient Reader', author: 'Updated 6h ago', genre: 'Action', chapter: 'Ch.186', desc: 'Chapter 186: Constellation alliance.', cover: 'https://upload.wikimedia.org/wikipedia/en/6/69/Omniscient_Reader%27s_Viewpoint_Volume_1_Cover.jpg' },
-    { id: 19, title: 'Doom Breaker', author: 'Updated 8h ago', genre: 'Action', chapter: 'Ch.110', desc: 'Chapter 110: Dragon raid battle.', cover: 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=600&auto=format&fit=crop&q=80' },
-    { id: 30, title: 'Leveling Up With the Gods', author: 'Updated 5h ago', genre: 'Fantasy', chapter: 'Ch.115', desc: 'Chapter 115: Olympus trial victory.', cover: 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=600&auto=format&fit=crop&q=80' }
-  ]
+  monday: MOCK_LATEST.filter((_, i) => i % 7 === 0 || i % 7 === 1 || i % 7 === 2).map(c => ({
+    id: c.id,
+    title: c.title,
+    author: `Updated ${c.timeAgo}`,
+    genre: (c.genreText || c.genre || '').split(' · ')[0],
+    chapter: c.chapter,
+    desc: `Chapter ${c.chapter.replace('Ch.', '')}: Latest weekly update with intense storyline progression.`,
+    cover: c.cover,
+    rating: c.rating
+  })),
+  tuesday: MOCK_LATEST.filter((_, i) => i % 7 === 1 || i % 7 === 3 || i % 7 === 5).map(c => ({
+    id: c.id,
+    title: c.title,
+    author: `Updated ${c.timeAgo}`,
+    genre: (c.genreText || c.genre || '').split(' · ')[0],
+    chapter: c.chapter,
+    desc: `Chapter ${c.chapter.replace('Ch.', '')}: New battle unfolds and critical secrets get revealed.`,
+    cover: c.cover,
+    rating: c.rating
+  })),
+  wednesday: MOCK_LATEST.filter((_, i) => i % 7 === 2 || i % 7 === 4 || i % 7 === 6).map(c => ({
+    id: c.id,
+    title: c.title,
+    author: `Updated ${c.timeAgo}`,
+    genre: (c.genreText || c.genre || '').split(' · ')[0],
+    chapter: c.chapter,
+    desc: `Chapter ${c.chapter.replace('Ch.', '')}: The exciting journey continues with breathtaking art.`,
+    cover: c.cover,
+    rating: c.rating
+  })),
+  thursday: MOCK_LATEST.filter((_, i) => i % 7 === 3 || i % 7 === 0 || i % 7 === 5).map(c => ({
+    id: c.id,
+    title: c.title,
+    author: `Updated ${c.timeAgo}`,
+    genre: (c.genreText || c.genre || '').split(' · ')[0],
+    chapter: c.chapter,
+    desc: `Chapter ${c.chapter.replace('Ch.', '')}: Critical climax reached in this week's chapter release.`,
+    cover: c.cover,
+    rating: c.rating
+  })),
+  friday: MOCK_LATEST.filter((_, i) => i % 7 === 4 || i % 7 === 1 || i % 7 === 6).map(c => ({
+    id: c.id,
+    title: c.title,
+    author: `Updated ${c.timeAgo}`,
+    genre: (c.genreText || c.genre || '').split(' · ')[0],
+    chapter: c.chapter,
+    desc: `Chapter ${c.chapter.replace('Ch.', '')}: Heartfelt moments and thrilling confrontations.`,
+    cover: c.cover,
+    rating: c.rating
+  })),
+  saturday: MOCK_LATEST.filter((_, i) => i % 7 === 5 || i % 7 === 2 || i % 7 === 0).map(c => ({
+    id: c.id,
+    title: c.title,
+    author: `Updated ${c.timeAgo}`,
+    genre: (c.genreText || c.genre || '').split(' · ')[0],
+    chapter: c.chapter,
+    desc: `Chapter ${c.chapter.replace('Ch.', '')}: Weekend special chapter update with bonus illustrations.`,
+    cover: c.cover,
+    rating: c.rating
+  })),
+  sunday: MOCK_LATEST.filter((_, i) => i % 7 === 6 || i % 7 === 3 || i % 7 === 4).map(c => ({
+    id: c.id,
+    title: c.title,
+    author: `Updated ${c.timeAgo}`,
+    genre: (c.genreText || c.genre || '').split(' · ')[0],
+    chapter: c.chapter,
+    desc: `Chapter ${c.chapter.replace('Ch.', '')}: Unmissable Sunday release to start your week inspired.`,
+    cover: c.cover,
+    rating: c.rating
+  }))
 };
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -606,21 +629,39 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
 
-  // --- 3. SCHEDULE PAGE INTERACTION (SCHEDULE.HTML) ---
+  // --- 3. SCHEDULE PAGE INTERACTION & PAGINATION (SCHEDULE.HTML) ---
   const dayItems = document.querySelectorAll('.sched-day-item');
   const browseGrid = document.querySelector('.browse-grid');
+  const paginationWrap = document.getElementById('schedule-pagination');
+  const paginationInfo = document.getElementById('pagination-info');
+  const paginationControls = document.getElementById('pagination-controls');
 
-  if (dayItems.length > 0 && browseGrid) {
-    
-    function renderScheduleForDay(dayKey) {
-      const dayData = SCHEDULE_DATA[dayKey] || SCHEDULE_DATA['thursday'];
-      
-      browseGrid.innerHTML = dayData.map(item => `
+  if (browseGrid) {
+    let currentScheduleDay = 'thursday';
+    let currentSchedulePage = 1;
+    const scheduleItemsPerPage = 9; // 9 cards per page for clean 3x3 layout
+
+    function renderSchedulePage(dayKey, page = 1) {
+      currentScheduleDay = dayKey;
+      currentSchedulePage = page;
+
+      const dayData = SCHEDULE_DATA[dayKey] || SCHEDULE_DATA['thursday'] || [];
+      const totalItems = dayData.length;
+      const totalPages = Math.max(1, Math.ceil(totalItems / scheduleItemsPerPage));
+
+      if (currentSchedulePage > totalPages) currentSchedulePage = totalPages;
+      if (currentSchedulePage < 1) currentSchedulePage = 1;
+
+      const startIndex = (currentSchedulePage - 1) * scheduleItemsPerPage;
+      const endIndex = Math.min(startIndex + scheduleItemsPerPage, totalItems);
+      const pageItems = dayData.slice(startIndex, endIndex);
+
+      browseGrid.innerHTML = pageItems.map(item => `
         <div class="browse-card" onclick="window.location.href='detail.html?id=${item.id}'" style="cursor:pointer;">
           <div class="browse-cover">
-            <img src="${item.cover}" alt="${escapeHtml(item.title)}" class="cover-img" />
+            <img src="${item.cover}" alt="${escapeHtml(item.title)}" class="cover-img" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1578632767115-351597cf2477?w=600&q=80'" />
             <span class="badge-tag hot">NEW ${item.chapter}</span>
-            <span class="rating-tag">★ 9.8</span>
+            <span class="rating-tag">★ ${item.rating || '4.9'}</span>
           </div>
           <div class="browse-info">
             <h3 class="browse-title"><a href="detail.html?id=${item.id}" style="color:inherit; text-decoration:none;">${escapeHtml(item.title)}</a></h3>
@@ -631,18 +672,73 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
       `).join('');
 
+      // Update Pagination UI
+      if (paginationWrap && paginationInfo && paginationControls) {
+        if (totalItems <= scheduleItemsPerPage) {
+          paginationWrap.style.display = 'none';
+        } else {
+          paginationWrap.style.display = 'flex';
+          paginationInfo.textContent = `Hiển thị ${startIndex + 1} - ${endIndex} trong tổng số ${totalItems} truyện (${currentScheduleDay.toUpperCase()})`;
+
+          let controlsHtml = '';
+
+          // Prev Button
+          controlsHtml += `
+            <button type="button" class="page-btn page-prev" ${currentSchedulePage === 1 ? 'disabled' : ''} data-page="${currentSchedulePage - 1}" aria-label="Trang trước">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+              Trước
+            </button>
+          `;
+
+          // Page Number Buttons
+          for (let p = 1; p <= totalPages; p++) {
+            controlsHtml += `
+              <button type="button" class="page-btn ${p === currentSchedulePage ? 'active' : ''}" data-page="${p}">${p}</button>
+            `;
+          }
+
+          // Next Button
+          controlsHtml += `
+            <button type="button" class="page-btn page-next" ${currentSchedulePage === totalPages ? 'disabled' : ''} data-page="${currentSchedulePage + 1}" aria-label="Trang sau">
+              Sau
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+          `;
+
+          paginationControls.innerHTML = controlsHtml;
+
+          // Attach page button events
+          paginationControls.querySelectorAll('.page-btn:not(:disabled)').forEach(btn => {
+            btn.addEventListener('click', () => {
+              const targetPage = parseInt(btn.getAttribute('data-page'), 10);
+              if (targetPage && targetPage !== currentSchedulePage) {
+                renderSchedulePage(currentScheduleDay, targetPage);
+                const titleElem = document.querySelector('.sched-current-title');
+                if (titleElem) titleElem.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }
+            });
+          });
+        }
+      }
+
       attachImageFallback();
     }
 
+    // Update Day Item badge counts & events
     dayItems.forEach(item => {
+      const dayKey = item.getAttribute('data-day') || 'thursday';
+      const countSpan = item.querySelector('.day-count');
+      const count = (SCHEDULE_DATA[dayKey] || []).length;
+      if (countSpan && count > 0) {
+        countSpan.textContent = `${count} Series${dayKey === 'thursday' ? ' 🔥' : ''}`;
+      }
+
       item.addEventListener('click', (e) => {
         e.preventDefault();
         dayItems.forEach(i => i.classList.remove('active'));
         item.classList.add('active');
 
-        const dayKey = item.getAttribute('data-day') || 'thursday';
         const dayName = item.querySelector('.day-name')?.textContent || 'THU';
-        
         const currentTitleElem = document.querySelector('.sched-current-title h2');
         if (currentTitleElem) {
           const fullDays = {
@@ -652,18 +748,14 @@ document.addEventListener('DOMContentLoaded', () => {
           currentTitleElem.textContent = `${fullDays[dayName] || dayName} Releases`;
         }
 
-        renderScheduleForDay(dayKey);
+        renderSchedulePage(dayKey, 1);
       });
     });
 
-    // Make initial cards in schedule page clickable
-    document.querySelectorAll('.browse-card').forEach((card, index) => {
-      card.style.cursor = 'pointer';
-      card.addEventListener('click', (e) => {
-        if (e.target.tagName && e.target.tagName.toLowerCase() === 'a') return;
-        window.location.href = `detail.html?id=${(index % 9) + 1}`;
-      });
-    });
+    // Initial render for schedule page
+    const activeDayItem = document.querySelector('.sched-day-item.active');
+    const initialDay = activeDayItem ? activeDayItem.getAttribute('data-day') : 'thursday';
+    renderSchedulePage(initialDay, 1);
   }
 
 
@@ -775,6 +867,26 @@ document.addEventListener('DOMContentLoaded', () => {
     attachImageFallback();
   }
 
+  const gridWrap = document.getElementById('comics-grid-wrap');
+  const gridFadeOverlay = document.getElementById('grid-fade-overlay');
+  const btnExpandGrid = document.getElementById('btn-expand-grid');
+  const expandText = document.getElementById('expand-text');
+
+  function updateExpandState(totalComics) {
+    if (!gridWrap || !gridFadeOverlay) return;
+
+    if (totalComics <= 30) {
+      gridFadeOverlay.style.display = 'none';
+      gridWrap.classList.remove('is-collapsed');
+    } else {
+      gridFadeOverlay.style.display = 'flex';
+      gridWrap.classList.add('is-collapsed');
+      if (expandText) {
+        expandText.textContent = `Xem Thêm Lịch Ra Truyện (${totalComics - 30}+ bộ khác)`;
+      }
+    }
+  }
+
   function renderLatestComics(comics) {
     const gridContainer = document.getElementById('new-updates-grid');
     if (!gridContainer) return;
@@ -796,6 +908,7 @@ document.addEventListener('DOMContentLoaded', () => {
       </a>
     `).join('');
 
+    updateExpandState(comics.length);
     attachImageFallback();
   }
 
@@ -925,6 +1038,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (tab.closest('#orig-tabs')) return; // Ignore if inside originals tab
       genreTabs.forEach(t => t.classList.remove('active'));
       tab.classList.add('active');
+      isGridExpanded = false;
       const selectedGenre = tab.getAttribute('data-genre');
       loadLatestComics(selectedGenre);
     });
