@@ -2,67 +2,106 @@
 
 const API_BASE_URL = 'http://localhost:3000/api';
 
-// Dữ liệu Mock dự phòng
+// Dữ liệu Mock API 35+ bộ truyện chuẩn đa dạng thể loại
 const MOCK_TRENDING = [
   { id: 1, title: 'Solo Leveling', genre: 'Action · Fantasy', cover: 'https://upload.wikimedia.org/wikipedia/en/6/6c/Solo_Leveling_Volume_1_Cover.jpg', rank: 1, rankClass: 'r1' },
   { id: 2, title: 'Tower of God', genre: 'Fantasy · Mystery', cover: 'https://upload.wikimedia.org/wikipedia/en/7/7d/Tower_of_God_Volume_1_Cover.jpg', rank: 2, rankClass: 'r2' },
-  { id: 3, title: 'Omniscient Reader\'s Viewpoint', genre: 'Action · Fantasy', cover: 'https://upload.wikimedia.org/wikipedia/en/6/69/Omniscient_Reader%27s_Viewpoint_Volume_1_Cover.jpg', rank: 3, rankClass: 'r3' },
+  { id: 3, title: "Omniscient Reader's Viewpoint", genre: 'Action · Fantasy', cover: 'https://upload.wikimedia.org/wikipedia/en/6/69/Omniscient_Reader%27s_Viewpoint_Volume_1_Cover.jpg', rank: 3, rankClass: 'r3' },
   { id: 4, title: 'Lore Olympus', genre: 'Romance · Mythology', cover: 'https://upload.wikimedia.org/wikipedia/en/7/72/Lore_Olympus_Banner_Art.png', rank: 4, rankClass: '' },
   { id: 5, title: 'Demon Slayer: Kimetsu no Yaiba', genre: 'Action · Supernatural', cover: 'https://upload.wikimedia.org/wikipedia/en/0/09/Demon_Slayer_-_Kimetsu_no_Yaiba%2C_volume_1.jpg', rank: 5, rankClass: '' },
   { id: 6, title: 'Jujutsu Kaisen', genre: 'Action · Fantasy', cover: 'https://upload.wikimedia.org/wikipedia/en/4/46/Jujutsu_kaisen.jpg', rank: 6, rankClass: '' },
   { id: 7, title: 'Spy × Family', genre: 'Comedy · Action', cover: 'https://upload.wikimedia.org/wikipedia/en/5/51/Spy_Family_vol_1.jpg', rank: 7, rankClass: '' },
   { id: 8, title: 'Chainsaw Man', genre: 'Action · Horror', cover: 'https://upload.wikimedia.org/wikipedia/en/2/24/Chainsawman.jpg', rank: 8, rankClass: '' },
-  { id: 9, title: 'Attack on Titan', genre: 'Action · Drama', cover: 'https://upload.wikimedia.org/wikipedia/en/d/d6/Shingeki_no_Kyojin_manga_volume_1.jpg', rank: 9, rankClass: '' }
+  { id: 9, title: 'Attack on Titan', genre: 'Action · Drama', cover: 'https://upload.wikimedia.org/wikipedia/en/d/d6/Shingeki_no_Kyojin_manga_volume_1.jpg', rank: 9, rankClass: '' },
+  { id: 10, title: 'The Beginning After The End', genre: 'Fantasy · Isekai', cover: 'https://upload.wikimedia.org/wikipedia/en/8/87/The_Beginning_After_The_End_vol_1.jpg', rank: 10, rankClass: '' }
 ];
 
 let MOCK_LATEST = [
-  { id: 1, title: 'Solo Leveling', genre: 'action', genreText: 'Action', timeAgo: '2h ago', chapter: 'Ch.200', badgeClass: 'hot-badge', cover: 'https://upload.wikimedia.org/wikipedia/en/6/6c/Solo_Leveling_Volume_1_Cover.jpg' },
-  { id: 2, title: 'Tower of God', genre: 'fantasy', genreText: 'Fantasy', timeAgo: '3h ago', chapter: 'Ch.590', badgeClass: '', cover: 'https://upload.wikimedia.org/wikipedia/en/7/7d/Tower_of_God_Volume_1_Cover.jpg' },
-  { id: 3, title: 'Omniscient Reader', genre: 'action', genreText: 'Action', timeAgo: '5h ago', chapter: 'Ch.185', badgeClass: 'hot-badge', cover: 'https://upload.wikimedia.org/wikipedia/en/6/69/Omniscient_Reader%27s_Viewpoint_Volume_1_Cover.jpg' },
-  { id: 4, title: 'Lore Olympus', genre: 'romance', genreText: 'Romance', timeAgo: '6h ago', chapter: 'Ch.240', badgeClass: 'new-badge', cover: 'https://upload.wikimedia.org/wikipedia/en/7/72/Lore_Olympus_Banner_Art.png' },
-  { id: 5, title: 'Demon Slayer', genre: 'action', genreText: 'Action', timeAgo: '8h ago', chapter: 'Ch.205', badgeClass: '', cover: 'https://upload.wikimedia.org/wikipedia/en/0/09/Demon_Slayer_-_Kimetsu_no_Yaiba%2C_volume_1.jpg' },
-  { id: 6, title: 'Jujutsu Kaisen', genre: 'action', genreText: 'Action', timeAgo: '10h ago', chapter: 'Ch.254', badgeClass: 'hot-badge', cover: 'https://upload.wikimedia.org/wikipedia/en/4/46/Jujutsu_kaisen.jpg' },
-  { id: 7, title: 'Spy × Family', genre: 'comedy', genreText: 'Comedy', timeAgo: '12h ago', chapter: 'Ch.96', badgeClass: '', cover: 'https://upload.wikimedia.org/wikipedia/en/5/51/Spy_Family_vol_1.jpg' },
-  { id: 8, title: 'Chainsaw Man', genre: 'action', genreText: 'Action', timeAgo: '1d ago', chapter: 'Ch.160', badgeClass: 'new-badge', cover: 'https://upload.wikimedia.org/wikipedia/en/2/24/Chainsawman.jpg' },
-  { id: 9, title: 'Attack on Titan', genre: 'action', genreText: 'Action', timeAgo: '2d ago', chapter: 'Ch.139', badgeClass: '', cover: 'https://upload.wikimedia.org/wikipedia/en/d/d6/Shingeki_no_Kyojin_manga_volume_1.jpg' }
+  { id: 1, title: 'Solo Leveling', genre: 'action', genreText: 'Action · Fantasy', author: 'Chugong & DUBU', rating: '4.9', views: '15.8M', likes: '920K', status: 'COMPLETED', timeAgo: '2h ago', chapter: 'Ch.200', badgeClass: 'hot-badge', cover: 'https://upload.wikimedia.org/wikipedia/en/6/6c/Solo_Leveling_Volume_1_Cover.jpg' },
+  { id: 2, title: 'Tower of God', genre: 'fantasy', genreText: 'Fantasy · Mystery', author: 'SIU', rating: '4.8', views: '12.4M', likes: '780K', status: 'ONGOING', timeAgo: '3h ago', chapter: 'Ch.590', badgeClass: '', cover: 'https://upload.wikimedia.org/wikipedia/en/7/7d/Tower_of_God_Volume_1_Cover.jpg' },
+  { id: 3, title: "Omniscient Reader's Viewpoint", genre: 'action', genreText: 'Action · Fantasy', author: 'singNsong', rating: '4.9', views: '11.2M', likes: '850K', status: 'ONGOING', timeAgo: '5h ago', chapter: 'Ch.185', badgeClass: 'hot-badge', cover: 'https://upload.wikimedia.org/wikipedia/en/6/69/Omniscient_Reader%27s_Viewpoint_Volume_1_Cover.jpg' },
+  { id: 4, title: 'Lore Olympus', genre: 'romance', genreText: 'Romance · Mythology', author: 'Rachel Smythe', rating: '4.7', views: '9.8M', likes: '640K', status: 'COMPLETED', timeAgo: '6h ago', chapter: 'Ch.280', badgeClass: 'new-badge', cover: 'https://upload.wikimedia.org/wikipedia/en/7/72/Lore_Olympus_Banner_Art.png' },
+  { id: 5, title: 'Demon Slayer: Kimetsu no Yaiba', genre: 'action', genreText: 'Action · Supernatural', author: 'Koyoharu Gotouge', rating: '4.9', views: '18.5M', likes: '1.2M', status: 'COMPLETED', timeAgo: '8h ago', chapter: 'Ch.205', badgeClass: '', cover: 'https://upload.wikimedia.org/wikipedia/en/0/09/Demon_Slayer_-_Kimetsu_no_Yaiba%2C_volume_1.jpg' },
+  { id: 6, title: 'Jujutsu Kaisen', genre: 'action', genreText: 'Action · Fantasy', author: 'Gege Akutami', rating: '4.8', views: '16.2M', likes: '990K', status: 'ONGOING', timeAgo: '10h ago', chapter: 'Ch.265', badgeClass: 'hot-badge', cover: 'https://upload.wikimedia.org/wikipedia/en/4/46/Jujutsu_kaisen.jpg' },
+  { id: 7, title: 'Spy × Family', genre: 'comedy', genreText: 'Comedy · Action', author: 'Tatsuya Endo', rating: '4.9', views: '14.1M', likes: '880K', status: 'ONGOING', timeAgo: '12h ago', chapter: 'Ch.102', badgeClass: '', cover: 'https://upload.wikimedia.org/wikipedia/en/5/51/Spy_Family_vol_1.jpg' },
+  { id: 8, title: 'Chainsaw Man', genre: 'action', genreText: 'Action · Horror', author: 'Tatsuki Fujimoto', rating: '4.8', views: '13.7M', likes: '910K', status: 'ONGOING', timeAgo: '1d ago', chapter: 'Ch.172', badgeClass: 'new-badge', cover: 'https://upload.wikimedia.org/wikipedia/en/2/24/Chainsawman.jpg' },
+  { id: 9, title: 'Attack on Titan', genre: 'action', genreText: 'Action · Drama', author: 'Hajime Isayama', rating: '4.9', views: '22.0M', likes: '1.5M', status: 'COMPLETED', timeAgo: '2d ago', chapter: 'Ch.139', badgeClass: '', cover: 'https://upload.wikimedia.org/wikipedia/en/d/d6/Shingeki_no_Kyojin_manga_volume_1.jpg' },
+  { id: 10, title: 'The Beginning After The End', genre: 'fantasy', genreText: 'Fantasy · Isekai', author: 'TurtleMe', rating: '4.9', views: '10.5M', likes: '790K', status: 'ONGOING', timeAgo: '4h ago', chapter: 'Ch.180', badgeClass: 'hot-badge', cover: 'https://upload.wikimedia.org/wikipedia/en/8/87/The_Beginning_After_The_End_vol_1.jpg' },
+  { id: 11, title: 'unOrdinary', genre: 'supernatural', genreText: 'Supernatural · Drama', author: 'uru-chan', rating: '4.7', views: '8.4M', likes: '520K', status: 'ONGOING', timeAgo: '5h ago', chapter: 'Ch.340', badgeClass: '', cover: 'https://images.unsplash.com/photo-1563089145-599997674d42?w=600&auto=format&fit=crop&q=80' },
+  { id: 12, title: 'True Beauty', genre: 'romance', genreText: 'Romance · Drama', author: 'Yaongyi', rating: '4.6', views: '11.8M', likes: '710K', status: 'COMPLETED', timeAgo: '7h ago', chapter: 'Ch.223', badgeClass: 'new-badge', cover: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600&auto=format&fit=crop&q=80' },
+  { id: 13, title: 'Midnight Poppyland', genre: 'romance', genreText: 'Romance · Action', author: 'Lilydusk', rating: '4.8', views: '6.2M', likes: '430K', status: 'ONGOING', timeAgo: '9h ago', chapter: 'Ch.120', badgeClass: '', cover: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=600&auto=format&fit=crop&q=80' },
+  { id: 14, title: 'Lookism', genre: 'drama', genreText: 'Drama · Martial Arts', author: 'Taejun Pak', rating: '4.8', views: '15.3M', likes: '950K', status: 'ONGOING', timeAgo: '11h ago', chapter: 'Ch.510', badgeClass: 'hot-badge', cover: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&auto=format&fit=crop&q=80' },
+  { id: 15, title: 'My Inmost Secret', genre: 'thriller', genreText: 'Thriller · Mystery', author: 'Hanamaki', rating: '4.7', views: '4.9M', likes: '310K', status: 'COMPLETED', timeAgo: '1d ago', chapter: 'Ch.108', badgeClass: '', cover: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=600&auto=format&fit=crop&q=80' },
+  { id: 16, title: 'Sweet Home', genre: 'horror', genreText: 'Horror · Thriller', author: 'Carnby Kim', rating: '4.9', views: '9.2M', likes: '680K', status: 'COMPLETED', timeAgo: '1d ago', chapter: 'Ch.140', badgeClass: 'hot-badge', cover: 'https://images.unsplash.com/photo-1509248961158-e54f6934749c?w=600&auto=format&fit=crop&q=80' },
+  { id: 17, title: 'Eleceed', genre: 'comedy', genreText: 'Comedy · Action', author: 'Zhena & Son Jeho', rating: '4.9', views: '8.7M', likes: '620K', status: 'ONGOING', timeAgo: '3h ago', chapter: 'Ch.305', badgeClass: 'hot-badge', cover: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=600&auto=format&fit=crop&q=80' },
+  { id: 18, title: 'The Remarried Empress', genre: 'fantasy', genreText: 'Fantasy · Romance', author: 'Alphatart', rating: '4.8', views: '7.6M', likes: '540K', status: 'ONGOING', timeAgo: '6h ago', chapter: 'Ch.175', badgeClass: '', cover: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?w=600&auto=format&fit=crop&q=80' },
+  { id: 19, title: 'Doom Breaker', genre: 'action', genreText: 'Action · Fantasy', author: 'Blue-King', rating: '4.8', views: '5.8M', likes: '410K', status: 'ONGOING', timeAgo: '8h ago', chapter: 'Ch.110', badgeClass: 'new-badge', cover: 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=600&auto=format&fit=crop&q=80' },
+  { id: 20, title: 'Bastard', genre: 'thriller', genreText: 'Thriller · Psychological', author: 'Carnby Kim', rating: '4.9', views: '8.1M', likes: '590K', status: 'COMPLETED', timeAgo: '2d ago', chapter: 'Ch.93', badgeClass: '', cover: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=600&auto=format&fit=crop&q=80' },
+  { id: 21, title: 'Wind Breaker', genre: 'sports', genreText: 'Sports · Drama', author: 'Jo Yongseok', rating: '4.9', views: '12.8M', likes: '840K', status: 'ONGOING', timeAgo: '5h ago', chapter: 'Ch.490', badgeClass: 'hot-badge', cover: 'https://images.unsplash.com/photo-1485965120184-e220f721d03e?w=600&auto=format&fit=crop&q=80' },
+  { id: 22, title: 'Nano Machine', genre: 'cultivation', genreText: 'Martial Arts · Sci-Fi', author: 'Han-Jo', rating: '4.8', views: '9.3M', likes: '670K', status: 'ONGOING', timeAgo: '4h ago', chapter: 'Ch.215', badgeClass: 'hot-badge', cover: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&auto=format&fit=crop&q=80' },
+  { id: 23, title: 'Survival Story of a Sword King', genre: 'isekai', genreText: 'Isekai · Action', author: 'Yrap', rating: '4.7', views: '6.4M', likes: '420K', status: 'ONGOING', timeAgo: '10h ago', chapter: 'Ch.205', badgeClass: '', cover: 'https://images.unsplash.com/photo-1563089145-599997674d42?w=600&auto=format&fit=crop&q=80' },
+  { id: 24, title: "Let's Play", genre: 'romance', genreText: 'Romance · Slice of Life', author: 'Mongie', rating: '4.6', views: '5.2M', likes: '370K', status: 'ONGOING', timeAgo: '1d ago', chapter: 'Ch.170', badgeClass: '', cover: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=600&auto=format&fit=crop&q=80' },
+  { id: 25, title: 'SubZero', genre: 'fantasy', genreText: 'Fantasy · Romance', author: 'Junepurrr', rating: '4.7', views: '5.9M', likes: '410K', status: 'ONGOING', timeAgo: '12h ago', chapter: 'Ch.165', badgeClass: 'new-badge', cover: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=600&auto=format&fit=crop&q=80' },
+  { id: 26, title: 'The Boxer', genre: 'sports', genreText: 'Sports · Action', author: 'JH', rating: '4.9', views: '7.8M', likes: '610K', status: 'COMPLETED', timeAgo: '3d ago', chapter: 'Ch.124', badgeClass: 'hot-badge', cover: 'https://images.unsplash.com/photo-1517649763962-0c623266010b?w=600&auto=format&fit=crop&q=80' },
+  { id: 27, title: 'The God of High School', genre: 'action', genreText: 'Action · Martial Arts', author: 'Yongje Park', rating: '4.7', views: '14.5M', likes: '890K', status: 'COMPLETED', timeAgo: '2d ago', chapter: 'Ch.570', badgeClass: '', cover: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=600&auto=format&fit=crop&q=80' },
+  { id: 28, title: 'Return of the Mount Hua Sect', genre: 'cultivation', genreText: 'Martial Arts · Historical', author: 'Biga & LICO', rating: '4.9', views: '11.4M', likes: '830K', status: 'ONGOING', timeAgo: '2h ago', chapter: 'Ch.130', badgeClass: 'hot-badge', cover: 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?w=600&auto=format&fit=crop&q=80' },
+  { id: 29, title: "Skeleton Soldier Couldn't Protect the Dungeon", genre: 'isekai', genreText: 'Isekai · Supernatural', author: 'Kangyoo', rating: '4.7', views: '6.1M', likes: '400K', status: 'ONGOING', timeAgo: '7h ago', chapter: 'Ch.280', badgeClass: '', cover: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=600&auto=format&fit=crop&q=80' },
+  { id: 30, title: 'Leveling Up With the Gods', genre: 'fantasy', genreText: 'Fantasy · Action', author: 'Saeyoung', rating: '4.8', views: '7.3M', likes: '510K', status: 'ONGOING', timeAgo: '5h ago', chapter: 'Ch.115', badgeClass: 'new-badge', cover: 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=600&auto=format&fit=crop&q=80' },
+  { id: 31, title: 'Mercenary Enrollment', genre: 'action', genreText: 'Action · School', author: 'YC & Rakhyun', rating: '4.9', views: '10.8M', likes: '770K', status: 'ONGOING', timeAgo: '3h ago', chapter: 'Ch.195', badgeClass: 'hot-badge', cover: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&auto=format&fit=crop&q=80' },
+  { id: 32, title: 'Overgeared', genre: 'comedy', genreText: 'Virtual Reality · Comedy', author: 'Park Saenal', rating: '4.8', views: '8.9M', likes: '630K', status: 'ONGOING', timeAgo: '6h ago', chapter: 'Ch.230', badgeClass: '', cover: 'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=600&auto=format&fit=crop&q=80' },
+  { id: 33, title: 'Second Life Ranker', genre: 'action', genreText: 'Action · Fantasy', author: 'Nong Nong', rating: '4.8', views: '7.1M', likes: '490K', status: 'ONGOING', timeAgo: '8h ago', chapter: 'Ch.170', badgeClass: '', cover: 'https://images.unsplash.com/photo-1563089145-599997674d42?w=600&auto=format&fit=crop&q=80' },
+  { id: 34, title: 'Reincarnation of the Suicidal Battle God', genre: 'action', genreText: 'Action · Reincarnation', author: 'Cheong-Nok', rating: '4.9', views: '6.7M', likes: '470K', status: 'ONGOING', timeAgo: '4h ago', chapter: 'Ch.105', badgeClass: 'new-badge', cover: 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=600&auto=format&fit=crop&q=80' },
+  { id: 35, title: 'The Greatest Estate Developer', genre: 'comedy', genreText: 'Isekai · Comedy', author: 'BK_Moon', rating: '4.9', views: '12.1M', likes: '940K', status: 'ONGOING', timeAgo: '2h ago', chapter: 'Ch.150', badgeClass: 'hot-badge', cover: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=600&auto=format&fit=crop&q=80' }
 ];
 
 // Dữ liệu Lịch phát sóng theo ngày
 const SCHEDULE_DATA = {
   monday: [
     { id: 1, title: 'Solo Leveling', author: 'Updated 2h ago', genre: 'Action', chapter: 'Ch.200', desc: 'Chapter 200: Shadow Monarch ultimate battle.', cover: 'https://upload.wikimedia.org/wikipedia/en/6/6c/Solo_Leveling_Volume_1_Cover.jpg' },
-    { id: 4, title: 'Lore Olympus', author: 'Updated 6h ago', genre: 'Romance', chapter: 'Ch.240', desc: 'Chapter 240: The Underworld coronation.', cover: 'https://upload.wikimedia.org/wikipedia/en/7/72/Lore_Olympus_Banner_Art.png' },
-    { id: 7, title: 'Spy × Family', author: 'Updated 12h ago', genre: 'Comedy', chapter: 'Ch.96', desc: 'Chapter 96: Anya secret mission.', cover: 'https://upload.wikimedia.org/wikipedia/en/5/51/Spy_Family_vol_1.jpg' }
+    { id: 4, title: 'Lore Olympus', author: 'Updated 6h ago', genre: 'Romance', chapter: 'Ch.280', desc: 'Chapter 280: The Underworld coronation.', cover: 'https://upload.wikimedia.org/wikipedia/en/7/72/Lore_Olympus_Banner_Art.png' },
+    { id: 7, title: 'Spy × Family', author: 'Updated 12h ago', genre: 'Comedy', chapter: 'Ch.102', desc: 'Chapter 102: Anya secret mission.', cover: 'https://upload.wikimedia.org/wikipedia/en/5/51/Spy_Family_vol_1.jpg' },
+    { id: 11, title: 'unOrdinary', author: 'Updated 5h ago', genre: 'Supernatural', chapter: 'Ch.340', desc: 'Chapter 340: Wellston High hierarchy war.', cover: 'https://images.unsplash.com/photo-1563089145-599997674d42?w=600&auto=format&fit=crop&q=80' },
+    { id: 28, title: 'Return of the Mount Hua Sect', author: 'Updated 2h ago', genre: 'Martial Arts', chapter: 'Ch.130', desc: 'Chapter 130: Mount Hua revival tournament.', cover: 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?w=600&auto=format&fit=crop&q=80' }
   ],
   tuesday: [
     { id: 2, title: 'Tower of God', author: 'Updated 3h ago', genre: 'Fantasy', chapter: 'Ch.590', desc: 'Chapter 590: Floor 77 War climax.', cover: 'https://upload.wikimedia.org/wikipedia/en/7/7d/Tower_of_God_Volume_1_Cover.jpg' },
     { id: 5, title: 'Demon Slayer', author: 'Updated 8h ago', genre: 'Supernatural', chapter: 'Ch.205', desc: 'Chapter 205: Final sunrise after battle.', cover: 'https://upload.wikimedia.org/wikipedia/en/0/09/Demon_Slayer_-_Kimetsu_no_Yaiba%2C_volume_1.jpg' },
-    { id: 8, title: 'Chainsaw Man', author: 'Updated 1d ago', genre: 'Horror', chapter: 'Ch.160', desc: 'Chapter 160: Devil fusion awakening.', cover: 'https://upload.wikimedia.org/wikipedia/en/2/24/Chainsawman.jpg' }
+    { id: 8, title: 'Chainsaw Man', author: 'Updated 1d ago', genre: 'Horror', chapter: 'Ch.172', desc: 'Chapter 172: Devil fusion awakening.', cover: 'https://upload.wikimedia.org/wikipedia/en/2/24/Chainsawman.jpg' },
+    { id: 17, title: 'Eleceed', author: 'Updated 3h ago', genre: 'Comedy', chapter: 'Ch.305', desc: 'Chapter 305: Kayden feline power clash.', cover: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=600&auto=format&fit=crop&q=80' },
+    { id: 31, title: 'Mercenary Enrollment', author: 'Updated 3h ago', genre: 'Action', chapter: 'Ch.195', desc: 'Chapter 195: Ijin bodyguard operation.', cover: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&auto=format&fit=crop&q=80' }
   ],
   wednesday: [
     { id: 3, title: 'Omniscient Reader', author: 'Updated 5h ago', genre: 'Fantasy', chapter: 'Ch.185', desc: 'Chapter 185: Demon King scenario.', cover: 'https://upload.wikimedia.org/wikipedia/en/6/69/Omniscient_Reader%27s_Viewpoint_Volume_1_Cover.jpg' },
-    { id: 6, title: 'Jujutsu Kaisen', author: 'Updated 10h ago', genre: 'Action', chapter: 'Ch.254', desc: 'Chapter 254: Shinjuku showdown.', cover: 'https://upload.wikimedia.org/wikipedia/en/4/46/Jujutsu_kaisen.jpg' },
-    { id: 9, title: 'Attack on Titan', author: 'Updated 2d ago', genre: 'Drama', chapter: 'Ch.139', desc: 'Chapter 139: Freedom finale.', cover: 'https://upload.wikimedia.org/wikipedia/en/d/d6/Shingeki_no_Kyojin_manga_volume_1.jpg' }
+    { id: 6, title: 'Jujutsu Kaisen', author: 'Updated 10h ago', genre: 'Action', chapter: 'Ch.265', desc: 'Chapter 265: Shinjuku showdown.', cover: 'https://upload.wikimedia.org/wikipedia/en/4/46/Jujutsu_kaisen.jpg' },
+    { id: 9, title: 'Attack on Titan', author: 'Updated 2d ago', genre: 'Drama', chapter: 'Ch.139', desc: 'Chapter 139: Freedom finale.', cover: 'https://upload.wikimedia.org/wikipedia/en/d/d6/Shingeki_no_Kyojin_manga_volume_1.jpg' },
+    { id: 22, title: 'Nano Machine', author: 'Updated 4h ago', genre: 'Martial Arts', chapter: 'Ch.215', desc: 'Chapter 215: Demon Cult Heavenly Lord.', cover: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&auto=format&fit=crop&q=80' },
+    { id: 35, title: 'The Greatest Estate Developer', author: 'Updated 2h ago', genre: 'Comedy', chapter: 'Ch.150', desc: 'Chapter 150: Lloyd civil engineering magic.', cover: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=600&auto=format&fit=crop&q=80' }
   ],
   thursday: [
     { id: 1, title: 'Solo Leveling', author: 'Updated 2h ago', genre: 'Action', chapter: 'Ch.200', desc: 'Chapter 200: Shadow Monarch ultimate battle.', cover: 'https://upload.wikimedia.org/wikipedia/en/6/6c/Solo_Leveling_Volume_1_Cover.jpg' },
     { id: 2, title: 'Tower of God', author: 'Updated 4h ago', genre: 'Fantasy', chapter: 'Ch.590', desc: 'Chapter 590: Floor 77 War climax.', cover: 'https://upload.wikimedia.org/wikipedia/en/7/7d/Tower_of_God_Volume_1_Cover.jpg' },
     { id: 3, title: 'Omniscient Reader', author: 'Updated 5h ago', genre: 'Action', chapter: 'Ch.185', desc: 'Chapter 185: The Demon King scenario.', cover: 'https://upload.wikimedia.org/wikipedia/en/6/69/Omniscient_Reader%27s_Viewpoint_Volume_1_Cover.jpg' },
-    { id: 4, title: 'Lore Olympus', author: 'Updated 7h ago', genre: 'Romance', chapter: 'Ch.240', desc: 'Chapter 240: Coronation ceremony.', cover: 'https://upload.wikimedia.org/wikipedia/en/7/72/Lore_Olympus_Banner_Art.png' },
-    { id: 5, title: 'Demon Slayer', author: 'Updated 8h ago', genre: 'Supernatural', chapter: 'Ch.205', desc: 'Chapter 205: Final sunrise after battle.', cover: 'https://upload.wikimedia.org/wikipedia/en/0/09/Demon_Slayer_-_Kimetsu_no_Yaiba%2C_volume_1.jpg' },
-    { id: 6, title: 'Jujutsu Kaisen', author: 'Updated 10h ago', genre: 'Action', chapter: 'Ch.254', desc: 'Chapter 254: Domain expansion clash.', cover: 'https://upload.wikimedia.org/wikipedia/en/4/46/Jujutsu_kaisen.jpg' }
+    { id: 10, title: 'The Beginning After The End', author: 'Updated 4h ago', genre: 'Fantasy', chapter: 'Ch.180', desc: 'Chapter 180: Relictombs exploration.', cover: 'https://upload.wikimedia.org/wikipedia/en/8/87/The_Beginning_After_The_End_vol_1.jpg' },
+    { id: 14, title: 'Lookism', author: 'Updated 11h ago', genre: 'Drama', chapter: 'Ch.510', desc: 'Chapter 510: Workers First Affiliate climax.', cover: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&auto=format&fit=crop&q=80' },
+    { id: 21, title: 'Wind Breaker', author: 'Updated 5h ago', genre: 'Sports', chapter: 'Ch.490', desc: 'Chapter 490: Hummingbird final lap.', cover: 'https://images.unsplash.com/photo-1485965120184-e220f721d03e?w=600&auto=format&fit=crop&q=80' }
   ],
   friday: [
-    { id: 4, title: 'Lore Olympus', author: 'Updated 1h ago', genre: 'Romance', chapter: 'Ch.241', desc: 'Chapter 241: Love story unfolds.', cover: 'https://upload.wikimedia.org/wikipedia/en/7/72/Lore_Olympus_Banner_Art.png' },
-    { id: 7, title: 'Spy × Family', author: 'Updated 4h ago', genre: 'Comedy', chapter: 'Ch.97', desc: 'Chapter 97: Operation Strix update.', cover: 'https://upload.wikimedia.org/wikipedia/en/5/51/Spy_Family_vol_1.jpg' }
+    { id: 4, title: 'Lore Olympus', author: 'Updated 1h ago', genre: 'Romance', chapter: 'Ch.280', desc: 'Chapter 280: Love story unfolds.', cover: 'https://upload.wikimedia.org/wikipedia/en/7/72/Lore_Olympus_Banner_Art.png' },
+    { id: 7, title: 'Spy × Family', author: 'Updated 4h ago', genre: 'Comedy', chapter: 'Ch.102', desc: 'Chapter 102: Operation Strix update.', cover: 'https://upload.wikimedia.org/wikipedia/en/5/51/Spy_Family_vol_1.jpg' },
+    { id: 12, title: 'True Beauty', author: 'Updated 7h ago', genre: 'Romance', chapter: 'Ch.223', desc: 'Chapter 223: Makeup artist career high.', cover: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600&auto=format&fit=crop&q=80' },
+    { id: 18, title: 'The Remarried Empress', author: 'Updated 6h ago', genre: 'Fantasy', chapter: 'Ch.175', desc: 'Chapter 175: Empress Navier kingdom decree.', cover: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?w=600&auto=format&fit=crop&q=80' }
   ],
   saturday: [
     { id: 1, title: 'Solo Leveling', author: 'Updated 3h ago', genre: 'Action', chapter: 'Ch.201', desc: 'Chapter 201: Arise awakening.', cover: 'https://upload.wikimedia.org/wikipedia/en/6/6c/Solo_Leveling_Volume_1_Cover.jpg' },
-    { id: 6, title: 'Jujutsu Kaisen', author: 'Updated 5h ago', genre: 'Action', chapter: 'Ch.255', desc: 'Chapter 255: Black flash strike.', cover: 'https://upload.wikimedia.org/wikipedia/en/4/46/Jujutsu_kaisen.jpg' }
+    { id: 6, title: 'Jujutsu Kaisen', author: 'Updated 5h ago', genre: 'Action', chapter: 'Ch.265', desc: 'Chapter 265: Black flash strike.', cover: 'https://upload.wikimedia.org/wikipedia/en/4/46/Jujutsu_kaisen.jpg' },
+    { id: 16, title: 'Sweet Home', author: 'Updated 1d ago', genre: 'Horror', chapter: 'Ch.140', desc: 'Chapter 140: Monsterization survival.', cover: 'https://images.unsplash.com/photo-1509248961158-e54f6934749c?w=600&auto=format&fit=crop&q=80' },
+    { id: 26, title: 'The Boxer', author: 'Updated 3d ago', genre: 'Sports', chapter: 'Ch.124', desc: 'Chapter 124: Yu world championship belt.', cover: 'https://images.unsplash.com/photo-1517649763962-0c623266010b?w=600&auto=format&fit=crop&q=80' }
   ],
   sunday: [
     { id: 2, title: 'Tower of God', author: 'Updated 2h ago', genre: 'Fantasy', chapter: 'Ch.591', desc: 'Chapter 591: High Ranker duel.', cover: 'https://upload.wikimedia.org/wikipedia/en/7/7d/Tower_of_God_Volume_1_Cover.jpg' },
-    { id: 3, title: 'Omniscient Reader', author: 'Updated 6h ago', genre: 'Action', chapter: 'Ch.186', desc: 'Chapter 186: Constellation alliance.', cover: 'https://upload.wikimedia.org/wikipedia/en/6/69/Omniscient_Reader%27s_Viewpoint_Volume_1_Cover.jpg' }
+    { id: 3, title: 'Omniscient Reader', author: 'Updated 6h ago', genre: 'Action', chapter: 'Ch.186', desc: 'Chapter 186: Constellation alliance.', cover: 'https://upload.wikimedia.org/wikipedia/en/6/69/Omniscient_Reader%27s_Viewpoint_Volume_1_Cover.jpg' },
+    { id: 19, title: 'Doom Breaker', author: 'Updated 8h ago', genre: 'Action', chapter: 'Ch.110', desc: 'Chapter 110: Dragon raid battle.', cover: 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=600&auto=format&fit=crop&q=80' },
+    { id: 30, title: 'Leveling Up With the Gods', author: 'Updated 5h ago', genre: 'Fantasy', chapter: 'Ch.115', desc: 'Chapter 115: Olympus trial victory.', cover: 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=600&auto=format&fit=crop&q=80' }
   ]
 };
 
@@ -167,44 +206,46 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function checkUserAuth() {
     const savedUserStr = localStorage.getItem('webcomics_user');
-    if (!savedUserStr) return;
+    let user = null;
+    try { user = JSON.parse(savedUserStr); } catch(e){}
 
-    const user = JSON.parse(savedUserStr);
+    const loginBtn = document.getElementById('login-btn');
+    if (!loginBtn) return;
+
     if (user && user.isLoggedIn) {
-      if (loginBtn) {
-        if (user.role === 'admin') {
-          loginBtn.outerHTML = `
-            <div style="display:flex; align-items:center; gap:10px;">
-              <a href="admin.html" class="btn btn-login" style="background:var(--primary); text-decoration:none;">🛡️ Admin Dashboard</a>
-              <div class="user-profile-badge" title="Logged in as Admin">
-                <div class="user-avatar-circle">AD</div>
-                <span style="font-size:13px; font-weight:700; color:var(--text-main);">${user.name}</span>
-                <button id="logout-btn" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:12px;" title="Log Out">✕</button>
-              </div>
+      if (user.role === 'admin') {
+        loginBtn.outerHTML = `
+          <div style="display:flex; align-items:center; gap:8px;">
+            <a href="admin.html" class="btn btn-login" style="background:linear-gradient(135deg,#6c63ff,#ff2a6d); color:#fff; text-decoration:none; border:none; padding:7px 14px; font-size:12px; font-weight:700; border-radius:8px; box-shadow:0 4px 12px rgba(108,99,255,.3);">🛡️ Admin Dashboard</a>
+            <div class="user-profile-badge" style="display:flex; align-items:center; gap:8px; background:rgba(255,255,255,.06); padding:5px 12px; border-radius:20px; border:1px solid rgba(255,255,255,.1);">
+              <div class="user-avatar-circle" style="width:26px; height:26px; border-radius:50%; background:linear-gradient(135deg,#6c63ff,#ff2a6d); color:#fff; font-weight:800; font-size:11px; display:flex; align-items:center; justify-content:center;">AD</div>
+              <span style="font-size:12.5px; font-weight:700; color:#e4e6f0;">${escapeHtml(user.name)}</span>
+              <button id="logout-btn" style="background:none; border:none; color:#ef4444; cursor:pointer; font-size:14px; font-weight:700; padding:2px 6px; margin-left:4px;" title="Đăng Xuất">✕</button>
             </div>
-          `;
-        } else {
-          loginBtn.outerHTML = `
-            <div class="user-profile-badge">
-              <div class="user-avatar-circle">US</div>
-              <span style="font-size:13px; font-weight:700; color:var(--text-main);">${user.name}</span>
-              <button id="logout-btn" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:12px;" title="Log Out">✕</button>
-            </div>
-          `;
-        }
+          </div>
+        `;
+      } else {
+        loginBtn.outerHTML = `
+          <div class="user-profile-badge" style="display:flex; align-items:center; gap:8px; background:rgba(255,255,255,.06); padding:5px 12px; border-radius:20px; border:1px solid rgba(255,255,255,.1);">
+            <div class="user-avatar-circle" style="width:26px; height:26px; border-radius:50%; background:linear-gradient(135deg,#10b981,#3b82f6); color:#fff; font-weight:800; font-size:11px; display:flex; align-items:center; justify-content:center;">US</div>
+            <span style="font-size:12.5px; font-weight:700; color:#e4e6f0;">${escapeHtml(user.name)}</span>
+            <button id="logout-btn" style="background:none; border:none; color:#ef4444; cursor:pointer; font-size:14px; font-weight:700; padding:2px 6px; margin-left:4px;" title="Đăng Xuất">✕</button>
+          </div>
+        `;
+      }
 
-        const logoutBtn = document.getElementById('logout-btn');
-        if (logoutBtn) {
-          logoutBtn.addEventListener('click', () => {
-            localStorage.removeItem('webcomics_user');
-            window.location.reload();
-          });
-        }
+      const logoutBtn = document.getElementById('logout-btn');
+      if (logoutBtn) {
+        logoutBtn.addEventListener('click', () => {
+          localStorage.removeItem('webcomics_user');
+          window.location.reload();
+        });
       }
     }
   }
 
   checkUserAuth();
+
 
   // --- ADMIN INTER-MODULE COORDINATION & CROSS-LINKING ---
   const adminComicsTbody = document.getElementById('admin-comics-tbody');
@@ -316,30 +357,31 @@ document.addEventListener('DOMContentLoaded', () => {
     const libContainer = document.getElementById('library-items-list');
     if (!libContainer) return;
 
-    // Load saved comic IDs/keys from localStorage
-    let savedIds = [];
+    // Đọc từ localStorage — detail.html lưu dạng object {id, title, cover, chapter, url}
+    let savedRaw = [];
     try {
-      savedIds = JSON.parse(localStorage.getItem('wc_library_comics') || '[]');
-    } catch(e) { savedIds = []; }
+      savedRaw = JSON.parse(localStorage.getItem('wc_library_comics') || '[]');
+      if (!Array.isArray(savedRaw)) savedRaw = [];
+    } catch(e) { savedRaw = []; }
 
-    // List of known comics in the system
-    const ALL_CATALOG = [
-      { id: 'detail-eden', title: "Eden's Last Stand", cover: 'https://upload.wikimedia.org/wikipedia/en/6/6c/Solo_Leveling_Volume_1_Cover.jpg', chapter: 'Ch.150', url: 'detail.html' },
-      ...MOCK_LATEST.map(c => ({ id: c.id, title: c.title, cover: c.cover, chapter: c.chapter, url: `detail.html?id=${c.id}` }))
-    ];
+    // Chuẩn hoá: hỗ trợ cả mảng ID (cũ) lẫn mảng object (mới)
+    const savedItems = savedRaw.map(item => {
+      if (typeof item === 'object' && item !== null && item.id) {
+        return item; // object đầy đủ từ detail.html
+      }
+      // Fallback: nếu chỉ là ID thì tra catalog
+      const found = MOCK_LATEST.find(c => String(c.id) === String(item));
+      if (found) return { id: found.id, title: found.title, cover: found.cover, chapter: found.chapter, url: `detail.html?id=${found.id}` };
+      return null;
+    }).filter(Boolean);
 
-    // Match saved items
-    let savedItems = ALL_CATALOG.filter(item =>
-      savedIds.some(savedId => String(savedId) === String(item.id))
-    );
-
-    // If nothing saved yet
+    // Nếu không có gì
     if (savedItems.length === 0) {
       libContainer.innerHTML = `
         <div style="text-align:center; padding:32px 16px; color:#7b7f9e;">
           <div style="font-size:36px; margin-bottom:8px;">📚</div>
           <div style="font-weight:700; color:#e4e6f0; font-size:14px;">Tủ sách đang trống</div>
-          <div style="font-size:12px; margin-top:4px; color:#9ca3af;">Hãy nhấn <strong>"+ Theo Dõi"</strong> ở các bộ truyện để lưu vào đây nhé!</div>
+          <div style="font-size:12px; margin-top:4px; color:#9ca3af;">Hãy nhấn <strong>"📚 Theo Dõi Truyện"</strong> ở các bộ truyện để lưu vào đây nhé!</div>
         </div>`;
       return;
     }
@@ -347,14 +389,14 @@ document.addEventListener('DOMContentLoaded', () => {
     libContainer.innerHTML = savedItems.map(item => `
       <div style="display:flex; align-items:center; justify-content:space-between; background:rgba(255,255,255,.05); padding:10px 14px; border-radius:10px; border:1px solid rgba(255,255,255,.08); margin-bottom:8px; transition:background .2s;" onmouseover="this.style.background='rgba(255,255,255,.08)'" onmouseout="this.style.background='rgba(255,255,255,.05)'">
         <div style="display:flex; align-items:center; gap:12px; min-width:0;">
-          <img src="${item.cover}" style="width:40px; height:52px; object-fit:cover; border-radius:6px; flex-shrink:0;" />
+          <img src="${item.cover}" style="width:40px; height:52px; object-fit:cover; border-radius:6px; flex-shrink:0;" onerror="this.src='https://images.unsplash.com/photo-1578632767115-351597cf2477?w=200&q=80'" />
           <div style="min-width:0;">
             <div style="font-size:13.5px; font-weight:700; color:#e4e6f0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(item.title)}</div>
-            <div style="font-size:12px; color:#6c63ff; font-weight:600; margin-top:2px;">${item.chapter}</div>
+            <div style="font-size:12px; color:#6c63ff; font-weight:600; margin-top:2px;">${escapeHtml(item.chapter || 'Ch.?')}</div>
           </div>
         </div>
         <div style="display:flex; align-items:center; gap:8px;">
-          <a href="${item.url}" class="btn btn-login" style="padding:6px 14px; font-size:12px; font-weight:700; text-decoration:none;">Đọc tiếp</a>
+          <a href="${item.url || 'detail.html'}" class="btn btn-login" style="padding:6px 14px; font-size:12px; font-weight:700; text-decoration:none;">Đọc tiếp</a>
           <button onclick="removeFromLibrary('${item.id}')" title="Xóa khỏi tủ sách" style="background:none; border:none; color:#ef4444; font-size:15px; cursor:pointer; padding:4px 8px; border-radius:6px; transition:.15s;" onmouseover="this.style.background='rgba(239,68,68,.15)'" onmouseout="this.style.background='none'">🗑️</button>
         </div>
       </div>
@@ -363,75 +405,184 @@ document.addEventListener('DOMContentLoaded', () => {
 
   window.removeFromLibrary = function(comicId) {
     try {
-      let savedIds = JSON.parse(localStorage.getItem('wc_library_comics') || '[]');
-      savedIds = savedIds.filter(id => String(id) !== String(comicId));
-      localStorage.setItem('wc_library_comics', JSON.stringify(savedIds));
+      let savedRaw = JSON.parse(localStorage.getItem('wc_library_comics') || '[]');
+      if (!Array.isArray(savedRaw)) savedRaw = [];
+
+      // Xóa đúng cả object lẫn ID string
+      savedRaw = savedRaw.filter(item => {
+        if (typeof item === 'object' && item !== null) return String(item.id) !== String(comicId);
+        return String(item) !== String(comicId);
+      });
+
+      localStorage.setItem('wc_library_comics', JSON.stringify(savedRaw));
       renderLibraryItems();
 
-      // Refresh detail.html button if currently viewing that page
+      // Reset nút theo dõi nếu đang xem trang detail
       const btnSub = document.getElementById('btn-subscribe');
-      if (btnSub && (String(comicId) === 'detail-eden' || String(comicId) === '1')) {
-        btnSub.dataset.saved = '0';
-        btnSub.style.background   = 'transparent';
-        btnSub.style.borderColor  = 'rgba(255,255,255,.2)';
-        btnSub.style.color        = '#e4e6f0';
-        const libLabel = document.getElementById('lib-label');
-        if (libLabel) libLabel.textContent = '📚 Theo Dõi Truyện';
-        const libIcon = document.getElementById('lib-icon');
-        if (libIcon) libIcon.setAttribute('fill', 'none');
+      if (btnSub) {
+        const urlId = new URLSearchParams(window.location.search).get('id') || '';
+        if (String(urlId) === String(comicId) || String(comicId).includes(urlId)) {
+          btnSub.dataset.saved = '0';
+          btnSub.style.background  = 'transparent';
+          btnSub.style.borderColor = 'rgba(255,255,255,.2)';
+          btnSub.style.color       = '#e4e6f0';
+          const libLabel = document.getElementById('lib-label');
+          if (libLabel) libLabel.textContent = '📚 Theo Dõi Truyện';
+          const libIcon = document.getElementById('lib-icon');
+          if (libIcon) libIcon.setAttribute('fill', 'none');
+        }
       }
-    } catch(e){}
+    } catch(e) { console.error('removeFromLibrary error:', e); }
   };
+
 
   // --- 2. SEARCH ---
   const searchInput = document.getElementById('search-input');
   const searchDropdown = document.getElementById('search-dropdown');
 
   if (searchInput && searchDropdown) {
-    searchInput.addEventListener('focus', () => searchDropdown.classList.add('visible'));
+    // Danh sách tìm kiếm phổ biến mặc định
+    const DEFAULT_POPULAR_HTML = `
+      <div class="search-recent-title">Popular Searches</div>
+      <a href="detail.html?id=1" class="search-item" style="text-decoration:none; color:inherit; display:flex; align-items:center; gap:8px;">
+        <span>🔥</span>Solo Leveling
+      </a>
+      <a href="detail.html?id=2" class="search-item" style="text-decoration:none; color:inherit; display:flex; align-items:center; gap:8px;">
+        <span>⚔️</span>Tower of God
+      </a>
+      <a href="detail.html?id=3" class="search-item" style="text-decoration:none; color:inherit; display:flex; align-items:center; gap:8px;">
+        <span>💜</span>Omniscient Reader
+      </a>
+    `;
 
+    // Hiện dropdown khi focus
+    searchInput.addEventListener('focus', () => {
+      if (!searchInput.value.trim()) {
+        searchDropdown.innerHTML = DEFAULT_POPULAR_HTML;
+      }
+      searchDropdown.classList.add('visible');
+    });
+
+    // Ẩn dropdown khi click ra ngoài
     document.addEventListener('click', (e) => {
       if (!searchInput.contains(e.target) && !searchDropdown.contains(e.target)) {
         searchDropdown.classList.remove('visible');
       }
     });
 
+    // Tra cứu trong kho truyện tổng hợp
+    function searchCatalog(query) {
+      const q = query.toLowerCase();
+      const catalog = [
+        ...MOCK_TRENDING.map(c => ({ id: c.id, title: c.title, cover: c.cover, genre: c.genre })),
+        ...MOCK_LATEST.map(c => ({ id: c.id, title: c.title, cover: c.cover, genre: c.genreText || c.genre })),
+        { id: 'detail-eden', title: "Eden's Last Stand", cover: 'https://upload.wikimedia.org/wikipedia/en/6/6c/Solo_Leveling_Volume_1_Cover.jpg', genre: 'Sci-Fi · Action' }
+      ];
+      
+      const seen = new Set();
+      const unique = [];
+      for (const item of catalog) {
+        const key = String(item.id);
+        if (!seen.has(key)) {
+          seen.add(key);
+          unique.push(item);
+        }
+      }
+
+      return unique.filter(c => 
+        c.title.toLowerCase().includes(q) || 
+        (c.genre && c.genre.toLowerCase().includes(q))
+      );
+    }
+
+    function renderSearchResults(results, query) {
+      if (results.length > 0) {
+        searchDropdown.innerHTML = `
+          <div class="search-recent-title">KẾT QUẢ TÌM KIẾM (${results.length})</div>
+          ${results.map(item => `
+            <a href="${item.id === 'detail-eden' ? 'detail.html' : `detail.html?id=${item.id}`}" class="search-item" style="text-decoration:none; color:inherit; display:flex; align-items:center; gap:10px; padding:8px 12px; transition:background .15s;">
+              <img src="${item.cover}" style="width:32px; height:42px; object-fit:cover; border-radius:4px; flex-shrink:0;" onerror="this.src='https://images.unsplash.com/photo-1578632767115-351597cf2477?w=100&q=80'" />
+              <div style="min-width:0; flex:1;">
+                <div style="font-size:13px; font-weight:700; color:#e4e6f0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(item.title)}</div>
+                <div style="font-size:11px; color:#94a3b8; font-weight:500;">${escapeHtml(item.genre || 'Manhwa')}</div>
+              </div>
+            </a>
+          `).join('')}
+        `;
+      } else {
+        searchDropdown.innerHTML = `
+          <div style="padding:16px 12px; text-align:center; color:#94a3b8; font-size:13px;">
+            <div>🔍 Không tìm thấy truyện phù hợp cho "<strong>${escapeHtml(query)}</strong>"</div>
+            <div style="font-size:11px; margin-top:4px; color:#64748b;">Hãy thử từ khóa khác như "Solo", "God", "Reader"...</div>
+          </div>
+        `;
+      }
+      searchDropdown.classList.add('visible');
+    }
+
+    // Xử lý sự kiện nhập từ khóa
     searchInput.addEventListener('input', async (e) => {
       const query = e.target.value.trim();
-      if (!query) return;
 
+      if (!query) {
+        searchDropdown.innerHTML = DEFAULT_POPULAR_HTML;
+        searchDropdown.classList.add('visible');
+        return;
+      }
+
+      // 1. Thử gọi API trước
       try {
-        const res = await fetch(`${API_BASE_URL}/comics/search?q=${encodeURIComponent(query)}`);
+        const res = await fetch(`/api/comics/search?q=${encodeURIComponent(query)}`);
         if (res.ok) {
-          const results = await res.json();
-          if (results.length > 0) {
-            searchDropdown.innerHTML = `
-              <div class="search-recent-title">Search Results</div>
-              ${results.map(item => `
-                <a href="detail.html?id=${item.id}" class="search-item" style="text-decoration:none; color:inherit; display:flex; align-items:center; gap:8px;">
-                  <span class="search-item-icon">📖</span>${escapeHtml(item.title)}
-                </a>
-              `).join('')}
-            `;
-          } else {
-            searchDropdown.innerHTML = `<div class="search-recent-title">No comics found for "${escapeHtml(query)}"</div>`;
+          const apiResults = await res.json();
+          if (Array.isArray(apiResults) && apiResults.length > 0) {
+            renderSearchResults(apiResults, query);
+            return;
           }
         }
       } catch (err) {
-        const matches = MOCK_LATEST.filter(c => c.title.toLowerCase().includes(query.toLowerCase()));
-        if (matches.length > 0) {
-          searchDropdown.innerHTML = `
-            <div class="search-recent-title">Search Results</div>
-            ${matches.map(item => `
-              <a href="detail.html?id=${item.id}" class="search-item" style="text-decoration:none; color:inherit; display:flex; align-items:center; gap:8px;">
-                <span class="search-item-icon">📖</span>${escapeHtml(item.title)}
-              </a>
-            `).join('')}
-          `;
+        // API offline -> dùng local catalog
+      }
+
+      // 2. Tra cứu local catalog
+      const localResults = searchCatalog(query);
+      renderSearchResults(localResults, query);
+    });
+
+    // Nhấn Enter để xem ngay truyện đầu tiên
+    searchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const query = searchInput.value.trim();
+        if (!query) return;
+        const results = searchCatalog(query);
+        if (results.length > 0) {
+          const top = results[0];
+          window.location.href = top.id === 'detail-eden' ? 'detail.html' : `detail.html?id=${top.id}`;
         }
       }
     });
+
+    // Click vào icon kính lúp để tìm kiếm
+    const searchIcon = searchInput.parentElement?.querySelector('.search-icon');
+    if (searchIcon) {
+      searchIcon.style.cursor = 'pointer';
+      searchIcon.style.pointerEvents = 'auto';
+      searchIcon.addEventListener('click', () => {
+        const query = searchInput.value.trim();
+        if (!query) {
+          searchInput.focus();
+          return;
+        }
+        const results = searchCatalog(query);
+        if (results.length > 0) {
+          const top = results[0];
+          window.location.href = top.id === 'detail-eden' ? 'detail.html' : `detail.html?id=${top.id}`;
+        }
+      });
+    }
   }
+
 
   // --- 3. SCHEDULE PAGE INTERACTION (SCHEDULE.HTML) ---
   const dayItems = document.querySelectorAll('.sched-day-item');
@@ -609,16 +760,20 @@ document.addEventListener('DOMContentLoaded', () => {
     gridContainer.innerHTML = comics.map(item => `
       <a href="detail.html?id=${item.id}" class="comic-card-sm" data-genre="${item.genre}">
         <div class="sm-cover">
-          <img src="${item.cover}" alt="${escapeHtml(item.title)}" class="cover-img" />
-          <span class="sm-badge ${item.badgeClass || ''}">${item.chapter}</span>
+          <img src="${item.cover}" alt="${escapeHtml(item.title)}" class="cover-img" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1578632767115-351597cf2477?w=600&q=80'" />
+          <span class="sm-badge ${item.badgeClass || ''}">${escapeHtml(item.chapter)}</span>
+          <span class="sm-rating">★ ${item.rating || '4.9'}</span>
         </div>
-        <p class="sm-title">${escapeHtml(item.title)}</p>
-        <p class="sm-meta">${escapeHtml(item.genreText || item.genre)} &middot; ${escapeHtml(item.timeAgo)}</p>
+        <div class="sm-info">
+          <h3 class="sm-title">${escapeHtml(item.title)}</h3>
+          <p class="sm-meta"><span style="color:var(--primary); font-weight:600;">${escapeHtml((item.genreText || item.genre || '').split(' · ')[0])}</span> <span>${escapeHtml(item.timeAgo || 'Hot')}</span></p>
+        </div>
       </a>
     `).join('');
 
     attachImageFallback();
   }
+
 
   async function loadTrendingComics() {
     try {

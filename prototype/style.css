@@ -397,12 +397,23 @@ button {
   border-radius: var(--radius-md);
   position: relative;
   overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   box-shadow: var(--shadow-card);
   border: 1px solid var(--border-color);
+  background: var(--bg-surface-2);
 }
+
+.tcard-cover .cover-img,
+.tcard-cover img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover !important;
+  object-position: center !important;
+  display: block;
+}
+
 
 .cover-emoji-big {
   font-size: 4.8rem;
@@ -764,75 +775,143 @@ button {
 .comics-grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  gap: 20px;
+  gap: 22px;
 }
 
-.comic-card-sm {
+@media (max-width: 1200px) {
+  .comics-grid { grid-template-columns: repeat(4, 1fr); }
+}
+@media (max-width: 900px) {
+  .comics-grid { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 600px) {
+  .comics-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
+}
+
+/* Unified Comic Card Component */
+.comic-card-sm,
+.orig-full-card {
   background: var(--bg-surface-1);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
+  border-radius: 14px;
   padding: 10px;
-  transition: all var(--transition);
-  display: block;
-}
-
-.comic-card-sm:hover {
-  transform: translateY(-4px);
-  border-color: var(--border-active);
-  box-shadow: var(--shadow-card);
-}
-
-.sm-cover {
-  width: 100%;
-  aspect-ratio: 3/4;
-  border-radius: var(--radius-sm);
-  position: relative;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
-  align-items: center;
-  justify-content: center;
+  flex-direction: column;
+  height: 100%;
+  text-decoration: none;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.comic-card-sm:hover,
+.orig-full-card:hover {
+  transform: translateY(-5px);
+  border-color: rgba(255, 94, 54, 0.45);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5), 0 0 18px rgba(255, 94, 54, 0.2);
+}
+
+/* Cover Image Box */
+.sm-cover,
+.of-cover {
+  width: 100%;
+  height: 250px;
+  aspect-ratio: 3 / 4;
+  border-radius: 10px;
+  position: relative;
   overflow: hidden;
+  background: var(--bg-surface-2);
 }
 
-.sm-emoji {
-  font-size: 2.6rem;
-  transition: transform 0.3s ease;
+.sm-cover img,
+.of-cover img,
+.tcard-cover img,
+.browse-cover img,
+img.cover-img {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  object-position: center !important;
+  display: block !important;
+  transition: transform 0.35s ease !important;
 }
 
-.comic-card-sm:hover .sm-emoji {
-  transform: scale(1.15);
+.comic-card-sm:hover .cover-img,
+.orig-full-card:hover .cover-img {
+  transform: scale(1.07) !important;
 }
 
-.sm-badge {
+/* Badges */
+.sm-badge,
+.of-badge {
   position: absolute;
   top: 8px;
   right: 8px;
-  font-size: 10px;
+  font-size: 10.5px;
   font-weight: 800;
-  padding: 3px 8px;
-  border-radius: 4px;
+  padding: 3px 9px;
+  border-radius: 6px;
   background: rgba(11, 14, 20, 0.85);
   color: #FFF;
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  z-index: 2;
 }
 
-.sm-badge.hot-badge { background: var(--primary); }
-.sm-badge.new-badge { background: var(--accent-green); }
+.sm-badge.hot-badge { background: linear-gradient(135deg, #FF5E36, #FF2A6D); border: none; }
+.sm-badge.new-badge { background: linear-gradient(135deg, #10B981, #059669); border: none; }
 
-.sm-title {
-  margin-top: 10px;
-  font-size: 13.5px;
+.sm-rating,
+.of-rating {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  font-size: 11px;
+  font-weight: 800;
+  color: #F59E0B;
+  background: rgba(11, 14, 20, 0.85);
+  backdrop-filter: blur(6px);
+  padding: 2px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  z-index: 2;
+}
+
+/* Card Content / Typography */
+.sm-info,
+.of-body {
+  padding-top: 10px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.sm-title,
+.of-title {
+  margin: 0;
+  font-size: 14px;
   font-weight: 700;
   color: var(--text-main);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  line-height: 1.35;
 }
 
-.sm-meta {
-  margin-top: 4px;
+.sm-meta,
+.of-genre {
+  margin-top: 5px;
   font-size: 12px;
+  font-weight: 500;
   color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
+
 
 /* ==========================================================================
    PAGES (GENRES & SCHEDULE SPECIFIC)
@@ -961,12 +1040,25 @@ button {
 
 .browse-cover {
   width: 140px;
+  min-height: 190px;
   flex-shrink: 0;
   position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  overflow: hidden;
+  background: var(--bg-surface-2);
 }
+
+.browse-cover .cover-img,
+.browse-cover img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+
 
 .cover-icon {
   font-size: 3rem;
@@ -1365,12 +1457,25 @@ button {
 
 .of-cover {
   width: 100%;
-  aspect-ratio: 2/3;
+  height: 240px;
+  aspect-ratio: 3 / 4;
   position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  overflow: hidden;
+  background: var(--bg-surface-2);
 }
+
+.of-cover .cover-img,
+.of-cover img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover !important;
+  object-position: center !important;
+  display: block;
+}
+
 
 .of-emoji {
   font-size: 3.2rem;

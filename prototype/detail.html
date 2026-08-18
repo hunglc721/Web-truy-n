@@ -374,25 +374,53 @@
   ============================================================ -->
   <script>
   (function() {
-    // ── Trạng thái lưu trong localStorage (giả lập login/server) ──
     const STORAGE_KEY_LIKES  = 'wc_liked_comics';
     const STORAGE_KEY_LIB    = 'wc_library_comics';
-    const COMIC_ID           = 'detail-eden'; // ID duy nhất cho truyện này
 
-    function getSet(key)       { try { return new Set(JSON.parse(localStorage.getItem(key) || '[]')); } catch { return new Set(); } }
-    function saveSet(key, set) { localStorage.setItem(key, JSON.stringify([...set])); }
+    // ── Helper Lấy Thông Tin Bộ Truyện Hiện Tại Trực Tiếp Từ DOM ──
+    function getCurrentComicInfo() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const paramId   = urlParams.get('id');
+      const titleEl   = document.getElementById('detail-title');
+      const coverEl   = document.getElementById('detail-cover-img');
+      const title     = titleEl ? titleEl.textContent.trim() : "Eden's Last Stand";
+      const cover     = coverEl ? coverEl.src : 'https://upload.wikimedia.org/wikipedia/en/6/6c/Solo_Leveling_Volume_1_Cover.jpg';
+      const id        = paramId || (title ? title.toLowerCase().replace(/[^a-z0-9]+/g, '-') : 'detail-eden');
+      const chapter   = document.getElementById('btn-read-latest')?.textContent.replace('Read ', '').trim() || 'Ch.1';
+      const url       = window.location.href;
+      return { id: String(id), title, cover, chapter, url };
+    }
 
-    let likedSet   = getSet(STORAGE_KEY_LIKES);
-    let librarySet = getSet(STORAGE_KEY_LIB);
+    // ── Xử Lý Storage Tủ Sách (Library) ─────────────────────────
+    function getLibraryList() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY_LIB) || '[]';
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch(e) { return []; }
+    }
 
-    // ── Số lượt thích ban đầu (số giả demo) ──────────────────────
-    let likeBaseCount = 850000;
-    let likeCount     = likedSet.has(COMIC_ID) ? likeBaseCount + 1 : likeBaseCount;
+    function saveLibraryList(list) {
+      localStorage.setItem(STORAGE_KEY_LIB, JSON.stringify(list));
+    }
 
-    function formatCount(n) {
-      if (n >= 1_000_000) return (n / 1_000_000).toFixed(1).replace('.0','') + 'M';
-      if (n >= 1_000)     return (n / 1_000).toFixed(1).replace('.0','') + 'K';
-      return String(n);
+    function isComicInLibrary(comicId) {
+      const list = getLibraryList();
+      return list.some(item => {
+        if (typeof item === 'object' && item !== null) return String(item.id) === String(comicId);
+        return String(item) === String(comicId);
+      });
+    }
+
+    // ── Xử Lý Storage Yêu Thích (Likes) ──────────────────────────
+    function getLikedSet() {
+      try {
+        return new Set(JSON.parse(localStorage.getItem(STORAGE_KEY_LIKES) || '[]'));
+      } catch(e) { return new Set(); }
+    }
+
+    function saveLikedSet(set) {
+      localStorage.setItem(STORAGE_KEY_LIKES, JSON.stringify([...set]));
     }
 
     // ── Toast ───────────────────────────────────────────────────
@@ -432,32 +460,74 @@
         btnSub.style.background   = '#16a34a';
         btnSub.style.borderColor  = '#16a34a';
         btnSub.style.color        = '#fff';
-        libLabel.textContent      = '✓ Đã Theo Dõi';
+        if (libLabel) libLabel.textContent = '✓ Đã Theo Dõi';
         if (libIcon) libIcon.setAttribute('fill', 'currentColor');
       } else {
         btnSub.style.background   = 'transparent';
         btnSub.style.borderColor  = 'rgba(255,255,255,.2)';
         btnSub.style.color        = '#e4e6f0';
-        libLabel.textContent      = '📚 Theo Dõi Truyện';
+        if (libLabel) libLabel.textContent = '📚 Theo Dõi Truyện';
         if (libIcon) libIcon.setAttribute('fill', 'none');
       }
     }
 
-    // Khôi phục trạng thái từ localStorage
-    applyLibraryState(librarySet.has(COMIC_ID));
+    function initLibraryUI() {
+      const comic = getCurrentComicInfo();
+      applyLibraryState(isComicInLibrary(comic.id));
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // NÚT ĐỌC TRUYỆN — Read First & Read Latest
+    // ─────────────────────────────────────────────────────────────
+    const btnReadFirst = document.getElementById('btn-read-first');
+    const btnReadLatest = document.getElementById('btn-read-latest');
+
+    if (btnReadFirst) {
+      btnReadFirst.addEventListener('click', () => {
+        showActionToast('📖 Đang tải Chapter 1...', 'success');
+        document.getElementById('episodes-list')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      });
+    }
+
+    if (btnReadLatest) {
+      btnReadLatest.addEventListener('click', () => {
+        const txt = btnReadLatest.textContent.trim();
+        showActionToast(`📖 Đang tải ${txt}...`, 'success');
+        document.getElementById('episodes-list')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      });
+    }
+
+    // Đợi DOM & app.js populate comic detail
+    setTimeout(initLibraryUI, 100);
+    setTimeout(initLibraryUI, 500);
+
 
     btnSub?.addEventListener('click', function() {
-      const isSaved = librarySet.has(COMIC_ID);
-      if (isSaved) {
-        librarySet.delete(COMIC_ID);
-        saveSet(STORAGE_KEY_LIB, librarySet);
+      const comic = getCurrentComicInfo();
+      const alreadySaved = isComicInLibrary(comic.id);
+
+      if (alreadySaved) {
+        let list = getLibraryList();
+        list = list.filter(item => {
+          if (typeof item === 'object' && item !== null) return String(item.id) !== String(comic.id);
+          return String(item) !== String(comic.id);
+        });
+        saveLibraryList(list);
         applyLibraryState(false);
-        showActionToast('📚 Đã xóa khỏi Tủ Sách!', 'error');
+        showActionToast(`📚 Đã xóa "${comic.title}" khỏi Tủ Sách!`, 'error');
       } else {
-        librarySet.add(COMIC_ID);
-        saveSet(STORAGE_KEY_LIB, librarySet);
+        let list = getLibraryList();
+        // Thêm đối tượng bộ truyện vào đầu mảng
+        list.unshift({
+          id: comic.id,
+          title: comic.title,
+          cover: comic.cover,
+          chapter: comic.chapter,
+          url: comic.url
+        });
+        saveLibraryList(list);
         applyLibraryState(true);
-        showActionToast('📚 Đã thêm vào Tủ Sách! Đọc bất cứ lúc nào bạn muốn.', 'library');
+        showActionToast(`📚 Đã thêm "${comic.title}" vào Tủ Sách!`, 'library');
       }
     });
 
@@ -469,19 +539,58 @@
     const likeLabel = document.getElementById('like-label');
     const likeCountEl = document.getElementById('like-count');
 
+    let likedSet = getLikedSet();
+
     function applyLikeState(liked) {
       if (!btnLike) return;
       btnLike.dataset.liked = liked ? '1' : '0';
-      if (likeCountEl) likeCountEl.textContent = formatCount(likeCount);
       if (liked) {
         btnLike.style.background  = '#ef4444';
         btnLike.style.borderColor = '#ef4444';
         btnLike.style.color       = '#fff';
-        likeLabel.textContent     = '❤️ Đã Thích';
+        if (likeLabel) likeLabel.textContent = '❤️ Đã Thích';
         if (likeHeart) likeHeart.setAttribute('fill', 'currentColor');
       } else {
         btnLike.style.background  = 'transparent';
         btnLike.style.borderColor = 'rgba(255,255,255,.2)';
+        btnLike.style.color       = '#e4e6f0';
+        if (likeLabel) likeLabel.textContent = '🤍 Yêu Thích';
+        if (likeHeart) likeHeart.setAttribute('fill', 'none');
+      }
+    }
+
+    function initLikeUI() {
+      const comic = getCurrentComicInfo();
+      applyLikeState(likedSet.has(String(comic.id)));
+    }
+
+    setTimeout(initLikeUI, 100);
+    setTimeout(initLikeUI, 500);
+
+    btnLike?.addEventListener('click', function() {
+      const comic = getCurrentComicInfo();
+      const isLiked = likedSet.has(String(comic.id));
+
+      if (likeHeart) {
+        likeHeart.style.transform = 'scale(1.5)';
+        setTimeout(() => { likeHeart.style.transform = 'scale(1)'; }, 200);
+      }
+
+      if (isLiked) {
+        likedSet.delete(String(comic.id));
+        saveLikedSet(likedSet);
+        applyLikeState(false);
+        showActionToast(`🤍 Đã bỏ thích "${comic.title}".`, 'error');
+      } else {
+        likedSet.add(String(comic.id));
+        saveLikedSet(likedSet);
+        applyLikeState(true);
+        showActionToast(`❤️ Đã thích "${comic.title}"! Cảm ơn bạn đã ủng hộ!`, 'success');
+      }
+    });
+
+  })();
+  </script>5,255,255,.2)';
         btnLike.style.color       = '#e4e6f0';
         likeLabel.textContent     = '🤍 Yêu Thích';
         if (likeHeart) likeHeart.setAttribute('fill', 'none');
@@ -522,16 +631,56 @@
        USER COMMENT SYSTEM WITH ADVANCED BAD WORDS & TEENCODE FILTER
   ============================================================ -->
   <script>
-  // ── 1. Seed data with Auto-Approve Statuses ─────────────────────
-  let cmtData = [
+  let defaultCmtData = [
     { id: 1, user: 'Shadow123',   avatar: 'S', color: 'linear-gradient(135deg,#6c63ff,#ff2a6d)', text: 'The artwork in Chapter 150 is absolutely mind-blowing! Can\'t wait for the next update 🔥', time: '2 giờ trước', likes: 42, liked: false, status: 'approved', statusText: '🟢 Tự động duyệt', replies: [] },
     { id: 2, user: 'ComicLover',  avatar: 'C', color: 'linear-gradient(135deg,#f59e0b,#ef4444)', text: 'Best sci-fi manhwa of the year hands down. 10/10 recommendation!', time: '1 ngày trước', likes: 87, liked: false, status: 'approved', statusText: '🟢 Tự động duyệt', replies: [
       { id: 21, user: 'MangaFan', avatar: 'M', color: 'linear-gradient(135deg,#10b981,#3b82f6)', text: 'Totally agree! The story pacing is perfect.', time: '23 giờ trước', likes: 15, liked: false, status: 'approved' }
     ]},
     { id: 3, user: 'NhậtLong98',  avatar: 'N', color: 'linear-gradient(135deg,#8b5cf6,#ec4899)', text: 'Chapter 148 làm mình khóc luôn 😭 tác giả *** vãi!', time: '3 ngày trước', likes: 120, liked: false, status: 'filtered', statusText: '⚡ Đã lọc từ nhạy cảm', replies: [] },
   ];
+  let cmtData = [...defaultCmtData];
   let nextId = 100;
   let currentCmtTab = 'all';
+
+  function getCmtStorageKey() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const id = urlParams.get('id') || 'detail-eden';
+    return 'wc_comments_' + id;
+  }
+
+  function loadCommentsFromStorage() {
+    const key = getCmtStorageKey();
+    try {
+      const raw = localStorage.getItem(key);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          cmtData = parsed;
+          let maxId = 100;
+          const scanMax = (arr) => {
+            (arr || []).forEach(c => {
+              if (typeof c.id === 'number' && c.id >= maxId) maxId = c.id + 1;
+              if (Array.isArray(c.replies)) scanMax(c.replies);
+            });
+          };
+          scanMax(cmtData);
+          nextId = maxId;
+        }
+      }
+    } catch(e) {
+      console.error('Error loading comments from localStorage:', e);
+    }
+  }
+
+  function saveCommentsToStorage() {
+    const key = getCmtStorageKey();
+    try {
+      localStorage.setItem(key, JSON.stringify(cmtData));
+    } catch(e) {
+      console.error('Error saving comments to localStorage:', e);
+    }
+  }
+
 
   // ── 2. 150+ Bad Words List & Teencode Evasion Engine ──────────────
   const BAD_WORDS_LIST = [
@@ -707,6 +856,7 @@
     };
 
     cmtData.unshift(newCmt);
+    saveCommentsToStorage();
     input.value = '';
     renderComments();
 
@@ -761,6 +911,7 @@
     if (!cmt) return;
     cmt.liked = !cmt.liked;
     cmt.likes += cmt.liked ? 1 : -1;
+    saveCommentsToStorage();
     renderComments();
   }
 
@@ -794,6 +945,7 @@
       status: isSpamContent ? 'pending' : (hasBadWord ? 'filtered' : 'approved')
     });
 
+    saveCommentsToStorage();
     renderComments();
 
     if (isSpamContent) {
@@ -819,8 +971,10 @@
 
   // ── 8. Event listeners ──────────────────────────────────────────
   document.addEventListener('DOMContentLoaded', () => {
+    loadCommentsFromStorage();
     renderComments();
     document.getElementById('user-comment-input')?.addEventListener('keydown', function(e) {
+
       if (e.key === 'Enter' && e.ctrlKey) { e.preventDefault(); postComment(); }
     });
   });

@@ -5,7 +5,7 @@ const url = require('url');
 
 const PORT = 3000;
 
-// Dữ liệu Mock API
+// Dữ liệu Mock API 35+ bộ truyện chuẩn đa dạng thể loại
 const trendingComics = [
   { id: 1, title: 'Solo Leveling', genre: 'Action · Fantasy', cover: 'https://upload.wikimedia.org/wikipedia/en/6/6c/Solo_Leveling_Volume_1_Cover.jpg', rank: 1, rankClass: 'r1' },
   { id: 2, title: 'Tower of God', genre: 'Fantasy · Mystery', cover: 'https://upload.wikimedia.org/wikipedia/en/7/7d/Tower_of_God_Volume_1_Cover.jpg', rank: 2, rankClass: 'r2' },
@@ -15,32 +15,53 @@ const trendingComics = [
   { id: 6, title: 'Jujutsu Kaisen', genre: 'Action · Fantasy', cover: 'https://upload.wikimedia.org/wikipedia/en/4/46/Jujutsu_kaisen.jpg', rank: 6, rankClass: '' },
   { id: 7, title: 'Spy × Family', genre: 'Comedy · Action', cover: 'https://upload.wikimedia.org/wikipedia/en/5/51/Spy_Family_vol_1.jpg', rank: 7, rankClass: '' },
   { id: 8, title: 'Chainsaw Man', genre: 'Action · Horror', cover: 'https://upload.wikimedia.org/wikipedia/en/2/24/Chainsawman.jpg', rank: 8, rankClass: '' },
-  { id: 9, title: 'Attack on Titan', genre: 'Action · Drama', cover: 'https://upload.wikimedia.org/wikipedia/en/d/d6/Shingeki_no_Kyojin_manga_volume_1.jpg', rank: 9, rankClass: '' }
+  { id: 9, title: 'Attack on Titan', genre: 'Action · Drama', cover: 'https://upload.wikimedia.org/wikipedia/en/d/d6/Shingeki_no_Kyojin_manga_volume_1.jpg', rank: 9, rankClass: '' },
+  { id: 10, title: 'The Beginning After The End', genre: 'Fantasy · Isekai', cover: 'https://upload.wikimedia.org/wikipedia/en/8/87/The_Beginning_After_The_End_vol_1.jpg', rank: 10, rankClass: '' }
 ];
 
 const latestComics = [
-  { id: 1, title: 'Solo Leveling', genre: 'action', genreText: 'Action', timeAgo: '2h ago', chapter: 'Ch.200', badgeClass: 'hot-badge', cover: 'https://upload.wikimedia.org/wikipedia/en/6/6c/Solo_Leveling_Volume_1_Cover.jpg' },
-  { id: 2, title: 'Tower of God', genre: 'fantasy', genreText: 'Fantasy', timeAgo: '3h ago', chapter: 'Ch.590', badgeClass: '', cover: 'https://upload.wikimedia.org/wikipedia/en/7/7d/Tower_of_God_Volume_1_Cover.jpg' },
-  { id: 3, title: 'Omniscient Reader', genre: 'action', genreText: 'Action', timeAgo: '5h ago', chapter: 'Ch.185', badgeClass: 'hot-badge', cover: 'https://upload.wikimedia.org/wikipedia/en/6/69/Omniscient_Reader%27s_Viewpoint_Volume_1_Cover.jpg' },
-  { id: 4, title: 'Lore Olympus', genre: 'romance', genreText: 'Romance', timeAgo: '6h ago', chapter: 'Ch.240', badgeClass: 'new-badge', cover: 'https://upload.wikimedia.org/wikipedia/en/7/72/Lore_Olympus_Banner_Art.png' },
-  { id: 5, title: 'Demon Slayer', genre: 'action', genreText: 'Action', timeAgo: '8h ago', chapter: 'Ch.205', badgeClass: '', cover: 'https://upload.wikimedia.org/wikipedia/en/0/09/Demon_Slayer_-_Kimetsu_no_Yaiba%2C_volume_1.jpg' },
-  { id: 6, title: 'Jujutsu Kaisen', genre: 'action', genreText: 'Action', timeAgo: '10h ago', chapter: 'Ch.254', badgeClass: 'hot-badge', cover: 'https://upload.wikimedia.org/wikipedia/en/4/46/Jujutsu_kaisen.jpg' },
-  { id: 7, title: 'Spy × Family', genre: 'comedy', genreText: 'Comedy', timeAgo: '12h ago', chapter: 'Ch.96', badgeClass: '', cover: 'https://upload.wikimedia.org/wikipedia/en/5/51/Spy_Family_vol_1.jpg' },
-  { id: 8, title: 'Chainsaw Man', genre: 'action', genreText: 'Action', timeAgo: '1d ago', chapter: 'Ch.160', badgeClass: 'new-badge', cover: 'https://upload.wikimedia.org/wikipedia/en/2/24/Chainsawman.jpg' },
-  { id: 9, title: 'Attack on Titan', genre: 'action', genreText: 'Action', timeAgo: '2d ago', chapter: 'Ch.139', badgeClass: '', cover: 'https://upload.wikimedia.org/wikipedia/en/d/d6/Shingeki_no_Kyojin_manga_volume_1.jpg' },
-  { id: 10, title: 'The Beginning After The End', genre: 'fantasy', genreText: 'Fantasy', timeAgo: '4h ago', chapter: 'Ch.175', badgeClass: 'hot-badge', cover: 'https://upload.wikimedia.org/wikipedia/en/8/87/The_Beginning_After_The_End_vol_1.jpg' },
-  { id: 11, title: 'My Hero Academia', genre: 'action', genreText: 'Action', timeAgo: '7h ago', chapter: 'Ch.410', badgeClass: '', cover: 'https://upload.wikimedia.org/wikipedia/en/5/5a/Boku_no_Hero_Academia_Volume_1.png' },
-  { id: 12, title: 'One Punch Man', genre: 'comedy', genreText: 'Comedy', timeAgo: '9h ago', chapter: 'Ch.198', badgeClass: 'hot-badge', cover: 'https://upload.wikimedia.org/wikipedia/en/c/c3/OnePunchMan_manga_cover.png' }
+  { id: 1, title: 'Solo Leveling', genre: 'action', genreText: 'Action · Fantasy', author: 'Chugong & DUBU', rating: '4.9', views: '15.8M', likes: '920K', status: 'COMPLETED', timeAgo: '2h ago', chapter: 'Ch.200', badgeClass: 'hot-badge', cover: 'https://upload.wikimedia.org/wikipedia/en/6/6c/Solo_Leveling_Volume_1_Cover.jpg' },
+  { id: 2, title: 'Tower of God', genre: 'fantasy', genreText: 'Fantasy · Mystery', author: 'SIU', rating: '4.8', views: '12.4M', likes: '780K', status: 'ONGOING', timeAgo: '3h ago', chapter: 'Ch.590', badgeClass: '', cover: 'https://upload.wikimedia.org/wikipedia/en/7/7d/Tower_of_God_Volume_1_Cover.jpg' },
+  { id: 3, title: "Omniscient Reader's Viewpoint", genre: 'action', genreText: 'Action · Fantasy', author: 'singNsong', rating: '4.9', views: '11.2M', likes: '850K', status: 'ONGOING', timeAgo: '5h ago', chapter: 'Ch.185', badgeClass: 'hot-badge', cover: 'https://upload.wikimedia.org/wikipedia/en/6/69/Omniscient_Reader%27s_Viewpoint_Volume_1_Cover.jpg' },
+  { id: 4, title: 'Lore Olympus', genre: 'romance', genreText: 'Romance · Mythology', author: 'Rachel Smythe', rating: '4.7', views: '9.8M', likes: '640K', status: 'COMPLETED', timeAgo: '6h ago', chapter: 'Ch.280', badgeClass: 'new-badge', cover: 'https://upload.wikimedia.org/wikipedia/en/7/72/Lore_Olympus_Banner_Art.png' },
+  { id: 5, title: 'Demon Slayer: Kimetsu no Yaiba', genre: 'action', genreText: 'Action · Supernatural', author: 'Koyoharu Gotouge', rating: '4.9', views: '18.5M', likes: '1.2M', status: 'COMPLETED', timeAgo: '8h ago', chapter: 'Ch.205', badgeClass: '', cover: 'https://upload.wikimedia.org/wikipedia/en/0/09/Demon_Slayer_-_Kimetsu_no_Yaiba%2C_volume_1.jpg' },
+  { id: 6, title: 'Jujutsu Kaisen', genre: 'action', genreText: 'Action · Fantasy', author: 'Gege Akutami', rating: '4.8', views: '16.2M', likes: '990K', status: 'ONGOING', timeAgo: '10h ago', chapter: 'Ch.265', badgeClass: 'hot-badge', cover: 'https://upload.wikimedia.org/wikipedia/en/4/46/Jujutsu_kaisen.jpg' },
+  { id: 7, title: 'Spy × Family', genre: 'comedy', genreText: 'Comedy · Action', author: 'Tatsuya Endo', rating: '4.9', views: '14.1M', likes: '880K', status: 'ONGOING', timeAgo: '12h ago', chapter: 'Ch.102', badgeClass: '', cover: 'https://upload.wikimedia.org/wikipedia/en/5/51/Spy_Family_vol_1.jpg' },
+  { id: 8, title: 'Chainsaw Man', genre: 'action', genreText: 'Action · Horror', author: 'Tatsuki Fujimoto', rating: '4.8', views: '13.7M', likes: '910K', status: 'ONGOING', timeAgo: '1d ago', chapter: 'Ch.172', badgeClass: 'new-badge', cover: 'https://upload.wikimedia.org/wikipedia/en/2/24/Chainsawman.jpg' },
+  { id: 9, title: 'Attack on Titan', genre: 'action', genreText: 'Action · Drama', author: 'Hajime Isayama', rating: '4.9', views: '22.0M', likes: '1.5M', status: 'COMPLETED', timeAgo: '2d ago', chapter: 'Ch.139', badgeClass: '', cover: 'https://upload.wikimedia.org/wikipedia/en/d/d6/Shingeki_no_Kyojin_manga_volume_1.jpg' },
+  { id: 10, title: 'The Beginning After The End', genre: 'fantasy', genreText: 'Fantasy · Isekai', author: 'TurtleMe', rating: '4.9', views: '10.5M', likes: '790K', status: 'ONGOING', timeAgo: '4h ago', chapter: 'Ch.180', badgeClass: 'hot-badge', cover: 'https://upload.wikimedia.org/wikipedia/en/8/87/The_Beginning_After_The_End_vol_1.jpg' },
+  { id: 11, title: 'unOrdinary', genre: 'supernatural', genreText: 'Supernatural · Drama', author: 'uru-chan', rating: '4.7', views: '8.4M', likes: '520K', status: 'ONGOING', timeAgo: '5h ago', chapter: 'Ch.340', badgeClass: '', cover: 'https://images.unsplash.com/photo-1563089145-599997674d42?w=600&auto=format&fit=crop&q=80' },
+  { id: 12, title: 'True Beauty', genre: 'romance', genreText: 'Romance · Drama', author: 'Yaongyi', rating: '4.6', views: '11.8M', likes: '710K', status: 'COMPLETED', timeAgo: '7h ago', chapter: 'Ch.223', badgeClass: 'new-badge', cover: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600&auto=format&fit=crop&q=80' },
+  { id: 13, title: 'Midnight Poppyland', genre: 'romance', genreText: 'Romance · Action', author: 'Lilydusk', rating: '4.8', views: '6.2M', likes: '430K', status: 'ONGOING', timeAgo: '9h ago', chapter: 'Ch.120', badgeClass: '', cover: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=600&auto=format&fit=crop&q=80' },
+  { id: 14, title: 'Lookism', genre: 'drama', genreText: 'Drama · Martial Arts', author: 'Taejun Pak', rating: '4.8', views: '15.3M', likes: '950K', status: 'ONGOING', timeAgo: '11h ago', chapter: 'Ch.510', badgeClass: 'hot-badge', cover: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&auto=format&fit=crop&q=80' },
+  { id: 15, title: 'My Inmost Secret', genre: 'thriller', genreText: 'Thriller · Mystery', author: 'Hanamaki', rating: '4.7', views: '4.9M', likes: '310K', status: 'COMPLETED', timeAgo: '1d ago', chapter: 'Ch.108', badgeClass: '', cover: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=600&auto=format&fit=crop&q=80' },
+  { id: 16, title: 'Sweet Home', genre: 'horror', genreText: 'Horror · Thriller', author: 'Carnby Kim', rating: '4.9', views: '9.2M', likes: '680K', status: 'COMPLETED', timeAgo: '1d ago', chapter: 'Ch.140', badgeClass: 'hot-badge', cover: 'https://images.unsplash.com/photo-1509248961158-e54f6934749c?w=600&auto=format&fit=crop&q=80' },
+  { id: 17, title: 'Eleceed', genre: 'comedy', genreText: 'Comedy · Action', author: 'Zhena & Son Jeho', rating: '4.9', views: '8.7M', likes: '620K', status: 'ONGOING', timeAgo: '3h ago', chapter: 'Ch.305', badgeClass: 'hot-badge', cover: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=600&auto=format&fit=crop&q=80' },
+  { id: 18, title: 'The Remarried Empress', genre: 'fantasy', genreText: 'Fantasy · Romance', author: 'Alphatart', rating: '4.8', views: '7.6M', likes: '540K', status: 'ONGOING', timeAgo: '6h ago', chapter: 'Ch.175', badgeClass: '', cover: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?w=600&auto=format&fit=crop&q=80' },
+  { id: 19, title: 'Doom Breaker', genre: 'action', genreText: 'Action · Fantasy', author: 'Blue-King', rating: '4.8', views: '5.8M', likes: '410K', status: 'ONGOING', timeAgo: '8h ago', chapter: 'Ch.110', badgeClass: 'new-badge', cover: 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=600&auto=format&fit=crop&q=80' },
+  { id: 20, title: 'Bastard', genre: 'thriller', genreText: 'Thriller · Psychological', author: 'Carnby Kim', rating: '4.9', views: '8.1M', likes: '590K', status: 'COMPLETED', timeAgo: '2d ago', chapter: 'Ch.93', badgeClass: '', cover: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=600&auto=format&fit=crop&q=80' },
+  { id: 21, title: 'Wind Breaker', genre: 'sports', genreText: 'Sports · Drama', author: 'Jo Yongseok', rating: '4.9', views: '12.8M', likes: '840K', status: 'ONGOING', timeAgo: '5h ago', chapter: 'Ch.490', badgeClass: 'hot-badge', cover: 'https://images.unsplash.com/photo-1485965120184-e220f721d03e?w=600&auto=format&fit=crop&q=80' },
+  { id: 22, title: 'Nano Machine', genre: 'cultivation', genreText: 'Martial Arts · Sci-Fi', author: 'Han-Jo', rating: '4.8', views: '9.3M', likes: '670K', status: 'ONGOING', timeAgo: '4h ago', chapter: 'Ch.215', badgeClass: 'hot-badge', cover: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&auto=format&fit=crop&q=80' },
+  { id: 23, title: 'Survival Story of a Sword King', genre: 'isekai', genreText: 'Isekai · Action', author: 'Yrap', rating: '4.7', views: '6.4M', likes: '420K', status: 'ONGOING', timeAgo: '10h ago', chapter: 'Ch.205', badgeClass: '', cover: 'https://images.unsplash.com/photo-1563089145-599997674d42?w=600&auto=format&fit=crop&q=80' },
+  { id: 24, title: "Let's Play", genre: 'romance', genreText: 'Romance · Slice of Life', author: 'Mongie', rating: '4.6', views: '5.2M', likes: '370K', status: 'ONGOING', timeAgo: '1d ago', chapter: 'Ch.170', badgeClass: '', cover: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=600&auto=format&fit=crop&q=80' },
+  { id: 25, title: 'SubZero', genre: 'fantasy', genreText: 'Fantasy · Romance', author: 'Junepurrr', rating: '4.7', views: '5.9M', likes: '410K', status: 'ONGOING', timeAgo: '12h ago', chapter: 'Ch.165', badgeClass: 'new-badge', cover: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=600&auto=format&fit=crop&q=80' },
+  { id: 26, title: 'The Boxer', genre: 'sports', genreText: 'Sports · Action', author: 'JH', rating: '4.9', views: '7.8M', likes: '610K', status: 'COMPLETED', timeAgo: '3d ago', chapter: 'Ch.124', badgeClass: 'hot-badge', cover: 'https://images.unsplash.com/photo-1517649763962-0c623266010b?w=600&auto=format&fit=crop&q=80' },
+  { id: 27, title: 'The God of High School', genre: 'action', genreText: 'Action · Martial Arts', author: 'Yongje Park', rating: '4.7', views: '14.5M', likes: '890K', status: 'COMPLETED', timeAgo: '2d ago', chapter: 'Ch.570', badgeClass: '', cover: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=600&auto=format&fit=crop&q=80' },
+  { id: 28, title: 'Return of the Mount Hua Sect', genre: 'cultivation', genreText: 'Martial Arts · Historical', author: 'Biga & LICO', rating: '4.9', views: '11.4M', likes: '830K', status: 'ONGOING', timeAgo: '2h ago', chapter: 'Ch.130', badgeClass: 'hot-badge', cover: 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?w=600&auto=format&fit=crop&q=80' },
+  { id: 29, title: "Skeleton Soldier Couldn't Protect the Dungeon", genre: 'isekai', genreText: 'Isekai · Supernatural', author: 'Kangyoo', rating: '4.7', views: '6.1M', likes: '400K', status: 'ONGOING', timeAgo: '7h ago', chapter: 'Ch.280', badgeClass: '', cover: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=600&auto=format&fit=crop&q=80' },
+  { id: 30, title: 'Leveling Up With the Gods', genre: 'fantasy', genreText: 'Fantasy · Action', author: 'Saeyoung', rating: '4.8', views: '7.3M', likes: '510K', status: 'ONGOING', timeAgo: '5h ago', chapter: 'Ch.115', badgeClass: 'new-badge', cover: 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=600&auto=format&fit=crop&q=80' },
+  { id: 31, title: 'Mercenary Enrollment', genre: 'action', genreText: 'Action · School', author: 'YC & Rakhyun', rating: '4.9', views: '10.8M', likes: '770K', status: 'ONGOING', timeAgo: '3h ago', chapter: 'Ch.195', badgeClass: 'hot-badge', cover: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&auto=format&fit=crop&q=80' },
+  { id: 32, title: 'Overgeared', genre: 'comedy', genreText: 'Virtual Reality · Comedy', author: 'Park Saenal', rating: '4.8', views: '8.9M', likes: '630K', status: 'ONGOING', timeAgo: '6h ago', chapter: 'Ch.230', badgeClass: '', cover: 'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=600&auto=format&fit=crop&q=80' },
+  { id: 33, title: 'Second Life Ranker', genre: 'action', genreText: 'Action · Fantasy', author: 'Nong Nong', rating: '4.8', views: '7.1M', likes: '490K', status: 'ONGOING', timeAgo: '8h ago', chapter: 'Ch.170', badgeClass: '', cover: 'https://images.unsplash.com/photo-1563089145-599997674d42?w=600&auto=format&fit=crop&q=80' },
+  { id: 34, title: 'Reincarnation of the Suicidal Battle God', genre: 'action', genreText: 'Action · Reincarnation', author: 'Cheong-Nok', rating: '4.9', views: '6.7M', likes: '470K', status: 'ONGOING', timeAgo: '4h ago', chapter: 'Ch.105', badgeClass: 'new-badge', cover: 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=600&auto=format&fit=crop&q=80' },
+  { id: 35, title: 'The Greatest Estate Developer', genre: 'comedy', genreText: 'Isekai · Comedy', author: 'BK_Moon', rating: '4.9', views: '12.1M', likes: '940K', status: 'ONGOING', timeAgo: '2h ago', chapter: 'Ch.150', badgeClass: 'hot-badge', cover: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=600&auto=format&fit=crop&q=80' }
 ];
 
 // Hàm tạo thông tin chi tiết bộ truyện khớp chính xác với số chapter
 function getComicDetail(id) {
-  const base = latestComics.find(c => c.id == id) || trendingComics.find(c => c.id == id) || latestComics[0];
+  const base = latestComics.find(c => String(c.id) === String(id)) || trendingComics.find(c => String(c.id) === String(id)) || latestComics[0];
   
-  // Trích xuất số chapter mới nhất từ chuỗi (vd "Ch.200" -> 200)
   const latestChapterNum = parseInt((base.chapter || '200').replace(/\D/g, ''), 10) || 200;
-  
-  // Tạo danh sách chapter từ mới nhất xuống 1 (mẫu hiển thị tối đa 30 chapter mới nhất hoặc full)
   const chaptersCount = Math.min(latestChapterNum, 30);
   const chapters = [];
   
@@ -58,14 +79,14 @@ function getComicDetail(id) {
   return {
     id: base.id,
     title: base.title,
-    author: 'Chugong & DUBU (REDICE STUDIO)',
-    status: 'ONGOING',
-    rating: '4.9',
-    views: '15.8M',
-    likes: '920K',
-    tags: [base.genreText || 'Action', 'Fantasy', 'Supernatural', 'Webtoon'],
+    author: base.author || 'Chugong & DUBU (REDICE STUDIO)',
+    status: base.status || 'ONGOING',
+    rating: base.rating || '4.9',
+    views: base.views || '15.8M',
+    likes: base.likes || '920K',
+    tags: [base.genreText ? base.genreText.split(' · ')[0] : 'Action', 'Fantasy', 'Supernatural', 'Webtoon'],
     cover: base.cover,
-    description: `Series cực hot ${base.title}. Trong một thế giới nơi những thợ săn, những con người sở hữu khả năng kỳ diệu phải chiến đấu với những quái vật đáng sợ để bảo vệ nhân loại, một thợ săn yếu đuối tìm thấy chính mình trong một cuộc chiến sinh tồn không tưởng...`,
+    description: `Series cực hot "${base.title}". Trong một thế giới thần thoại đầy kỳ bí, các anh hùng cùng hội tụ để vượt qua thử thách nghiệt ngã và bảo vệ hòa bình nhân loại...`,
     totalChapters: latestChapterNum,
     latestChapterNum: latestChapterNum,
     chapters: chapters
