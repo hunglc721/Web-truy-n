@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
   <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -163,7 +163,11 @@
   function setStatus(id,status){AdminStore.reports.update(id,{status:status});loadData();toast('Đã cập nhật trạng thái!','success');}
   function saveNote(id,note){AdminStore.reports.update(id,{note:note});}
 
-  document.addEventListener('DOMContentLoaded',loadData);
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', loadData);
+  } else {
+    loadData();
+  }
 </script>
 </body>
 </html>

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
   <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -154,7 +154,11 @@
     toast('Đã lưu cài đặt website!','success');
   }
 
-  document.addEventListener('DOMContentLoaded',loadSettings);
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', loadSettings);
+  } else {
+    loadSettings();
+  }
 </script>
 </body>
 </html>

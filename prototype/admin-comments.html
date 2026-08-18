@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
   <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -207,7 +207,11 @@
   function bulkApprove(){if(!selected.size)return;AdminStore.comments.bulkApprove(Array.from(selected));selected.clear();loadData();toast('Đã duyệt '+selected.size+' bình luận!','success');}
   function bulkDelete(){if(!selected.size)return;if(!confirm('Xóa '+selected.size+' bình luận đã chọn?'))return;AdminStore.comments.bulkDelete(Array.from(selected));selected.clear();loadData();toast('Đã xóa!','success');}
 
-  document.addEventListener('DOMContentLoaded',loadData);
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', loadData);
+  } else {
+    loadData();
+  }
 </script>
 </body>
 </html>

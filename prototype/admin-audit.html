@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
   <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -184,7 +184,11 @@
     toast('Đã xóa nhật ký!','success');
   }
 
-  document.addEventListener('DOMContentLoaded',loadData);
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', loadData);
+  } else {
+    loadData();
+  }
 </script>
 </body>
 </html>

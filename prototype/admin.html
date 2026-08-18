@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
@@ -519,7 +519,7 @@
   }
 
   // Stats từ AdminStore
-  document.addEventListener('DOMContentLoaded', () => {
+  function initAdminStats() {
     const genres  = JSON.parse(localStorage.getItem('admin_genres')  || '[]');
     const tags    = JSON.parse(localStorage.getItem('admin_tags')    || '[]');
     const authors = JSON.parse(localStorage.getItem('admin_authors') || '[]');
@@ -533,7 +533,12 @@
     if (el) el.textContent = comics.length;
     const elCh = document.getElementById('st-chapters');
     if (elCh) { const totalCh = AdminStore.chapters.getAll().length; elCh.textContent = totalCh; }
-  });
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initAdminStats);
+  } else {
+    initAdminStats();
+  }
 </script>
 </body>
 </html>

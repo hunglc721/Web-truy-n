@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
   <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -407,7 +407,7 @@
   });
 
   // Init
-  document.addEventListener('DOMContentLoaded',function(){
+  function initChapters(){
     populateComicSelect();
     // Check URL param
     var params = new URLSearchParams(window.location.search);
@@ -417,7 +417,12 @@
       sel.value = comicParam;
       if (sel.value) selectComic(comicParam);
     }
-  });
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initChapters);
+  } else {
+    initChapters();
+  }
 </script>
 </body>
 </html>

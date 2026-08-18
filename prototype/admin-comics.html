@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
   <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -288,11 +288,6 @@
   const PAGE_SIZE = 15;
   let allComics = [], filteredComics = [], currentPage = 1, deleteTargetId = null;
 
-  function buildAdminSidebar(active) {
-    // Use the function from admin-store.js
-    return window.buildAdminSidebar ? window.buildAdminSidebar(active) : '<aside class="sidebar"><a href="admin.html" class="brand"><div class="brand-icon">WC</div><div><div class="brand-text">WebComics</div><div class="brand-sub">Admin Panel</div></div></a></aside>';
-  }
-
   function loadData() {
     allComics = AdminStore.comics.getAll();
     updateStats();
@@ -483,9 +478,11 @@
     toast(editId?'Đã cập nhật bộ truyện!':'Đã thêm bộ truyện mới!','success');
   });
 
-  document.addEventListener('DOMContentLoaded',function(){
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', loadData);
+  } else {
     loadData();
-  });
+  }
 </script>
 </body>
 </html>

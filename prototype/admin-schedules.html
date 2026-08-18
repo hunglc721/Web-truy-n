@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
   <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -154,7 +154,11 @@
 
   function delSched(id){AdminStore.schedules.delete(id);render();toast('Đã xóa lịch!','info',2000);}
 
-  document.addEventListener('DOMContentLoaded',render);
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', render);
+  } else {
+    render();
+  }
 </script>
 </body>
 </html>

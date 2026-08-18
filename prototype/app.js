@@ -215,14 +215,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (user && user.isLoggedIn) {
       if (user.role === 'admin') {
         loginBtn.outerHTML = `
-          <div style="display:flex; align-items:center; gap:8px;">
-            <a href="admin.html" class="btn btn-login" style="background:linear-gradient(135deg,#6c63ff,#ff2a6d); color:#fff; text-decoration:none; border:none; padding:7px 14px; font-size:12px; font-weight:700; border-radius:8px; box-shadow:0 4px 12px rgba(108,99,255,.3);">🛡️ Admin Dashboard</a>
-            <div class="user-profile-badge" style="display:flex; align-items:center; gap:8px; background:rgba(255,255,255,.06); padding:5px 12px; border-radius:20px; border:1px solid rgba(255,255,255,.1);">
-              <div class="user-avatar-circle" style="width:26px; height:26px; border-radius:50%; background:linear-gradient(135deg,#6c63ff,#ff2a6d); color:#fff; font-weight:800; font-size:11px; display:flex; align-items:center; justify-content:center;">AD</div>
-              <span style="font-size:12.5px; font-weight:700; color:#e4e6f0;">${escapeHtml(user.name)}</span>
-              <button id="logout-btn" style="background:none; border:none; color:#ef4444; cursor:pointer; font-size:14px; font-weight:700; padding:2px 6px; margin-left:4px;" title="Đăng Xuất">✕</button>
-            </div>
-          </div>
+          <a href="admin.html" class="btn-admin-dashboard" id="admin-dashboard-btn" title="Chuyển tới trang Quản lý Admin">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+            </svg>
+            Admin Dashboard
+          </a>
         `;
       } else {
         loginBtn.outerHTML = `
@@ -232,14 +230,13 @@ document.addEventListener('DOMContentLoaded', () => {
             <button id="logout-btn" style="background:none; border:none; color:#ef4444; cursor:pointer; font-size:14px; font-weight:700; padding:2px 6px; margin-left:4px;" title="Đăng Xuất">✕</button>
           </div>
         `;
-      }
-
-      const logoutBtn = document.getElementById('logout-btn');
-      if (logoutBtn) {
-        logoutBtn.addEventListener('click', () => {
-          localStorage.removeItem('webcomics_user');
-          window.location.reload();
-        });
+        const logoutBtn = document.getElementById('logout-btn');
+        if (logoutBtn) {
+          logoutBtn.addEventListener('click', () => {
+            localStorage.removeItem('webcomics_user');
+            window.location.reload();
+          });
+        }
       }
     }
   }
@@ -765,8 +762,11 @@ document.addEventListener('DOMContentLoaded', () => {
           <span class="sm-rating">★ ${item.rating || '4.9'}</span>
         </div>
         <div class="sm-info">
-          <h3 class="sm-title">${escapeHtml(item.title)}</h3>
-          <p class="sm-meta"><span style="color:var(--primary); font-weight:600;">${escapeHtml((item.genreText || item.genre || '').split(' · ')[0])}</span> <span>${escapeHtml(item.timeAgo || 'Hot')}</span></p>
+          <h3 class="sm-title" title="${escapeHtml(item.title)}">${escapeHtml(item.title)}</h3>
+          <div class="sm-meta">
+            <span class="sm-genre">${escapeHtml((item.genreText || item.genre || '').split(' · ')[0])}</span>
+            <span class="sm-time">${escapeHtml(item.timeAgo || 'Hot')}</span>
+          </div>
         </div>
       </a>
     `).join('');
