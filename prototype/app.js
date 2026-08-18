@@ -660,25 +660,44 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="browse-card" onclick="window.location.href='detail.html?id=${item.id}'" style="cursor:pointer;">
           <div class="browse-cover">
             <img src="${item.cover}" alt="${escapeHtml(item.title)}" class="cover-img" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1578632767115-351597cf2477?w=600&q=80'" />
-            <span class="badge-tag hot">NEW ${item.chapter}</span>
+            <span class="badge-tag hot">MỚI ${item.chapter}</span>
             <span class="rating-tag">★ ${item.rating || '4.9'}</span>
           </div>
           <div class="browse-info">
             <h3 class="browse-title"><a href="detail.html?id=${item.id}" style="color:inherit; text-decoration:none;">${escapeHtml(item.title)}</a></h3>
-            <p class="browse-author">${escapeHtml(item.author)}</p>
-            <p class="browse-meta"><span>${escapeHtml(item.genre)}</span> &middot; <span>${item.chapter} Released</span></p>
+            <p class="browse-author">Tác giả: ${escapeHtml(item.author)}</p>
+            <p class="browse-meta"><span>${escapeHtml(item.genre)}</span> &middot; <span>${item.chapter}</span></p>
             <p class="browse-desc">${escapeHtml(item.desc)}</p>
           </div>
         </div>
       `).join('');
 
       // Update Pagination UI
-      if (paginationWrap && paginationInfo && paginationControls) {
+      let pWrap = document.getElementById('schedule-pagination');
+      if (!pWrap && browseGrid && browseGrid.parentElement) {
+        pWrap = document.createElement('div');
+        pWrap.className = 'pagination-wrap';
+        pWrap.id = 'schedule-pagination';
+        pWrap.innerHTML = `
+          <div class="pagination-info" id="pagination-info"></div>
+          <div class="pagination-controls" id="pagination-controls"></div>
+        `;
+        browseGrid.parentElement.appendChild(pWrap);
+      }
+
+      const pInfo = document.getElementById('pagination-info');
+      const pControls = document.getElementById('pagination-controls');
+
+      if (pWrap && pInfo && pControls) {
         if (totalItems <= scheduleItemsPerPage) {
-          paginationWrap.style.display = 'none';
+          pWrap.style.display = 'none';
         } else {
-          paginationWrap.style.display = 'flex';
-          paginationInfo.textContent = `Hiển thị ${startIndex + 1} - ${endIndex} trong tổng số ${totalItems} truyện (${currentScheduleDay.toUpperCase()})`;
+          pWrap.style.display = 'flex';
+          const dayNamesVi = {
+            'monday': 'THỨ 2', 'tuesday': 'THỨ 3', 'wednesday': 'THỨ 4',
+            'thursday': 'THỨ 5', 'friday': 'THỨ 6', 'saturday': 'THỨ 7', 'sunday': 'CHỦ NHẬT'
+          };
+          pInfo.textContent = `Hiển thị ${startIndex + 1} - ${endIndex} trong tổng số ${totalItems} bộ truyện (${dayNamesVi[currentScheduleDay] || currentScheduleDay.toUpperCase()})`;
 
           let controlsHtml = '';
 
@@ -705,10 +724,10 @@ document.addEventListener('DOMContentLoaded', () => {
             </button>
           `;
 
-          paginationControls.innerHTML = controlsHtml;
+          pControls.innerHTML = controlsHtml;
 
           // Attach page button events
-          paginationControls.querySelectorAll('.page-btn:not(:disabled)').forEach(btn => {
+          pControls.querySelectorAll('.page-btn:not(:disabled)').forEach(btn => {
             btn.addEventListener('click', () => {
               const targetPage = parseInt(btn.getAttribute('data-page'), 10);
               if (targetPage && targetPage !== currentSchedulePage) {
@@ -730,7 +749,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const countSpan = item.querySelector('.day-count');
       const count = (SCHEDULE_DATA[dayKey] || []).length;
       if (countSpan && count > 0) {
-        countSpan.textContent = `${count} Series${dayKey === 'thursday' ? ' 🔥' : ''}`;
+        countSpan.textContent = `${count} Bộ Truyện${dayKey === 'thursday' ? ' 🔥' : ''}`;
       }
 
       item.addEventListener('click', (e) => {
@@ -738,14 +757,16 @@ document.addEventListener('DOMContentLoaded', () => {
         dayItems.forEach(i => i.classList.remove('active'));
         item.classList.add('active');
 
-        const dayName = item.querySelector('.day-name')?.textContent || 'THU';
+        const dayName = item.querySelector('.day-name')?.textContent || 'THỨ 5';
         const currentTitleElem = document.querySelector('.sched-current-title h2');
         if (currentTitleElem) {
           const fullDays = {
-            'MON': 'Monday', 'TUE': 'Tuesday', 'WED': 'Wednesday',
-            'THU': 'Thursday', 'FRI': 'Friday', 'SAT': 'Saturday', 'SUN': 'Sunday'
+            'THỨ 2': 'Thứ Hai', 'THỨ 3': 'Thứ Ba', 'THỨ 4': 'Thứ Tư',
+            'THỨ 5': 'Thứ Năm', 'THỨ 6': 'Thứ Sáu', 'THỨ 7': 'Thứ Bảy', 'CHỦ NHẬT': 'Chủ Nhật',
+            'MON': 'Thứ Hai', 'TUE': 'Thứ Ba', 'WED': 'Thứ Tư',
+            'THU': 'Thứ Năm', 'FRI': 'Thứ Sáu', 'SAT': 'Thứ Bảy', 'SUN': 'Chủ Nhật'
           };
-          currentTitleElem.textContent = `${fullDays[dayName] || dayName} Releases`;
+          currentTitleElem.textContent = `Lịch Ra Truyện ${fullDays[dayName] || dayName}`;
         }
 
         renderSchedulePage(dayKey, 1);
@@ -773,7 +794,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         origFullCards.forEach((card, idx) => {
           const cardContent = card.textContent.toLowerCase();
-          if (selectedCategory.includes("editor") || selectedCategory.includes("pick") || cardContent.includes(selectedCategory)) {
+          if (selectedCategory.includes("biên tập") || selectedCategory.includes("chọn") || selectedCategory.includes("editor") || cardContent.includes(selectedCategory)) {
             card.style.display = 'flex';
           } else {
             // Cho hiển thị ngẫu nhiên 60% card để mô phỏng kết quả lọc
@@ -828,7 +849,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         cards.forEach((card, idx) => {
           const cardContent = card.textContent.toLowerCase();
-          if (selectedVal.includes('all') || selectedVal.includes('hottest') || cardContent.includes(selectedVal)) {
+          if (selectedVal.includes('tất cả') || selectedVal.includes('hot') || selectedVal.includes('all') || cardContent.includes(selectedVal)) {
             card.style.display = 'flex';
           } else {
             card.style.display = (idx % 2 === 0) ? 'flex' : 'none';
@@ -848,18 +869,18 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
 
-  // --- 6. HOME PAGE & DETAIL PAGE ---
+  // --- 6. HOME PAGE DATA LOADING & RENDERING (INDEX.HTML) ---
   function renderTrendingComics(comics) {
-    const trendContainer = document.getElementById('trending-list');
-    if (!trendContainer) return;
+    const listContainer = document.getElementById('trending-list');
+    if (!listContainer) return;
 
-    trendContainer.innerHTML = comics.map(item => `
+    listContainer.innerHTML = comics.map(item => `
       <a href="detail.html?id=${item.id}" class="trending-card" aria-label="${escapeHtml(item.title)}">
         <div class="tcard-cover">
-          <img src="${item.cover}" alt="${escapeHtml(item.title)} Cover" class="cover-img" />
-          <div class="rank-num ${item.rankClass || ''}">${item.rank}</div>
+          <img src="${item.cover}" alt="${escapeHtml(item.title)}" class="cover-img" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1578632767115-351597cf2477?w=600&q=80'" />
+          <div class="rank-num ${item.rankClass}">${item.rank}</div>
         </div>
-        <p class="tcard-title">${escapeHtml(item.title)}</p>
+        <p class="tcard-title" title="${escapeHtml(item.title)}">${escapeHtml(item.title)}</p>
         <p class="tcard-genre">${escapeHtml(item.genre)}</p>
       </a>
     `).join('');
@@ -882,7 +903,7 @@ document.addEventListener('DOMContentLoaded', () => {
       gridFadeOverlay.style.display = 'flex';
       gridWrap.classList.add('is-collapsed');
       if (expandText) {
-        expandText.textContent = `Xem Thêm Lịch Ra Truyện (${totalComics - 30}+ bộ khác)`;
+        expandText.textContent = `Xem Thêm Lịch Phát Sóng (${totalComics - 30}+ bộ khác)`;
       }
     }
   }
@@ -901,8 +922,8 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="sm-info">
           <h3 class="sm-title" title="${escapeHtml(item.title)}">${escapeHtml(item.title)}</h3>
           <div class="sm-meta">
-            <span class="sm-genre">${escapeHtml((item.genreText || item.genre || '').split(' · ')[0])}</span>
-            <span class="sm-time">${escapeHtml(item.timeAgo || 'Hot')}</span>
+            <span class="sm-genre">${escapeHtml(item.genre)}</span>
+            <span class="sm-time">${escapeHtml(item.timeAgo || 'Vừa cập nhật')}</span>
           </div>
         </div>
       </a>
@@ -962,20 +983,20 @@ document.addEventListener('DOMContentLoaded', () => {
           id: comicId,
           title: 'Solo Leveling',
           author: 'Chugong & DUBU (REDICE STUDIO)',
-          status: 'ONGOING',
+          status: 'ĐANG TIẾN HÀNH',
           rating: '4.9',
           views: '15.8M',
           likes: '920K',
-          tags: ['Action', 'Fantasy', 'Supernatural'],
+          tags: ['Hành Động', 'Giả Tưởng', 'Siêu Nhiên'],
           cover: 'https://upload.wikimedia.org/wikipedia/en/6/6c/Solo_Leveling_Volume_1_Cover.jpg',
-          description: 'In a world where hunters, humans who possess magical abilities, must battle deadly monsters to protect the human race from certain annihilation, a notoriously weak hunter named Sung Jinwoo finds himself in a seamless struggle for survival...',
+          description: 'Trong một thế giới nơi thợ săn chiến đấu với quái vật chết người, Sung Jin-Woo từ kẻ yếu nhất đã thức tỉnh hệ thống người chơi bí ẩn để thăng cấp không giới hạn...',
           totalChapters: 200,
           chapters: Array.from({ length: 20 }, (_, i) => ({
             id: 200 - i,
-            number: `Chapter ${200 - i}`,
-            title: `The Awakening - Part ${200 - i}`,
+            number: `Chương ${200 - i}`,
+            title: `Hồi Thức Tỉnh - Phần ${200 - i}`,
             date: `2024-07-20`,
-            views: `${(200 - i) * 15.2}K`
+            views: `${((200 - i) * 15.2).toFixed(1)}K`
           }))
         };
         populateComicDetail(mockDetail);
@@ -985,10 +1006,10 @@ document.addEventListener('DOMContentLoaded', () => {
     function populateComicDetail(data) {
       document.title = `${data.title} - WebComics`;
       document.getElementById('detail-title').textContent = data.title;
-      document.getElementById('detail-author').innerHTML = `By <span class="author-name">${escapeHtml(data.author)}</span>`;
+      document.getElementById('detail-author').innerHTML = `Tác giả: <span class="author-name">${escapeHtml(data.author)}</span>`;
       document.getElementById('detail-cover-img').src = data.cover;
       document.getElementById('detail-backdrop-bg').style.backgroundImage = `url('${data.cover}')`;
-      document.getElementById('detail-status').textContent = data.status || 'ONGOING';
+      document.getElementById('detail-status').textContent = data.status || 'ĐANG TIẾN HÀNH';
       document.getElementById('detail-rating').textContent = `⭐ ${data.rating}`;
       document.getElementById('detail-views').textContent = data.views;
       document.getElementById('detail-likes').textContent = data.likes;
@@ -998,7 +1019,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const btnReadLatest = document.getElementById('btn-read-latest');
       if (btnReadLatest && data.totalChapters) {
-        btnReadLatest.textContent = `Read Ch.${data.totalChapters}`;
+        btnReadLatest.textContent = `Đọc Chương ${data.totalChapters}`;
       }
 
       const tagsContainer = document.getElementById('detail-tags-list');
@@ -1022,7 +1043,7 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
           <div class="ep-right">
             <span class="ep-date">${escapeHtml(ep.date)}</span>
-            <span class="ep-read-badge">Read</span>
+            <span class="ep-read-badge">Đọc Ngay</span>
           </div>
         </a>
       `).join('');
