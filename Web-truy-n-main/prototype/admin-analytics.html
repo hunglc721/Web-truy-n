@@ -1,0 +1,210 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Thống kê — WebComics Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--sidebar-w:230px;--topbar-h:58px;--bg:#0d0f14;--sidebar-bg:#13161e;--card:#1a1d27;--border:rgba(255,255,255,0.07);--text:#e4e6f0;--muted:#7b7f9e;--primary:#6c63ff;--danger:#ef4444;--success:#22c55e;--warning:#f59e0b;--info:#3b82f6;--radius:10px}
+    body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh}
+    .sidebar{width:var(--sidebar-w);background:var(--sidebar-bg);border-right:1px solid var(--border);position:fixed;top:0;left:0;bottom:0;display:flex;flex-direction:column;z-index:100}
+    .brand{display:flex;align-items:center;gap:10px;padding:18px 16px;border-bottom:1px solid var(--border);text-decoration:none}
+    .brand-icon{width:34px;height:34px;background:linear-gradient(135deg,#6c63ff,#ff2a6d);border-radius:9px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:13px;color:#fff}
+    .brand-text{font-weight:800;font-size:14px;color:var(--text)}.brand-sub{font-size:10px;color:var(--muted)}
+    .nav{padding:10px 8px;flex:1;overflow-y:auto}
+    .nav-sec{font-size:9.5px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);padding:10px 8px 5px}
+    .nav-link{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:7px;color:var(--muted);text-decoration:none;font-size:13px;font-weight:500;margin-bottom:2px;transition:.15s}
+    .nav-link:hover{background:rgba(108,99,255,.12);color:var(--text)}.nav-link.active{background:rgba(108,99,255,.18);color:var(--primary);font-weight:600}.nav-link svg{width:15px;height:15px;flex-shrink:0}
+    .sidebar-footer{padding:10px 8px;border-top:1px solid var(--border)}
+    .user-pill{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:8px;background:rgba(255,255,255,.04)}
+    .user-av{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#6c63ff,#ff2a6d);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:#fff;flex-shrink:0}
+    .user-name{font-size:12.5px;font-weight:600}.user-role{font-size:10.5px;color:var(--primary)}
+    .topbar{position:fixed;top:0;left:var(--sidebar-w);right:0;height:var(--topbar-h);background:var(--sidebar-bg);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;z-index:90}
+    .breadcrumb{font-size:13px;color:var(--muted)}.breadcrumb span{color:var(--text);font-weight:600}
+    .topbar-right{display:flex;gap:10px;align-items:center}
+    .tbtn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:8px;font-size:12.5px;font-weight:600;cursor:pointer;text-decoration:none;border:none;transition:.15s}
+    .tbtn-ghost{background:rgba(255,255,255,.06);color:var(--text)}.tbtn-ghost:hover{background:rgba(255,255,255,.1)}
+    .main{margin-left:var(--sidebar-w);margin-top:var(--topbar-h);padding:24px 24px 60px;min-height:calc(100vh - var(--topbar-h));width:calc(100% - var(--sidebar-w))}
+    .ph{margin-bottom:20px}.ph h1{font-size:21px;font-weight:800}.ph p{font-size:13px;color:var(--muted);margin-top:4px}
+    .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
+    .kpi{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;transition:.2s}
+    .kpi:hover{border-color:rgba(108,99,255,.25);transform:translateY(-1px)}
+    .kpi-label{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:6px}
+    .kpi-val{font-size:28px;font-weight:800}
+    .kpi-sub{font-size:11.5px;color:var(--muted);margin-top:4px}
+    .c-p{color:var(--primary)}.c-s{color:var(--success)}.c-w{color:var(--warning)}.c-i{color:#60a5fa}.c-d{color:var(--danger)}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:20px}
+    .card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--border)}
+    .card-title{font-size:15px;font-weight:700}
+    .two-col{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+    table{width:100%;border-collapse:collapse}
+    th{background:rgba(255,255,255,.04);padding:10px 12px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);text-align:left;border-bottom:1px solid var(--border)}
+    td{padding:10px 12px;font-size:13px;border-bottom:1px solid var(--border);vertical-align:middle}
+    tr:last-child td{border-bottom:none}
+    tr:hover td{background:rgba(255,255,255,.02)}
+    .rank{width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#6c63ff,#ff2a6d);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0}
+    .badge{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:600}
+    .badge-ongoing{background:rgba(34,197,94,.14);color:var(--success)}
+    .bar-wrap{background:rgba(255,255,255,.06);border-radius:6px;height:8px;flex:1}
+    .bar-fill{height:8px;border-radius:6px;background:linear-gradient(90deg,#6c63ff,#ff2a6d)}
+    .comic-cover-sm{width:32px;height:44px;object-fit:cover;border-radius:4px;flex-shrink:0}
+    .cover-ph-sm{width:32px;height:44px;border-radius:4px;background:rgba(108,99,255,.1);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+    .audit-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+    @media(max-width:900px){.kpi-grid{grid-template-columns:1fr 1fr}.two-col{grid-template-columns:1fr}.main{padding:16px 12px 40px}}
+  </style>
+</head>
+<body>
+<div id="sidebar-container"></div>
+<header class="topbar">
+  <div class="breadcrumb">Admin / <span>Thống kê & Báo cáo</span></div>
+  <div class="topbar-right">
+    <button class="tbtn tbtn-ghost" style="color:#f87171" onclick="doLogout()">✕ Đăng xuất</button>
+  </div>
+</header>
+<main class="main">
+  <div class="ph"><h1>📊 Thống kê & Báo cáo</h1><p>Tổng quan hoạt động hệ thống dựa trên dữ liệu localStorage.</p></div>
+
+  <!-- KPIs -->
+  <div class="kpi-grid" id="kpi-grid"></div>
+
+  <div class="two-col">
+    <!-- Top Comics -->
+    <div class="card">
+      <div class="card-header"><span class="card-title">🏆 Top 10 Bộ Truyện theo Lượt xem</span></div>
+      <table>
+        <thead><tr><th>#</th><th>Bìa</th><th>Tên truyện</th><th>Trạng thái</th><th style="text-align:right">Lượt xem</th></tr></thead>
+        <tbody id="top-comics-body"></tbody>
+      </table>
+    </div>
+    <!-- Audit Summary -->
+    <div class="card">
+      <div class="card-header"><span class="card-title">📋 Nhật ký Gần nhất</span></div>
+      <table>
+        <thead><tr><th>Thời gian</th><th>Admin</th><th>Hành động</th><th>Module</th></tr></thead>
+        <tbody id="audit-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Chapter stats -->
+  <div class="card">
+    <div class="card-header"><span class="card-title">📖 Số Chapter theo Bộ Truyện</span></div>
+    <div id="chap-bars"></div>
+  </div>
+
+  <!-- Reports & Comments summary -->
+  <div class="two-col">
+    <div class="card">
+      <div class="card-header"><span class="card-title">⚠️ Tình trạng Báo cáo Lỗi</span></div>
+      <div id="rpt-summary"></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-title">💬 Tình trạng Bình luận</span></div>
+      <div id="cmt-summary"></div>
+    </div>
+  </div>
+</main>
+<script src="admin-store.js"></script>
+<script>
+  Auth.guard();
+  document.getElementById('sidebar-container').innerHTML = buildAdminSidebar('analytics');
+  Auth.syncSidebar();
+  function doLogout(){Auth.clearSession();window.location.href='admin-login.html';}
+
+  function fmt(n){return n>=1000000?(n/1000000).toFixed(1)+'M':n>=1000?(n/1000).toFixed(0)+'K':String(n);}
+
+  function loadAll(){
+    var comics=AdminStore.comics.getAll();
+    var chapters=AdminStore.chapters.getAll();
+    var comments=AdminStore.comments.getAll();
+    var reports=AdminStore.reports.getAll();
+    var audit=AdminStore.audit.getAll();
+    var banners=AdminStore.banners.getAll();
+
+    var totalViews=comics.reduce(function(s,c){return s+(c.views||0);},0);
+
+    // KPIs
+    document.getElementById('kpi-grid').innerHTML=[
+      ['📚','Bộ Truyện',comics.length,'Tổng số bộ','c-p'],
+      ['📖','Chapter',chapters.length,'Tổng số chapter','c-s'],
+      ['👁','Tổng Lượt xem',fmt(totalViews),'Cộng dồn tất cả truyện','c-w'],
+      ['💬','Bình luận',comments.length,'Tổng cộng — '+comments.filter(function(c){return c.status==='pending';}).length+' chờ duyệt','c-i'],
+      ['⚠️','Báo cáo Lỗi',reports.length,''+reports.filter(function(r){return r.status==='pending';}).length+' chưa xử lý','c-d'],
+      ['🖼️','Banners',banners.length,''+banners.filter(function(b){return b.active;}).length+' đang hiển thị','c-p'],
+      ['📝','Audit Logs',audit.length,'','c-i'],
+      ['🟢','Đang Ra',comics.filter(function(c){return c.status==='ONGOING';}).length,'','c-s'],
+    ].map(function(k){
+      return '<div class="kpi"><div class="kpi-label">'+k[0]+' '+escapeHtml(k[1])+'</div><div class="kpi-val '+k[4]+'">'+k[2]+'</div><div class="kpi-sub">'+escapeHtml(k[3])+'</div></div>';
+    }).join('');
+
+    // Top comics
+    var sorted=[...comics].sort(function(a,b){return (b.views||0)-(a.views||0);}).slice(0,10);
+    var maxViews=sorted[0]?sorted[0].views||1:1;
+    document.getElementById('top-comics-body').innerHTML=sorted.map(function(c,i){
+      var badge=c.status==='ONGOING'?'<span class="badge badge-ongoing">🟢</span>':'<span class="badge" style="background:rgba(255,255,255,.08);color:var(--muted)">'+escapeHtml(c.status)+'</span>';
+      var cover=c.cover?'<img src="'+escapeHtml(c.cover)+'" class="comic-cover-sm" alt="" loading="lazy">':'<div class="cover-ph-sm">📚</div>';
+      return '<tr>'+
+        '<td><div class="rank" style="'+(i<3?'background:linear-gradient(135deg,#f59e0b,#ef4444)':'')+'">'+( i+1)+'</div></td>'+
+        '<td>'+cover+'</td>'+
+        '<td style="font-weight:600">'+escapeHtml(c.title)+'</td>'+
+        '<td>'+badge+'</td>'+
+        '<td style="text-align:right;font-weight:700">👁 '+fmt(c.views||0)+'</td>'+
+      '</tr>';
+    }).join('');
+
+    // Audit recent
+    document.getElementById('audit-body').innerHTML=audit.slice(0,10).map(function(l){
+      var colors={'CREATE':'#22c55e','UPDATE':'#60a5fa','DELETE':'#f87171','LOGIN':'#6c63ff','LOGOUT':'#f59e0b'};
+      var dotColor=colors[l.action]||'#7b7f9e';
+      return '<tr>'+
+        '<td style="font-size:11px;color:var(--muted);white-space:nowrap">'+timeAgo(l.ts)+'</td>'+
+        '<td style="font-weight:600;font-size:12.5px">'+escapeHtml(l.actor||'—')+'</td>'+
+        '<td><span style="display:inline-flex;align-items:center;gap:5px"><span class="audit-dot" style="background:'+dotColor+'"></span><span style="font-size:12px;font-weight:700">'+escapeHtml(l.action||'—')+'</span></span></td>'+
+        '<td style="font-size:12px;color:var(--muted)">'+escapeHtml(l.module||'—')+'</td>'+
+      '</tr>';
+    }).join('');
+
+    // Chapter bars
+    var comicsWithChaps=comics.filter(function(c){return (c.chapterCount||0)>0;}).sort(function(a,b){return (b.chapterCount||0)-(a.chapterCount||0);}).slice(0,8);
+    var maxChap=comicsWithChaps[0]?comicsWithChaps[0].chapterCount||1:1;
+    document.getElementById('chap-bars').innerHTML=comicsWithChaps.map(function(c){
+      var pct=Math.round((c.chapterCount||0)/maxChap*100);
+      return '<div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">'+
+        '<div style="min-width:160px;font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escapeHtml(c.title)+'</div>'+
+        '<div class="bar-wrap"><div class="bar-fill" style="width:'+pct+'%"></div></div>'+
+        '<div style="min-width:50px;text-align:right;font-size:12.5px;font-weight:700;color:var(--primary)">'+( c.chapterCount||0)+' ch.</div>'+
+      '</div>';
+    }).join('') || '<div style="text-align:center;padding:20px;color:var(--muted)">Chưa có dữ liệu chapter.</div>';
+
+    // Reports summary
+    var rptPend=reports.filter(function(r){return r.status==='pending';}).length;
+    var rptProc=reports.filter(function(r){return r.status==='processing';}).length;
+    var rptRes=reports.filter(function(r){return r.status==='resolved';}).length;
+    document.getElementById('rpt-summary').innerHTML=[
+      ['⏳ Chưa xử lý',rptPend,'c-w'],['🔄 Đang xử lý',rptProc,'c-i'],['✅ Đã khắc phục',rptRes,'c-s']
+    ].map(function(r){
+      return '<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid var(--border);margin-bottom:8px">'+
+        '<span style="font-size:13.5px;font-weight:600">'+escapeHtml(r[0])+'</span>'+
+        '<span style="font-size:22px;font-weight:800;min-width:40px;text-align:right" class="'+r[2]+'">'+r[1]+'</span>'+
+      '</div>';
+    }).join('');
+
+    // Comments summary
+    var cmtPend=comments.filter(function(c){return c.status==='pending';}).length;
+    var cmtAppr=comments.filter(function(c){return c.status==='approved';}).length;
+    var cmtLock=comments.filter(function(c){return c.locked;}).length;
+    document.getElementById('cmt-summary').innerHTML=[
+      ['⏳ Chờ duyệt',cmtPend,'c-w'],['✅ Đã duyệt',cmtAppr,'c-s'],['🔒 Tài khoản khóa',cmtLock,'c-d']
+    ].map(function(r){
+      return '<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid var(--border);margin-bottom:8px">'+
+        '<span style="font-size:13.5px;font-weight:600">'+escapeHtml(r[0])+'</span>'+
+        '<span style="font-size:22px;font-weight:800;min-width:40px;text-align:right" class="'+r[2]+'">'+r[1]+'</span>'+
+      '</div>';
+    }).join('');
+  }
+
+  document.addEventListener('DOMContentLoaded',loadAll);
+</script>
+</body>
+</html>

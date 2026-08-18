@@ -1,0 +1,213 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quản lý Bình luận — WebComics Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--sidebar-w:230px;--topbar-h:58px;--bg:#0d0f14;--sidebar-bg:#13161e;--card:#1a1d27;--border:rgba(255,255,255,0.07);--text:#e4e6f0;--muted:#7b7f9e;--primary:#6c63ff;--danger:#ef4444;--success:#22c55e;--warning:#f59e0b;--radius:10px}
+    body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh}
+    .sidebar{width:var(--sidebar-w);background:var(--sidebar-bg);border-right:1px solid var(--border);position:fixed;top:0;left:0;bottom:0;display:flex;flex-direction:column;z-index:100}
+    .brand{display:flex;align-items:center;gap:10px;padding:18px 16px;border-bottom:1px solid var(--border);text-decoration:none}
+    .brand-icon{width:34px;height:34px;background:linear-gradient(135deg,#6c63ff,#ff2a6d);border-radius:9px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:13px;color:#fff}
+    .brand-text{font-weight:800;font-size:14px;color:var(--text)}.brand-sub{font-size:10px;color:var(--muted)}
+    .nav{padding:10px 8px;flex:1;overflow-y:auto}
+    .nav-sec{font-size:9.5px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);padding:10px 8px 5px}
+    .nav-link{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:7px;color:var(--muted);text-decoration:none;font-size:13px;font-weight:500;margin-bottom:2px;transition:.15s}
+    .nav-link:hover{background:rgba(108,99,255,.12);color:var(--text)}.nav-link.active{background:rgba(108,99,255,.18);color:var(--primary);font-weight:600}.nav-link svg{width:15px;height:15px;flex-shrink:0}
+    .sidebar-footer{padding:10px 8px;border-top:1px solid var(--border)}
+    .user-pill{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:8px;background:rgba(255,255,255,.04)}
+    .user-av{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#6c63ff,#ff2a6d);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:#fff;flex-shrink:0}
+    .user-name{font-size:12.5px;font-weight:600}.user-role{font-size:10.5px;color:var(--primary)}
+    .topbar{position:fixed;top:0;left:var(--sidebar-w);right:0;height:var(--topbar-h);background:var(--sidebar-bg);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;z-index:90}
+    .breadcrumb{font-size:13px;color:var(--muted)}.breadcrumb span{color:var(--text);font-weight:600}
+    .topbar-right{display:flex;gap:10px;align-items:center}
+    .tbtn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:8px;font-size:12.5px;font-weight:600;cursor:pointer;text-decoration:none;border:none;transition:.15s}
+    .tbtn-primary{background:var(--primary);color:#fff}.tbtn-primary:hover{background:#574fd6}
+    .tbtn-ghost{background:rgba(255,255,255,.06);color:var(--text)}.tbtn-ghost:hover{background:rgba(255,255,255,.1)}
+    .main{margin-left:var(--sidebar-w);margin-top:var(--topbar-h);padding:24px 24px 60px;min-height:calc(100vh - var(--topbar-h));width:calc(100% - var(--sidebar-w))}
+    .ph{margin-bottom:20px}.ph h1{font-size:21px;font-weight:800}.ph p{font-size:13px;color:var(--muted);margin-top:4px}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:20px}
+    .card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:10px}
+    .card-title{font-size:15px;font-weight:700}
+    .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+    .stat-box{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:14px 16px}
+    .stat-num{font-size:24px;font-weight:800;margin-top:4px}
+    .c-p{color:var(--primary)}.c-s{color:var(--success)}.c-w{color:var(--warning)}.c-d{color:var(--danger)}
+    .filters-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;align-items:center}
+    .search-input{flex:1;min-width:180px;padding:9px 13px;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:inherit;font-size:13px;outline:none;transition:.2s}
+    .search-input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(108,99,255,.15)}
+    .search-input::placeholder{color:var(--muted)}
+    select{padding:9px 12px;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:inherit;font-size:13px;outline:none;cursor:pointer}
+    select option{background:#1a1d27}
+    .bulk-bar{display:none;align-items:center;gap:10px;padding:10px 14px;background:rgba(108,99,255,.1);border:1px solid rgba(108,99,255,.25);border-radius:8px;margin-bottom:12px}
+    .bulk-bar.show{display:flex}
+    .overflow-x{overflow-x:auto}
+    table{width:100%;border-collapse:collapse}
+    th{background:rgba(255,255,255,.04);padding:10px 12px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);text-align:left;border-bottom:1px solid var(--border)}
+    td{padding:11px 12px;font-size:13px;border-bottom:1px solid var(--border);vertical-align:middle}
+    tr:last-child td{border-bottom:none}
+    tr:hover td{background:rgba(255,255,255,.02)}
+    .badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600}
+    .badge-approved{background:rgba(34,197,94,.14);color:var(--success)}
+    .badge-pending{background:rgba(245,158,11,.14);color:var(--warning)}
+    .user-pill-inline{display:inline-flex;align-items:center;gap:6px}
+    .user-av-sm{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#6c63ff,#ff2a6d);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0}
+    .action-btns{display:flex;gap:5px;flex-wrap:wrap}
+    .btn-sm{display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:7px;font-size:11.5px;font-weight:600;cursor:pointer;border:none;transition:.15s;white-space:nowrap}
+    .btn-approve{background:rgba(34,197,94,.15);color:var(--success)}.btn-approve:hover{background:rgba(34,197,94,.3)}
+    .btn-unapprove{background:rgba(245,158,11,.15);color:var(--warning)}.btn-unapprove:hover{background:rgba(245,158,11,.3)}
+    .btn-del{background:rgba(239,68,68,.15);color:#f87171}.btn-del:hover{background:rgba(239,68,68,.25)}
+    .btn-lock{background:rgba(255,255,255,.08);color:var(--muted)}.btn-lock:hover{background:rgba(255,255,255,.15)}
+    .comment-text{font-size:13px;color:var(--text);max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .comment-meta{font-size:11px;color:var(--muted);margin-top:2px}
+    .pagination{display:flex;align-items:center;gap:8px;padding-top:14px;border-top:1px solid var(--border);flex-wrap:wrap}
+    .page-info{font-size:12.5px;color:var(--muted);flex:1}
+    .page-btn{padding:5px 11px;border-radius:7px;border:1px solid var(--border);background:rgba(255,255,255,.05);color:var(--text);font-size:12px;font-weight:600;cursor:pointer;transition:.15s}
+    .page-btn:hover{background:rgba(255,255,255,.1)}.page-btn.active{background:var(--primary);border-color:var(--primary);color:#fff}.page-btn:disabled{opacity:.4;cursor:default}
+    .empty-state{text-align:center;padding:50px 20px;color:var(--muted)}
+    .empty-state .es-icon{font-size:44px;margin-bottom:10px}
+    @media(max-width:768px){.stats-row{grid-template-columns:1fr 1fr}.main{padding:16px 12px 40px}}
+  </style>
+</head>
+<body>
+<div id="sidebar-container"></div>
+<header class="topbar">
+  <div class="breadcrumb">Admin / <span>Quản lý Bình luận</span></div>
+  <div class="topbar-right">
+    <button class="tbtn tbtn-ghost" style="color:#f87171" onclick="doLogout()">✕ Đăng xuất</button>
+  </div>
+</header>
+<main class="main">
+  <div class="ph"><h1>💬 Quản lý Bình luận</h1><p>Duyệt, xóa, khóa bình luận của độc giả.</p></div>
+  <div class="stats-row">
+    <div class="stat-box"><div style="font-size:10.5px;font-weight:700;text-transform:uppercase;color:var(--muted)">Tổng BL</div><div class="stat-num c-p" id="st-total">—</div></div>
+    <div class="stat-box"><div style="font-size:10.5px;font-weight:700;text-transform:uppercase;color:var(--muted)">Chờ duyệt</div><div class="stat-num c-w" id="st-pending">—</div></div>
+    <div class="stat-box"><div style="font-size:10.5px;font-weight:700;text-transform:uppercase;color:var(--muted)">Đã duyệt</div><div class="stat-num c-s" id="st-approved">—</div></div>
+    <div class="stat-box"><div style="font-size:10.5px;font-weight:700;text-transform:uppercase;color:var(--muted)">Đã khóa</div><div class="stat-num c-d" id="st-locked">—</div></div>
+  </div>
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">📋 Danh sách Bình luận</span>
+      <span id="count-lbl" style="font-size:12px;color:var(--muted)"></span>
+    </div>
+    <div class="filters-row">
+      <input type="search" class="search-input" id="cmt-search" placeholder="🔍 Tìm theo user, nội dung, truyện..." oninput="applyFilters()" />
+      <select id="filter-status" onchange="applyFilters()">
+        <option value="">Tất cả trạng thái</option>
+        <option value="pending">Chờ duyệt</option>
+        <option value="approved">Đã duyệt</option>
+      </select>
+    </div>
+    <div class="bulk-bar" id="bulk-bar">
+      <span id="bulk-count" style="font-size:13px;font-weight:600;color:var(--primary)">0 đã chọn</span>
+      <button class="btn-sm btn-approve" onclick="bulkApprove()">✅ Duyệt hàng loạt</button>
+      <button class="btn-sm btn-del" onclick="bulkDelete()">🗑️ Xóa hàng loạt</button>
+      <button class="btn-sm btn-lock" onclick="clearSelection()">✕ Bỏ chọn</button>
+    </div>
+    <div class="overflow-x">
+      <table>
+        <thead><tr>
+          <th style="width:32px"><input type="checkbox" id="select-all" onclick="toggleSelectAll()" aria-label="Chọn tất cả" /></th>
+          <th>Người dùng</th>
+          <th>Nội dung</th>
+          <th>Truyện / Chapter</th>
+          <th>Thời gian</th>
+          <th>Trạng thái</th>
+          <th style="text-align:right">Hành động</th>
+        </tr></thead>
+        <tbody id="cmt-tbody"></tbody>
+      </table>
+    </div>
+    <div class="pagination" id="pagination"></div>
+  </div>
+</main>
+<script src="admin-store.js"></script>
+<script>
+  Auth.guard();
+  document.getElementById('sidebar-container').innerHTML = buildAdminSidebar('comments');
+  Auth.syncSidebar();
+  function doLogout(){Auth.clearSession();window.location.href='admin-login.html';}
+
+  const PAGE_SIZE = 20;
+  var allCmts=[], filtered=[], currentPage=1, selected=new Set();
+
+  function loadData(){
+    allCmts = AdminStore.comments.getAll();
+    var all=allCmts.length, pend=allCmts.filter(function(c){return c.status==='pending';}).length, appr=allCmts.filter(function(c){return c.status==='approved';}).length, lock=allCmts.filter(function(c){return c.locked;}).length;
+    document.getElementById('st-total').textContent=all;
+    document.getElementById('st-pending').textContent=pend;
+    document.getElementById('st-approved').textContent=appr;
+    document.getElementById('st-locked').textContent=lock;
+    applyFilters();
+  }
+
+  function applyFilters(){
+    var q=(document.getElementById('cmt-search').value||'').trim().toLowerCase();
+    var st=document.getElementById('filter-status').value;
+    filtered=allCmts.filter(function(c){
+      var mq=!q||c.user.toLowerCase().includes(q)||(c.text||'').toLowerCase().includes(q)||(c.comicTitle||'').toLowerCase().includes(q);
+      var ms=!st||c.status===st;
+      return mq&&ms;
+    }).sort(function(a,b){return b.ts-a.ts;});
+    currentPage=1; selected.clear(); updateBulkBar();
+    renderTable(); renderPagination();
+  }
+
+  function renderTable(){
+    var tbody=document.getElementById('cmt-tbody');
+    document.getElementById('count-lbl').textContent=filtered.length+' bình luận';
+    if(!filtered.length){tbody.innerHTML='<tr><td colspan="7"><div class="empty-state"><div class="es-icon">💬</div><p>Không tìm thấy bình luận nào.</p></div></td></tr>';return;}
+    var start=(currentPage-1)*PAGE_SIZE, end=Math.min(start+PAGE_SIZE,filtered.length);
+    var page=filtered.slice(start,end);
+    var sel=document.getElementById('select-all');
+    if(sel) sel.checked=false;
+    tbody.innerHTML=page.map(function(c){
+      var isAppr=c.status==='approved';
+      var isLocked=c.locked;
+      var chk=selected.has(c.id)?'checked':'';
+      var badge=isAppr?'<span class="badge badge-approved">✅ Đã duyệt</span>':'<span class="badge badge-pending">⏳ Chờ duyệt</span>';
+      var approveBtn=isAppr?'<button class="btn-sm btn-unapprove" onclick="toggleApprove(\''+c.id+'\')">↩ Bỏ duyệt</button>':'<button class="btn-sm btn-approve" onclick="toggleApprove(\''+c.id+'\')">✅ Duyệt</button>';
+      var lockBtn=isLocked?'<button class="btn-sm btn-approve" onclick="toggleLock(\''+c.id+'\')">🔓 Mở khóa</button>':'<button class="btn-sm btn-lock" onclick="toggleLock(\''+c.id+'\')">🔒 Khóa</button>';
+      return '<tr>'+
+        '<td><input type="checkbox" class="row-cb" data-id="'+c.id+'" '+chk+' onchange="onCheckChange(\''+c.id+'\',this.checked)" /></td>'+
+        '<td><div class="user-pill-inline"><div class="user-av-sm">'+escapeHtml(c.user[0].toUpperCase())+'</div><span style="font-weight:600;font-size:13px">'+escapeHtml(c.user)+'</span></div>'+(isLocked?'<div style="font-size:10px;color:var(--danger);margin-top:2px">🔒 Tài khoản bị khóa</div>':'')+'</td>'+
+        '<td><div class="comment-text" title="'+escapeHtml(c.text)+'">'+escapeHtml(c.text)+'</div></td>'+
+        '<td><div style="font-size:12.5px;font-weight:600">'+escapeHtml(c.comicTitle||'—')+'</div><div class="comment-meta">'+escapeHtml(c.chapter||'')+'</div></td>'+
+        '<td style="font-size:12px;color:var(--muted);white-space:nowrap">'+timeAgo(c.ts)+'</td>'+
+        '<td>'+badge+'</td>'+
+        '<td><div class="action-btns">'+approveBtn+lockBtn+'<button class="btn-sm btn-del" onclick="deleteComment(\''+c.id+'\')">🗑️</button></div></td>'+
+      '</tr>';
+    }).join('');
+  }
+
+  function renderPagination(){
+    var total=filtered.length, pages=Math.ceil(total/PAGE_SIZE);
+    var pg=document.getElementById('pagination');
+    if(pages<=1){pg.innerHTML='';return;}
+    var start=(currentPage-1)*PAGE_SIZE+1, end=Math.min(currentPage*PAGE_SIZE,total);
+    var h='<div class="page-info">'+start+'–'+end+' / '+total+'</div>';
+    h+='<button class="page-btn" '+(currentPage===1?'disabled':'')+' onclick="goPage('+(currentPage-1)+')">← Trước</button>';
+    for(var i=1;i<=pages;i++){if(pages<=7||i===1||i===pages||Math.abs(i-currentPage)<=1)h+='<button class="page-btn '+(i===currentPage?'active':'')+'" onclick="goPage('+i+')">'+i+'</button>'; else if(Math.abs(i-currentPage)===2)h+='<span style="color:var(--muted)">…</span>';}
+    h+='<button class="page-btn" '+(currentPage===pages?'disabled':'')+' onclick="goPage('+(currentPage+1)+')">Sau →</button>';
+    pg.innerHTML=h;
+  }
+
+  function goPage(n){currentPage=n;renderTable();renderPagination();}
+
+  function onCheckChange(id,chk){if(chk)selected.add(id);else selected.delete(id);updateBulkBar();}
+  function toggleSelectAll(){var all=document.querySelectorAll('.row-cb');var chk=document.getElementById('select-all').checked;all.forEach(function(cb){cb.checked=chk;var id=cb.dataset.id;if(chk)selected.add(id);else selected.delete(id);});updateBulkBar();}
+  function updateBulkBar(){var bar=document.getElementById('bulk-bar');var cnt=selected.size;bar.classList.toggle('show',cnt>0);document.getElementById('bulk-count').textContent=cnt+' đã chọn';}
+  function clearSelection(){selected.clear();document.querySelectorAll('.row-cb').forEach(function(cb){cb.checked=false;});document.getElementById('select-all').checked=false;updateBulkBar();}
+
+  function toggleApprove(id){var c=AdminStore.comments.getAll().find(function(x){return x.id===id;});if(!c)return;AdminStore.comments.update(id,{status:c.status==='approved'?'pending':'approved'});loadData();toast(c.status==='approved'?'Đã bỏ duyệt!':'Đã duyệt bình luận!','success');}
+  function toggleLock(id){var c=AdminStore.comments.getAll().find(function(x){return x.id===id;});if(!c)return;AdminStore.comments.update(id,{locked:!c.locked});loadData();toast(c.locked?'Đã mở khóa!':'Đã khóa tài khoản!','info');}
+  function deleteComment(id){if(!confirm('Xóa bình luận này?'))return;AdminStore.comments.delete(id);loadData();toast('Đã xóa!','success');}
+  function bulkApprove(){if(!selected.size)return;AdminStore.comments.bulkApprove(Array.from(selected));selected.clear();loadData();toast('Đã duyệt '+selected.size+' bình luận!','success');}
+  function bulkDelete(){if(!selected.size)return;if(!confirm('Xóa '+selected.size+' bình luận đã chọn?'))return;AdminStore.comments.bulkDelete(Array.from(selected));selected.clear();loadData();toast('Đã xóa!','success');}
+
+  document.addEventListener('DOMContentLoaded',loadData);
+</script>
+</body>
+</html>

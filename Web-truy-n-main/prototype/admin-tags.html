@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Tags - WebComics</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --sidebar-w:230px; --topbar-h:58px; --bg:#0d0f14; --sidebar-bg:#13161e; --card:#1a1d27; --border:rgba(255,255,255,0.07); --text:#e4e6f0; --muted:#7b7f9e; --primary:#6c63ff; --danger:#ef4444; --success:#22c55e; --warning:#f59e0b; --radius:10px; }
+    body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); display:flex; min-height:100vh; }
+    .sidebar { width:var(--sidebar-w); background:var(--sidebar-bg); border-right:1px solid var(--border); position:fixed; top:0; left:0; bottom:0; display:flex; flex-direction:column; z-index:100; }
+    .brand { display:flex; align-items:center; gap:10px; padding:18px 16px; border-bottom:1px solid var(--border); text-decoration:none; }
+    .brand-icon { width:34px; height:34px; background:linear-gradient(135deg,#6c63ff,#ff2a6d); border-radius:9px; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:13px; color:#fff; }
+    .brand-text { font-weight:800; font-size:14px; color:var(--text); }
+    .brand-sub  { font-size:10px; color:var(--muted); }
+    .nav { padding:10px 8px; flex:1; }
+    .nav-sec { font-size:9.5px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase; color:var(--muted); padding:10px 8px 5px; }
+    .nav-link { display:flex; align-items:center; gap:9px; padding:8px 10px; border-radius:7px; color:var(--muted); text-decoration:none; font-size:13px; font-weight:500; margin-bottom:2px; transition:.15s; }
+    .nav-link:hover { background:rgba(108,99,255,.12); color:var(--text); }
+    .nav-link.active { background:rgba(108,99,255,.18); color:var(--primary); font-weight:600; }
+    .nav-link svg { width:15px; height:15px; flex-shrink:0; }
+    .sidebar-footer { padding:10px 8px; border-top:1px solid var(--border); }
+    .user-pill { display:flex; align-items:center; gap:9px; padding:9px 10px; border-radius:8px; background:rgba(255,255,255,.04); }
+    .user-av { width:30px; height:30px; border-radius:50%; background:linear-gradient(135deg,#6c63ff,#ff2a6d); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:12px; color:#fff; }
+    .user-name { font-size:12.5px; font-weight:600; } .user-role { font-size:10.5px; color:var(--primary); }
+    .topbar { position:fixed; top:0; left:var(--sidebar-w); right:0; height:var(--topbar-h); background:var(--sidebar-bg); border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; padding:0 24px; z-index:90; }
+    .breadcrumb { font-size:13px; color:var(--muted); } .breadcrumb span { color:var(--text); font-weight:600; }
+    .topbar-right { display:flex; gap:10px; }
+    .tbtn { display:inline-flex; align-items:center; gap:6px; padding:7px 14px; border-radius:8px; font-size:12.5px; font-weight:600; cursor:pointer; text-decoration:none; border:none; transition:.15s; }
+    .tbtn-primary { background:var(--primary); color:#fff; } .tbtn-primary:hover { background:#574fd6; }
+    .tbtn-ghost { background:rgba(255,255,255,.06); color:var(--text); } .tbtn-ghost:hover { background:rgba(255,255,255,.1); }
+    .main { margin-left:var(--sidebar-w); margin-top:var(--topbar-h); padding:26px 26px 40px; }
+    .ph { margin-bottom:22px; } .ph h1 { font-size:21px; font-weight:800; } .ph p { font-size:13px; color:var(--muted); margin-top:4px; }
+    .card { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:22px; }
+    .card-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; padding-bottom:14px; border-bottom:1px solid var(--border); }
+    .card-title { font-size:15px; font-weight:700; }
+    table { width:100%; border-collapse:collapse; }
+    th { background:rgba(255,255,255,.04); padding:10px 14px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.8px; color:var(--muted); text-align:left; border-bottom:1px solid var(--border); }
+    td { padding:12px 14px; font-size:13.5px; border-bottom:1px solid var(--border); vertical-align:middle; }
+    tr:last-child td { border-bottom:none; } tr:hover td { background:rgba(255,255,255,.025); }
+    .badge { display:inline-flex; align-items:center; gap:4px; padding:3px 9px; border-radius:20px; font-size:11px; font-weight:600; }
+    .badge-p { background:rgba(108,99,255,.14); color:var(--primary); }
+    .btn { display:inline-flex; align-items:center; gap:6px; padding:8px 16px; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; border:none; text-decoration:none; transition:.15s; }
+    .btn-primary { background:var(--primary); color:#fff; } .btn-primary:hover { background:#574fd6; }
+    .btn-danger  { background:var(--danger); color:#fff; } .btn-danger:hover  { background:#dc2626; }
+    .btn-ghost { background:rgba(255,255,255,.06); color:var(--text); border:1px solid var(--border); } .btn-ghost:hover { background:rgba(255,255,255,.1); }
+    .btn-sm { padding:5px 11px; font-size:12px; }
+    .fg { margin-bottom:18px; }
+    label { display:block; font-size:13px; font-weight:600; margin-bottom:6px; } label span { color:var(--danger); }
+    .hint { font-size:11.5px; color:var(--muted); margin-top:4px; }
+    input, textarea, select { width:100%; padding:10px 13px; background:rgba(255,255,255,.05); border:1px solid var(--border); border-radius:8px; color:var(--text); font-family:inherit; font-size:13.5px; outline:none; transition:.2s; }
+    input:focus, textarea:focus, select:focus { border-color:var(--primary); box-shadow:0 0 0 3px rgba(108,99,255,.2); }
+    .err { color:var(--danger); font-size:12px; margin-top:4px; display:none; } .err.show { display:block; }
+    .alert { display:flex; align-items:center; gap:10px; padding:13px 16px; border-radius:9px; margin-bottom:18px; font-size:13.5px; font-weight:500; }
+    .alert-s { background:rgba(34,197,94,.12); border:1px solid rgba(34,197,94,.25); color:#4ade80; }
+    .alert-d { background:rgba(239,68,68,.12); border:1px solid rgba(239,68,68,.25); color:#f87171; }
+    .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.65); backdrop-filter:blur(5px); z-index:999; align-items:center; justify-content:center; }
+    .modal-overlay.show { display:flex; }
+    .modal-box { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:26px 28px; width:90%; max-width:480px; }
+    .modal-title { font-size:17px; font-weight:800; margin-bottom:6px; }
+    .modal-sub { font-size:13px; color:var(--muted); margin-bottom:20px; }
+    .modal-actions { display:flex; gap:10px; margin-top:22px; }
+    .modal-del { text-align:center; }
+    .modal-del .icon { font-size:40px; margin-bottom:10px; }
+    .modal-del h3 { font-size:17px; font-weight:800; margin-bottom:6px; }
+    .modal-del p { font-size:13px; color:var(--muted); margin-bottom:20px; }
+    code { background:rgba(255,255,255,.08); padding:2px 7px; border-radius:5px; font-size:11.5px; color:var(--muted); font-family:monospace; }
+    .overflow-x { overflow-x:auto; }
+  </style>
+</head>
+<body>
+<aside class="sidebar">
+  <a href="admin.html" class="brand">
+    <div class="brand-icon">WC</div>
+    <div><div class="brand-text">WebComics</div><div class="brand-sub">Admin Panel</div></div>
+  </a>
+  <nav class="nav">
+    <div class="nav-sec">NỘI DUNG</div>
+    <a href="admin.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Quản lý Truyện</a>
+    <a href="admin.html#section-add-chapter" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Quản lý Chương</a>
+    <a href="admin-genres.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h7"/></svg>Thể loại</a>
+    <a href="admin-tags.html" class="nav-link active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>Tags</a>
+    <a href="admin-authors.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Tác giả</a>
+
+    <div class="nav-sec">TƯƠNG TÁC</div>
+    <a href="admin-comments.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Quản lý Bình luận</a>
+    <a href="admin-reports.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Báo cáo Lỗi Chapter</a>
+
+    <div class="nav-sec">VẬN HÀNH</div>
+    <a href="admin-schedules.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Lịch ra truyện</a>
+    <a href="admin-banners.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>Banner Quảng cáo</a>
+
+    <div class="nav-sec">NGƯỜI DÙNG</div>
+    <a href="admin-users.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 010 7.75"/></svg>Quản lý Thành viên</a>
+    <a href="admin-permissions.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Phân quyền</a>
+
+    <div class="nav-sec">HỆ THỐNG</div>
+    <a href="admin-settings.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Cài đặt Website</a>
+    <a href="index.html" target="_blank" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>Xem trang web</a>
+  </nav>
+  <div class="sidebar-footer"><div class="user-pill"><div class="user-av">A</div><div><div class="user-name">Admin</div><div class="user-role">⚡ Administrator</div></div></div></div>
+</aside>
+
+<header class="topbar">
+  <div class="breadcrumb">Admin / <span>Tags</span></div>
+  <div class="topbar-right">
+    <button class="tbtn tbtn-primary" onclick="openAddModal()">+ Thêm Tag</button>
+    <a href="index.html" class="tbtn tbtn-ghost">← Trang web</a>
+  </div>
+</header>
+
+<main class="main">
+  <div class="ph"><h1>🏷️ Quản lý Tags</h1><p id="total-count">Đang tải...</p></div>
+  <div class="alert alert-s" id="flash-ok" style="display:none"></div>
+  <div class="alert alert-d" id="flash-err" style="display:none"></div>
+
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Danh sách Tags</span>
+      <button class="btn btn-primary btn-sm" onclick="openAddModal()">+ Thêm mới</button>
+    </div>
+    <div class="overflow-x">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:44px">#</th>
+            <th>Tag</th>
+            <th>Slug</th>
+            <th>Màu sắc</th>
+            <th style="text-align:center">Số truyện</th>
+            <th style="text-align:center">Thao tác</th>
+          </tr>
+        </thead>
+        <tbody id="tags-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<!-- FORM MODAL -->
+<div class="modal-overlay" id="form-modal">
+  <div class="modal-box">
+    <div class="modal-title" id="modal-title">➕ Thêm Tag mới</div>
+    <div class="modal-sub">Tạo tag để phân loại truyện.</div>
+    <form onsubmit="submitForm(event)" novalidate>
+      <input type="hidden" id="edit-id" />
+      <div class="fg">
+        <label>Tên Tag <span>*</span></label>
+        <input type="text" id="f-name" placeholder="HOT, Isekai, Shounen..." required />
+        <div class="err" id="err-name">Tên không được để trống.</div>
+      </div>
+      <div class="fg">
+        <label>Slug</label>
+        <input type="text" id="f-slug" placeholder="hot (để trống sẽ tự tạo)" />
+      </div>
+      <div class="fg">
+        <label>Màu sắc (Hex)</label>
+        <div style="display:flex;gap:12px;align-items:center">
+          <input type="color" id="color-picker" value="#6c63ff" style="width:48px;height:40px;border-radius:8px;padding:2px;cursor:pointer;flex-shrink:0" />
+          <input type="text" id="f-color" value="#6c63ff" placeholder="#FF5733" maxlength="7" style="flex:1" />
+          <span id="tag-prev" style="display:inline-block;padding:5px 14px;border-radius:20px;font-size:13px;font-weight:700;white-space:nowrap;background:#6c63ff25;color:#6c63ff;border:1px solid #6c63ff50">Preview</span>
+        </div>
+        <p class="hint">Chọn màu bằng color picker hoặc nhập mã hex.</p>
+      </div>
+      <div class="modal-actions">
+        <button type="submit" class="btn btn-primary" id="submit-btn">💾 Lưu Tag</button>
+        <button type="button" class="btn btn-ghost" onclick="closeModal()">Hủy</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- DELETE MODAL -->
+<div class="modal-overlay" id="del-modal">
+  <div class="modal-box modal-del">
+    <div class="icon">🗑️</div><h3>Xác nhận xóa</h3>
+    <p id="del-desc">Bạn có chắc muốn xóa tag này?</p>
+    <div style="display:flex;gap:10px;justify-content:center">
+      <button class="btn btn-ghost" onclick="closeDelModal()">Hủy</button>
+      <button class="btn btn-danger" onclick="confirmDelete()">🗑️ Xóa ngay</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let tags = JSON.parse(localStorage.getItem('admin_tags') || 'null') || [
+  {id:1, name:'🔥 HOT',     slug:'hot',      color:'#ef4444', comics:18},
+  {id:2, name:'✨ NEW',     slug:'new',      color:'#22c55e', comics:9},
+  {id:3, name:'🌟 Featured',slug:'featured', color:'#f59e0b', comics:6},
+  {id:4, name:'Isekai',     slug:'isekai',   color:'#6c63ff', comics:14},
+  {id:5, name:'Shounen',    slug:'shounen',  color:'#3b82f6', comics:11},
+  {id:6, name:'Manhwa',     slug:'manhwa',   color:'#ec4899', comics:22},
+  {id:7, name:'Completed',  slug:'completed',color:'#14b8a6', comics:8},
+  {id:8, name:'Long Strip', slug:'long-strip',color:'#8b5cf6',comics:31},
+];
+let nextId = Math.max(...tags.map(t=>t.id)) + 1;
+let delId = null;
+function save() { localStorage.setItem('admin_tags', JSON.stringify(tags)); }
+
+function render() {
+  document.getElementById('total-count').textContent = `Tổng cộng ${tags.length} tags`;
+  const tbody = document.getElementById('tags-tbody');
+  tbody.innerHTML = tags.map(t => `
+    <tr>
+      <td style="color:var(--muted);font-size:12px">${t.id}</td>
+      <td>
+        <span style="display:inline-block;padding:4px 12px;border-radius:20px;font-size:12.5px;font-weight:700;background:${t.color}22;color:${t.color};border:1px solid ${t.color}44">
+          ${esc(t.name)}
+        </span>
+      </td>
+      <td><code>${esc(t.slug)}</code></td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="display:inline-block;width:20px;height:20px;border-radius:5px;background:${t.color};border:1px solid rgba(255,255,255,.15)"></span>
+          <code>${t.color}</code>
+        </div>
+      </td>
+      <td style="text-align:center"><span class="badge badge-p">${t.comics}</span></td>
+      <td style="text-align:center">
+        <div style="display:flex;gap:6px;justify-content:center">
+          <button class="btn btn-ghost btn-sm" onclick="openEdit(${t.id})">✏️ Sửa</button>
+          <button class="btn btn-danger btn-sm" onclick="openDel(${t.id})">🗑️ Xóa</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function openAddModal() {
+  document.getElementById('modal-title').textContent = '➕ Thêm Tag mới';
+  document.getElementById('submit-btn').textContent = '💾 Lưu Tag';
+  document.getElementById('edit-id').value = '';
+  document.getElementById('f-name').value = '';
+  document.getElementById('f-slug').value = '';
+  document.getElementById('f-color').value = '#6c63ff';
+  document.getElementById('color-picker').value = '#6c63ff';
+  applyColor('#6c63ff');
+  document.getElementById('tag-prev').textContent = 'Preview';
+  document.getElementById('form-modal').classList.add('show');
+  setTimeout(()=>document.getElementById('f-name').focus(),100);
+}
+function openEdit(id) {
+  const t = tags.find(x=>x.id===id); if(!t) return;
+  document.getElementById('modal-title').textContent = `✏️ Sửa Tag: ${t.name}`;
+  document.getElementById('submit-btn').textContent = '💾 Lưu thay đổi';
+  document.getElementById('edit-id').value = id;
+  document.getElementById('f-name').value = t.name;
+  document.getElementById('f-slug').value = t.slug;
+  document.getElementById('f-color').value = t.color || '#6c63ff';
+  document.getElementById('color-picker').value = t.color || '#6c63ff';
+  applyColor(t.color || '#6c63ff');
+  document.getElementById('tag-prev').textContent = t.name;
+  document.getElementById('form-modal').classList.add('show');
+  setTimeout(()=>document.getElementById('f-name').focus(),100);
+}
+function closeModal() { document.getElementById('form-modal').classList.remove('show'); }
+
+function submitForm(e) {
+  e.preventDefault();
+  const name  = document.getElementById('f-name').value.trim();
+  const slugR = document.getElementById('f-slug').value.trim();
+  const color = document.getElementById('f-color').value.trim() || '#6c63ff';
+  const editId= parseInt(document.getElementById('edit-id').value) || null;
+  if (!name) { document.getElementById('err-name').classList.add('show'); return; }
+  document.getElementById('err-name').classList.remove('show');
+  const slug = slugR ? slugR.toLowerCase() : toSlug(name);
+  if (editId) {
+    const idx = tags.findIndex(t=>t.id===editId);
+    tags[idx] = {...tags[idx], name, slug, color};
+    showFlash('✅ Cập nhật tag "'+name+'" thành công!', 'ok');
+  } else {
+    tags.push({id:nextId++, name, slug, color, comics:0});
+    showFlash('✅ Thêm tag "'+name+'" thành công!', 'ok');
+  }
+  save(); render(); closeModal();
+}
+
+function openDel(id) {
+  const t = tags.find(x=>x.id===id); if(!t) return;
+  if (t.comics > 0) { showFlash(`❌ Không thể xóa "${t.name}" vì đang được gán cho ${t.comics} truyện.`, 'err'); return; }
+  delId = id;
+  document.getElementById('del-desc').textContent = `Bạn có chắc muốn xóa tag "${t.name}"?`;
+  document.getElementById('del-modal').classList.add('show');
+}
+function closeDelModal() { document.getElementById('del-modal').classList.remove('show'); delId=null; }
+function confirmDelete() {
+  const t = tags.find(x=>x.id===delId);
+  tags = tags.filter(x=>x.id!==delId);
+  save(); render(); closeDelModal();
+  showFlash(`✅ Đã xóa tag "${t.name}".`, 'ok');
+}
+
+function applyColor(hex) {
+  const prev = document.getElementById('tag-prev');
+  prev.style.background = hex+'22'; prev.style.color = hex; prev.style.borderColor = hex+'44';
+}
+document.getElementById('color-picker').addEventListener('input', function() {
+  document.getElementById('f-color').value = this.value; applyColor(this.value);
+});
+document.getElementById('f-color').addEventListener('input', function() {
+  if(/^#[0-9A-Fa-f]{6}$/.test(this.value)) { document.getElementById('color-picker').value=this.value; applyColor(this.value); }
+});
+document.getElementById('f-name').addEventListener('input', function() {
+  document.getElementById('tag-prev').textContent = this.value || 'Preview';
+});
+document.querySelectorAll('.modal-overlay').forEach(el => {
+  el.addEventListener('click', function(e) { if(e.target===this){closeModal();closeDelModal();}});
+});
+
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function toSlug(s){return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').replace(/[^a-z0-9\s-]/g,'').trim().replace(/\s+/g,'-');}
+function showFlash(msg,type){const ok=document.getElementById('flash-ok');const err=document.getElementById('flash-err');const el=type==='ok'?ok:err;const other=type==='ok'?err:ok;other.style.display='none';el.textContent=msg;el.style.display='flex';setTimeout(()=>{el.style.opacity='0';setTimeout(()=>{el.style.display='none';el.style.opacity='1';},600);},3500);}
+
+render();
+</script>
+</body>
+</html>

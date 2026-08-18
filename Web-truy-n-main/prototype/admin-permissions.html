@@ -1,0 +1,149 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Phân quyền — WebComics Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--sidebar-w:230px;--topbar-h:58px;--bg:#0d0f14;--sidebar-bg:#13161e;--card:#1a1d27;--border:rgba(255,255,255,0.07);--text:#e4e6f0;--muted:#7b7f9e;--primary:#6c63ff;--danger:#ef4444;--success:#22c55e;--warning:#f59e0b;--radius:10px}
+    body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh}
+    .sidebar{width:var(--sidebar-w);background:var(--sidebar-bg);border-right:1px solid var(--border);position:fixed;top:0;left:0;bottom:0;display:flex;flex-direction:column;z-index:100}
+    .brand{display:flex;align-items:center;gap:10px;padding:18px 16px;border-bottom:1px solid var(--border);text-decoration:none}
+    .brand-icon{width:34px;height:34px;background:linear-gradient(135deg,#6c63ff,#ff2a6d);border-radius:9px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:13px;color:#fff}
+    .brand-text{font-weight:800;font-size:14px;color:var(--text)}.brand-sub{font-size:10px;color:var(--muted)}
+    .nav{padding:10px 8px;flex:1;overflow-y:auto}
+    .nav-sec{font-size:9.5px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);padding:10px 8px 5px}
+    .nav-link{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:7px;color:var(--muted);text-decoration:none;font-size:13px;font-weight:500;margin-bottom:2px;transition:.15s}
+    .nav-link:hover{background:rgba(108,99,255,.12);color:var(--text)}.nav-link.active{background:rgba(108,99,255,.18);color:var(--primary);font-weight:600}.nav-link svg{width:15px;height:15px;flex-shrink:0}
+    .sidebar-footer{padding:10px 8px;border-top:1px solid var(--border)}
+    .user-pill{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:8px;background:rgba(255,255,255,.04)}
+    .user-av{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#6c63ff,#ff2a6d);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:#fff;flex-shrink:0}
+    .user-name{font-size:12.5px;font-weight:600}.user-role{font-size:10.5px;color:var(--primary)}
+    .topbar{position:fixed;top:0;left:var(--sidebar-w);right:0;height:var(--topbar-h);background:var(--sidebar-bg);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;z-index:90}
+    .breadcrumb{font-size:13px;color:var(--muted)}.breadcrumb span{color:var(--text);font-weight:600}
+    .topbar-right{display:flex;gap:10px;align-items:center}
+    .tbtn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:8px;font-size:12.5px;font-weight:600;cursor:pointer;text-decoration:none;border:none;transition:.15s}
+    .tbtn-primary{background:var(--primary);color:#fff}.tbtn-primary:hover{background:#574fd6}
+    .tbtn-ghost{background:rgba(255,255,255,.06);color:var(--text)}.tbtn-ghost:hover{background:rgba(255,255,255,.1)}
+    .main{margin-left:var(--sidebar-w);margin-top:var(--topbar-h);padding:24px 24px 60px;min-height:calc(100vh - var(--topbar-h));width:calc(100% - var(--sidebar-w))}
+    .ph{margin-bottom:20px}.ph h1{font-size:21px;font-weight:800}.ph p{font-size:13px;color:var(--muted);margin-top:4px}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:20px}
+    .card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--border)}
+    .card-title{font-size:15px;font-weight:700}
+    .overflow-x{overflow-x:auto}
+    table{width:100%;border-collapse:collapse}
+    th{background:rgba(255,255,255,.04);padding:11px 14px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);text-align:center;border-bottom:1px solid var(--border);white-space:nowrap}
+    th:first-child{text-align:left}
+    td{padding:13px 14px;font-size:13px;border-bottom:1px solid var(--border);vertical-align:middle;text-align:center}
+    td:first-child{text-align:left}
+    tr:last-child td{border-bottom:none}
+    tr:hover td{background:rgba(255,255,255,.02)}
+    .role-header{padding:4px 10px;border-radius:6px;font-size:12px;font-weight:700;display:inline-block}
+    .role-admin{background:rgba(108,99,255,.15);color:var(--primary)}
+    .role-mod{background:rgba(245,158,11,.15);color:var(--warning)}
+    .role-editor{background:rgba(34,197,94,.15);color:var(--success)}
+    .role-viewer{background:rgba(255,255,255,.08);color:var(--muted)}
+    .perm-locked{color:var(--muted);font-size:18px}
+    .cb-perm{width:18px;height:18px;accent-color:var(--primary);cursor:pointer}
+    .perm-row-label{font-weight:600;font-size:13.5px}
+    .perm-row-desc{font-size:11.5px;color:var(--muted);margin-top:2px}
+    .warn-box{background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.25);border-radius:8px;padding:12px 16px;font-size:13px;color:#fbbf24;margin-bottom:20px}
+  </style>
+</head>
+<body>
+<div id="sidebar-container"></div>
+
+<header class="topbar">
+  <div class="breadcrumb">Admin / <span>Phân quyền</span></div>
+  <div class="topbar-right">
+    <button class="tbtn tbtn-primary" onclick="savePermissions()" id="save-btn">💾 Lưu thay đổi</button>
+    <button class="tbtn tbtn-ghost" style="color:#f87171" onclick="doLogout()">✕ Đăng xuất</button>
+  </div>
+</header>
+
+<main class="main">
+  <div class="ph">
+    <h1>🔒 Ma Trận Phân Quyền Quản Trị</h1>
+    <p>Thiết lập chi tiết quyền hạn cho từng nhóm vai trò quản trị viên.</p>
+  </div>
+
+  <div class="warn-box">⚠️ Super Admin luôn có toàn quyền và không thể thay đổi. Các thay đổi dưới đây sẽ áp dụng ngay khi nhấn "Lưu thay đổi".</div>
+
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Bảng Quyền Hạn Vai Trò</span>
+      <span style="font-size:12px;color:var(--muted)">✅ = Có quyền &nbsp;|&nbsp; 🔒 = Cố định</span>
+    </div>
+    <div class="overflow-x">
+      <table id="perm-table">
+        <thead>
+          <tr>
+            <th style="min-width:200px">Quyền hạn / Tính năng</th>
+            <th><span class="role-header role-admin">🛡️ Admin</span></th>
+            <th><span class="role-header role-mod">🔍 Moderator</span></th>
+            <th><span class="role-header role-editor">✏️ Editor</span></th>
+            <th><span class="role-header role-viewer">👤 Viewer</span></th>
+          </tr>
+        </thead>
+        <tbody id="perm-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<script src="admin-store.js"></script>
+<script>
+  Auth.guard();
+  document.getElementById('sidebar-container').innerHTML = buildAdminSidebar('permissions');
+  Auth.syncSidebar();
+  function doLogout(){Auth.clearSession();window.location.href='admin-login.html';}
+
+  const PERM_ROWS = [
+    {key:'comics',label:'Quản lý Truyện',desc:'Thêm, sửa, xóa bộ truyện'},
+    {key:'chapters',label:'Quản lý Chapter',desc:'Upload & quản lý chapter, ảnh hàng loạt'},
+    {key:'genres',label:'Thể loại & Tags',desc:'CRUD thể loại và tags'},
+    {key:'tags',label:'Tags',desc:'Quản lý nhãn màu sắc'},
+    {key:'authors',label:'Tác giả',desc:'Quản lý hồ sơ tác giả'},
+    {key:'users',label:'Quản lý Thành viên',desc:'Cấp quyền, ban, xem hồ sơ'},
+    {key:'comments',label:'Kiểm duyệt Bình luận',desc:'Duyệt, xóa, khóa bình luận'},
+    {key:'reports',label:'Xử lý Báo cáo lỗi',desc:'Xem và cập nhật trạng thái báo cáo'},
+    {key:'banners',label:'Quản lý Banner',desc:'Thêm, sửa, bật/tắt banner quảng cáo'},
+    {key:'settings',label:'Cài đặt Hệ thống',desc:'SEO, bảo trì, cấu hình website'},
+  ];
+
+  const ROLES = ['admin','moderator','editor','viewer'];
+
+  function renderTable() {
+    var perms = AdminStore.permissions.get();
+    var tbody = document.getElementById('perm-tbody');
+    tbody.innerHTML = PERM_ROWS.map(function(row) {
+      var cells = ROLES.map(function(role) {
+        if (role === 'admin' || role === 'viewer') {
+          var val = role === 'admin' ? true : false;
+          return '<td><span class="perm-locked" title="Cố định">'+( val?'✅':'🚫')+'</span></td>';
+        }
+        var checked = (perms[role] && perms[role][row.key]) ? 'checked' : '';
+        return '<td><input type="checkbox" class="cb-perm" data-role="'+role+'" data-perm="'+row.key+'" '+checked+' aria-label="'+row.label+' cho '+role+'" /></td>';
+      }).join('');
+      return '<tr>'+
+        '<td><div class="perm-row-label">'+escapeHtml(row.label)+'</div><div class="perm-row-desc">'+escapeHtml(row.desc)+'</div></td>'+
+        cells+'</tr>';
+    }).join('');
+  }
+
+  function savePermissions() {
+    var perms = AdminStore.permissions.get();
+    document.querySelectorAll('.cb-perm').forEach(function(cb) {
+      var role = cb.dataset.role, perm = cb.dataset.perm;
+      if (!perms[role]) perms[role] = {};
+      perms[role][perm] = cb.checked;
+    });
+    AdminStore.permissions.save(perms);
+    toast('Đã lưu ma trận phân quyền!','success');
+  }
+
+  document.addEventListener('DOMContentLoaded', renderTable);
+</script>
+</body>
+</html>

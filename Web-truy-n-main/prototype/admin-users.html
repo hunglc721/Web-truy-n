@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Users - WebComics</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --sidebar-w:230px; --topbar-h:58px; --bg:#0d0f14; --sidebar-bg:#13161e; --card:#1a1d27; --border:rgba(255,255,255,0.07); --text:#e4e6f0; --muted:#7b7f9e; --primary:#6c63ff; --danger:#ef4444; --success:#22c55e; --warning:#f59e0b; --info:#3b82f6; --radius:10px; }
+    body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); display:flex; min-height:100vh; }
+    .sidebar { width:var(--sidebar-w); background:var(--sidebar-bg); border-right:1px solid var(--border); position:fixed; top:0; left:0; bottom:0; display:flex; flex-direction:column; z-index:100; }
+    .brand { display:flex; align-items:center; gap:10px; padding:18px 16px; border-bottom:1px solid var(--border); text-decoration:none; }
+    .brand-icon { width:34px; height:34px; background:linear-gradient(135deg,#6c63ff,#ff2a6d); border-radius:9px; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:13px; color:#fff; }
+    .brand-text { font-weight:800; font-size:14px; color:var(--text); } .brand-sub { font-size:10px; color:var(--muted); }
+    .nav { padding:10px 8px; flex:1; } .nav-sec { font-size:9.5px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase; color:var(--muted); padding:10px 8px 5px; }
+    .nav-link { display:flex; align-items:center; gap:9px; padding:8px 10px; border-radius:7px; color:var(--muted); text-decoration:none; font-size:13px; font-weight:500; margin-bottom:2px; transition:.15s; }
+    .nav-link:hover { background:rgba(108,99,255,.12); color:var(--text); } .nav-link.active { background:rgba(108,99,255,.18); color:var(--primary); font-weight:600; } .nav-link svg { width:15px; height:15px; flex-shrink:0; }
+    .sidebar-footer { padding:10px 8px; border-top:1px solid var(--border); }
+    .user-pill { display:flex; align-items:center; gap:9px; padding:9px 10px; border-radius:8px; background:rgba(255,255,255,.04); }
+    .user-av { width:30px; height:30px; border-radius:50%; background:linear-gradient(135deg,#6c63ff,#ff2a6d); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:12px; color:#fff; }
+    .user-name { font-size:12.5px; font-weight:600; } .user-role { font-size:10.5px; color:var(--primary); }
+    .topbar { position:fixed; top:0; left:var(--sidebar-w); right:0; height:var(--topbar-h); background:var(--sidebar-bg); border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; padding:0 24px; z-index:90; }
+    .breadcrumb { font-size:13px; color:var(--muted); } .breadcrumb span { color:var(--text); font-weight:600; }
+    .topbar-right { display:flex; gap:10px; }
+    .tbtn { display:inline-flex; align-items:center; gap:6px; padding:7px 14px; border-radius:8px; font-size:12.5px; font-weight:600; cursor:pointer; text-decoration:none; border:none; transition:.15s; }
+    .tbtn-ghost { background:rgba(255,255,255,.06); color:var(--text); } .tbtn-ghost:hover { background:rgba(255,255,255,.1); }
+    .main { margin-left:var(--sidebar-w); margin-top:var(--topbar-h); padding:26px 26px 40px; }
+    .ph { margin-bottom:22px; } .ph h1 { font-size:21px; font-weight:800; } .ph p { font-size:13px; color:var(--muted); margin-top:4px; }
+    .card { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:22px; margin-bottom:18px; }
+    .card-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; padding-bottom:14px; border-bottom:1px solid var(--border); }
+    .card-title { font-size:15px; font-weight:700; }
+    table { width:100%; border-collapse:collapse; }
+    th { background:rgba(255,255,255,.04); padding:10px 14px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.8px; color:var(--muted); text-align:left; border-bottom:1px solid var(--border); }
+    td { padding:11px 14px; font-size:13px; border-bottom:1px solid var(--border); vertical-align:middle; }
+    tr:last-child td { border-bottom:none; } tr:hover td { background:rgba(255,255,255,.025); }
+    .badge { display:inline-flex; align-items:center; gap:4px; padding:3px 9px; border-radius:20px; font-size:11px; font-weight:600; }
+    .badge-p { background:rgba(108,99,255,.14); color:var(--primary); }
+    .badge-s { background:rgba(34,197,94,.14); color:var(--success); }
+    .badge-d { background:rgba(239,68,68,.14); color:var(--danger); }
+    .badge-w { background:rgba(245,158,11,.14); color:var(--warning); }
+    .badge-i { background:rgba(59,130,246,.14); color:var(--info); }
+    .badge-m { background:rgba(255,255,255,.06); color:var(--muted); }
+    .btn { display:inline-flex; align-items:center; gap:5px; padding:7px 13px; border-radius:7px; font-size:12px; font-weight:600; cursor:pointer; border:none; text-decoration:none; transition:.15s; }
+    .btn-primary { background:var(--primary); color:#fff; } .btn-primary:hover { background:#574fd6; }
+    .btn-danger  { background:var(--danger); color:#fff; } .btn-danger:hover  { background:#dc2626; }
+    .btn-success { background:var(--success); color:#fff; } .btn-success:hover { background:#16a34a; }
+    .btn-ghost { background:rgba(255,255,255,.06); color:var(--text); border:1px solid var(--border); } .btn-ghost:hover { background:rgba(255,255,255,.1); }
+    .btn-warn { background:rgba(245,158,11,.14); color:var(--warning); border:1px solid rgba(245,158,11,.3); }
+    .btn-info-soft { background:rgba(59,130,246,.12); color:var(--info); border:1px solid rgba(59,130,246,.25); }
+    input, select { padding:9px 13px; background:rgba(255,255,255,.05); border:1px solid var(--border); border-radius:8px; color:var(--text); font-family:inherit; font-size:13.5px; outline:none; transition:.2s; }
+    input:focus, select:focus { border-color:var(--primary); box-shadow:0 0 0 3px rgba(108,99,255,.2); }
+    .alert { display:flex; align-items:center; gap:10px; padding:13px 16px; border-radius:9px; margin-bottom:18px; font-size:13.5px; font-weight:500; }
+    .alert-s { background:rgba(34,197,94,.12); border:1px solid rgba(34,197,94,.25); color:#4ade80; }
+    .alert-d { background:rgba(239,68,68,.12); border:1px solid rgba(239,68,68,.25); color:#f87171; }
+    .stats-row { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:20px; }
+    .stat-card { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:16px 18px; }
+    .stat-label { font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.8px; color:var(--muted); }
+    .stat-val { font-size:26px; font-weight:800; margin-top:4px; }
+    .c-p{color:var(--primary);}.c-s{color:var(--success);}.c-w{color:var(--warning);}.c-d{color:var(--danger);}
+    .search-bar { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:0; }
+    .search-bar input { flex:1; min-width:180px; }
+    .search-bar select { min-width:130px; }
+    .overflow-x { overflow-x:auto; }
+    /* Detail panel */
+    .detail-panel { position:fixed; top:0; right:-420px; width:420px; height:100vh; background:var(--sidebar-bg); border-left:1px solid var(--border); z-index:200; transition:.3s cubic-bezier(.4,0,.2,1); overflow-y:auto; padding:24px; }
+    .detail-panel.open { right:0; }
+    .detail-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:199; }
+    .detail-overlay.show { display:block; }
+    .av-big { width:70px; height:70px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:28px; color:#fff; flex-shrink:0; }
+  </style>
+</head>
+<body>
+<aside class="sidebar">
+  <a href="admin.html" class="brand"><div class="brand-icon">WC</div><div><div class="brand-text">WebComics</div><div class="brand-sub">Admin Panel</div></div></a>
+  <nav class="nav">
+    <div class="nav-sec">NỘI DUNG</div>
+    <a href="admin.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Quản lý Truyện</a>
+    <a href="admin.html#section-add-chapter" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Quản lý Chương</a>
+    <a href="admin-genres.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h7"/></svg>Thể loại</a>
+    <a href="admin-tags.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>Tags</a>
+    <a href="admin-authors.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Tác giả</a>
+
+    <div class="nav-sec">TƯƠNG TÁC</div>
+    <a href="admin-comments.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Quản lý Bình luận</a>
+    <a href="admin-reports.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Báo cáo Lỗi Chapter</a>
+
+    <div class="nav-sec">VẬN HÀNH</div>
+    <a href="admin-schedules.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Lịch ra truyện</a>
+    <a href="admin-banners.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>Banner Quảng cáo</a>
+
+    <div class="nav-sec">NGƯỜI DÙNG</div>
+    <a href="admin-users.html" class="nav-link active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 010 7.75"/></svg>Quản lý Thành viên</a>
+    <a href="admin-permissions.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Phân quyền</a>
+
+    <div class="nav-sec">HỆ THỐNG</div>
+    <a href="admin-settings.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1 0-2.83 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Cài đặt Website</a>
+    <a href="index.html" target="_blank" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>Xem trang web</a>
+  </nav>
+  <div class="sidebar-footer"><div class="user-pill"><div class="user-av">A</div><div><div class="user-name">Admin</div><div class="user-role">⚡ Administrator</div></div></div></div>
+</aside>
+
+<header class="topbar">
+  <div class="breadcrumb">Admin / <span>Thành viên</span></div>
+  <div class="topbar-right"><a href="index.html" class="tbtn tbtn-ghost">← Trang web</a></div>
+</header>
+
+<main class="main">
+  <div class="ph"><h1>👥 Quản lý Thành viên</h1><p id="total-count">Đang tải...</p></div>
+  <div class="alert alert-s" id="flash-ok" style="display:none"></div>
+  <div class="alert alert-d" id="flash-err" style="display:none"></div>
+
+  <!-- Stats -->
+  <div class="stats-row">
+    <div class="stat-card"><div class="stat-label">Tổng thành viên</div><div class="stat-val c-p" id="st-total">—</div></div>
+    <div class="stat-card"><div class="stat-label">Admin</div><div class="stat-val c-w" id="st-admin">—</div></div>
+    <div class="stat-card"><div class="stat-label">Đang hoạt động</div><div class="stat-val c-s" id="st-active">—</div></div>
+    <div class="stat-card"><div class="stat-label">Bị khóa</div><div class="stat-val c-d" id="st-banned">—</div></div>
+  </div>
+
+  <!-- Search -->
+  <div class="card">
+    <div class="search-bar">
+      <input type="text" id="search-input" placeholder="🔍 Tìm theo tên hoặc email..." oninput="applyFilter()" />
+      <select id="filter-role" onchange="applyFilter()">
+        <option value="">Tất cả vai trò</option>
+        <option value="admin">Admin</option>
+        <option value="user">User</option>
+      </select>
+      <select id="filter-status" onchange="applyFilter()">
+        <option value="">Tất cả trạng thái</option>
+        <option value="active">Hoạt động</option>
+        <option value="banned">Bị khóa</option>
+      </select>
+      <button class="btn btn-ghost" onclick="clearFilter()">✖ Xóa lọc</button>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Danh sách thành viên</span>
+      <span id="result-count" style="font-size:13px;color:var(--muted)"></span>
+    </div>
+    <div class="overflow-x">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:44px">#</th>
+            <th>Thành viên</th>
+            <th>Email</th>
+            <th style="text-align:center">Vai trò</th>
+            <th style="text-align:center">Trạng thái</th>
+            <th style="text-align:center">💬</th>
+            <th style="text-align:center">📚</th>
+            <th>Ngày tham gia</th>
+            <th style="text-align:center">Thao tác</th>
+          </tr>
+        </thead>
+        <tbody id="users-tbody"></tbody>
+      </table>
+    </div>
+    <div id="no-results" style="text-align:center;padding:40px;color:var(--muted);display:none">
+      <div style="font-size:42px;margin-bottom:10px">🔍</div>
+      <p>Không tìm thấy thành viên nào phù hợp.</p>
+    </div>
+  </div>
+</main>
+
+<!-- User Detail Slide Panel -->
+<div class="detail-overlay" id="detail-overlay" onclick="closeDetail()"></div>
+<div class="detail-panel" id="detail-panel">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+    <span style="font-size:15px;font-weight:800">Chi tiết thành viên</span>
+    <button onclick="closeDetail()" style="background:rgba(255,255,255,.06);border:none;color:var(--text);width:30px;height:30px;border-radius:7px;cursor:pointer;font-size:16px">✕</button>
+  </div>
+  <div id="detail-content"></div>
+</div>
+
+<script>
+const ME_ID = 1; // "Bạn" — admin đang đăng nhập
+let users = JSON.parse(localStorage.getItem('admin_users') || 'null') || [
+  {id:1,name:'Admin Master',email:'admin@webcomics.vn',is_admin:true,banned_at:null,comments:0,libraries:0,joined:'2024-01-01'},
+  {id:2,name:'Nguyễn Văn An',email:'an.nguyen@gmail.com',is_admin:false,banned_at:null,comments:47,libraries:12,joined:'2024-02-15'},
+  {id:3,name:'Trần Thị Bích',email:'bich.tran@yahoo.com',is_admin:false,banned_at:null,comments:23,libraries:8,joined:'2024-03-10'},
+  {id:4,name:'Lê Minh Cường',email:'cuong.le@hotmail.com',is_admin:false,banned_at:'2024-06-20',comments:5,libraries:2,joined:'2024-04-05'},
+  {id:5,name:'Phạm Thùy Dương',email:'duong.pham@gmail.com',is_admin:true,banned_at:null,comments:11,libraries:4,joined:'2024-01-20'},
+  {id:6,name:'Hoàng Quốc Đạt',email:'dat.hoang@gmail.com',is_admin:false,banned_at:null,comments:88,libraries:31,joined:'2024-05-03'},
+  {id:7,name:'Vũ Thanh Hoa',email:'hoa.vu@gmail.com',is_admin:false,banned_at:null,comments:14,libraries:7,joined:'2024-06-12'},
+  {id:8,name:'Ngô Minh Khánh',email:'khanh.ngo@gmail.com',is_admin:false,banned_at:'2024-07-01',comments:2,libraries:1,joined:'2024-07-01'},
+  {id:9,name:'Đinh Thị Lan',email:'lan.dinh@gmail.com',is_admin:false,banned_at:null,comments:56,libraries:19,joined:'2024-03-28'},
+  {id:10,name:'Bùi Đức Mạnh',email:'manh.bui@gmail.com',is_admin:false,banned_at:null,comments:3,libraries:2,joined:'2024-07-15'},
+];
+function save(){localStorage.setItem('admin_users',JSON.stringify(users));}
+
+const gradients=['linear-gradient(135deg,#6c63ff,#ff2a6d)','linear-gradient(135deg,#3b82f6,#06b6d4)','linear-gradient(135deg,#f59e0b,#ef4444)','linear-gradient(135deg,#22c55e,#14b8a6)','linear-gradient(135deg,#ec4899,#8b5cf6)','linear-gradient(135deg,#14b8a6,#3b82f6)'];
+
+let filtered = [...users];
+
+function applyFilter(){
+  const q = document.getElementById('search-input').value.trim().toLowerCase();
+  const role = document.getElementById('filter-role').value;
+  const status = document.getElementById('filter-status').value;
+  filtered = users.filter(u=>{
+    const matchQ = !q || u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q);
+    const matchR = !role || (role==='admin'?u.is_admin:!u.is_admin);
+    const matchS = !status || (status==='banned'?!!u.banned_at:!u.banned_at);
+    return matchQ && matchR && matchS;
+  });
+  render();
+}
+function clearFilter(){
+  document.getElementById('search-input').value='';
+  document.getElementById('filter-role').value='';
+  document.getElementById('filter-status').value='';
+  filtered=[...users]; render();
+}
+
+function updateStats(){
+  document.getElementById('total-count').textContent=`Tổng cộng ${users.length} thành viên`;
+  document.getElementById('st-total').textContent=users.length;
+  document.getElementById('st-admin').textContent=users.filter(u=>u.is_admin).length;
+  document.getElementById('st-active').textContent=users.filter(u=>!u.banned_at).length;
+  document.getElementById('st-banned').textContent=users.filter(u=>u.banned_at).length;
+}
+
+function render(){
+  updateStats();
+  const tbody=document.getElementById('users-tbody');
+  const noRes=document.getElementById('no-results');
+  document.getElementById('result-count').textContent=`Hiện ${filtered.length} / ${users.length} kết quả`;
+  if(!filtered.length){tbody.innerHTML='';noRes.style.display='block';return;}
+  noRes.style.display='none';
+  tbody.innerHTML=filtered.map((u,i)=>`
+    <tr>
+      <td style="color:var(--muted);font-size:12px">${u.id}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:9px">
+          <div style="width:34px;height:34px;border-radius:50%;flex-shrink:0;background:${u.is_admin?'linear-gradient(135deg,#6c63ff,#ff2a6d)':gradients[i%gradients.length]};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff">
+            ${u.name[0].toUpperCase()}
+          </div>
+          <div>
+            <div style="font-weight:600;font-size:13.5px">${esc(u.name)} ${u.id===ME_ID?'<span style="font-size:10px;color:var(--primary)">(Bạn)</span>':''}</div>
+          </div>
+        </div>
+      </td>
+      <td style="font-size:12.5px;color:var(--muted)">${esc(u.email)}</td>
+      <td style="text-align:center">${u.is_admin?'<span class="badge badge-p">⚡ Admin</span>':'<span class="badge badge-m">👤 User</span>'}</td>
+      <td style="text-align:center">${u.banned_at?'<span class="badge badge-d">🔒 Bị khóa</span>':'<span class="badge badge-s">✅ Hoạt động</span>'}</td>
+      <td style="text-align:center"><span class="badge badge-i">${u.comments}</span></td>
+      <td style="text-align:center"><span class="badge badge-w">${u.libraries}</span></td>
+      <td style="font-size:12px;color:var(--muted)">${u.joined}</td>
+      <td style="text-align:center">
+        ${u.id===ME_ID
+          ? '<span style="font-size:12px;color:var(--muted)">—</span>'
+          : `<div style="display:flex;gap:5px;justify-content:center;flex-wrap:wrap">
+              <button class="btn ${u.is_admin?'btn-warn':'btn-primary'}" onclick="toggleRole(${u.id})" title="${u.is_admin?'Thu hồi Admin':'Cấp Admin'}">
+                ${u.is_admin?'👤→':'👑'}
+              </button>
+              ${!u.is_admin?`<button class="btn ${u.banned_at?'btn-success':'btn-danger'}" onclick="toggleBan(${u.id})" title="${u.banned_at?'Mở khóa':'Khóa tài khoản'}">
+                ${u.banned_at?'🔓':'🔒'}
+              </button>`:''}
+              <button class="btn btn-ghost btn-info-soft" onclick="showDetail(${u.id})" title="Chi tiết">👁</button>
+            </div>`
+        }
+      </td>
+    </tr>
+  `).join('');
+}
+
+function toggleRole(id){
+  if(id===ME_ID){showFlash('❌ Không thể thay đổi quyền của chính bạn.','err');return;}
+  const u=users.find(x=>x.id===id);if(!u)return;
+  if(u.is_admin&&users.filter(x=>x.is_admin).length<=1){showFlash('❌ Phải có ít nhất 1 Admin trong hệ thống.','err');return;}
+  u.is_admin=!u.is_admin;
+  save();filtered=[...users];applyFilter();
+  showFlash(`✅ Đã đổi quyền của "${u.name}" thành ${u.is_admin?'Admin':'User'}.`,'ok');
+}
+function toggleBan(id){
+  if(id===ME_ID){showFlash('❌ Bạn không thể tự khóa mình.','err');return;}
+  const u=users.find(x=>x.id===id);if(!u)return;
+  if(u.is_admin){showFlash('❌ Không thể khóa tài khoản Admin.','err');return;}
+  u.banned_at=u.banned_at?null:new Date().toISOString().slice(0,10);
+  save();filtered=[...users];applyFilter();
+  showFlash(`✅ Đã ${u.banned_at?'khóa':'mở khóa'} tài khoản "${u.name}".`,'ok');
+}
+
+function showDetail(id){
+  const u=users.find(x=>x.id===id);if(!u)return;
+  const gradIdx=users.indexOf(u);
+  document.getElementById('detail-content').innerHTML=`
+    <div style="text-align:center;padding-bottom:20px;border-bottom:1px solid var(--border);margin-bottom:20px">
+      <div class="av-big" style="margin:0 auto 14px;background:${u.is_admin?'linear-gradient(135deg,#6c63ff,#ff2a6d)':gradients[gradIdx%gradients.length]}">${u.name[0].toUpperCase()}</div>
+      <div style="font-size:17px;font-weight:800">${esc(u.name)}</div>
+      <div style="font-size:13px;color:var(--muted);margin-top:3px">${esc(u.email)}</div>
+      <div style="margin-top:10px;display:flex;gap:6px;justify-content:center">
+        ${u.is_admin?'<span class="badge badge-p">⚡ Admin</span>':'<span class="badge badge-m">👤 User</span>'}
+        ${u.banned_at?'<span class="badge badge-d">🔒 Bị khóa</span>':'<span class="badge badge-s">✅ Hoạt động</span>'}
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--muted)">Ngày tham gia</span><span style="font-weight:600">${u.joined}</span></div>
+      ${u.banned_at?`<div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--muted)">Ngày bị khóa</span><span style="font-weight:600;color:var(--danger)">${u.banned_at}</span></div>`:''}
+      <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--muted)">Bình luận</span><span style="font-weight:600;color:var(--info)">${u.comments}</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--muted)">Thư viện</span><span style="font-weight:600;color:var(--warning)">${u.libraries}</span></div>
+    </div>
+    ${u.id!==ME_ID?`
+    <div style="margin-top:20px;border-top:1px solid var(--border);padding-top:16px;display:flex;flex-direction:column;gap:8px">
+      <button class="btn ${u.is_admin?'btn-warn':'btn-primary'}" onclick="toggleRole(${u.id})" style="width:100%;justify-content:center">
+        ${u.is_admin?'👤 Thu hồi quyền Admin':'👑 Cấp quyền Admin'}
+      </button>
+      ${!u.is_admin?`<button class="btn ${u.banned_at?'btn-success':'btn-danger'}" onclick="toggleBan(${u.id})" style="width:100%;justify-content:center">
+        ${u.banned_at?'🔓 Mở khóa tài khoản':'🔒 Khóa tài khoản'}
+      </button>`:''}
+    </div>`:''}
+  `;
+  document.getElementById('detail-panel').classList.add('open');
+  document.getElementById('detail-overlay').classList.add('show');
+}
+function closeDetail(){
+  document.getElementById('detail-panel').classList.remove('open');
+  document.getElementById('detail-overlay').classList.remove('show');
+}
+
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function showFlash(msg,type){const ok=document.getElementById('flash-ok');const err=document.getElementById('flash-err');const el=type==='ok'?ok:err;const other=type==='ok'?err:ok;other.style.display='none';el.textContent=msg;el.style.display='flex';setTimeout(()=>{el.style.opacity='0';setTimeout(()=>{el.style.display='none';el.style.opacity='1';},600);},3500);}
+
+filtered=[...users];
+render();
+</script>
+</body>
+</html>

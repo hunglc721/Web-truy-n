@@ -1,0 +1,210 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quản lý Banner — WebComics Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--sidebar-w:230px;--topbar-h:58px;--bg:#0d0f14;--sidebar-bg:#13161e;--card:#1a1d27;--border:rgba(255,255,255,0.07);--text:#e4e6f0;--muted:#7b7f9e;--primary:#6c63ff;--danger:#ef4444;--success:#22c55e;--warning:#f59e0b;--radius:10px}
+    body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh}
+    .sidebar{width:var(--sidebar-w);background:var(--sidebar-bg);border-right:1px solid var(--border);position:fixed;top:0;left:0;bottom:0;display:flex;flex-direction:column;z-index:100}
+    .brand{display:flex;align-items:center;gap:10px;padding:18px 16px;border-bottom:1px solid var(--border);text-decoration:none}
+    .brand-icon{width:34px;height:34px;background:linear-gradient(135deg,#6c63ff,#ff2a6d);border-radius:9px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:13px;color:#fff}
+    .brand-text{font-weight:800;font-size:14px;color:var(--text)}.brand-sub{font-size:10px;color:var(--muted)}
+    .nav{padding:10px 8px;flex:1;overflow-y:auto}
+    .nav-sec{font-size:9.5px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);padding:10px 8px 5px}
+    .nav-link{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:7px;color:var(--muted);text-decoration:none;font-size:13px;font-weight:500;margin-bottom:2px;transition:.15s}
+    .nav-link:hover{background:rgba(108,99,255,.12);color:var(--text)}.nav-link.active{background:rgba(108,99,255,.18);color:var(--primary);font-weight:600}.nav-link svg{width:15px;height:15px;flex-shrink:0}
+    .sidebar-footer{padding:10px 8px;border-top:1px solid var(--border)}
+    .user-pill{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:8px;background:rgba(255,255,255,.04)}
+    .user-av{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#6c63ff,#ff2a6d);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:#fff;flex-shrink:0}
+    .user-name{font-size:12.5px;font-weight:600}.user-role{font-size:10.5px;color:var(--primary)}
+    .topbar{position:fixed;top:0;left:var(--sidebar-w);right:0;height:var(--topbar-h);background:var(--sidebar-bg);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;z-index:90}
+    .breadcrumb{font-size:13px;color:var(--muted)}.breadcrumb span{color:var(--text);font-weight:600}
+    .topbar-right{display:flex;gap:10px;align-items:center}
+    .tbtn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:8px;font-size:12.5px;font-weight:600;cursor:pointer;text-decoration:none;border:none;transition:.15s}
+    .tbtn-primary{background:var(--primary);color:#fff}.tbtn-primary:hover{background:#574fd6}
+    .tbtn-ghost{background:rgba(255,255,255,.06);color:var(--text)}.tbtn-ghost:hover{background:rgba(255,255,255,.1)}
+    .main{margin-left:var(--sidebar-w);margin-top:var(--topbar-h);padding:24px 24px 60px;min-height:calc(100vh - var(--topbar-h));width:calc(100% - var(--sidebar-w))}
+    .ph{margin-bottom:20px}.ph h1{font-size:21px;font-weight:800}.ph p{font-size:13px;color:var(--muted);margin-top:4px}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:20px}
+    .card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--border)}
+    .card-title{font-size:15px;font-weight:700}
+    .banner-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin-bottom:20px}
+    .banner-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;transition:.2s}
+    .banner-card:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,0,0,.4)}
+    .banner-img{width:100%;height:160px;object-fit:cover;display:block}
+    .banner-img-ph{width:100%;height:160px;background:rgba(108,99,255,.1);display:flex;align-items:center;justify-content:center;font-size:36px}
+    .banner-body{padding:14px 16px}
+    .banner-title{font-weight:700;font-size:14px;margin-bottom:4px}
+    .banner-url{font-size:11.5px;color:var(--muted);text-decoration:none;display:block;margin-bottom:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .banner-footer{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+    .badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600}
+    .badge-on{background:rgba(34,197,94,.14);color:var(--success)}
+    .badge-off{background:rgba(255,255,255,.08);color:var(--muted)}
+    .switch-wrap{display:flex;align-items:center;gap:8px;cursor:pointer;padding:5px 8px;border-radius:7px;border:1px solid var(--border);background:rgba(255,255,255,.04);transition:.2s}
+    .switch-wrap:hover{background:rgba(255,255,255,.08)}
+    .switch-track{width:36px;height:18px;border-radius:10px;background:rgba(239,68,68,.25);border:1.5px solid rgba(239,68,68,.4);position:relative;transition:.3s;flex-shrink:0}
+    .switch-thumb{width:12px;height:12px;border-radius:50%;background:#ef4444;position:absolute;top:2px;left:2px;transition:.3s}
+    .switch-wrap.on .switch-track{background:rgba(34,197,94,.25);border-color:rgba(34,197,94,.5)}
+    .switch-wrap.on .switch-thumb{left:20px;background:#22c55e}
+    .switch-label{font-size:12px;font-weight:700;color:#ef4444;transition:.2s}
+    .switch-wrap.on .switch-label{color:var(--success)}
+    .banner-clicks{font-size:12px;color:var(--muted)}
+    .banner-actions{display:flex;gap:6px;margin-top:10px}
+    .btn-sm{display:inline-flex;align-items:center;gap:4px;padding:5px 10px;border-radius:7px;font-size:11.5px;font-weight:600;cursor:pointer;border:none;transition:.15s}
+    .btn-edit{background:rgba(108,99,255,.15);color:var(--primary)}.btn-edit:hover{background:rgba(108,99,255,.3)}
+    .btn-del{background:rgba(239,68,68,.15);color:#f87171}.btn-del:hover{background:rgba(239,68,68,.25)}
+    .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);backdrop-filter:blur(5px);z-index:999;align-items:center;justify-content:center}
+    .modal-overlay.show{display:flex}
+    .modal-box{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:26px 28px;width:90%;max-width:520px;max-height:92vh;overflow-y:auto}
+    .modal-title{font-size:17px;font-weight:800;margin-bottom:4px}
+    .modal-sub{font-size:13px;color:var(--muted);margin-bottom:22px}
+    .modal-actions{display:flex;gap:10px;margin-top:20px}
+    .fg{margin-bottom:14px}
+    label{display:block;font-size:13px;font-weight:600;margin-bottom:6px}
+    input[type=text],input[type=url]{width:100%;padding:10px 13px;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:inherit;font-size:13.5px;outline:none;transition:.2s}
+    input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(108,99,255,.15)}
+    input::placeholder{color:var(--muted)}
+    .hint{font-size:11.5px;color:var(--muted);margin-top:4px}
+    .preview-img{width:100%;height:120px;object-fit:cover;border-radius:8px;border:1px solid var(--border);margin-top:8px;display:none}
+    .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:.15s}
+    .btn-primary{background:var(--primary);color:#fff}.btn-primary:hover{background:#574fd6}
+    .btn-ghost{background:rgba(255,255,255,.06);color:var(--text);border:1px solid var(--border)}.btn-ghost:hover{background:rgba(255,255,255,.1)}
+    @media(max-width:768px){.main{padding:16px 12px 40px}.modal-box{padding:20px 16px}}
+  </style>
+</head>
+<body>
+<div id="sidebar-container"></div>
+<header class="topbar">
+  <div class="breadcrumb">Admin / <span>Banner Quảng cáo</span></div>
+  <div class="topbar-right">
+    <button class="tbtn tbtn-primary" onclick="openAddModal()">➕ Thêm Banner mới</button>
+    <button class="tbtn tbtn-ghost" style="color:#f87171" onclick="doLogout()">✕ Đăng xuất</button>
+  </div>
+</header>
+<main class="main">
+  <div class="ph"><h1>🖼️ Quản lý Banner Hero Slider</h1><p>Thêm, sửa, bật/tắt banner quảng cáo hiển thị trên trang chủ.</p></div>
+  <div class="banner-grid" id="banner-grid"></div>
+</main>
+<div class="modal-overlay" id="banner-modal">
+  <div class="modal-box">
+    <div class="modal-title" id="bm-title">🖼️ Thêm Banner mới</div>
+    <div class="modal-sub">Cấu hình nội dung và đường dẫn banner.</div>
+    <input type="hidden" id="b-edit-id" />
+    <div class="fg">
+      <label>Tiêu đề banner <span style="color:var(--danger)">*</span></label>
+      <input type="text" id="b-title" placeholder="Solo Leveling Season 2 — Banner chính" />
+    </div>
+    <div class="fg">
+      <label>URL Ảnh <span style="color:var(--danger)">*</span></label>
+      <input type="url" id="b-img" placeholder="https://..." oninput="previewBanner()" />
+      <img class="preview-img" id="b-preview" alt="Preview" onload="this.style.display='block'" onerror="this.style.display='none'" />
+      <div class="hint">Khuyến nghị kích thước 1200×400px (tỉ lệ 3:1)</div>
+    </div>
+    <div class="fg">
+      <label>URL liên kết khi click</label>
+      <input type="url" id="b-link" placeholder="https://webcomics.vn/detail.html?id=1" />
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" style="flex:1;justify-content:center" onclick="saveBanner()">💾 Lưu Banner</button>
+      <button class="btn btn-ghost" onclick="closeModal('banner-modal')">Hủy</button>
+    </div>
+  </div>
+</div>
+<script src="admin-store.js"></script>
+<script>
+  Auth.guard();
+  document.getElementById('sidebar-container').innerHTML = buildAdminSidebar('banners');
+  Auth.syncSidebar();
+  function doLogout(){Auth.clearSession();window.location.href='admin-login.html';}
+
+  function render(){
+    var banners=AdminStore.banners.getAll().sort(function(a,b){return (a.order||0)-(b.order||0);});
+    var grid=document.getElementById('banner-grid');
+    if(!banners.length){grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--muted)"><div style="font-size:48px;margin-bottom:12px">🖼️</div><h3 style="color:var(--text)">Chưa có banner nào</h3><p>Nhấn "+ Thêm Banner mới" để tạo banner đầu tiên.</p></div>';return;}
+    grid.innerHTML=banners.map(function(b){
+      var imgHtml=b.imageUrl?'<img src="'+escapeHtml(b.imageUrl)+'" class="banner-img" alt="'+escapeHtml(b.title)+'" loading="lazy" />':'<div class="banner-img-ph">🖼️</div>';
+      var onClass=b.active?'on':'';
+      var badge=b.active?'<span class="badge badge-on">🟢 Đang hiển thị</span>':'<span class="badge badge-off">⭕ Tắt</span>';
+      return '<div class="banner-card">'+imgHtml+
+        '<div class="banner-body">'+
+          '<div class="banner-title">'+escapeHtml(b.title||'—')+'</div>'+
+          '<div class="banner-url" title="'+escapeHtml(b.linkUrl||'')+'">🔗 '+escapeHtml(b.linkUrl||'Chưa có link')+'</div>'+
+          '<div class="banner-footer">'+badge+
+            '<div class="switch-wrap '+onClass+'" onclick="toggleBanner(\''+b.id+'\',this)">'+
+              '<div class="switch-track"><div class="switch-thumb"></div></div>'+
+              '<span class="switch-label">'+(b.active?'BẬT':'TẮT')+'</span>'+
+            '</div>'+
+          '</div>'+
+          '<div class="banner-clicks" style="margin-top:6px">👆 '+((b.clicks||0).toLocaleString())+' lượt click</div>'+
+          '<div class="banner-actions">'+
+            '<button class="btn-sm btn-edit" onclick="openEditModal(\''+b.id+'\')">✏️ Sửa</button>'+
+            '<button class="btn-sm btn-del" onclick="deleteBanner(\''+b.id+'\')">🗑️ Xóa</button>'+
+          '</div>'+
+        '</div></div>';
+    }).join('');
+  }
+
+  function toggleBanner(id,el){
+    var banners=AdminStore.banners.getAll();
+    var b=banners.find(function(x){return x.id===id;});
+    if(!b)return;
+    AdminStore.banners.save(Object.assign({},b,{active:!b.active}));
+    render();
+    toast((b.active?'Đã tắt':'Đã bật')+' banner!','info',2000);
+  }
+
+  function openAddModal(){
+    document.getElementById('b-edit-id').value='';
+    document.getElementById('b-title').value='';
+    document.getElementById('b-img').value='';
+    document.getElementById('b-link').value='';
+    document.getElementById('b-preview').style.display='none';
+    document.getElementById('bm-title').textContent='🖼️ Thêm Banner mới';
+    openModal('banner-modal');
+  }
+
+  function openEditModal(id){
+    var b=AdminStore.banners.getAll().find(function(x){return x.id===id;});
+    if(!b)return;
+    document.getElementById('b-edit-id').value=b.id;
+    document.getElementById('b-title').value=b.title||'';
+    document.getElementById('b-img').value=b.imageUrl||'';
+    document.getElementById('b-link').value=b.linkUrl||'';
+    document.getElementById('bm-title').textContent='✏️ Sửa Banner';
+    previewBanner();
+    openModal('banner-modal');
+  }
+
+  function previewBanner(){
+    var url=document.getElementById('b-img').value.trim();
+    var img=document.getElementById('b-preview');
+    if(url)img.src=url;else img.style.display='none';
+  }
+
+  function saveBanner(){
+    var editId=document.getElementById('b-edit-id').value;
+    var title=document.getElementById('b-title').value.trim();
+    var imageUrl=document.getElementById('b-img').value.trim();
+    if(!title||!imageUrl){toast('Vui lòng nhập tiêu đề và URL ảnh!','warning');return;}
+    var data={title:title,imageUrl:imageUrl,linkUrl:document.getElementById('b-link').value.trim(),active:true};
+    if(editId)data.id=editId;
+    AdminStore.banners.save(data);
+    closeModal('banner-modal');
+    render();
+    toast(editId?'Đã cập nhật banner!':'Đã thêm banner mới!','success');
+  }
+
+  function deleteBanner(id){
+    if(!confirm('Xóa banner này?'))return;
+    AdminStore.banners.delete(id);
+    render();
+    toast('Đã xóa banner!','success');
+  }
+
+  document.addEventListener('DOMContentLoaded',render);
+</script>
+</body>
+</html>
