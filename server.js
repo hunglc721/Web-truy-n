@@ -177,11 +177,30 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  // --- STATIC FILES ---
-  let reqPath = pathname === '/' ? 'index.html' : pathname;
-  let filePath = path.join(__dirname, 'prototype', reqPath);
-  if (!fs.existsSync(filePath)) {
-    filePath = path.join(__dirname, reqPath);
+  // --- STATIC FILES (sandboxed to prototype/ only) ---
+  const STATIC_ROOT = path.join(__dirname, 'prototype');
+  const rawPath = pathname === '/' ? 'index.html' : pathname;
+
+  // Decode percent-encoding rồi normalize để triệt tiêu ../ và ..%2f
+  let safePath;
+  try {
+    safePath = path.normalize(decodeURIComponent(rawPath));
+  } catch (_) {
+    res.writeHead(400, { 'Content-Type': 'text/plain' });
+    res.end('400 Bad Request');
+    return;
+  }
+
+  // Loại bỏ leading traversal sequences
+  safePath = safePath.replace(/^(\.\.[/\\])+/, '');
+
+  const filePath = path.join(STATIC_ROOT, safePath);
+
+  // Chặn mọi path vượt ra ngoài STATIC_ROOT (kiểm tra sau khi resolve)
+  if (!filePath.startsWith(STATIC_ROOT + path.sep) && filePath !== STATIC_ROOT) {
+    res.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end('403 Forbidden');
+    return;
   }
   const ext = path.extname(filePath).toLowerCase();
   const contentType = MIME_TYPES[ext] || 'text/plain';

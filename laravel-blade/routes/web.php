@@ -32,8 +32,14 @@ Route::get('/schedule', [ScheduleController::class, 'index'])->name('schedule');
 Route::get('/originals', [OriginalsController::class, 'index'])->name('originals');
 
 // Chuẩn SEO URL cho Chi tiết truyện & Đọc chương
-Route::get('/truyen/{slug}', [ComicController::class, 'show'])->name('comics.show');
-Route::get('/truyen/{comicSlug}/{chapterSlug}', [ChapterController::class, 'show'])->name('chapters.show');
+// Constraint slug: chỉ accept [a-z0-9-] để chặn URL rác và tránh route conflict
+Route::get('/truyen/{slug}', [ComicController::class, 'show'])
+    ->name('comics.show')
+    ->where('slug', '[a-z0-9\-]+');
+
+Route::get('/truyen/{comicSlug}/{chapterSlug}', [ChapterController::class, 'show'])
+    ->name('chapters.show')
+    ->where(['comicSlug' => '[a-z0-9\-]+', 'chapterSlug' => '[a-z0-9\-]+']);
 
 // --- ROUTE AUTHENTICATION ---
 Route::middleware('guest')->group(function () {

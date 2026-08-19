@@ -7,6 +7,7 @@ use App\Models\Chapter;
 use App\Models\ReadingHistory;
 use App\Models\Comment;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class ChapterController extends Controller
 {
@@ -19,7 +20,7 @@ class ChapterController extends Controller
         // 1. Tìm bộ truyện theo Slug
         $comic = Comic::where('slug', $comicSlug)->firstOrFail();
 
-        // 2. Tìm chương theo Slug thuộc truyện
+        // 2. Tìm chương theo slug | chapter_number | id (chỉ trong phạm vi comic này)
         $chapter = Chapter::where('comic_id', $comic->id)
             ->where(function($q) use ($chapterSlug) {
                 $q->where('slug', $chapterSlug)
@@ -27,7 +28,16 @@ class ChapterController extends Controller
                   ->orWhere('id', $chapterSlug);
             })->firstOrFail();
 
-        // 3. Lấy Chapter Trước và Chapter Sau
+        // 3. SEO Canonical: nếu URL không dùng slug chuẩn → redirect 301
+        //    Tránh duplicate content: /truyen/solo-leveling/1 và /truyen/solo-leveling/chuong-1
+        if ($chapterSlug !== $chapter->slug) {
+            return redirect()->route('chapters.show', [
+                'comicSlug'   => $comic->slug,
+                'chapterSlug' => $chapter->slug,
+            ], 301);
+        }
+
+        // 4. Lấy Chapter Trước và Chapter Sau
         $nextChapter = Chapter::where('comic_id', $comic->id)
             ->where('chapter_number', '>', $chapter->chapter_number)
             ->orderBy('chapter_number', 'asc')
@@ -38,12 +48,14 @@ class ChapterController extends Controller
             ->orderBy('chapter_number', 'desc')
             ->first();
 
-        // 4. Lấy tất cả các chương để chọn nhanh
+        // 5. Lấy danh sách chương cho dropdown — chỉ select cột cần thiết
+        //    Tránh load toàn bộ dữ liệu khi truyện có 500–800 chương
         $allChapters = Chapter::where('comic_id', $comic->id)
+            ->select('id', 'slug', 'chapter_number', 'title')
             ->orderBy('chapter_number', 'desc')
             ->get();
 
-        // 5. Lấy danh sách bình luận của chương & truyện
+        // 6. Lấy bình luận — phân trang để tránh treo trang khi truyện hot
         $comments = Comment::with('user')
             ->where('comic_id', $comic->id)
             ->where(function($q) use ($chapter) {
@@ -51,11 +63,16 @@ class ChapterController extends Controller
             })
             ->whereNull('parent_id')
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->paginate(20);
 
-        // 6. Tự động tăng lượt xem
-        $comic->increment('views');
-        $chapter->increment('views');
+        // 7. Throttle view counter qua session — chặn spam F5
+        //    Mỗi session chỉ tính 1 lượt xem / chapter
+        $sessionKey = "viewed_chapter_{$chapter->id}";
+        if (!session()->has($sessionKey)) {
+            $comic->increment('views');
+            $chapter->increment('views');
+            session()->put($sessionKey, true);
+        }
 
         return view('comics.reader', compact(
             'comic',
@@ -68,13 +85,18 @@ class ChapterController extends Controller
     }
 
     /**
-     * Tự động ghi nhận Lịch sử đọc qua AJAX request khi cuộn trang
+     * Tự động ghi nhận Lịch sử đọc qua AJAX request khi cuộn trang.
+     * Validate chapter phải thuộc đúng comic được truyền vào.
      */
     public function saveHistory(Request $request)
     {
         $request->validate([
             'comic_id'   => 'required|exists:comics,id',
-            'chapter_id' => 'required|exists:chapters,id',
+            // Đảm bảo chapter_id thuộc đúng comic_id — chặn cặp lệch nhau
+            'chapter_id' => [
+                'required',
+                Rule::exists('chapters', 'id')->where('comic_id', $request->comic_id),
+            ],
         ]);
 
         ReadingHistory::updateOrCreate(
@@ -90,7 +112,7 @@ class ChapterController extends Controller
 
         return response()->json([
             'status'  => 'success',
-            'message' => 'Lịch sử đọc đã được cập nhật!'
+            'message' => 'Lịch sử đọc đã được cập nhật!',
         ]);
     }
 }
