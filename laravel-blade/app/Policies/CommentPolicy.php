@@ -27,7 +27,7 @@ class CommentPolicy
      */
     public function delete(User $user, Comment $comment): Response
     {
-        if ($user->is_admin) {
+        if ($user->isAdmin()) {
             return Response::allow();
         }
 

@@ -42,6 +42,16 @@ class User extends Authenticatable
         return !is_null($this->banned_at);
     }
 
+    /**
+     * Kiểm tra user có quyền admin không.
+     * Dùng method này thay vì truy cập $user->is_admin trực tiếp
+     * để tập trung logic phân quyền tại một nơi.
+     */
+    public function isAdmin(): bool
+    {
+        return (bool) $this->is_admin;
+    }
+
     // ─────────────────────────────────────────────────────────────
     // RELATIONSHIPS — Thêm mới cho WebComics
     // ─────────────────────────────────────────────────────────────

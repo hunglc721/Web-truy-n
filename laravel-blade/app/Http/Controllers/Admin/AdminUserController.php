@@ -77,7 +77,7 @@ class AdminUserController extends Controller
                 ->with('error', 'Bạn không thể tự khóa tài khoản của mình.');
         }
 
-        if ($user->is_admin) {
+        if ($user->isAdmin()) {
             return redirect()->route('admin.users.index')
                 ->with('error', 'Không thể khóa tài khoản Admin.');
         }

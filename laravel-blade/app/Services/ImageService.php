@@ -1,0 +1,118 @@
+<?php
+
+namespace App\Services;
+
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+
+class ImageService
+{
+    protected string $disk;
+
+    public function __construct(string $disk = 'public')
+    {
+        $this->disk = $disk;
+    }
+
+    /**
+     * Upload nhiều ảnh cùng lúc (Bulk Upload) vào $folder trên disk.
+     * Tôn trọng thứ tự kéo thả từ frontend nếu $orderIndices được truyền vào.
+     *
+     * @param  UploadedFile[]  $files
+     * @param  string          $folder        Thư mục đích: "comics/1/chapters/5"
+     * @param  int[]|null      $orderIndices  Thứ tự index mảng $files sau khi kéo thả
+     * @return string[]        Mảng đường dẫn tương đối đã lưu
+     */
+    public function uploadBulk(array $files, string $folder, ?array $orderIndices = null): array
+    {
+        // Sắp xếp lại theo thứ tự kéo thả (nếu có và hợp lệ)
+        if (!empty($orderIndices) && count($orderIndices) === count($files)) {
+            $ordered = [];
+            foreach ($orderIndices as $idx) {
+                if (isset($files[$idx])) {
+                    $ordered[] = $files[$idx];
+                }
+            }
+            if (count($ordered) === count($files)) {
+                $files = $ordered;
+            }
+        }
+
+        $paths = [];
+        foreach ($files as $idx => $file) {
+            $paths[] = $this->uploadSingle($file, $folder, $idx);
+        }
+
+        return $paths;
+    }
+
+    /**
+     * Upload 1 file ảnh, tạo tên file có padding số trang.
+     *
+     * @param  UploadedFile $file
+     * @param  string       $folder
+     * @param  int          $index   Vị trí trong batch (0-based)
+     * @return string       Đường dẫn tương đối
+     */
+    public function uploadSingle(UploadedFile $file, string $folder, int $index = 0): string
+    {
+        $pageNumber = str_pad($index + 1, 3, '0', STR_PAD_LEFT);
+        $extension  = $file->getClientOriginalExtension() ?: 'jpg';
+        $filename   = "page_{$pageNumber}_" . Str::random(6) . ".{$extension}";
+
+        return $file->storeAs($folder, $filename, $this->disk);
+    }
+
+    /**
+     * Parse textarea chứa danh sách URL ảnh (mỗi dòng 1 URL) thành mảng.
+     *
+     * @param  string   $raw
+     * @return string[]
+     */
+    public function parseUrlList(string $raw): array
+    {
+        return array_values(
+            array_filter(
+                array_map('trim', explode("\n", $raw)),
+                fn($url) => !empty($url)
+            )
+        );
+    }
+
+    /**
+     * Xóa danh sách file cục bộ (đường dẫn bắt đầu bằng "comics/") khỏi Storage.
+     * Bỏ qua file URL ngoài (http://...) để tránh lỗi.
+     *
+     * @param  string[] $paths
+     */
+    public function deleteFiles(array $paths): void
+    {
+        foreach ($paths as $path) {
+            if (str_starts_with($path, 'comics/') && Storage::disk($this->disk)->exists($path)) {
+                Storage::disk($this->disk)->delete($path);
+            }
+        }
+    }
+
+    /**
+     * Xóa toàn bộ thư mục ảnh của một chương.
+     *
+     * @param  string $folder  Ví dụ: "comics/1/chapters/5"
+     */
+    public function deleteFolder(string $folder): void
+    {
+        if (Storage::disk($this->disk)->exists($folder)) {
+            Storage::disk($this->disk)->deleteDirectory($folder);
+        }
+    }
+
+    /**
+     * Trả về đường dẫn thư mục lưu ảnh theo quy ước.
+     * comics/{comic_id}/chapters/{chapter_id}
+     */
+    public function chapterFolder(int $comicId, int $chapterId): string
+    {
+        return "comics/{$comicId}/chapters/{$chapterId}";
+    }
+}
