@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Comic;
 use App\Models\Genre;
+use Illuminate\Support\Facades\Cache;
 
 class HomeController extends Controller
 {
@@ -12,43 +13,39 @@ class HomeController extends Controller
     {
         /*
         |──────────────────────────────────────────────────────────
-        | TRENDING — lấy 9 truyện có trending_rank, kèm eager load
-        | genres (để hiển thị "Action · Fantasy") và latestChapter
+        | TRENDING — cache 30 phút; bị invalidate bởi ChapterObserver
+        | khi có chapter mới được đăng (via artisan schedule hoặc admin)
         |──────────────────────────────────────────────────────────
         */
-        $trendingComics = Comic::trending()         // scope: whereNotNull('trending_rank')->orderBy('trending_rank')
-            ->with([
-                'genres',           // ["Action", "Fantasy"]
-                'latestChapter',    // chương số lớn nhất
-                'tags',             // ["HOT", "ORIGINAL"]
-            ])
-            ->take(9)
-            ->get();
+        $trendingComics = Cache::remember('home.trending', 1800, function () {
+            return Comic::trending()
+                ->with(['genres', 'latestChapter', 'tags'])
+                ->take(9)
+                ->get();
+        });
 
         /*
         |──────────────────────────────────────────────────────────
-        | GENRE TABS — lấy tất cả thể loại để render tab filter
+        | GENRE TABS — cache 60 phút; genres ít thay đổi
         |──────────────────────────────────────────────────────────
         */
-        $genres = Genre::orderBy('name')->get();
+        $genres = Cache::remember('home.genres', 3600, function () {
+            return Genre::orderBy('name')->get();
+        });
 
         /*
         |──────────────────────────────────────────────────────────
-        | LATEST UPDATES — 15 truyện có chapter mới nhất
-        | Dùng withMax để lấy max(published_at) của chapters
-        | rồi orderByDesc để sắp xếp
+        | LATEST UPDATES — cache 5 phút; hay thay đổi nên TTL ngắn
         |──────────────────────────────────────────────────────────
         */
-        $latestUpdates = Comic::withMax('chapters', 'published_at')  // thêm cột: chapters_max_published_at
-            ->with([
-                'genres',
-                'latestChapter',
-                'tags',
-            ])
-            ->whereHas('chapters')           // chỉ lấy truyện đã có chương
-            ->orderByDesc('chapters_max_published_at')
-            ->take(15)
-            ->get();
+        $latestUpdates = Cache::remember('home.latest', 300, function () {
+            return Comic::withMax('chapters', 'published_at')
+                ->with(['genres', 'latestChapter', 'tags'])
+                ->whereHas('chapters')
+                ->orderByDesc('chapters_max_published_at')
+                ->take(15)
+                ->get();
+        });
 
         return view('home', compact('trendingComics', 'genres', 'latestUpdates'));
     }

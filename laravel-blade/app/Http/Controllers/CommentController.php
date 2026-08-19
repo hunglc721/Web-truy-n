@@ -3,9 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreCommentRequest;
+use App\Events\CommentCreated;
 use App\Models\Comment;
 use App\Services\CommentFilterService;
-use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Http\Request;
 
 class CommentController extends Controller
 {
@@ -22,16 +23,7 @@ class CommentController extends Controller
      */
     public function store(StoreCommentRequest $request)
     {
-        // Rate limiting: 5 bình luận / phút / user
-        $rateLimitKey = 'comment:' . auth()->id();
-        if (RateLimiter::tooManyAttempts($rateLimitKey, maxAttempts: 5)) {
-            $seconds = RateLimiter::availableIn($rateLimitKey);
-            return response()->json([
-                'status'  => 'error',
-                'message' => "Bạn đăng bình luận quá nhanh. Vui lòng thử lại sau {$seconds} giây.",
-            ], 429);
-        }
-        RateLimiter::hit($rateLimitKey, decay: 60);
+        // Rate limiting đã được xử lý bởi throttle:comments middleware trong routes/web.php
 
         // Chạy Filter Service: phát hiện spam link & lọc từ cấm
         $processed = $this->filterService->process($request->content);
@@ -46,6 +38,9 @@ class CommentController extends Controller
         ]);
 
         $comment->load('user');
+
+        // Task 13: Fire event — LogCommentCreated listener ghi ActivityLog
+        CommentCreated::dispatch($comment);
 
         $isSpam = $processed['status'] === Comment::STATUS_SPAM;
 

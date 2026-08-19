@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 use App\Models\Comic;
 use App\Models\ComicLike;
 use App\Models\Library;
+use App\Models\ActivityLog;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -28,23 +29,23 @@ class ComicActionController extends Controller
                            ->first();
 
         if ($existing) {
-            // Đã theo dõi → Bỏ theo dõi
             $existing->delete();
+            ActivityLog::record('comic.unfollowed', $comic, ['comic_id' => $comicId]);
             return response()->json([
                 'status'     => 'success',
                 'in_library' => false,
-                'is_followed'=> false, // backward-compat với code cũ
+                'is_followed'=> false,
                 'message'    => 'Đã bỏ theo dõi "' . $comic->title . '"',
             ]);
         }
 
-        // Chưa theo dõi → Thêm vào Library
         Library::create([
             'user_id'  => $user->id,
             'comic_id' => $comicId,
             'status'   => 'reading',
             'added_at' => now(),
         ]);
+        ActivityLog::record('comic.followed', $comic, ['comic_id' => $comicId]);
 
         return response()->json([
             'status'     => 'success',
@@ -70,10 +71,9 @@ class ComicActionController extends Controller
                              ->first();
 
         if ($existing) {
-            // Đã like → Unlike
             $existing->delete();
             $likeCount = $comic->likes()->count();
-
+            ActivityLog::record('comic.unliked', $comic, ['comic_id' => $comicId]);
             return response()->json([
                 'status'     => 'success',
                 'is_liked'   => false,
@@ -82,14 +82,13 @@ class ComicActionController extends Controller
             ]);
         }
 
-        // Chưa like → Like
         ComicLike::create([
             'user_id'  => $user->id,
             'comic_id' => $comicId,
             'liked_at' => now(),
         ]);
-
         $likeCount = $comic->likes()->count();
+        ActivityLog::record('comic.liked', $comic, ['comic_id' => $comicId]);
 
         return response()->json([
             'status'     => 'success',

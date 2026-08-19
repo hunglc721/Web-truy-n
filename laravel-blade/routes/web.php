@@ -8,6 +8,7 @@ use App\Http\Controllers\OriginalsController;
 use App\Http\Controllers\ComicController;
 use App\Http\Controllers\ChapterController;
 use App\Http\Controllers\CommentController;
+use App\Http\Controllers\RecommendationController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\LibraryController;
 use App\Http\Controllers\ComicActionController;
@@ -56,13 +57,28 @@ Route::middleware('auth')->group(function () {
     Route::post('/user/library/toggle/{comic}', [LibraryController::class, 'toggle'])->name('library.toggle');
     Route::delete('/user/history/clear', [LibraryController::class, 'clearHistory'])->name('history.clear');
 
-    Route::post('/api/reading-history', [ChapterController::class, 'saveHistory'])->name('history.save');
-    Route::post('/api/comments', [CommentController::class, 'store'])->name('comments.store');
+    Route::post('/api/reading-history', [ChapterController::class, 'saveHistory'])
+        ->name('history.save')
+        ->middleware('throttle:history-save');
+
+    Route::post('/api/comments', [CommentController::class, 'store'])
+        ->name('comments.store')
+        ->middleware('throttle:comments');  // Task 14: rate limit 5/phút
 
     // ── Tủ Sách & Lượt Thích (AJAX JSON) ───────────────────────────
-    Route::post('/api/comics/{comicId}/toggle-library', [ComicActionController::class, 'toggleLibrary'])->name('comics.toggleLibrary');
-    Route::post('/api/comics/{comicId}/toggle-like', [ComicActionController::class, 'toggleLike'])->name('comics.toggleLike');
+    Route::post('/api/comics/{comicId}/toggle-library', [ComicActionController::class, 'toggleLibrary'])
+        ->name('comics.toggleLibrary')
+        ->middleware('throttle:library-toggle');
+
+    Route::post('/api/comics/{comicId}/toggle-like', [ComicActionController::class, 'toggleLike'])
+        ->name('comics.toggleLike')
+        ->middleware('throttle:like-toggle');
 });
+
+// Task 15: Recommendations — public (guest + user), throttle api
+Route::get('/api/recommendations', [RecommendationController::class, 'index'])
+    ->name('recommendations.index')
+    ->middleware('throttle:api');
 
 // --- ROUTE ADMIN (Bảo mật với Auth + AdminMiddleware) ---
 Route::middleware(['auth', AdminMiddleware::class])->prefix('admin')->name('admin.')->group(function () {

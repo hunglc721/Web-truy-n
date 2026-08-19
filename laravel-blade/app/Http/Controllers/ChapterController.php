@@ -7,6 +7,7 @@ use App\Models\Chapter;
 use App\Models\ReadingHistory;
 use App\Models\Comment;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Validation\Rule;
 
 class ChapterController extends Controller
@@ -48,12 +49,16 @@ class ChapterController extends Controller
             ->orderBy('chapter_number', 'desc')
             ->first();
 
-        // 5. Lấy danh sách chương cho dropdown — chỉ select cột cần thiết
-        //    Tránh load toàn bộ dữ liệu khi truyện có 500–800 chương
-        $allChapters = Chapter::where('comic_id', $comic->id)
-            ->select('id', 'slug', 'chapter_number', 'title')
-            ->orderBy('chapter_number', 'desc')
-            ->get();
+        // 5. Lấy danh sách chương cho dropdown — cache theo comic_id 1 giờ
+        //    ChapterObserver sẽ xóa cache khi có chapter mới/sửa/xóa
+        $allChapters = Cache::remember(
+            "comic.{$comic->id}.chapters_list",
+            3600,
+            fn() => Chapter::where('comic_id', $comic->id)
+                ->select('id', 'slug', 'chapter_number', 'title')
+                ->orderBy('chapter_number', 'desc')
+                ->get()
+        );
 
         // 6. Lấy bình luận — phân trang để tránh treo trang khi truyện hot
         $comments = Comment::with('user')
