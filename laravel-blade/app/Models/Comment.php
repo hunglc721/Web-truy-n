@@ -13,13 +13,23 @@ class Comment extends Model
 {
     use HasFactory, SoftDeletes;
 
+    // Trạng thái hợp lệ cho cột status
+    const STATUS_APPROVED = 'approved';
+    const STATUS_SPAM     = 'spam';
+    const STATUS_PENDING  = 'pending';
+
     protected $fillable = [
         'user_id',
         'comic_id',
         'chapter_id',
         'parent_id',
         'content',
+        'status',       // Fix #1: thêm status vào fillable – trước đây bị silent-fail khi create()
         'likes_count',
+    ];
+
+    protected $casts = [
+        'likes_count' => 'integer',
     ];
 
     // ─────────────────────────────────────────────────────────────
@@ -77,5 +87,18 @@ class Comment extends Model
     public function getTimeAgoAttribute(): string
     {
         return $this->created_at ? Carbon::parse($this->created_at)->diffForHumans() : '';
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // SCOPES
+    // ─────────────────────────────────────────────────────────────
+
+    /**
+     * Chỉ lấy bình luận đã được duyệt (status = 'approved').
+     * Dùng: Comment::approved()->where('comic_id', $id)->get()
+     */
+    public function scopeApproved($query)
+    {
+        return $query->where('status', self::STATUS_APPROVED);
     }
 }

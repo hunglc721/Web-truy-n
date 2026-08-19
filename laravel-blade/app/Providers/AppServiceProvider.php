@@ -1,12 +1,13 @@
 <?php
 
-use Illuminate\Cache\RateLimiting\Limit;
-use Illuminate\Foundation\Support\Providers\RouteServiceProvider as ServiceProvider;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\RateLimiter;
-use Illuminate\Support\Facades\Route;
+namespace App\Providers;
 
-class AppServiceProvider extends \Illuminate\Support\ServiceProvider
+use App\Models\Comment;
+use App\Policies\CommentPolicy;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\ServiceProvider;
+
+class AppServiceProvider extends ServiceProvider
 {
     /**
      * Register any application services.
@@ -21,6 +22,8 @@ class AppServiceProvider extends \Illuminate\Support\ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // Fix #3 – Đăng ký CommentPolicy cho model Comment
+        // Gate tự động map: 'create' → CommentPolicy::create(), 'delete' → CommentPolicy::delete()
+        Gate::policy(Comment::class, CommentPolicy::class);
     }
 }
