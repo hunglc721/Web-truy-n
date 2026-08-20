@@ -65,9 +65,9 @@ class Comic extends Model
      * Lấy chương mới nhất (dùng trong home/update list).
      * Comic::find(1)->latestChapter — dùng eager load: with('latestChapter')
      */
-    public function latestChapter(): HasMany
+    public function latestChapter(): \Illuminate\Database\Eloquent\Relations\HasOne
     {
-        return $this->hasMany(Chapter::class)->latestOfMany('chapter_number');
+        return $this->hasOne(Chapter::class)->latestOfMany('chapter_number');
     }
 
     /**
@@ -136,8 +136,7 @@ class Comic extends Model
     public function genres(): BelongsToMany
     {
         return $this->belongsToMany(Genre::class, 'comic_genre')
-                    ->withPivot('is_primary')
-                    ->withTimestamps();
+                    ->withPivot('is_primary');
     }
 
     /**
@@ -148,8 +147,7 @@ class Comic extends Model
     public function authors(): BelongsToMany
     {
         return $this->belongsToMany(Author::class, 'comic_author')
-                    ->withPivot('role')
-                    ->withTimestamps();
+                    ->withPivot('role');
     }
 
     /**
@@ -158,8 +156,7 @@ class Comic extends Model
      */
     public function tags(): BelongsToMany
     {
-        return $this->belongsToMany(Tag::class, 'comic_tag')
-                    ->withTimestamps();
+        return $this->belongsToMany(Tag::class, 'comic_tag');
     }
 
     // ─────────────────────────────────────────────────────────────

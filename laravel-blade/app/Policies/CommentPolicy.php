@@ -17,7 +17,7 @@ class CommentPolicy
     public function create(User $user): Response
     {
         return $user->isBanned()
-            ? Response::deny('Tài khoản của bạn đã bị khóa và không thể đăng bình luận.', 403)
+            ? Response::denyWithStatus(403, 'Tài khoản của bạn đã bị khóa và không thể đăng bình luận.')
             : Response::allow();
     }
 
@@ -34,15 +34,15 @@ class CommentPolicy
         }
 
         if ($user->id !== $comment->user_id) {
-            return Response::deny('Bạn không có quyền sửa bình luận này.', 403);
+            return Response::denyWithStatus(403, 'Bạn không có quyền sửa bình luận này.');
         }
 
         // Chỉ cho phép sửa trong vòng 15 phút
         $editWindowMinutes = 15;
         if ($comment->created_at->diffInMinutes(now()) > $editWindowMinutes) {
-            return Response::deny(
-                "Bình luận chỉ có thể chỉnh sửa trong vòng {$editWindowMinutes} phút sau khi đăng.",
-                403
+            return Response::denyWithStatus(
+                403,
+                "Bình luận chỉ có thể chỉnh sửa trong vòng {$editWindowMinutes} phút sau khi đăng."
             );
         }
 
@@ -50,24 +50,20 @@ class CommentPolicy
     }
 
     /**
-     * User chỉ được xóa bình luận của chính mình;
+     * User chỉ được xóa bình luận của chính mình.
      * Admin được xóa bất kỳ bình luận nào.
      *
      * Được gọi qua: $this->authorize('delete', $comment)
      */
     public function delete(User $user, Comment $comment): Response
     {
-        if ($user->isAdmin()) {
-            return Response::allow();
-        }
-
-        return $user->id === $comment->user_id
+        return ($user->isAdmin() || $user->id === $comment->user_id)
             ? Response::allow()
-            : Response::deny('Bạn không có quyền xóa bình luận này.', 403);
+            : Response::denyWithStatus(403, 'Bạn không có quyền xóa bình luận này.');
     }
 
     /**
-     * Chỉ admin mới được khôi phục bình luận đã bị xóa mềm.
+     * Chỉ Admin mới được khôi phục bình luận đã xóa mềm.
      *
      * Được gọi qua: $this->authorize('restore', $comment)
      */
@@ -75,6 +71,6 @@ class CommentPolicy
     {
         return $user->isAdmin()
             ? Response::allow()
-            : Response::deny('Chỉ quản trị viên mới có thể khôi phục bình luận.', 403);
+            : Response::denyWithStatus(403, 'Chỉ Quản trị viên mới có thể khôi phục bình luận.');
     }
 }

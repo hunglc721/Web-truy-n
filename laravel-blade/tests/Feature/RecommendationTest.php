@@ -93,7 +93,7 @@ class RecommendationTest extends TestCase
         ]);
         $romanceComic->genres()->attach($romanceGenre);
 
-        $response = $this->actingAs($user)->getJson(route('recommendations.index'));
+        $response = $this->actingAs($user)->getJson(route('recommendations.index', ['limit' => 2]));
 
         $response->assertStatus(200)
             ->assertJsonPath('status', 'success')

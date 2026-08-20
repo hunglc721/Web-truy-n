@@ -72,7 +72,7 @@ class RecommendationController extends Controller
                     'raw_views'      => $comic->views,
                     'genres'         => $comic->genres->pluck('name')->toArray(),
                     'authors'        => $comic->authors->pluck('name')->toArray(),
-                    'latest_chapter' => $comic->latestChapter->first()?->label ?? ($comic->chapters_count ? "Ch.{$comic->chapters_count}" : null),
+                    'latest_chapter' => $comic->latestChapter?->label ?? ($comic->chapters_count ? "Ch.{$comic->chapters_count}" : null),
                 ];
             }),
         ]);

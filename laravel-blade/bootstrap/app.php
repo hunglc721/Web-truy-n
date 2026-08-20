@@ -21,10 +21,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        // ── Scoped Route Model Binding ────────────────────────────────────────
-        // Đảm bảo khi route có cả {comic} và {chapter},
-        // Laravel tự động scope chapter phải thuộc comic đó.
-        $middleware->scopeApiBindings();
+        $middleware->alias([
+            'admin' => \App\Http\Middleware\AdminMiddleware::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
 
@@ -149,6 +148,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 || $e instanceof ModelNotFoundException
                 || $e instanceof MethodNotAllowedHttpException
                 || $e instanceof HttpException
+                || $e instanceof \Illuminate\Http\Exceptions\HttpResponseException
             ) {
                 return null; // Nhường cho handler trên
             }

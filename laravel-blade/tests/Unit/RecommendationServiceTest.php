@@ -66,10 +66,11 @@ class RecommendationServiceTest extends TestCase
         // Comic in history has genreA
         $historyComic = Comic::factory()->create();
         $historyComic->genres()->attach($genreA);
+        $historyChapter = \App\Models\Chapter::factory()->create(['comic_id' => $historyComic->id]);
         ReadingHistory::create([
             'user_id'      => $user->id,
             'comic_id'     => $historyComic->id,
-            'chapter_id'   => 1,
+            'chapter_id'   => $historyChapter->id,
             'last_read_at' => now(),
         ]);
 
@@ -89,6 +90,12 @@ class RecommendationServiceTest extends TestCase
         // New candidate comic with genreB
         $candidateB = Comic::factory()->create(['avg_rating' => 9.2]);
         $candidateB->genres()->attach($genreB);
+
+        $candidateC = Comic::factory()->create(['avg_rating' => 9.0]);
+        $candidateC->genres()->attach($genreA);
+
+        $candidateD = Comic::factory()->create(['avg_rating' => 8.8]);
+        $candidateD->genres()->attach($genreB);
 
         $recommendations = $this->service->forUser($user, 4);
         $recIds = $recommendations->pluck('id')->toArray();

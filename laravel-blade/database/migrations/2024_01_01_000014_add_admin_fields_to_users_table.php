@@ -15,9 +15,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            // Thêm sau cột email
-            $table->boolean('is_admin')->default(false)->after('email');
-            $table->timestamp('banned_at')->nullable()->after('is_admin');
+            if (!Schema::hasColumn('users', 'is_admin')) {
+                $table->boolean('is_admin')->default(false)->after('email');
+            }
+            if (!Schema::hasColumn('users', 'banned_at')) {
+                $table->timestamp('banned_at')->nullable()->after('is_admin');
+            }
         });
     }
 

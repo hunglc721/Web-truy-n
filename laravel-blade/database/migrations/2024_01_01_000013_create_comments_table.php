@@ -25,6 +25,7 @@ return new class extends Migration
             // Nội dung bình luận & số lượt thích
             $table->text('content');
             $table->unsignedInteger('likes_count')->default(0);
+            $table->string('status', 20)->default('approved');
             
             $table->timestamps();
             $table->softDeletes();

@@ -6,7 +6,7 @@ use App\Models\Comic;
 use App\Models\ReadingHistory;
 use App\Models\Library;
 use App\Models\User;
-use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
@@ -90,7 +90,7 @@ class RecommendationService
             // 6. Nếu vẫn chưa đủ (kho truyện nhỏ), nới lỏng không loại trừ excludeIds
             if ($recommendations->count() < $limit) {
                 $needed = $limit - $recommendations->count();
-                $alreadyCollectedIds = $recommendations->pluck('id')->toArray();
+                $alreadyCollectedIds = array_merge($excludeIds, $recommendations->pluck('id')->toArray());
 
                 $extra = Comic::orderByDesc('views')
                     ->whereNotIn('id', $alreadyCollectedIds)
