@@ -7,12 +7,17 @@ use App\Models\Comic;
 use App\Models\ComicLike;
 use App\Models\Library;
 use App\Models\ActivityLog;
+use App\Services\RecommendationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class ComicActionController extends Controller
 {
+    public function __construct(
+        protected RecommendationService $recommendationService
+    ) {}
+
     /**
      * TOGGLE TỦ SÁCH — Thêm/Xóa truyện khỏi Library của user.
      *
@@ -31,6 +36,8 @@ class ComicActionController extends Controller
         if ($existing) {
             $existing->delete();
             ActivityLog::record('comic.unfollowed', $comic, ['comic_id' => $comicId]);
+            $this->recommendationService->invalidateForUser($user->id);
+
             return response()->json([
                 'status'     => 'success',
                 'in_library' => false,
@@ -46,6 +53,7 @@ class ComicActionController extends Controller
             'added_at' => now(),
         ]);
         ActivityLog::record('comic.followed', $comic, ['comic_id' => $comicId]);
+        $this->recommendationService->invalidateForUser($user->id);
 
         return response()->json([
             'status'     => 'success',

@@ -4,73 +4,101 @@ namespace App\Services;
 
 use App\Models\Comic;
 use App\Models\ReadingHistory;
+use App\Models\Library;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 /**
  * RecommendationService
  *
- * Gợi ý truyện dựa trên hành vi đọc của người dùng (Content-Based Filtering).
- * Không cần ML/package — dùng genre overlap + popularity fallback.
+ * Gợi ý truyện dựa trên hành vi đọc & tương tác của người dùng (Content-Based Filtering).
  *
- * Algorithm:
- *  1. Lấy genre IDs từ lịch sử đọc 30 ngày gần nhất của user
- *  2. Tìm comics cùng genre, chưa đọc, sort avg_rating DESC → views DESC
- *  3. Fallback: nếu < 3 kết quả → bổ sung trending comics
+ * Thuật toán (Multi-Signal Content Filtering):
+ *  1. Lấy preferred genres từ Lịch sử đọc 30 ngày gần nhất + Tủ sách của user (Library)
+ *  2. Tìm các bộ truyện cùng thể loại chưa đọc, xếp hạng theo: avg_rating DESC -> views DESC
+ *  3. Fallback mượt mà: nếu chưa đủ số lượng, bổ sung Trending / Top Rated Comics
+ *  4. Hỗ trợ gợi ý truyện tương tự theo comic cụ thể (Similar Comics)
+ *  5. Tích hợp đa tầng Cache (User-level & Guest-level & Comic-level)
  */
 class RecommendationService
 {
     /**
-     * Gợi ý cho user đã đăng nhập.
+     * Gợi ý truyện cá nhân hóa cho User đã đăng nhập.
      *
-     * @param  User  $user
-     * @param  int   $limit
+     * @param  User   $user
+     * @param  int    $limit
+     * @param  array  $excludeComicIds
      * @return Collection<Comic>
      */
-    public function forUser(User $user, int $limit = 6): Collection
+    public function forUser(User $user, int $limit = 6, array $excludeComicIds = []): Collection
     {
-        $cacheKey = "recommendations.user.{$user->id}";
+        $cacheKey = "recommendations.user.{$user->id}.limit_{$limit}";
 
-        return Cache::remember($cacheKey, 600, function () use ($user, $limit) {
-            // 1. Lấy comic IDs đã đọc trong 30 ngày
+        return Cache::remember($cacheKey, 600, function () use ($user, $limit, $excludeComicIds) {
+            // 1. Lấy danh sách comic IDs đã đọc trong 30 ngày gần nhất
             $readComicIds = ReadingHistory::where('user_id', $user->id)
                 ->where('last_read_at', '>=', now()->subDays(30))
-                ->pluck('comic_id');
+                ->pluck('comic_id')
+                ->toArray();
 
-            // 2. Lấy genre IDs từ các comic đã đọc
-            $preferredGenreIds = \DB::table('comic_genre')
-                ->whereIn('comic_id', $readComicIds)
+            // 2. Lấy comic IDs trong Tủ sách (Bookmark)
+            $libraryComicIds = Library::where('user_id', $user->id)
+                ->pluck('comic_id')
+                ->toArray();
+
+            $allInteractedComicIds = array_unique(array_merge($readComicIds, $libraryComicIds));
+            $excludeIds = array_unique(array_merge($allInteractedComicIds, $excludeComicIds));
+
+            // 3. Khai phá preferred genre IDs từ các bộ truyện đã tương tác
+            $preferredGenreIds = DB::table('comic_genre')
+                ->whereIn('comic_id', $allInteractedComicIds)
                 ->pluck('genre_id')
-                ->unique();
+                ->unique()
+                ->toArray();
 
             $recommendations = collect();
 
-            if ($preferredGenreIds->isNotEmpty()) {
-                // 3. Tìm comics cùng genre, chưa đọc
+            // 4. Tìm truyện cùng thể loại yêu thích (chưa từng đọc/thêm tủ sách)
+            if (!empty($preferredGenreIds)) {
                 $recommendations = Comic::whereHas('genres', function ($q) use ($preferredGenreIds) {
                         $q->whereIn('genres.id', $preferredGenreIds);
                     })
-                    ->whereNotIn('id', $readComicIds)
-                    ->with(['genres', 'latestChapter', 'tags'])
+                    ->whereNotIn('id', $excludeIds)
+                    ->with(['genres', 'latestChapter', 'tags', 'authors'])
                     ->orderByDesc('avg_rating')
                     ->orderByDesc('views')
                     ->limit($limit)
                     ->get();
             }
 
-            // 4. Fallback: bổ sung trending nếu không đủ $limit kết quả
+            // 5. Fallback nếu user mới (ít dữ liệu) hoặc chưa đủ $limit
             if ($recommendations->count() < $limit) {
-                $needed    = $limit - $recommendations->count();
-                $existIds  = $recommendations->pluck('id')->merge($readComicIds);
+                $needed = $limit - $recommendations->count();
+                $alreadyCollectedIds = array_merge($excludeIds, $recommendations->pluck('id')->toArray());
 
-                $trending = Comic::trending()
-                    ->whereNotIn('id', $existIds)
-                    ->with(['genres', 'latestChapter', 'tags'])
+                $fallback = Comic::trending()
+                    ->whereNotIn('id', $alreadyCollectedIds)
+                    ->with(['genres', 'latestChapter', 'tags', 'authors'])
                     ->limit($needed)
                     ->get();
 
-                $recommendations = $recommendations->concat($trending);
+                $recommendations = $recommendations->concat($fallback);
+            }
+
+            // 6. Nếu vẫn chưa đủ (kho truyện nhỏ), nới lỏng không loại trừ excludeIds
+            if ($recommendations->count() < $limit) {
+                $needed = $limit - $recommendations->count();
+                $alreadyCollectedIds = $recommendations->pluck('id')->toArray();
+
+                $extra = Comic::orderByDesc('views')
+                    ->whereNotIn('id', $alreadyCollectedIds)
+                    ->with(['genres', 'latestChapter', 'tags', 'authors'])
+                    ->limit($needed)
+                    ->get();
+
+                $recommendations = $recommendations->concat($extra);
             }
 
             return $recommendations->take($limit);
@@ -78,26 +106,93 @@ class RecommendationService
     }
 
     /**
-     * Gợi ý cho khách (guest) — trending comics, cache 15 phút.
+     * Gợi ý truyện tương tự theo một bộ truyện cụ thể (Similar Comics).
      *
-     * @param  int  $limit
+     * @param  Comic  $comic
+     * @param  int    $limit
      * @return Collection<Comic>
      */
-    public function forGuest(int $limit = 6): Collection
+    public function forComic(Comic $comic, int $limit = 6): Collection
     {
-        return Cache::remember('recommendations.guest', 900, function () use ($limit) {
-            return Comic::trending()
-                ->with(['genres', 'latestChapter', 'tags'])
+        $cacheKey = "recommendations.comic.{$comic->id}.limit_{$limit}";
+
+        return Cache::remember($cacheKey, 1800, function () use ($comic, $limit) {
+            $genreIds = $comic->genres->pluck('id')->toArray();
+
+            $query = Comic::where('id', '!=', $comic->id)
+                ->with(['genres', 'latestChapter', 'tags', 'authors']);
+
+            if (!empty($genreIds)) {
+                $query->whereHas('genres', function ($q) use ($genreIds) {
+                    $q->whereIn('genres.id', $genreIds);
+                });
+            }
+
+            $similar = $query->orderByDesc('avg_rating')
+                ->orderByDesc('views')
+                ->limit($limit)
+                ->get();
+
+            if ($similar->count() < $limit) {
+                $needed = $limit - $similar->count();
+                $excludeIds = array_merge([$comic->id], $similar->pluck('id')->toArray());
+
+                $trending = Comic::trending()
+                    ->whereNotIn('id', $excludeIds)
+                    ->with(['genres', 'latestChapter', 'tags', 'authors'])
+                    ->limit($needed)
+                    ->get();
+
+                $similar = $similar->concat($trending);
+            }
+
+            return $similar->take($limit);
+        });
+    }
+
+    /**
+     * Gợi ý cho khách vãng lai (Guest) — Trending & Top Rated, cache 15 phút.
+     *
+     * @param  int    $limit
+     * @param  array  $excludeComicIds
+     * @return Collection<Comic>
+     */
+    public function forGuest(int $limit = 6, array $excludeComicIds = []): Collection
+    {
+        $cacheKey = "recommendations.guest.limit_{$limit}";
+
+        return Cache::remember($cacheKey, 900, function () use ($limit, $excludeComicIds) {
+            $query = Comic::trending();
+
+            if (!empty($excludeComicIds)) {
+                $query->whereNotIn('id', $excludeComicIds);
+            }
+
+            return $query->with(['genres', 'latestChapter', 'tags', 'authors'])
                 ->limit($limit)
                 ->get();
         });
     }
 
     /**
-     * Xóa cache gợi ý khi user đọc truyện mới (gọi từ ChapterController).
+     * Xóa cache gợi ý khi user có hành vi đọc mới hoặc theo dõi truyện.
      */
     public function invalidateForUser(int $userId): void
     {
+        // Xóa các key cache theo các limit phổ biến (4, 6, 8, 10, 12)
+        foreach ([4, 6, 8, 10, 12] as $limit) {
+            Cache::forget("recommendations.user.{$userId}.limit_{$limit}");
+        }
         Cache::forget("recommendations.user.{$userId}");
+    }
+
+    /**
+     * Xóa cache truyện tương tự khi comic có cập nhật metadata.
+     */
+    public function invalidateForComic(int $comicId): void
+    {
+        foreach ([4, 6, 8, 10, 12] as $limit) {
+            Cache::forget("recommendations.comic.{$comicId}.limit_{$limit}");
+        }
     }
 }

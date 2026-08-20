@@ -77,12 +77,13 @@ Route::middleware('auth')->group(function () {
     Route::post('/api/comics/{comicId}/toggle-like', [ComicActionController::class, 'toggleLike'])
         ->middleware('throttle:like-toggle')
         ->name('comics.toggleLike');
-
-    // ── Gợi ý truyện cá nhân hóa ─────────────────────────────────────
-    Route::get('/api/recommendations', [RecommendationController::class, 'index'])
-        ->middleware('throttle:api')
-        ->name('recommendations.index');
 });
+
+// ── API Gợi ý truyện (Công khai cho cả Guest & User, Rate limit: 120 req/phút) ──
+Route::get('/api/recommendations', [RecommendationController::class, 'index'])
+    ->middleware('throttle:api')
+    ->name('recommendations.index');
+
 
 // --- ROUTE ADMIN (Bảo mật với Auth + AdminMiddleware) ---
 Route::middleware(['auth', AdminMiddleware::class])->prefix('admin')->name('admin.')->group(function () {

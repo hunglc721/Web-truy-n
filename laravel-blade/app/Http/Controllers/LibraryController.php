@@ -5,11 +5,16 @@ namespace App\Http\Controllers;
 use App\Models\Comic;
 use App\Models\Library;
 use App\Models\ReadingHistory;
+use App\Services\RecommendationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class LibraryController extends Controller
 {
+    public function __construct(
+        protected RecommendationService $recommendationService
+    ) {}
+
     /**
      * Trang Tủ sách cá nhân & Lịch sử đọc của User
      * URL: /user/library
@@ -74,6 +79,8 @@ class LibraryController extends Controller
             $message = 'Đã thêm bộ truyện "' . $comic->title . '" vào tủ sách cá nhân!';
         }
 
+        $this->recommendationService->invalidateForUser($user->id);
+
         // Đếm tổng số lượt theo dõi truyện
         $totalFollowers = Library::where('comic_id', $comic->id)->count();
 
@@ -97,6 +104,7 @@ class LibraryController extends Controller
     {
         $user = Auth::user();
         ReadingHistory::where('user_id', $user->id)->delete();
+        $this->recommendationService->invalidateForUser($user->id);
 
         if ($request->expectsJson() || $request->ajax()) {
             return response()->json([
