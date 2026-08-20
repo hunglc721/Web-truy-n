@@ -11,8 +11,13 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        //
+        // ── Scoped Route Model Binding ────────────────────────────────────────
+        // Đảm bảo khi route có cả {comic} và {chapter},
+        // Laravel tự động scope chapter phải thuộc comic đó.
+        // Thay vì tự query thủ công, binding làm điều này tự động.
+        $middleware->scopeApiBindings();
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
     })->create();
+

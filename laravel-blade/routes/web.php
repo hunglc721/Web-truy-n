@@ -8,10 +8,10 @@ use App\Http\Controllers\OriginalsController;
 use App\Http\Controllers\ComicController;
 use App\Http\Controllers\ChapterController;
 use App\Http\Controllers\CommentController;
-use App\Http\Controllers\RecommendationController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\LibraryController;
 use App\Http\Controllers\ComicActionController;
+use App\Http\Controllers\RecommendationController;
 use App\Http\Controllers\Admin\AdminComicController;
 use App\Http\Controllers\Admin\AdminGenreController;
 use App\Http\Controllers\Admin\AdminTagController;
@@ -33,14 +33,8 @@ Route::get('/schedule', [ScheduleController::class, 'index'])->name('schedule');
 Route::get('/originals', [OriginalsController::class, 'index'])->name('originals');
 
 // Chuẩn SEO URL cho Chi tiết truyện & Đọc chương
-// Constraint slug: chỉ accept [a-z0-9-] để chặn URL rác và tránh route conflict
-Route::get('/truyen/{slug}', [ComicController::class, 'show'])
-    ->name('comics.show')
-    ->where('slug', '[a-z0-9\-]+');
-
-Route::get('/truyen/{comicSlug}/{chapterSlug}', [ChapterController::class, 'show'])
-    ->name('chapters.show')
-    ->where(['comicSlug' => '[a-z0-9\-]+', 'chapterSlug' => '[a-z0-9\-]+']);
+Route::get('/truyen/{slug}', [ComicController::class, 'show'])->name('comics.show');
+Route::get('/truyen/{comicSlug}/{chapterSlug}', [ChapterController::class, 'show'])->name('chapters.show');
 
 // --- ROUTE AUTHENTICATION ---
 Route::middleware('guest')->group(function () {
@@ -57,28 +51,38 @@ Route::middleware('auth')->group(function () {
     Route::post('/user/library/toggle/{comic}', [LibraryController::class, 'toggle'])->name('library.toggle');
     Route::delete('/user/history/clear', [LibraryController::class, 'clearHistory'])->name('history.clear');
 
+    // ── Lịch sử đọc (throttle: 60 req/phút – cuộn trang liên tục) ──────
     Route::post('/api/reading-history', [ChapterController::class, 'saveHistory'])
-        ->name('history.save')
-        ->middleware('throttle:history-save');
+        ->middleware('throttle:history-save')
+        ->name('history.save');
 
+    // ── Bình luận (throttle: 5 req/phút – chặn spam bình luận) ─────────
     Route::post('/api/comments', [CommentController::class, 'store'])
-        ->name('comments.store')
-        ->middleware('throttle:comments');  // Task 14: rate limit 5/phút
+        ->middleware('throttle:comments')
+        ->name('comments.store');
 
-    // ── Tủ Sách & Lượt Thích (AJAX JSON) ───────────────────────────
+    // PATCH /api/comments/{comment} — sửa bình luận (Policy: chủ BL trong 15p / admin)
+    Route::patch('/api/comments/{comment}', [CommentController::class, 'update'])
+        ->name('comments.update');
+
+    // DELETE /api/comments/{comment} — xóa mềm (Policy: chủ BL / admin)
+    Route::delete('/api/comments/{comment}', [CommentController::class, 'destroy'])
+        ->name('comments.destroy');
+
+    // ── Tủ Sách & Lượt Thích (AJAX JSON) ───────────────────────────────
     Route::post('/api/comics/{comicId}/toggle-library', [ComicActionController::class, 'toggleLibrary'])
-        ->name('comics.toggleLibrary')
-        ->middleware('throttle:library-toggle');
+        ->middleware('throttle:library-toggle')
+        ->name('comics.toggleLibrary');
 
     Route::post('/api/comics/{comicId}/toggle-like', [ComicActionController::class, 'toggleLike'])
-        ->name('comics.toggleLike')
-        ->middleware('throttle:like-toggle');
-});
+        ->middleware('throttle:like-toggle')
+        ->name('comics.toggleLike');
 
-// Task 15: Recommendations — public (guest + user), throttle api
-Route::get('/api/recommendations', [RecommendationController::class, 'index'])
-    ->name('recommendations.index')
-    ->middleware('throttle:api');
+    // ── Gợi ý truyện cá nhân hóa ─────────────────────────────────────
+    Route::get('/api/recommendations', [RecommendationController::class, 'index'])
+        ->middleware('throttle:api')
+        ->name('recommendations.index');
+});
 
 // --- ROUTE ADMIN (Bảo mật với Auth + AdminMiddleware) ---
 Route::middleware(['auth', AdminMiddleware::class])->prefix('admin')->name('admin.')->group(function () {
@@ -86,7 +90,7 @@ Route::middleware(['auth', AdminMiddleware::class])->prefix('admin')->name('admi
     // Dashboard redirect
     Route::get('/', fn() => redirect()->route('admin.comics.index'))->name('dashboard');
 
-    // ── Quản lý Truyện ──────────────────────────────────────────
+    // ── Quản lý Truyện ──────────────────────────────────────────────────
     Route::get('/comics', [AdminComicController::class, 'index'])->name('comics.index');
     Route::get('/comics/create', [AdminComicController::class, 'create'])->name('comics.create');
     Route::post('/comics', [AdminComicController::class, 'store'])->name('comics.store');
@@ -94,15 +98,18 @@ Route::middleware(['auth', AdminMiddleware::class])->prefix('admin')->name('admi
     Route::put('/comics/{id}', [AdminComicController::class, 'update'])->name('comics.update');
     Route::delete('/comics/{id}', [AdminComicController::class, 'destroy'])->name('comics.destroy');
 
-    // Quản lý Chapter (Bulk upload & CRUD nested dưới comic)
-    Route::get('/comics/{comic}/chapters', [AdminChapterController::class, 'index'])->name('comics.chapters.index');
-    Route::get('/comics/{comic}/chapters/create', [AdminChapterController::class, 'create'])->name('comics.chapters.create');
-    Route::post('/comics/{comic}/chapters', [AdminChapterController::class, 'store'])->name('comics.chapters.store');
-    Route::get('/comics/{comic}/chapters/{chapter}/edit', [AdminChapterController::class, 'edit'])->name('comics.chapters.edit');
-    Route::put('/comics/{comic}/chapters/{chapter}', [AdminChapterController::class, 'update'])->name('comics.chapters.update');
-    Route::delete('/comics/{comic}/chapters/{chapter}', [AdminChapterController::class, 'destroy'])->name('comics.chapters.destroy');
+    // Quản lý Chapter — scopeBindings() đảm bảo {chapter} phải thuộc {comic}
+    // Tránh admin truy cập chapter của comic khác qua URL manipulation
+    Route::prefix('/comics/{comic}/chapters')->name('comics.chapters.')->scopeBindings()->group(function () {
+        Route::get('/', [AdminChapterController::class, 'index'])->name('index');
+        Route::get('/create', [AdminChapterController::class, 'create'])->name('create');
+        Route::post('/', [AdminChapterController::class, 'store'])->name('store');
+        Route::get('/{chapter}/edit', [AdminChapterController::class, 'edit'])->name('edit');
+        Route::put('/{chapter}', [AdminChapterController::class, 'update'])->name('update');
+        Route::delete('/{chapter}', [AdminChapterController::class, 'destroy'])->name('destroy');
+    });
 
-    // ── Quản lý Thể loại (Genres) ───────────────────────────────
+    // ── Quản lý Thể loại (Genres) ───────────────────────────────────────
     Route::get('/genres', [AdminGenreController::class, 'index'])->name('genres.index');
     Route::get('/genres/create', [AdminGenreController::class, 'create'])->name('genres.create');
     Route::post('/genres', [AdminGenreController::class, 'store'])->name('genres.store');
@@ -110,7 +117,7 @@ Route::middleware(['auth', AdminMiddleware::class])->prefix('admin')->name('admi
     Route::put('/genres/{genre}', [AdminGenreController::class, 'update'])->name('genres.update');
     Route::delete('/genres/{genre}', [AdminGenreController::class, 'destroy'])->name('genres.destroy');
 
-    // ── Quản lý Tags ────────────────────────────────────────────
+    // ── Quản lý Tags ─────────────────────────────────────────────────────
     Route::get('/tags', [AdminTagController::class, 'index'])->name('tags.index');
     Route::get('/tags/create', [AdminTagController::class, 'create'])->name('tags.create');
     Route::post('/tags', [AdminTagController::class, 'store'])->name('tags.store');
@@ -118,7 +125,7 @@ Route::middleware(['auth', AdminMiddleware::class])->prefix('admin')->name('admi
     Route::put('/tags/{tag}', [AdminTagController::class, 'update'])->name('tags.update');
     Route::delete('/tags/{tag}', [AdminTagController::class, 'destroy'])->name('tags.destroy');
 
-    // ── Quản lý Tác giả (Authors) ───────────────────────────────
+    // ── Quản lý Tác giả (Authors) ───────────────────────────────────────
     Route::get('/authors', [AdminAuthorController::class, 'index'])->name('authors.index');
     Route::get('/authors/create', [AdminAuthorController::class, 'create'])->name('authors.create');
     Route::post('/authors', [AdminAuthorController::class, 'store'])->name('authors.store');
@@ -126,13 +133,13 @@ Route::middleware(['auth', AdminMiddleware::class])->prefix('admin')->name('admi
     Route::put('/authors/{author}', [AdminAuthorController::class, 'update'])->name('authors.update');
     Route::delete('/authors/{author}', [AdminAuthorController::class, 'destroy'])->name('authors.destroy');
 
-    // ── Quản lý Thành viên (Users) ──────────────────────────────
+    // ── Quản lý Thành viên (Users) ──────────────────────────────────────
     Route::get('/users', [AdminUserController::class, 'index'])->name('users.index');
     Route::get('/users/{user}', [AdminUserController::class, 'show'])->name('users.show');
     Route::patch('/users/{user}/toggle-role', [AdminUserController::class, 'toggleRole'])->name('users.toggleRole');
     Route::patch('/users/{user}/toggle-ban', [AdminUserController::class, 'toggleBan'])->name('users.toggleBan');
 
-    // ── Tương tác & Vận hành & Hệ thống ───────────────────────────
+    // ── Tương tác & Vận hành & Hệ thống ────────────────────────────────
     Route::get('/comments', fn() => view('admin.comments.index'))->name('comments.index');
     Route::get('/reports', fn() => view('admin.reports.index'))->name('reports.index');
     Route::get('/schedules', fn() => view('admin.schedules.index'))->name('schedules.index');

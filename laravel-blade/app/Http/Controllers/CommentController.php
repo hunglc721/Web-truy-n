@@ -3,10 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreCommentRequest;
+use App\Http\Requests\UpdateCommentRequest;
 use App\Events\CommentCreated;
 use App\Models\Comment;
 use App\Services\CommentFilterService;
-use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 
 class CommentController extends Controller
 {
@@ -20,11 +21,10 @@ class CommentController extends Controller
     /**
      * Lưu bình luận mới qua AJAX.
      * Authorization & validation đã được xử lý bởi StoreCommentRequest.
+     * Rate limiting: throttle:comments (5 req/phút) áp dụng tại route.
      */
-    public function store(StoreCommentRequest $request)
+    public function store(StoreCommentRequest $request): JsonResponse
     {
-        // Rate limiting đã được xử lý bởi throttle:comments middleware trong routes/web.php
-
         // Chạy Filter Service: phát hiện spam link & lọc từ cấm
         $processed = $this->filterService->process($request->content);
 
@@ -39,7 +39,7 @@ class CommentController extends Controller
 
         $comment->load('user');
 
-        // Task 13: Fire event — LogCommentCreated listener ghi ActivityLog
+        // Fire event — LogCommentCreated listener ghi ActivityLog
         CommentCreated::dispatch($comment);
 
         $isSpam = $processed['status'] === Comment::STATUS_SPAM;
@@ -57,6 +57,51 @@ class CommentController extends Controller
                 'status'    => $comment->status,
                 'time_ago'  => 'Vừa xong',
             ],
+        ]);
+    }
+
+    /**
+     * Sửa nội dung bình luận qua AJAX.
+     * Authorization: CommentPolicy::update() — chủ bình luận trong 15 phút, admin bất kỳ lúc.
+     * Route: PATCH /api/comments/{comment}
+     */
+    public function update(UpdateCommentRequest $request, Comment $comment): JsonResponse
+    {
+        // Lọc lại nội dung sau khi sửa (chặn thêm spam/từ cấm mới)
+        $processed = $this->filterService->process($request->content);
+
+        $comment->update([
+            'content' => $processed['content'],
+            // Nếu nội dung sau khi sửa chứa spam, chuyển về pending duyệt lại
+            'status'  => $processed['status'] === Comment::STATUS_SPAM
+                ? Comment::STATUS_PENDING
+                : $comment->status,
+        ]);
+
+        return response()->json([
+            'status'  => 'success',
+            'message' => 'Bình luận đã được cập nhật.',
+            'comment' => [
+                'id'      => $comment->id,
+                'content' => e($comment->content),
+            ],
+        ]);
+    }
+
+    /**
+     * Xóa mềm bình luận qua AJAX.
+     * Authorization: CommentPolicy::delete() — chủ bình luận hoặc admin.
+     * Route: DELETE /api/comments/{comment}
+     */
+    public function destroy(Comment $comment): JsonResponse
+    {
+        $this->authorize('delete', $comment);
+
+        $comment->delete(); // SoftDelete
+
+        return response()->json([
+            'status'  => 'success',
+            'message' => 'Bình luận đã được xóa.',
         ]);
     }
 }
