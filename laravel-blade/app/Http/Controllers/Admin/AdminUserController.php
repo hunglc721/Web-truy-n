@@ -4,9 +4,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\ActivityLog;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 
 class AdminUserController extends Controller
@@ -59,9 +59,18 @@ class AdminUserController extends Controller
                 ->with('error', 'Bạn không thể thay đổi quyền của chính mình.');
         }
 
+        $oldRole = $user->isAdmin() ? 'admin' : 'user';
         $user->update(['is_admin' => !$user->is_admin]);
+        $newRole = $user->isAdmin() ? 'admin' : 'user';
 
-        $role = $user->is_admin ? 'Admin' : 'User';
+        // Ghi activity log phân quyền
+        ActivityLog::record('admin.user.role_changed', $user, [
+            'old_role'   => $oldRole,
+            'new_role'   => $newRole,
+            'changed_by' => Auth::id(),
+        ]);
+
+        $role = $user->isAdmin() ? 'Admin' : 'User';
         return redirect()->route('admin.users.index')
             ->with('success', "Đã đổi quyền của \"{$user->name}\" thành {$role}.");
     }
@@ -85,11 +94,24 @@ class AdminUserController extends Controller
         if ($user->banned_at) {
             // Mở khóa
             $user->update(['banned_at' => null]);
+
+            // Ghi activity log mở khóa
+            ActivityLog::record('admin.user.unbanned', $user, [
+                'unbanned_by' => Auth::id(),
+            ]);
+
             return redirect()->route('admin.users.index')
                 ->with('success', "Đã mở khóa tài khoản \"{$user->name}\".");
         } else {
             // Khóa tài khoản
             $user->update(['banned_at' => now()]);
+
+            // Ghi activity log khóa tài khoản
+            ActivityLog::record('admin.user.banned', $user, [
+                'banned_by' => Auth::id(),
+                'reason'    => 'Manual ban by admin',
+            ]);
+
             return redirect()->route('admin.users.index')
                 ->with('success', "Đã khóa tài khoản \"{$user->name}\".");
         }

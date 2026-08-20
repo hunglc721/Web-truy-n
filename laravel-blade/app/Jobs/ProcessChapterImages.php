@@ -80,7 +80,13 @@ class ProcessChapterImages implements ShouldQueue
         } catch (\Throwable $e) {
             $this->chapter->update(['processing_status' => 'failed']);
 
-            Log::error("ProcessChapterImages failed for chapter #{$this->chapter->id}: {$e->getMessage()}");
+            Log::channel('queue')->error('ProcessChapterImages failed', [
+                'chapter_id' => $this->chapter->id,
+                'comic_id'   => $this->comic->id,
+                'error'      => $e->getMessage(),
+                'attempt'    => $this->attempts(),
+                'max_tries'  => $this->tries,
+            ]);
 
             throw $e; // Cho phép retry
         }
@@ -93,9 +99,12 @@ class ProcessChapterImages implements ShouldQueue
     {
         $this->chapter->update(['processing_status' => 'failed']);
 
-        Log::error("ProcessChapterImages permanently failed for chapter #{$this->chapter->id}", [
-            'error'    => $e->getMessage(),
-            'comic_id' => $this->comic->id,
+        Log::channel('queue')->critical('ProcessChapterImages permanently failed', [
+            'chapter_id' => $this->chapter->id,
+            'comic_id'   => $this->comic->id,
+            'error'      => $e->getMessage(),
+            'file'       => $e->getFile(),
+            'line'       => $e->getLine(),
         ]);
     }
 }

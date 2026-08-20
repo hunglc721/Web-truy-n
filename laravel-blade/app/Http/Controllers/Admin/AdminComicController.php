@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\ActivityLog;
 use App\Models\Comic;
 use App\Models\Chapter;
 use App\Models\Genre;
@@ -56,6 +57,12 @@ class AdminComicController extends Controller
             $comic->genres()->sync($request->input('genres'));
         }
 
+        // Ghi activity log
+        ActivityLog::record('admin.comic.created', $comic, [
+            'title'  => $comic->title,
+            'genres' => $request->input('genres', []),
+        ]);
+
         return redirect()->route('admin.comics.index')
             ->with('success', 'Đăng bộ truyện mới thành công!');
     }
@@ -94,6 +101,11 @@ class AdminComicController extends Controller
             $comic->genres()->sync($request->input('genres'));
         }
 
+        // Ghi activity log
+        ActivityLog::record('admin.comic.updated', $comic, [
+            'changed_fields' => array_keys($validated),
+        ]);
+
         return redirect()->route('admin.comics.index')
             ->with('success', 'Cập nhật bộ truyện thành công!');
     }
@@ -104,6 +116,13 @@ class AdminComicController extends Controller
     public function destroy($id)
     {
         $comic = Comic::findOrFail($id);
+
+        // Ghi log trước khi xóa (sau khi xóa không còn subject)
+        ActivityLog::record('admin.comic.deleted', $comic, [
+            'title' => $comic->title,
+            'slug'  => $comic->slug,
+        ]);
+
         $comic->delete();
 
         return redirect()->route('admin.comics.index')

@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ActivityLog;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rules\Password;
 
 class AuthController extends Controller
@@ -43,12 +45,25 @@ class AuthController extends Controller
             // Kiểm tra nếu tài khoản bị khóa
             if ($user->isBanned()) {
                 Auth::logout();
+
+                // Log cảnh báo: tài khoản bị khóa cố đăng nhập
+                Log::warning('auth.login_banned', [
+                    'user_id' => $user->id,
+                    'email'   => $user->email,
+                    'ip'      => $request->ip(),
+                ]);
+
                 return back()->withInput()->withErrors([
                     'email' => 'Tài khoản của bạn đã bị khóa đến ' . $user->banned_at->format('d/m/Y H:i') . '. Vui lòng liên hệ Admin.',
                 ]);
             }
 
             $request->session()->regenerate();
+
+            // Ghi activity log đăng nhập thành công
+            ActivityLog::record('auth.login', $user, [
+                'is_admin' => $user->isAdmin(),
+            ]);
 
             // Nếu là admin -> chuyển tới admin dashboard, ngược lại về trang chủ hoặc tủ sách
             if ($user->is_admin) {
@@ -59,6 +74,12 @@ class AuthController extends Controller
             return redirect()->intended(route('user.library'))
                 ->with('success', 'Đăng nhập thành công! Chào mừng ' . $user->name);
         }
+
+        // Log đăng nhập thất bại (security audit)
+        Log::warning('auth.login_failed', [
+            'email' => $request->input('email'),
+            'ip'    => $request->ip(),
+        ]);
 
         return back()->withInput()->withErrors([
             'email' => 'Thông tin đăng nhập (Email hoặc Mật khẩu) không chính xác.',
@@ -104,6 +125,9 @@ class AuthController extends Controller
 
         Auth::login($user);
 
+        // Ghi activity log đăng ký thành công
+        ActivityLog::record('auth.register', $user);
+
         return redirect()->route('user.library')
             ->with('success', 'Đăng ký tài khoản thành công! Tủ sách cá nhân của bạn đã sẵn sàng.');
     }
@@ -113,6 +137,10 @@ class AuthController extends Controller
      */
     public function logout(Request $request)
     {
+        // Ghi log trước khi huỷ session
+        $userId = Auth::id();
+        ActivityLog::record('auth.logout', Auth::user());
+
         Auth::logout();
 
         $request->session()->invalidate();

@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreCommentRequest;
 use App\Http\Requests\UpdateCommentRequest;
 use App\Events\CommentCreated;
+use App\Models\ActivityLog;
 use App\Models\Comment;
 use App\Services\CommentFilterService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Log;
 
 class CommentController extends Controller
 {
@@ -96,6 +98,14 @@ class CommentController extends Controller
     public function destroy(Comment $comment): JsonResponse
     {
         $this->authorize('delete', $comment);
+
+        // Ghi log trước khi xóa (admin moderation audit trail)
+        ActivityLog::record('comment.deleted', $comment, [
+            'comic_id'     => $comment->comic_id,
+            'chapter_id'   => $comment->chapter_id,
+            'deleted_by'   => auth()->id(),
+            'is_own'       => $comment->user_id === auth()->id(),
+        ]);
 
         $comment->delete(); // SoftDelete
 
