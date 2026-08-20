@@ -6,12 +6,16 @@ use App\Models\Comic;
 use App\Models\Chapter;
 use App\Models\ReadingHistory;
 use App\Models\Comment;
+use App\Services\RecommendationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Validation\Rule;
 
 class ChapterController extends Controller
 {
+    public function __construct(
+        protected RecommendationService $recommendationService
+    ) {}
     /**
      * Hiển thị nội dung đọc từng chương (Chế độ SEO Slug)
      * URL: /truyen/{comicSlug}/{chapterSlug}
@@ -114,6 +118,10 @@ class ChapterController extends Controller
                 'last_read_at' => now(),
             ]
         );
+
+        // Invalidate recommendation cache khi user đọc truyện mới
+        // Đảm bảo gợi ý luôn cập nhật theo lịch sử đọc mới nhất
+        $this->recommendationService->invalidateForUser(auth()->id());
 
         return response()->json([
             'status'  => 'success',

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Comic;
 use App\Models\Genre;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class GenreController extends Controller
 {
@@ -29,8 +30,9 @@ class GenreController extends Controller
         $status = $request->input('status', 'all');
         $sortBy = $request->input('sort', 'hot');
 
-        // Lấy danh sách tất cả Thể loại từ CSDL
-        $genres = Genre::orderBy('name')->get();
+        // Lấy danh sách tất cả Thể loại — cache 60 phút (genres ít thay đổi)
+        // Bị invalidate bởi AdminGenreController khi thêm/sửa/xóa genre
+        $genres = Cache::remember('all_genres', 3600, fn() => Genre::orderBy('name')->get());
 
         // 2. Xây dựng Query tìm kiếm với Eager Loading & Count Chapters
         $query = Comic::with([

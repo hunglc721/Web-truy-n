@@ -5,10 +5,12 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreChapterRequest;
 use App\Http\Requests\Admin\UpdateChapterRequest;
+use App\Jobs\ProcessChapterImages;
 use App\Models\Comic;
 use App\Models\Chapter;
 use App\Services\ChapterService;
 use App\Services\ImageService;
+use Illuminate\Support\Facades\Storage;
 
 class AdminChapterController extends Controller
 {
@@ -39,8 +41,17 @@ class AdminChapterController extends Controller
     }
 
     /**
-     * Lưu chương mới với Bulk Upload ảnh.
-     * Validation đã được xử lý bởi StoreChapterRequest.
+     * Lưu chương mới — QUEUE MODE cho bulk upload ảnh.
+     *
+     * Flow:
+     *  1. Validate bằng StoreChapterRequest
+     *  2. Tạo chapter với processing_status='pending'
+     *  3. Lưu ảnh vào thư mục tmp/ trước
+     *  4. Dispatch ProcessChapterImages job → worker xử lý bất đồng bộ
+     *  5. Redirect về admin ngay lập tức (không đợi upload xong)
+     *
+     * Lợi ích: Admin không bị block khi upload 100+ ảnh nặng.
+     * URL list (pages_raw) vẫn xử lý đồng bộ vì không tốn I/O.
      */
     public function store(StoreChapterRequest $request, Comic $comic)
     {
@@ -51,39 +62,50 @@ class AdminChapterController extends Controller
             ]);
         }
 
-        $folder = $this->imageService->chapterFolder($comic->id, 0); // temp folder — sẽ đổi sau khi có ID
-        $pages  = [];
-
-        // Xử lý file upload (cần chapter ID nên tạo chapter trước, sau đó cập nhật pages)
-        // Tạo chapter với pages = [] trước để lấy ID
+        // ── Tạo chapter với pages = [] trước để lấy ID ──────────────────────
         $chapter = $this->chapterService->createWithPages($comic, [
             'chapter_number' => $request->chapter_number,
             'title'          => $request->title,
             'is_free'        => $request->boolean('is_free', true),
         ], []);
 
-        // Upload ảnh vào thư mục theo chapter ID thực
-        $folder = $this->imageService->chapterFolder($comic->id, $chapter->id);
+        $tmpPaths = [];
+        $urlList  = [];
 
+        // ── Lưu ảnh upload vào thư mục tmp/ trên disk ───────────────────────
         if ($request->hasFile('images')) {
-            $pages = $this->imageService->uploadBulk(
-                $request->file('images'),
-                $folder,
-                $request->input('image_order')
-            );
+            $tmpFolder = "tmp/comics/{$comic->id}/chapters/{$chapter->id}";
+            foreach ($request->file('images') as $idx => $file) {
+                $tmpPaths[] = $this->imageService->uploadSingle($file, $tmpFolder, $idx);
+            }
         }
 
-        // Merge URL nếu có
+        // ── Parse URL list ──────────────────────────────────────────────────
         if (!empty(trim($request->input('pages_raw', '')))) {
-            $pages = array_merge($pages, $this->imageService->parseUrlList($request->pages_raw));
+            $urlList = $this->imageService->parseUrlList($request->pages_raw);
         }
 
-        // Cập nhật pages vào chapter vừa tạo
-        $chapter->update(['pages' => $pages]);
+        // ── Nếu chỉ có URL list → xử lý đồng bộ (nhanh, không cần queue) ──
+        if (empty($tmpPaths) && !empty($urlList)) {
+            $chapter->update([
+                'pages'             => $urlList,
+                'processing_status' => 'ready',
+            ]);
+
+            return redirect()
+                ->route('admin.comics.chapters.index', $comic->id)
+                ->with('success', "Đăng thành công Chapter {$chapter->chapter_number} với " . count($urlList) . " trang URL!");
+        }
+
+        // ── Dispatch Queue job — worker sẽ move tmp → final, merge URLs ─────
+        $chapter->update(['processing_status' => 'pending']);
+
+        ProcessChapterImages::dispatch($comic, $chapter, $tmpPaths, $urlList)
+            ->onQueue('chapter-images');
 
         return redirect()
             ->route('admin.comics.chapters.index', $comic->id)
-            ->with('success', "Đăng thành công Chapter {$chapter->chapter_number} với " . count($pages) . " trang ảnh!");
+            ->with('success', "Chapter {$chapter->chapter_number} đã được tạo và đang xử lý ảnh (" . count($tmpPaths) . " file). Refresh sau vài giây để xem kết quả.");
     }
 
     /**
@@ -95,7 +117,7 @@ class AdminChapterController extends Controller
     }
 
     /**
-     * Cập nhật chương (ảnh cũ, ảnh mới, thứ tự trang).
+     * Cập nhật chương — ảnh mới cũng đi qua queue nếu có file upload.
      * Validation đã được xử lý bởi UpdateChapterRequest.
      */
     public function update(UpdateChapterRequest $request, Comic $comic, Chapter $chapter)
@@ -109,15 +131,14 @@ class AdminChapterController extends Controller
         // 2. Bắt đầu với danh sách ảnh còn giữ lại
         $finalPages = array_values((array) $request->input('existing_pages', []));
 
-        // 3. Upload ảnh mới
+        // 3. Upload ảnh mới nếu có
         if ($request->hasFile('new_images')) {
-            $folder    = $this->imageService->chapterFolder($comic->id, $chapter->id);
-            $newPaths  = $this->imageService->uploadBulk(
+            $folder   = $this->imageService->chapterFolder($comic->id, $chapter->id);
+            $newPaths = $this->imageService->uploadBulk(
                 $request->file('new_images'),
                 $folder,
                 null,
             );
-            // Offset page number ảnh mới theo số ảnh hiện tại
             $finalPages = array_merge($finalPages, $newPaths);
         }
 

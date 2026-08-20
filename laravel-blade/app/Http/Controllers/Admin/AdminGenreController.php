@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Genre;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
@@ -54,6 +55,10 @@ class AdminGenreController extends Controller
 
         Genre::create($validated);
 
+        // Invalidate cache danh sách genres
+        Cache::forget('all_genres');
+        Cache::forget('home.genres');
+
         return redirect()->route('admin.genres.index')
             ->with('success', "Thêm thể loại \"{$validated['name']}\" thành công!");
     }
@@ -88,6 +93,10 @@ class AdminGenreController extends Controller
 
         $genre->update($validated);
 
+        // Invalidate cache danh sách genres
+        Cache::forget('all_genres');
+        Cache::forget('home.genres');
+
         return redirect()->route('admin.genres.index')
             ->with('success', "Cập nhật thể loại \"{$genre->name}\" thành công!");
     }
@@ -104,6 +113,10 @@ class AdminGenreController extends Controller
 
         $name = $genre->name;
         $genre->delete();
+
+        // Invalidate cache danh sách genres
+        Cache::forget('all_genres');
+        Cache::forget('home.genres');
 
         return redirect()->route('admin.genres.index')
             ->with('success', "Đã xóa thể loại \"{$name}\".");

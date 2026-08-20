@@ -5,8 +5,10 @@ namespace App\Providers;
 use App\Events\CommentCreated;
 use App\Listeners\LogCommentCreated;
 use App\Models\Chapter;
+use App\Models\Comic;
 use App\Models\Comment;
 use App\Observers\ChapterObserver;
+use App\Observers\ComicObserver;
 use App\Policies\CommentPolicy;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -27,9 +29,13 @@ class AppServiceProvider extends ServiceProvider
         // ── Task 9: Authorization Policy ─────────────────────────────────────
         Gate::policy(Comment::class, CommentPolicy::class);
 
-        // ── Task 11: Cache Observers ──────────────────────────────────────────
-        // ChapterObserver xóa cache 'chapters_list' và 'home.*' khi chapter thay đổi
+        // ── Cache Observers ───────────────────────────────────────────────────
+        // ChapterObserver xóa cache chapters_list + home.* khi chapter thay đổi
         Chapter::observe(ChapterObserver::class);
+
+        // ComicObserver xóa cache comic.detail.{slug} + comic.related.{id} + home.*
+        // khi comic được tạo/sửa/xóa (bao gồm cả trường hợp đổi slug)
+        Comic::observe(ComicObserver::class);
 
         // ── Task 13: Event → Listener mapping ────────────────────────────────
         Event::listen(CommentCreated::class, LogCommentCreated::class);
