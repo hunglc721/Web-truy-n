@@ -1,7 +1,12 @@
 {
     "name": "web-truyen/webcomiCs",
     "description": "Website đọc truyện tranh & manga – Laravel 11",
-    "keywords": ["laravel", "webtoon", "manga", "comic"],
+    "keywords": [
+        "laravel",
+        "webtoon",
+        "manga",
+        "comic"
+    ],
     "license": "MIT",
     "type": "project",
     "require": {
