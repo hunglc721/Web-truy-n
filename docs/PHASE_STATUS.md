@@ -2,29 +2,53 @@
 
 ## Completed in `feat/merge-prototype-into-laravel-blade`
 
-### Phase 1 — Architecture and authentication boundary
-- Laravel remains the single real application.
+### Phase 1 — Architecture and authorization boundary
+- Laravel is the single real application.
 - Guest reading remains public.
 - Member-only actions remain behind `auth`.
-- Admin area remains protected by `AdminMiddleware` and `is_admin`.
-- Existing Laravel auth, models and middleware were preserved.
+- Admin remains protected by `AdminMiddleware` + `is_admin`.
+- Existing Laravel auth/models/services were preserved instead of rewritten.
 
-### Phase 2 — Prototype interaction integration
-- Added Laravel-origin `public/js/app.js`.
-- Removed the prototype JS dependency on `localhost:3000` from the integrated Laravel interaction layer.
-- Added live search against `/api/search/live`.
-- Wired prototype login and library controls to Laravel routes.
-- Added authenticated-state synchronization for the shared header.
-- Preserved trending carousel and banner interactions.
+### Phase 2 — Shared client integration
+- Added same-origin `public/js/app.js`.
+- Live search uses `/api/search/live`.
+- Prototype carousel/banner interactions work without Node/mock API dependencies.
+- Shared Blade header now renders Guest, Member and Admin states directly.
+- JS no longer probes protected APIs to guess login state.
 
-### Phase 3 — Boundary tests and tracking
-- Added `GuestReaderAccessTest` covering public browsing, public comic detail, authenticated comment boundary and Member Library access.
-- Existing `AdminMiddlewareTest` continues to document the Admin-only access rule.
-- Added `docs/MIGRATION_CHECKLIST.md` for page-by-page migration tracking.
+### Phase 3 — One runtime / one URL
+- Removed root `server.js` standalone Node prototype runtime.
+- Rewrote README to document only `laravel-blade` as the runtime.
+- Added `prototype/README.md` marking prototype files as UI reference only.
 
-## Not yet marked complete
+### Phase 4 — Admin prototype gaps
+- Fixed broken Admin layout structure by restoring the missing `.admin-sidebar` wrapper.
+- Added `/admin/analytics` backed by real DB metrics.
+- Added `/admin/permissions` Blade page mapped to the real 2-role Member/Admin model.
+- Added `/admin/settings` as a real persistent module instead of localStorage.
 
-- Pixel-level UI parity for every client prototype page.
-- Pixel-level UI parity for every admin prototype page.
-- Final removal/decommissioning of the standalone Node prototype runtime from the product workflow.
-- Full application test run in a local PHP/Composer environment after all migration batches.
+### Phase 5 — Persistent site settings / maintenance
+- Added `settings` table and `Setting` model.
+- Added `AdminSettingController` and DB-backed settings form.
+- Public layout consumes site name, tagline and default SEO metadata from settings.
+- Added maintenance middleware and 503 page.
+- Admin/login remains reachable while maintenance is active.
+
+### Phase 6 — Regression coverage added
+- `GuestReaderAccessTest`
+- `HeaderRoleStateTest`
+- `AdminSettingsTest`
+- `AdminAnalyticsTest`
+- Existing Admin/Comment/CRUD tests remain in the suite.
+
+## Remaining work
+
+- Visual parity review for Schedule and Originals.
+- Visual parity review for Reader while preserving publish gate/history/reporting.
+- Visual parity review for Member Library.
+- Visual parity review for each existing Admin CRUD screen against prototype.
+- Review any prototype-only decorative/client interactions that still make sense after Laravel integration.
+- Run the complete Laravel test suite in a PHP/Composer environment and fix any failures.
+- Final branch diff/review before merge into `main`.
+
+`prototype/` itself does not need to be deleted: it remains useful as design documentation, but it is no longer executable product runtime.
