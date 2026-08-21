@@ -8,7 +8,6 @@ use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Auth\Access\AuthorizationException;
-use Illuminate\Cache\RateLimiting\Limit;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
@@ -22,18 +21,17 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->web(append: [
+            \App\Http\Middleware\MaintenanceModeMiddleware::class,
             \App\Http\Middleware\EnsureUserNotBanned::class,
         ]);
 
         $middleware->alias([
-            'admin'      => \App\Http\Middleware\AdminMiddleware::class,
-            'not_banned' => \App\Http\Middleware\EnsureUserNotBanned::class,
+            'admin'       => \App\Http\Middleware\AdminMiddleware::class,
+            'not_banned'  => \App\Http\Middleware\EnsureUserNotBanned::class,
+            'maintenance' => \App\Http\Middleware\MaintenanceModeMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-
-        // ── 1. Không tìm thấy tài nguyên (404) ───────────────────────────────
-        // Bao gồm cả Route 404 và Model 404 (ModelNotFoundException)
         $exceptions->render(function (NotFoundHttpException $e, Request $request) {
             if ($request->expectsJson()) {
                 return response()->json([
@@ -48,7 +46,6 @@ return Application::configure(basePath: dirname(__DIR__))
             ], 404);
         });
 
-        // ── 2. ModelNotFoundException → chuẩn hóa về 404 ─────────────────────
         $exceptions->render(function (ModelNotFoundException $e, Request $request) {
             $model = class_basename($e->getModel());
 
@@ -65,7 +62,6 @@ return Application::configure(basePath: dirname(__DIR__))
             ], 404);
         });
 
-        // ── 3. Không có quyền truy cập (403) ─────────────────────────────────
         $exceptions->render(function (AuthorizationException $e, Request $request) {
             if ($request->expectsJson()) {
                 return response()->json([
@@ -80,7 +76,6 @@ return Application::configure(basePath: dirname(__DIR__))
             ], 403);
         });
 
-        // ── 4. Chưa đăng nhập (401) ──────────────────────────────────────────
         $exceptions->render(function (AuthenticationException $e, Request $request) {
             if ($request->expectsJson()) {
                 return response()->json([
@@ -94,7 +89,6 @@ return Application::configure(basePath: dirname(__DIR__))
                 ->with('error', 'Vui lòng đăng nhập để tiếp tục.');
         });
 
-        // ── 5. Method Not Allowed (405) ───────────────────────────────────────
         $exceptions->render(function (MethodNotAllowedHttpException $e, Request $request) {
             if ($request->expectsJson()) {
                 return response()->json([
@@ -107,8 +101,6 @@ return Application::configure(basePath: dirname(__DIR__))
             return response()->view('errors.405', [], 405);
         });
 
-        // ── 6. Rate Limit exceeded (429) ──────────────────────────────────────
-        // Trả về JSON có retry_after thay vì trang lỗi HTML khi là AJAX
         $exceptions->render(function (HttpException $e, Request $request) {
             if ($e->getStatusCode() === 429) {
                 $retryAfter = $e->getHeaders()['Retry-After'] ?? 60;
@@ -128,8 +120,6 @@ return Application::configure(basePath: dirname(__DIR__))
             }
         });
 
-        // ── 7. Validation errors — chuẩn hóa JSON response ───────────────────
-        // Mặc định Laravel đã xử lý tốt, nhưng chuẩn hóa format cho API
         $exceptions->render(function (ValidationException $e, Request $request) {
             if ($request->expectsJson()) {
                 return response()->json([
@@ -139,13 +129,9 @@ return Application::configure(basePath: dirname(__DIR__))
                     'code'    => 422,
                 ], 422);
             }
-            // Blade form: để Laravel xử lý mặc định (redirect + withErrors)
         });
 
-        // ── 8. Lỗi server nghiêm trọng (500) — log chi tiết ──────────────────
-        // Chỉ catch Throwable mà không phải các loại đã handle trên
         $exceptions->render(function (\Throwable $e, Request $request) {
-            // Bỏ qua các exception đã handle ở trên
             if ($e instanceof AuthenticationException
                 || $e instanceof AuthorizationException
                 || $e instanceof ValidationException
@@ -155,10 +141,9 @@ return Application::configure(basePath: dirname(__DIR__))
                 || $e instanceof HttpException
                 || $e instanceof \Illuminate\Http\Exceptions\HttpResponseException
             ) {
-                return null; // Nhường cho handler trên
+                return null;
             }
 
-            // Ghi log lỗi không mong muốn với đầy đủ context
             Log::error('Unhandled exception', [
                 'exception' => get_class($e),
                 'message'   => $e->getMessage(),
@@ -181,22 +166,17 @@ return Application::configure(basePath: dirname(__DIR__))
                 ], 500);
             }
 
-            // Production: ẩn thông tin lỗi chi tiết
             if (app()->isProduction()) {
                 return response()->view('errors.500', [], 500);
             }
 
-            // Development: để Ignition/whoops hiển thị đầy đủ
             return null;
         });
 
-        // ── 9. Report: bỏ qua các exceptions không cần thiết ghi log ─────────
-        // Tránh spam log với 404 từ bot/crawler
         $exceptions->dontReport([
             AuthenticationException::class,
             AuthorizationException::class,
             ValidationException::class,
             NotFoundHttpException::class,
         ]);
-
     })->create();

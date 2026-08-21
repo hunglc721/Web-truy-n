@@ -7,6 +7,7 @@ use App\Listeners\LogCommentCreated;
 use App\Models\Chapter;
 use App\Models\Comic;
 use App\Models\Comment;
+use App\Models\Setting;
 use App\Observers\ChapterObserver;
 use App\Observers\ComicObserver;
 use App\Policies\CommentPolicy;
@@ -15,6 +16,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -26,24 +28,33 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        // ── Task 9: Authorization Policy ─────────────────────────────────────
         Gate::policy(Comment::class, CommentPolicy::class);
-
-        // ── Cache Observers ───────────────────────────────────────────────────
-        // ChapterObserver xóa cache chapters_list + home.* khi chapter thay đổi
         Chapter::observe(ChapterObserver::class);
-
-        // ComicObserver xóa cache comic.detail.{slug} + comic.related.{id} + home.*
-        // khi comic được tạo/sửa/xóa (bao gồm cả trường hợp đổi slug)
         Comic::observe(ComicObserver::class);
-
-        // ── Task 13: Event → Listener mapping ────────────────────────────────
         Event::listen(CommentCreated::class, LogCommentCreated::class);
 
-        // ── Task 14: Named Rate Limiters ──────────────────────────────────────
-        // Định nghĩa tại đây, áp dụng lên route bằng ->middleware('throttle:X')
+        // Public layout consumes the persistent settings created by the admin UI.
+        // The fallback keeps fresh installs usable before the settings migration runs.
+        View::composer('layouts.main', function ($view) {
+            $defaults = [
+                'site_name' => 'WebComics',
+                'tagline' => 'Đọc Manga, Manhwa & Manhua Online',
+                'meta_description' => 'Nền tảng đọc truyện tranh trực tuyến WebComics.',
+                'seo_keywords' => 'đọc truyện,manga,manhwa,manhua,webtoon',
+            ];
 
-        // POST /api/comments — 5 bình luận / phút / user
+            try {
+                $siteSettings = [];
+                foreach ($defaults as $key => $default) {
+                    $siteSettings[$key] = Setting::valueOf($key, $default);
+                }
+            } catch (\Throwable) {
+                $siteSettings = $defaults;
+            }
+
+            $view->with('siteSettings', $siteSettings);
+        });
+
         RateLimiter::for('comments', function (Request $request) {
             return Limit::perMinute(5)
                 ->by($request->user()?->id ?? $request->ip())
@@ -53,28 +64,20 @@ class AppServiceProvider extends ServiceProvider
                 ], 429));
         });
 
-        // POST /api/comics/*/toggle-library — 30 req/phút / user
         RateLimiter::for('library-toggle', function (Request $request) {
-            return Limit::perMinute(30)
-                ->by($request->user()?->id ?? $request->ip());
+            return Limit::perMinute(30)->by($request->user()?->id ?? $request->ip());
         });
 
-        // POST /api/comics/*/toggle-like — 30 req/phút / user
         RateLimiter::for('like-toggle', function (Request $request) {
-            return Limit::perMinute(30)
-                ->by($request->user()?->id ?? $request->ip());
+            return Limit::perMinute(30)->by($request->user()?->id ?? $request->ip());
         });
 
-        // POST /api/reading-history — 60 req/phút / user (cuộn trang liên tục)
         RateLimiter::for('history-save', function (Request $request) {
-            return Limit::perMinute(60)
-                ->by($request->user()?->id ?? $request->ip());
+            return Limit::perMinute(60)->by($request->user()?->id ?? $request->ip());
         });
 
-        // Toàn bộ /api/* — 120 req/phút / user hoặc IP (guest)
         RateLimiter::for('api', function (Request $request) {
-            return Limit::perMinute(120)
-                ->by($request->user()?->id ?? $request->ip());
+            return Limit::perMinute(120)->by($request->user()?->id ?? $request->ip());
         });
     }
 }

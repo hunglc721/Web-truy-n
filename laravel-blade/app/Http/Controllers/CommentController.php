@@ -2,54 +2,72 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\CommentCreated;
 use App\Http\Requests\StoreCommentRequest;
 use App\Http\Requests\UpdateCommentRequest;
-use App\Events\CommentCreated;
 use App\Models\ActivityLog;
 use App\Models\Comment;
+use App\Models\CommentLike;
 use App\Services\CommentFilterService;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class CommentController extends Controller
 {
-    protected CommentFilterService $filterService;
+    public function __construct(
+        protected CommentFilterService $filterService
+    ) {}
 
-    public function __construct(CommentFilterService $filterService)
-    {
-        $this->filterService = $filterService;
-    }
-
-    /**
-     * Lấy danh sách bình luận (phân biệt cấp truyện vs cấp chapter).
-     * Query Parameters:
-     *   - comic_id: int (bắt buộc)
-     *   - chapter_id: int (tuỳ chọn) - nếu có thì lấy comment của chapter đó, nếu không có thì lấy comment cấp truyện (chapter_id IS NULL)
-     *   - parent_id: null (chỉ lấy top-level comments, replies được eager load)
-     */
     public function index(Request $request): JsonResponse
     {
         $request->validate([
             'comic_id'   => 'required|exists:comics,id',
             'chapter_id' => 'nullable|exists:chapters,id',
+            'sort'       => 'nullable|in:newest,top',
         ]);
 
-        $query = Comment::with(['user', 'replies.user'])
-            ->where('comic_id', $request->comic_id)
+        $query = Comment::with([
+                'user:id,name',
+                'replies' => fn ($q) => $q->approved()->with('user:id,name')->orderBy('created_at'),
+            ])
+            ->where('comic_id', $request->integer('comic_id'))
             ->whereNull('parent_id')
-            ->approved()
-            ->orderBy('created_at', 'desc');
+            ->approved();
 
         if ($request->filled('chapter_id')) {
-            // Luồng 1: Bình luận thuộc về chương cụ thể
-            $query->where('chapter_id', $request->chapter_id);
+            $query->where('chapter_id', $request->integer('chapter_id'));
         } else {
-            // Luồng 2: Bình luận cấp truyện (không gắn với chương nào)
             $query->whereNull('chapter_id');
         }
 
+        if ($request->input('sort') === 'top') {
+            $query->orderByDesc('likes_count')->orderByDesc('created_at');
+        } else {
+            $query->orderByDesc('created_at');
+        }
+
         $comments = $query->paginate(20);
+        $userId = auth()->id();
+
+        if ($userId) {
+            $commentIds = $comments->getCollection()
+                ->flatMap(fn (Comment $comment) => collect([$comment->id])->merge($comment->replies->pluck('id')))
+                ->unique()
+                ->values();
+
+            $likedIds = CommentLike::where('user_id', $userId)
+                ->whereIn('comment_id', $commentIds)
+                ->pluck('comment_id')
+                ->flip();
+
+            $comments->getCollection()->each(function (Comment $comment) use ($likedIds) {
+                $comment->setAttribute('liked_by_me', $likedIds->has($comment->id));
+                $comment->replies->each(
+                    fn (Comment $reply) => $reply->setAttribute('liked_by_me', $likedIds->has($reply->id))
+                );
+            });
+        }
 
         return response()->json([
             'status'   => 'success',
@@ -57,14 +75,8 @@ class CommentController extends Controller
         ]);
     }
 
-    /**
-     * Lưu bình luận mới qua AJAX.
-     * Authorization & validation đã được xử lý bởi StoreCommentRequest.
-     * Rate limiting: throttle:comments (5 req/phút) áp dụng tại route.
-     */
     public function store(StoreCommentRequest $request): JsonResponse
     {
-        // Chạy Filter Service: phát hiện spam link & lọc từ cấm
         $processed = $this->filterService->process($request->content);
 
         $comment = Comment::create([
@@ -74,46 +86,85 @@ class CommentController extends Controller
             'parent_id'  => $request->parent_id ?: null,
             'content'    => $processed['content'],
             'status'     => $processed['status'],
+            'likes_count'=> 0,
         ]);
 
-        $comment->load(['user', 'replies.user']);
-
-        // Fire event — LogCommentCreated listener ghi ActivityLog
+        $comment->load('user:id,name');
         CommentCreated::dispatch($comment);
 
         $isSpam = $processed['status'] === Comment::STATUS_SPAM;
 
         return response()->json([
-            'status'  => 'success',
-            'is_spam' => $isSpam,
-            'message' => $isSpam
-                ? 'Bình luận của bạn chứa liên kết/thông tin nghi vấn và đã được đưa vào danh sách chờ duyệt.'
-                : 'Đã đăng bình luận thành công!',
+            'status'       => 'success',
+            'is_spam'      => $isSpam,
+            'has_bad_word' => (bool) ($processed['has_bad_word'] ?? false),
+            'message'      => $isSpam
+                ? 'Bình luận chứa liên kết/thông tin nghi vấn và đã được đưa vào danh sách chờ duyệt.'
+                : (($processed['has_bad_word'] ?? false)
+                    ? 'Bình luận đã được tự động làm sạch từ nhạy cảm và đăng thành công.'
+                    : 'Đã đăng bình luận thành công!'),
             'comment' => [
-                'id'        => $comment->id,
-                'user_name' => $comment->user->name ?? 'User',
-                'content'   => e($comment->content),
-                'status'    => $comment->status,
-                'time_ago'  => 'Vừa xong',
-                'parent_id' => $comment->parent_id,
-                'chapter_id'=> $comment->chapter_id,
+                'id'           => $comment->id,
+                'user_id'      => $comment->user_id,
+                'user_name'    => e($comment->user->name ?? 'User'),
+                'content'      => e($comment->content),
+                'status'       => $comment->status,
+                'time_ago'     => 'Vừa xong',
+                'parent_id'    => $comment->parent_id,
+                'chapter_id'   => $comment->chapter_id,
+                'likes_count'  => 0,
+                'liked_by_me'  => false,
             ],
         ]);
     }
 
-    /**
-     * Sửa nội dung bình luận qua AJAX.
-     * Authorization: CommentPolicy::update() — chủ bình luận trong 15 phút, admin bất kỳ lúc.
-     * Route: PATCH /api/comments/{comment}
-     */
+    public function toggleLike(Comment $comment): JsonResponse
+    {
+        if ($comment->status !== Comment::STATUS_APPROVED) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Chỉ có thể thích bình luận đã được duyệt.',
+            ], 422);
+        }
+
+        $userId = auth()->id();
+
+        $result = DB::transaction(function () use ($comment, $userId) {
+            $existing = CommentLike::where('comment_id', $comment->id)
+                ->where('user_id', $userId)
+                ->lockForUpdate()
+                ->first();
+
+            if ($existing) {
+                $existing->delete();
+                $isLiked = false;
+            } else {
+                CommentLike::create([
+                    'comment_id' => $comment->id,
+                    'user_id'    => $userId,
+                ]);
+                $isLiked = true;
+            }
+
+            $likesCount = CommentLike::where('comment_id', $comment->id)->count();
+            $comment->update(['likes_count' => $likesCount]);
+
+            return [$isLiked, $likesCount];
+        });
+
+        return response()->json([
+            'status'      => 'success',
+            'is_liked'    => $result[0],
+            'likes_count' => $result[1],
+        ]);
+    }
+
     public function update(UpdateCommentRequest $request, Comment $comment): JsonResponse
     {
-        // Lọc lại nội dung sau khi sửa (chặn thêm spam/từ cấm mới)
         $processed = $this->filterService->process($request->content);
 
         $comment->update([
             'content' => $processed['content'],
-            // Nếu nội dung sau khi sửa chứa spam, chuyển về pending duyệt lại
             'status'  => $processed['status'] === Comment::STATUS_SPAM
                 ? Comment::STATUS_PENDING
                 : $comment->status,
@@ -129,24 +180,18 @@ class CommentController extends Controller
         ]);
     }
 
-    /**
-     * Xóa mềm bình luận qua AJAX.
-     * Authorization: CommentPolicy::delete() — chủ bình luận hoặc admin.
-     * Route: DELETE /api/comments/{comment}
-     */
     public function destroy(Comment $comment): JsonResponse
     {
         $this->authorize('delete', $comment);
 
-        // Ghi log trước khi xóa (admin moderation audit trail)
         ActivityLog::record('comment.deleted', $comment, [
-            'comic_id'     => $comment->comic_id,
-            'chapter_id'   => $comment->chapter_id,
-            'deleted_by'   => auth()->id(),
-            'is_own'       => $comment->user_id === auth()->id(),
+            'comic_id'   => $comment->comic_id,
+            'chapter_id' => $comment->chapter_id,
+            'deleted_by' => auth()->id(),
+            'is_own'     => $comment->user_id === auth()->id(),
         ]);
 
-        $comment->delete(); // SoftDelete
+        $comment->delete();
 
         return response()->json([
             'status'  => 'success',
