@@ -10,7 +10,7 @@
 @endpush
 
 @section('content')
-<div class="admin-page-header"><h1 class="admin-page-title">💬 Kiểm duyệt Bình luận</h1><p class="admin-page-sub">Duyệt, ẩn, xóa mềm, khóa nhanh tài khoản vi phạm và xử lý hàng loạt.</p></div>
+<div class="admin-page-header"><h1 class="admin-page-title">💬 Quản lý & Kiểm duyệt Bình luận</h1><p class="admin-page-sub">Duyệt, ẩn, xóa mềm, khóa nhanh tài khoản vi phạm và xử lý hàng loạt.</p></div>
 
 <div class="admin-stats-row">
   @foreach([

@@ -39,7 +39,7 @@
   <div class="col-main-8" style="display:flex;flex-direction:column;gap:20px;">
     <div class="admin-stats-grid">
       <div class="admin-stat-card"><div class="admin-stat-label">📚 Tổng Truyện</div><div class="admin-stat-value primary">{{ $comics->total() }}</div></div>
-      <div class="admin-stat-card"><div class="admin-stat-label">📖 Tổng Chapter</div><div class="admin-stat-value success">{{ number_format(\App\Models\Chapter::count()) }}</div></div>
+      <a href="{{ route('admin.chapters.index') }}" class="admin-stat-card" style="text-decoration:none;color:inherit"><div class="admin-stat-label">📖 Tổng Chapter</div><div class="admin-stat-value success">{{ number_format(\App\Models\Chapter::count()) }}</div></a>
       <div class="admin-stat-card"><div class="admin-stat-label">👥 Thành Viên</div><div class="admin-stat-value warning">{{ number_format(\App\Models\User::count()) }}</div></div>
       <div class="admin-stat-card"><div class="admin-stat-label">🏷️ Thể Loại</div><div class="admin-stat-value info">{{ \App\Models\Genre::count() }}</div></div>
     </div>

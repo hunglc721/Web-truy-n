@@ -11,7 +11,7 @@
 
 @section('content')
 <div class="admin-page-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap">
-  <div><h1 class="admin-page-title">📅 Quản lý Lịch Phát Hành</h1><p class="admin-page-sub">Thêm, sửa, tắt/bật và xóa lịch; trang public /schedule đọc trực tiếp dữ liệu này.</p></div>
+  <div><h1 class="admin-page-title">📅 Quản lý Lịch Phát Sóng Tuần</h1><p class="admin-page-sub">Thêm, sửa, tắt/bật và xóa lịch; trang public /schedule đọc trực tiếp dữ liệu này.</p></div>
   <button type="button" class="btn-admin btn-admin-primary" onclick="openScheduleModal()">➕ Thêm lịch</button>
 </div>
 
@@ -33,7 +33,7 @@
                 <div class="sched-meta">⏰ {{ substr((string)$sched->release_time,0,5) }} · {{ $sched->is_active ? 'Đang bật' : 'Đang tắt' }}</div>
               </div>
               <div class="sched-actions">
-                <button type="button" class="icon-mini" title="Sửa" onclick='openScheduleModal(@json(["id"=>$sched->id,"comic_id"=>$sched->comic_id,"day_of_week"=>$sched->day_of_week,"release_time"=>substr((string)$sched->release_time,0,5),"is_active"=>$sched->is_active]))'>✏️</button>
+                <button type="button" class="icon-mini" title="Sửa" onclick="openScheduleModal({{ json_encode(['id'=>$sched->id,'comic_id'=>$sched->comic_id,'day_of_week'=>$sched->day_of_week,'release_time'=>substr((string)$sched->release_time,0,5),'is_active'=>$sched->is_active]) }})">✏️</button>
                 <form method="POST" action="{{ route('admin.schedules.destroy',$sched) }}" onsubmit="return confirm('Xóa lịch phát hành này?')">@csrf @method('DELETE')<button class="icon-mini" style="color:var(--admin-danger)" title="Xóa">🗑️</button></form>
               </div>
             </div>

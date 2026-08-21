@@ -27,8 +27,12 @@
       </div>
       <div class="spotlight-details">
         <div class="spotlight-tags">
-          @foreach($comic->genres as $genre)<a href="{{ route('genres',['genre'=>$genre->slug]) }}" class="genre-tag">{{ $genre->name }}</a>@endforeach
-          @foreach($comic->tags as $tag)<span class="orig-tag">{{ $tag->name }}</span>@endforeach
+          @foreach($comic->genres as $genre)
+            <a href="{{ route('genres', ['genre' => $genre->slug]) }}" class="genre-tag">{{ $genre->name }}</a>
+          @endforeach
+          @foreach($comic->tags as $tag)
+            <span class="orig-tag">{{ $tag->name }}</span>
+          @endforeach
         </div>
         <h1 class="spotlight-title">{{ $comic->title }}</h1>
         <p class="spotlight-author">Tác giả: {{ $comic->authors->pluck('name')->join(' · ') ?: 'Chưa cập nhật' }} · ⭐ {{ number_format($comic->avg_rating,1) }} · 👁 {{ $comic->formatted_views }} · {{ ucfirst($comic->status) }}</p>
@@ -52,11 +56,13 @@
 
         <div class="spotlight-actions" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:16px;">
           @if($lastChapter)
-            <a href="{{ route('chapters.show',[$comic->slug,$lastChapter->slug]) }}" class="btn-spotlight-read">📖 Đọc Tiếp Ch.{{ $lastChapter->chapter_number }}{{ ($lastHistory->scroll_percent ?? 0)>0 ? ' · '.round($lastHistory->scroll_percent).'%' : '' }}</a>
+            <a href="{{ route('chapters.show', [$comic->slug ?: ('comic-'.$comic->id), $lastChapter->slug ?: ('chapter-'.($lastChapter->chapter_number ?? 1))]) }}" class="btn-spotlight-read">📖 Đọc Tiếp (Ch.{{ $lastChapter->chapter_number }}{{ ($lastHistory->scroll_percent ?? 0) > 0 ? ' - ' . round($lastHistory->scroll_percent) . '%' : '' }})</a>
           @elseif($firstChapter)
-            <a href="{{ route('chapters.show',[$comic->slug,$firstChapter->slug]) }}" class="btn-spotlight-read">🚀 Đọc Từ Chương {{ $firstChapter->chapter_number }}</a>
+            <a href="{{ route('chapters.show', [$comic->slug ?: ('comic-'.$comic->id), $firstChapter->slug ?: ('chapter-'.($firstChapter->chapter_number ?? 1))]) }}" class="btn-spotlight-read">🚀 Đọc Từ Chương {{ $firstChapter->chapter_number }}</a>
           @endif
-          @if($latestChapter && (!$lastChapter || $latestChapter->id !== $lastChapter->id))<a href="{{ route('chapters.show',[$comic->slug,$latestChapter->slug]) }}" class="btn-spotlight-sub" style="text-decoration:none;">Chương Mới Nhất {{ $latestChapter->chapter_number }}</a>@endif
+          @if($latestChapter && (!$lastChapter || $latestChapter->id !== $lastChapter->id))
+            <a href="{{ route('chapters.show', [$comic->slug ?: ('comic-'.$comic->id), $latestChapter->slug ?: ('chapter-'.($latestChapter->chapter_number ?? 1))]) }}" class="btn-spotlight-sub" style="text-decoration:none;">Chương Mới Nhất {{ $latestChapter->chapter_number }}</a>
+          @endif
 
           @auth
           <button type="button" id="btn-toggle-library" data-comic="{{ $comic->id }}" data-saved="{{ $isSaved ? '1':'0' }}" class="btn-spotlight-sub" style="cursor:pointer;{{ $isSaved?'background:#16a34a;color:#fff;border-color:#16a34a;':'' }}"><span id="lib-label">{{ $isSaved?'✓ Đã Theo Dõi':'📚 Theo Dõi Truyện' }}</span></button>
@@ -78,8 +84,18 @@
       <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:12px;"><h2 class="section-title" style="margin:0;">Danh sách chapter</h2><div style="display:flex;gap:6px;"><button type="button" class="comment-sort active" id="chap-sort-desc">Mới nhất</button><button type="button" class="comment-sort" id="chap-sort-asc">Cũ nhất</button></div></div>
       <div id="chapter-list" style="display:flex;flex-direction:column;gap:8px;">
         @forelse($comic->chapters as $chapter)
-          <a href="{{ route('chapters.show',[$comic->slug,$chapter->slug]) }}" class="browse-card chapter-row" data-chapter="{{ $chapter->chapter_number }}" style="padding:16px 20px;text-decoration:none;align-items:center;">
-            <div class="browse-info" style="padding:0;"><h3 class="browse-title" style="font-size:15px;">Chương {{ $chapter->chapter_number }} @if($chapter->title)— {{ $chapter->title }}@endif</h3><p class="browse-meta" style="margin:4px 0 0;">{{ $chapter->time_ago }} @if(!$chapter->is_free)· 🔒 Premium@endif</p></div>
+          <a href="{{ route('chapters.show', [$comic->slug ?: ('comic-'.$comic->id), $chapter->slug ?: ('chapter-'.($chapter->chapter_number ?? 1))]) }}" class="browse-card chapter-row" data-chapter="{{ $chapter->chapter_number }}" style="padding:16px 20px;text-decoration:none;align-items:center;">
+            <div class="browse-info" style="padding:0;">
+              <h3 class="browse-title" style="font-size:15px;">
+                Chương {{ $chapter->chapter_number }} @if($chapter->title) — {{ $chapter->title }} @endif
+              </h3>
+              <p class="browse-meta" style="margin:4px 0 0;">
+                {{ $chapter->time_ago }}
+                @if(!$chapter->is_free)
+                  · 🔒 Premium
+                @endif
+              </p>
+            </div>
           </a>
         @empty
           <div style="padding:35px;text-align:center;border:1px dashed var(--border);border-radius:12px;color:var(--text-sub);">Chưa có chương nào được phát hành.</div>
@@ -99,28 +115,71 @@
         <div style="text-align:center;margin-top:14px;"><button type="button" id="btn-more-comments" class="btn-spotlight-sub" style="display:none;cursor:pointer;">Xem thêm bình luận</button></div>
       </div>
 
-      <div class="detail-rating-card">
+      <div class="detail-rating-card" id="ratings-section">
         <div class="section-header" style="margin-bottom:18px;"><h2 class="section-title">⭐ Đánh Giá & Nhận Xét</h2></div>
         <div class="rating-grid">
           <div><div class="rating-score-num" id="rating-avg-display">{{ number_format($comic->avg_rating,1) }}</div><div class="rating-stars-display" id="rating-stars-icons"></div><div style="font-size:12px;color:var(--text-sub);">Dựa trên <strong id="rating-total-display">{{ $comic->total_ratings }}</strong> lượt đánh giá</div></div>
-          <div>@for($s=5;$s>=1;$s--)<div class="rating-bar-row"><span>{{ $s }} ★</span><div class="rating-bar-track"><div class="rating-bar-fill" id="bar-fill-{{ $s }}" style="width:0%"></div></div><span id="bar-percent-{{ $s }}">0%</span></div>@endfor</div>
+          <div class="rating-histogram" id="rating-histogram-bars">
+            @for($s = 5; $s >= 1; $s--)
+              <div class="rating-bar-row">
+                <span>{{ $s }} ★</span>
+                <div class="rating-bar-track"><div class="rating-bar-fill" id="bar-fill-{{ $s }}" style="width:0%"></div></div>
+                <span id="bar-percent-{{ $s }}">0%</span>
+              </div>
+            @endfor
+          </div>
         </div>
 
         @auth
-        <div style="border-top:1px solid var(--border);padding-top:18px;margin-top:18px;"><h3 style="font-size:15px;margin:0;">Đánh giá của bạn</h3><div class="star-rating-select" id="star-selector">@for($i=1;$i<=5;$i++)<button type="button" class="star-btn" data-value="{{ $i }}">★</button>@endfor</div><input type="hidden" id="selected-score" value="0"><textarea id="rating-review-input" class="rating-review-textarea" maxlength="1000" placeholder="Viết cảm nhận (tùy chọn)..."></textarea><div style="display:flex;gap:8px;"><button type="button" id="btn-submit-rating" class="btn-spotlight-read" style="padding:8px 16px;">Gửi Đánh Giá</button><button type="button" id="btn-delete-rating" class="btn-spotlight-sub" style="display:none;color:#ef4444;padding:8px 14px;">Xóa Đánh Giá</button></div></div>
+        <div style="border-top:1px solid var(--border);padding-top:18px;margin-top:18px;">
+          <h3 style="font-size:15px;margin:0;">Đánh giá của bạn</h3>
+          <div class="star-rating-select" id="star-selector">
+            @for($i = 1; $i <= 5; $i++)
+              <button type="button" class="star-btn" data-value="{{ $i }}">★</button>
+            @endfor
+          </div>
+          <input type="hidden" id="selected-score" value="0">
+          <textarea id="rating-review-input" class="rating-review-textarea" maxlength="1000" placeholder="Viết cảm nhận (tùy chọn)..."></textarea>
+          <div style="display:flex;gap:8px;">
+            <button type="button" id="btn-submit-rating" class="btn-spotlight-read" style="padding:8px 16px;">Gửi Đánh Giá</button>
+            <button type="button" id="btn-delete-rating" class="btn-spotlight-sub" style="display:none;color:#ef4444;padding:8px 14px;">Xóa Đánh Giá</button>
+          </div>
+        </div>
         @else
-        <div style="border-top:1px solid var(--border);padding-top:18px;margin-top:18px;color:var(--text-sub);"><a href="{{ route('login') }}">Đăng nhập</a> để gửi đánh giá.</div>
+        <div style="border-top:1px solid var(--border);padding-top:18px;margin-top:18px;color:var(--text-sub);"><a href="{{ route('login') }}" style="color:var(--primary);font-weight:700;">Vui lòng đăng nhập để gửi đánh giá.</a></div>
         @endauth
 
         <div id="reviews-list-container" style="margin-top:22px;"><h3 style="font-size:15px;">Nhận xét gần đây</h3><div id="reviews-items"><p style="color:var(--text-sub);">Đang tải nhận xét...</p></div></div>
       </div>
     </section>
 
-    @php($suggested = ($recommendations ?? collect())->filter(fn($item) => $item->id !== $comic->id)->take(6))
+    @php
+      $suggested = ($recommendations ?? collect())->filter(fn($item) => $item->id !== $comic->id)->take(6);
+    @endphp
     @if($suggested->isNotEmpty())
-    <section class="comics-section" style="padding-top:42px;"><div class="section-header"><h2 class="section-title">✨ Dành Cho Bạn</h2></div><div class="comics-grid">@foreach($suggested as $item)<a href="{{ route('comics.show',$item->slug) }}" class="comic-card-sm"><div class="sm-cover"><img src="{{ $item->cover_image }}" alt="{{ $item->title }}" class="cover-img" loading="lazy"><span class="sm-badge">★ {{ number_format($item->avg_rating,1) }}</span></div><p class="sm-title">{{ $item->title }}</p></a>@endforeach</div></section>
-    @elseif($relatedComics->isNotEmpty())
-    <section class="comics-section" style="padding-top:42px;"><div class="section-header"><h2 class="section-title">🔗 Truyện Bạn Có Thể Thích</h2></div><div class="comics-grid">@foreach($relatedComics as $item)<a href="{{ route('comics.show',$item->slug) }}" class="comic-card-sm"><div class="sm-cover"><img src="{{ $item->cover_image }}" alt="{{ $item->title }}" class="cover-img" loading="lazy"><span class="sm-badge">★ {{ number_format($item->avg_rating,1) }}</span></div><p class="sm-title">{{ $item->title }}</p></a>@endforeach</div></section>
+      <section class="comics-section" style="padding-top:42px;">
+        <div class="section-header"><h2 class="section-title">✨ Dành Cho Bạn</h2></div>
+        <div class="comics-grid">
+          @foreach($suggested as $item)
+            <a href="{{ route('comics.show', $item->slug) }}" class="comic-card-sm">
+              <div class="sm-cover"><img src="{{ $item->cover_image }}" alt="{{ $item->title }}" class="cover-img" loading="lazy"><span class="sm-badge">★ {{ number_format($item->avg_rating,1) }}</span></div>
+              <p class="sm-title">{{ $item->title }}</p>
+            </a>
+          @endforeach
+        </div>
+      </section>
+    @elseif(!empty($relatedComics) && $relatedComics->isNotEmpty())
+      <section class="comics-section" style="padding-top:42px;">
+        <div class="section-header"><h2 class="section-title">🔗 Truyện Bạn Có Thể Thích</h2></div>
+        <div class="comics-grid">
+          @foreach($relatedComics as $item)
+            <a href="{{ route('comics.show', $item->slug) }}" class="comic-card-sm">
+              <div class="sm-cover"><img src="{{ $item->cover_image }}" alt="{{ $item->title }}" class="cover-img" loading="lazy"><span class="sm-badge">★ {{ number_format($item->avg_rating,1) }}</span></div>
+              <p class="sm-title">{{ $item->title }}</p>
+            </a>
+          @endforeach
+        </div>
+      </section>
     @endif
   </div>
 </main>

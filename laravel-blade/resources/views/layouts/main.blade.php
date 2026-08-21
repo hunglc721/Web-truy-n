@@ -50,7 +50,22 @@
     <div class="footer-main-grid">
       <div class="fgrid-brand-col"><a href="{{ route('home') }}" class="logo-link"><div class="logo-icon"><svg width="40" height="40" viewBox="0 0 44 44"><rect width="44" height="44" rx="12" fill="#FF5E36"/><text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle" font-family="Inter" font-weight="900" font-size="18" fill="white">WC</text></svg></div><span class="logo-text">{{ $siteSettings['site_name'] ?? 'WebComics' }}</span></a><p class="fbrand-desc">{{ $siteSettings['tagline'] ?? 'Nền tảng đọc Manga, Manhwa và Manhua trực tuyến.' }}</p></div>
       <div class="fgrid-col"><h4 class="fcol-heading">Khám Phá</h4><ul class="fcol-list"><li><a href="{{ route('home') }}">Truyện Thịnh Hành</a></li><li><a href="{{ route('genres') }}">Tất Cả Thể Loại</a></li><li><a href="{{ route('schedule') }}">Lịch Ra Truyện</a></li><li><a href="{{ route('originals') }}">Truyện Độc Quyền</a></li></ul></div>
-      <div class="fgrid-col"><h4 class="fcol-heading">Tài Khoản</h4><ul class="fcol-list">@guest<li><a href="{{ route('login') }}">Đăng Nhập</a></li><li><a href="{{ route('register') }}">Đăng Ký</a></li>@else<li><a href="{{ route('user.dashboard') }}">Tổng Quan</a></li><li><a href="{{ route('user.library') }}">Tủ Truyện</a></li><li><a href="{{ route('user.history') }}">Lịch Sử</a></li><li><a href="{{ route('user.likes') }}">Yêu Thích</a></li>@if(auth()->user()->canAccessAdmin())<li><a href="{{ route('admin.dashboard') }}">Trang Quản Trị</a></li>@endif@endguest</ul></div>
+      <div class="fgrid-col"><h4 class="fcol-heading">Tài Khoản</h4>
+        <ul class="fcol-list">
+          @guest
+            <li><a href="{{ route('login') }}">Đăng Nhập</a></li>
+            <li><a href="{{ route('register') }}">Đăng Ký</a></li>
+          @else
+            <li><a href="{{ route('user.dashboard') }}">Tổng Quan</a></li>
+            <li><a href="{{ route('user.library') }}">Tủ Truyện</a></li>
+            <li><a href="{{ route('user.history') }}">Lịch Sử</a></li>
+            <li><a href="{{ route('user.likes') }}">Yêu Thích</a></li>
+            @if(auth()->user()->canAccessAdmin())
+              <li><a href="{{ route('admin.dashboard') }}">Trang Quản Trị</a></li>
+            @endif
+          @endguest
+        </ul>
+      </div>
       <div class="fgrid-col"><h4 class="fcol-heading">Hỗ Trợ</h4><span class="footer-static-item">Điều Khoản Sử Dụng</span><span class="footer-static-item">Chính Sách Riêng Tư</span><span class="footer-static-item">Bản Quyền & DMCA</span><span class="footer-static-item">Trung Tâm Trợ Giúp</span></div>
     </div>
     <div class="footer-bottom-bar"><p class="fcopy-text">&copy; {{ date('Y') }} {{ $siteSettings['site_name'] ?? 'WebComics' }}. All rights reserved.</p><div class="lang-selector"><span class="lang-icon">🌐</span><select class="lang-select" aria-label="Ngôn ngữ"><option value="vi" selected>Tiếng Việt</option></select></div></div>

@@ -109,9 +109,13 @@ class SearchService
             }
         }
 
-        // 4. Lọc theo Trạng thái (ONGOING, COMPLETED)
+        // 4. Lọc theo Trạng thái (ongoing, completed, hiatus)
         if (!empty($params['status']) && strtolower((string) $params['status']) !== 'all') {
-            $query->where('status', strtoupper((string) $params['status']));
+            $st = (string) $params['status'];
+            $query->where(function (Builder $q) use ($st) {
+                $q->where('status', strtolower($st))
+                    ->orWhere('status', strtoupper($st));
+            });
         }
 
         // 5. Lọc theo Originals

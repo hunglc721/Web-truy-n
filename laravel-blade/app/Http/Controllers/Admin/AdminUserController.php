@@ -127,7 +127,7 @@ class AdminUserController extends Controller
                 'unbanned_by' => Auth::id(),
             ]);
 
-            return back()->with('success', "Đã mở khóa tài khoản \"{$user->name}\".");
+            return redirect()->route('admin.users.index')->with('success', "Đã mở khóa tài khoản \"{$user->name}\".");
         }
 
         $user->update(['banned_at' => now()]);
@@ -141,7 +141,7 @@ class AdminUserController extends Controller
             'reason' => 'Manual ban by authorized staff',
         ]);
 
-        return back()->with('success', "Đã khóa tài khoản \"{$user->name}\" và vô hiệu hóa các phiên đăng nhập.");
+        return redirect()->route('admin.users.index')->with('success', "Đã khóa tài khoản \"{$user->name}\" và vô hiệu hóa các phiên đăng nhập.");
     }
 
     public function show(User $user)

@@ -10,6 +10,7 @@ use App\Models\Comic;
 use App\Models\Chapter;
 use App\Services\ChapterService;
 use App\Services\ImageService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
 class AdminChapterController extends Controller
@@ -18,6 +19,49 @@ class AdminChapterController extends Controller
         protected ChapterService $chapterService,
         protected ImageService   $imageService,
     ) {}
+
+    /**
+     * Quản lý toàn bộ danh sách Chapter trên toàn hệ thống.
+     */
+    public function all(Request $request)
+    {
+        $query = Chapter::with('comic')
+            ->latest('id');
+
+        if ($request->filled('comic_id')) {
+            $query->where('comic_id', $request->comic_id);
+        }
+
+        if ($request->filled('q')) {
+            $q = trim($request->q);
+            $query->where(function ($sub) use ($q) {
+                $sub->where('title', 'like', "%{$q}%")
+                    ->orWhere('chapter_number', 'like', "%{$q}%")
+                    ->orWhereHas('comic', fn ($c) => $c->where('title', 'like', "%{$q}%"));
+            });
+        }
+
+        if ($request->filled('is_free') && $request->is_free !== 'all') {
+            $query->where('is_free', $request->boolean('is_free'));
+        }
+
+        if ($request->filled('status') && $request->status !== 'all') {
+            $query->where('processing_status', $request->status);
+        }
+
+        $chapters = $query->paginate(20)->withQueryString();
+        $comics = Comic::orderBy('title')->get(['id', 'title', 'slug']);
+
+        $stats = [
+            'total'   => Chapter::count(),
+            'free'    => Chapter::where('is_free', true)->count(),
+            'premium' => Chapter::where('is_free', false)->count(),
+            'ready'   => Chapter::where('processing_status', 'ready')->count(),
+            'pending' => Chapter::where('processing_status', 'pending')->count(),
+        ];
+
+        return view('admin.chapters.all', compact('chapters', 'comics', 'stats'));
+    }
 
     /**
      * Danh sách tất cả các chapter của một bộ truyện.

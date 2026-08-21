@@ -56,6 +56,14 @@ class Comic extends Model
         return !empty($value) ? $value : Str::slug($this->title ?: 'comic-' . ($this->id ?? 1));
     }
 
+    /**
+     * Chuẩn hóa status thành chữ thường để tương thích với SQLite CHECK constraints.
+     */
+    public function setStatusAttribute(?string $value): void
+    {
+        $this->attributes['status'] = $value ? strtolower($value) : 'ongoing';
+    }
+
     // ─────────────────────────────────────────────────────────────
     // RELATIONSHIPS
     // ─────────────────────────────────────────────────────────────

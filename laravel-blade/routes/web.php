@@ -96,6 +96,8 @@ Route::middleware(['auth', AdminMiddleware::class])->prefix('admin')->name('admi
     Route::put('/comics/{id}', [AdminComicController::class, 'update'])->middleware('permission:comics.update')->name('comics.update');
     Route::delete('/comics/{id}', [AdminComicController::class, 'destroy'])->middleware('permission:comics.delete')->name('comics.destroy');
 
+    Route::get('/chapters', [AdminChapterController::class, 'all'])->middleware('permission:chapters.view')->name('chapters.index');
+
     Route::prefix('/comics/{comic}/chapters')->name('comics.chapters.')->scopeBindings()->group(function () {
         Route::get('/', [AdminChapterController::class, 'index'])->middleware('permission:chapters.view')->name('index');
         Route::get('/create', [AdminChapterController::class, 'create'])->middleware('permission:chapters.create')->name('create');

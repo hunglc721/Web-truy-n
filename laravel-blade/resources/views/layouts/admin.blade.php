@@ -30,8 +30,8 @@
     @if($adminUser->hasPermission('dashboard.view'))<a href="{{ route('admin.dashboard') }}" class="sidebar-link {{ request()->routeIs('admin.dashboard')?'active':'' }}">📊 Tổng quan</a>@endif
     @if($adminUser->hasPermission('analytics.view'))<a href="{{ route('admin.analytics.index') }}" class="sidebar-link {{ request()->routeIs('admin.analytics.*')?'active':'' }}">📈 Thống kê</a>@endif
     @if($adminUser->hasAnyPermission(['comics.view','chapters.view','genres.manage','tags.manage','authors.manage']))<div class="sidebar-section-label">NỘI DUNG</div>@endif
-    @if($adminUser->hasPermission('comics.view'))<a href="{{ route('admin.comics.index') }}" class="sidebar-link {{ request()->routeIs('admin.comics.*')?'active':'' }}">📚 Truyện</a>@endif
-    @if($adminUser->hasPermission('chapters.view') && $adminUser->hasPermission('comics.view'))<a href="{{ route('admin.comics.index') }}" class="sidebar-link">📖 Chương</a>@endif
+    @if($adminUser->hasPermission('comics.view'))<a href="{{ route('admin.comics.index') }}" class="sidebar-link {{ request()->routeIs('admin.comics.*') && !request()->routeIs('admin.comics.chapters.*') ? 'active' : '' }}">📚 Truyện</a>@endif
+    @if($adminUser->hasPermission('chapters.view'))<a href="{{ route('admin.chapters.index') }}" class="sidebar-link {{ request()->routeIs('admin.chapters.*') || request()->routeIs('admin.comics.chapters.*') ? 'active' : '' }}">📖 Chương</a>@endif
     @if($adminUser->hasPermission('genres.manage'))<a href="{{ route('admin.genres.index') }}" class="sidebar-link {{ request()->routeIs('admin.genres.*')?'active':'' }}">🏷️ Thể loại</a>@endif
     @if($adminUser->hasPermission('tags.manage'))<a href="{{ route('admin.tags.index') }}" class="sidebar-link {{ request()->routeIs('admin.tags.*')?'active':'' }}">🔖 Tags</a>@endif
     @if($adminUser->hasPermission('authors.manage'))<a href="{{ route('admin.authors.index') }}" class="sidebar-link {{ request()->routeIs('admin.authors.*')?'active':'' }}">✍️ Tác giả</a>@endif

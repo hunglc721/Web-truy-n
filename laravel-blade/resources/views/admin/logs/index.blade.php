@@ -11,7 +11,7 @@
 
 @section('content')
 <div class="admin-page-header" style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
-  <div><h1 class="admin-page-title">📋 Audit Log</h1><p class="admin-page-sub">Theo dõi action, actor, subject, IP và payload thật từ ActivityLog.</p></div>
+  <div><h1 class="admin-page-title">📋 Nhật ký Hoạt động Hệ Thống</h1><p class="admin-page-sub">Theo dõi action, actor, subject, IP và payload thật từ ActivityLog.</p></div>
   @if(auth()->user()->hasPermission('permissions.manage'))<button type="button" class="btn-admin btn-admin-ghost" onclick="openRetentionModal()">🧹 Dọn log cũ</button>@endif
 </div>
 
