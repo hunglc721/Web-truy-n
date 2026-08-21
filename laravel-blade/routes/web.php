@@ -30,6 +30,7 @@ use App\Http\Controllers\Admin\AdminBannerController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminAnalyticsController;
 use App\Http\Controllers\Admin\AdminAuditLogController;
+use App\Http\Controllers\Admin\AdminPermissionController;
 use App\Http\Controllers\Admin\AdminSettingController;
 use App\Http\Middleware\AdminMiddleware;
 
@@ -85,78 +86,93 @@ Route::get('/api/recommendations', [RecommendationController::class, 'index'])->
 Route::post('/api/reports', [\App\Http\Controllers\ReportController::class, 'store'])->middleware('throttle:api')->name('reports.store');
 
 Route::middleware(['auth', AdminMiddleware::class])->prefix('admin')->name('admin.')->group(function () {
-    Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
-    Route::get('/analytics', [AdminAnalyticsController::class, 'index'])->name('analytics.index');
+    Route::get('/', [AdminDashboardController::class, 'index'])->middleware('permission:dashboard.view')->name('dashboard');
+    Route::get('/analytics', [AdminAnalyticsController::class, 'index'])->middleware('permission:analytics.view')->name('analytics.index');
 
-    Route::get('/comics', [AdminComicController::class, 'index'])->name('comics.index');
-    Route::get('/comics/create', [AdminComicController::class, 'create'])->name('comics.create');
-    Route::post('/comics', [AdminComicController::class, 'store'])->name('comics.store');
-    Route::get('/comics/{id}/edit', [AdminComicController::class, 'edit'])->name('comics.edit');
-    Route::put('/comics/{id}', [AdminComicController::class, 'update'])->name('comics.update');
-    Route::delete('/comics/{id}', [AdminComicController::class, 'destroy'])->name('comics.destroy');
+    Route::get('/comics', [AdminComicController::class, 'index'])->middleware('permission:comics.view')->name('comics.index');
+    Route::get('/comics/create', [AdminComicController::class, 'create'])->middleware('permission:comics.create')->name('comics.create');
+    Route::post('/comics', [AdminComicController::class, 'store'])->middleware('permission:comics.create')->name('comics.store');
+    Route::get('/comics/{id}/edit', [AdminComicController::class, 'edit'])->middleware('permission:comics.update')->name('comics.edit');
+    Route::put('/comics/{id}', [AdminComicController::class, 'update'])->middleware('permission:comics.update')->name('comics.update');
+    Route::delete('/comics/{id}', [AdminComicController::class, 'destroy'])->middleware('permission:comics.delete')->name('comics.destroy');
 
     Route::prefix('/comics/{comic}/chapters')->name('comics.chapters.')->scopeBindings()->group(function () {
-        Route::get('/', [AdminChapterController::class, 'index'])->name('index');
-        Route::get('/create', [AdminChapterController::class, 'create'])->name('create');
-        Route::post('/', [AdminChapterController::class, 'store'])->name('store');
-        Route::get('/{chapter}/edit', [AdminChapterController::class, 'edit'])->name('edit');
-        Route::put('/{chapter}', [AdminChapterController::class, 'update'])->name('update');
-        Route::delete('/{chapter}', [AdminChapterController::class, 'destroy'])->name('destroy');
+        Route::get('/', [AdminChapterController::class, 'index'])->middleware('permission:chapters.view')->name('index');
+        Route::get('/create', [AdminChapterController::class, 'create'])->middleware('permission:chapters.create')->name('create');
+        Route::post('/', [AdminChapterController::class, 'store'])->middleware('permission:chapters.create')->name('store');
+        Route::get('/{chapter}/edit', [AdminChapterController::class, 'edit'])->middleware('permission:chapters.update')->name('edit');
+        Route::put('/{chapter}', [AdminChapterController::class, 'update'])->middleware('permission:chapters.update')->name('update');
+        Route::delete('/{chapter}', [AdminChapterController::class, 'destroy'])->middleware('permission:chapters.delete')->name('destroy');
     });
 
-    Route::get('/genres', [AdminGenreController::class, 'index'])->name('genres.index');
-    Route::get('/genres/create', [AdminGenreController::class, 'create'])->name('genres.create');
-    Route::post('/genres', [AdminGenreController::class, 'store'])->name('genres.store');
-    Route::delete('/genres/bulk', [AdminGenreController::class, 'bulkDestroy'])->name('genres.bulkDestroy');
-    Route::get('/genres/{genre}/edit', [AdminGenreController::class, 'edit'])->name('genres.edit');
-    Route::put('/genres/{genre}', [AdminGenreController::class, 'update'])->name('genres.update');
-    Route::delete('/genres/{genre}', [AdminGenreController::class, 'destroy'])->name('genres.destroy');
+    Route::middleware('permission:genres.manage')->group(function () {
+        Route::get('/genres', [AdminGenreController::class, 'index'])->name('genres.index');
+        Route::get('/genres/create', [AdminGenreController::class, 'create'])->name('genres.create');
+        Route::post('/genres', [AdminGenreController::class, 'store'])->name('genres.store');
+        Route::delete('/genres/bulk', [AdminGenreController::class, 'bulkDestroy'])->name('genres.bulkDestroy');
+        Route::get('/genres/{genre}/edit', [AdminGenreController::class, 'edit'])->name('genres.edit');
+        Route::put('/genres/{genre}', [AdminGenreController::class, 'update'])->name('genres.update');
+        Route::delete('/genres/{genre}', [AdminGenreController::class, 'destroy'])->name('genres.destroy');
+    });
 
-    Route::get('/tags', [AdminTagController::class, 'index'])->name('tags.index');
-    Route::get('/tags/create', [AdminTagController::class, 'create'])->name('tags.create');
-    Route::post('/tags', [AdminTagController::class, 'store'])->name('tags.store');
-    Route::delete('/tags/bulk', [AdminTagController::class, 'bulkDestroy'])->name('tags.bulkDestroy');
-    Route::get('/tags/{tag}/edit', [AdminTagController::class, 'edit'])->name('tags.edit');
-    Route::put('/tags/{tag}', [AdminTagController::class, 'update'])->name('tags.update');
-    Route::delete('/tags/{tag}', [AdminTagController::class, 'destroy'])->name('tags.destroy');
+    Route::middleware('permission:tags.manage')->group(function () {
+        Route::get('/tags', [AdminTagController::class, 'index'])->name('tags.index');
+        Route::get('/tags/create', [AdminTagController::class, 'create'])->name('tags.create');
+        Route::post('/tags', [AdminTagController::class, 'store'])->name('tags.store');
+        Route::delete('/tags/bulk', [AdminTagController::class, 'bulkDestroy'])->name('tags.bulkDestroy');
+        Route::get('/tags/{tag}/edit', [AdminTagController::class, 'edit'])->name('tags.edit');
+        Route::put('/tags/{tag}', [AdminTagController::class, 'update'])->name('tags.update');
+        Route::delete('/tags/{tag}', [AdminTagController::class, 'destroy'])->name('tags.destroy');
+    });
 
-    Route::get('/authors', [AdminAuthorController::class, 'index'])->name('authors.index');
-    Route::get('/authors/create', [AdminAuthorController::class, 'create'])->name('authors.create');
-    Route::post('/authors', [AdminAuthorController::class, 'store'])->name('authors.store');
-    Route::get('/authors/{author}/edit', [AdminAuthorController::class, 'edit'])->name('authors.edit');
-    Route::put('/authors/{author}', [AdminAuthorController::class, 'update'])->name('authors.update');
-    Route::delete('/authors/{author}', [AdminAuthorController::class, 'destroy'])->name('authors.destroy');
+    Route::middleware('permission:authors.manage')->group(function () {
+        Route::get('/authors', [AdminAuthorController::class, 'index'])->name('authors.index');
+        Route::get('/authors/create', [AdminAuthorController::class, 'create'])->name('authors.create');
+        Route::post('/authors', [AdminAuthorController::class, 'store'])->name('authors.store');
+        Route::get('/authors/{author}/edit', [AdminAuthorController::class, 'edit'])->name('authors.edit');
+        Route::put('/authors/{author}', [AdminAuthorController::class, 'update'])->name('authors.update');
+        Route::delete('/authors/{author}', [AdminAuthorController::class, 'destroy'])->name('authors.destroy');
+    });
 
-    Route::get('/users', [AdminUserController::class, 'index'])->name('users.index');
-    Route::get('/users/{user}', [AdminUserController::class, 'show'])->name('users.show');
-    Route::patch('/users/{user}/toggle-role', [AdminUserController::class, 'toggleRole'])->name('users.toggleRole');
-    Route::patch('/users/{user}/toggle-ban', [AdminUserController::class, 'toggleBan'])->name('users.toggleBan');
+    Route::get('/users', [AdminUserController::class, 'index'])->middleware('permission:users.view')->name('users.index');
+    Route::get('/users/{user}', [AdminUserController::class, 'show'])->middleware('permission:users.view')->name('users.show');
+    Route::patch('/users/{user}/role', [AdminUserController::class, 'updateRole'])->middleware('permission:users.manage_role')->name('users.updateRole');
+    Route::patch('/users/{user}/toggle-role', [AdminUserController::class, 'toggleRole'])->middleware('permission:users.manage_role')->name('users.toggleRole');
+    Route::patch('/users/{user}/toggle-ban', [AdminUserController::class, 'toggleBan'])->middleware('permission:users.ban')->name('users.toggleBan');
 
-    Route::get('/comments', [AdminCommentController::class, 'index'])->name('comments.index');
-    Route::post('/comments/bulk', [AdminCommentController::class, 'bulk'])->name('comments.bulk');
-    Route::patch('/comments/{comment}/approve', [AdminCommentController::class, 'approve'])->name('comments.approve');
-    Route::patch('/comments/{comment}/hide', [AdminCommentController::class, 'hide'])->name('comments.hide');
-    Route::delete('/comments/{comment}', [AdminCommentController::class, 'destroy'])->name('comments.destroy');
-    Route::post('/comments/{id}/restore', [AdminCommentController::class, 'restore'])->name('comments.restore');
-    Route::post('/comments/{comment}/ban-user', [AdminCommentController::class, 'banUser'])->name('comments.banUser');
+    Route::get('/comments', [AdminCommentController::class, 'index'])->middleware('permission:comments.view')->name('comments.index');
+    Route::post('/comments/bulk', [AdminCommentController::class, 'bulk'])->middleware('permission:comments.moderate')->name('comments.bulk');
+    Route::patch('/comments/{comment}/approve', [AdminCommentController::class, 'approve'])->middleware('permission:comments.moderate')->name('comments.approve');
+    Route::patch('/comments/{comment}/hide', [AdminCommentController::class, 'hide'])->middleware('permission:comments.moderate')->name('comments.hide');
+    Route::delete('/comments/{comment}', [AdminCommentController::class, 'destroy'])->middleware('permission:comments.moderate')->name('comments.destroy');
+    Route::post('/comments/{id}/restore', [AdminCommentController::class, 'restore'])->middleware('permission:comments.moderate')->name('comments.restore');
+    Route::post('/comments/{comment}/ban-user', [AdminCommentController::class, 'banUser'])->middleware('permission:comments.moderate')->name('comments.banUser');
 
-    Route::get('/reports', [AdminReportController::class, 'index'])->name('reports.index');
-    Route::patch('/reports/{report}/status', [AdminReportController::class, 'updateStatus'])->name('reports.updateStatus');
-    Route::delete('/reports/{report}', [AdminReportController::class, 'destroy'])->name('reports.destroy');
+    Route::get('/reports', [AdminReportController::class, 'index'])->middleware('permission:reports.view')->name('reports.index');
+    Route::patch('/reports/{report}/status', [AdminReportController::class, 'updateStatus'])->middleware('permission:reports.manage')->name('reports.updateStatus');
+    Route::delete('/reports/{report}', [AdminReportController::class, 'destroy'])->middleware('permission:reports.manage')->name('reports.destroy');
 
-    Route::get('/schedules', [AdminScheduleController::class, 'index'])->name('schedules.index');
-    Route::post('/schedules', [AdminScheduleController::class, 'store'])->name('schedules.store');
-    Route::delete('/schedules/{schedule}', [AdminScheduleController::class, 'destroy'])->name('schedules.destroy');
+    Route::middleware('permission:schedules.manage')->group(function () {
+        Route::get('/schedules', [AdminScheduleController::class, 'index'])->name('schedules.index');
+        Route::post('/schedules', [AdminScheduleController::class, 'store'])->name('schedules.store');
+        Route::put('/schedules/{schedule}', [AdminScheduleController::class, 'update'])->name('schedules.update');
+        Route::delete('/schedules/{schedule}', [AdminScheduleController::class, 'destroy'])->name('schedules.destroy');
+    });
 
-    Route::get('/banners', [AdminBannerController::class, 'index'])->name('banners.index');
-    Route::post('/banners', [AdminBannerController::class, 'store'])->name('banners.store');
-    Route::put('/banners/{banner}', [AdminBannerController::class, 'update'])->name('banners.update');
-    Route::patch('/banners/{banner}/toggle-active', [AdminBannerController::class, 'toggleActive'])->name('banners.toggleActive');
-    Route::delete('/banners/{banner}', [AdminBannerController::class, 'destroy'])->name('banners.destroy');
+    Route::middleware('permission:banners.manage')->group(function () {
+        Route::get('/banners', [AdminBannerController::class, 'index'])->name('banners.index');
+        Route::post('/banners', [AdminBannerController::class, 'store'])->name('banners.store');
+        Route::put('/banners/{banner}', [AdminBannerController::class, 'update'])->name('banners.update');
+        Route::patch('/banners/{banner}/toggle-active', [AdminBannerController::class, 'toggleActive'])->name('banners.toggleActive');
+        Route::delete('/banners/{banner}', [AdminBannerController::class, 'destroy'])->name('banners.destroy');
+    });
 
-    Route::get('/logs', [AdminAuditLogController::class, 'index'])->name('logs.index');
-    Route::delete('/logs/clear', [AdminAuditLogController::class, 'clear'])->name('logs.clear');
-    Route::get('/permissions', fn () => view('admin.permissions.index'))->name('permissions.index');
-    Route::get('/settings', [AdminSettingController::class, 'index'])->name('settings.index');
-    Route::put('/settings', [AdminSettingController::class, 'update'])->name('settings.update');
+    Route::get('/logs', [AdminAuditLogController::class, 'index'])->middleware('permission:audit.view')->name('logs.index');
+    Route::delete('/logs/clear', [AdminAuditLogController::class, 'clear'])->middleware('permission:permissions.manage')->name('logs.clear');
+
+    Route::get('/permissions', [AdminPermissionController::class, 'index'])->middleware('permission:permissions.manage')->name('permissions.index');
+    Route::put('/permissions/{role}', [AdminPermissionController::class, 'update'])->middleware('permission:permissions.manage')->name('permissions.update');
+
+    Route::get('/settings', [AdminSettingController::class, 'index'])->middleware('permission:settings.manage')->name('settings.index');
+    Route::put('/settings', [AdminSettingController::class, 'update'])->middleware('permission:settings.manage')->name('settings.update');
 });
