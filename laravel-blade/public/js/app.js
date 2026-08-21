@@ -1,5 +1,5 @@
-/* WebComics - prototype interactions running on the Laravel origin.
- * No localhost:3000 dependency. Server state remains owned by Laravel.
+/* WebComics interactions on the Laravel origin.
+ * Authentication, authorization and server state are rendered/owned by Laravel.
  */
 (() => {
   'use strict';
@@ -7,43 +7,51 @@
   const $ = (selector, root = document) => root.querySelector(selector);
   const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 
+  // Prototype horizontal carousel, now fed by Blade/DB data.
   $$('.trending-scroll-wrap').forEach((wrap) => {
     const list = $('.trending-list', wrap);
     const left = $('.scroll-left', wrap);
     const right = $('.scroll-right', wrap);
     if (!list) return;
+
     const amount = () => Math.max(240, Math.floor(list.clientWidth * 0.75));
     left?.addEventListener('click', () => list.scrollBy({ left: -amount(), behavior: 'smooth' }));
     right?.addEventListener('click', () => list.scrollBy({ left: amount(), behavior: 'smooth' }));
   });
 
+  // Live search uses the real Laravel endpoint on the same origin.
   const searchInput = $('#search-input');
   const searchDropdown = $('#search-dropdown');
   let searchTimer = null;
   const closeSearch = () => searchDropdown?.classList.remove('visible');
   const openSearch = () => searchDropdown?.classList.add('visible');
 
-  searchInput?.addEventListener('focus', () => openSearch());
+  searchInput?.addEventListener('focus', openSearch);
   searchInput?.addEventListener('input', () => {
     const q = searchInput.value.trim();
     openSearch();
     clearTimeout(searchTimer);
+
     if (!q) return;
 
     searchTimer = setTimeout(async () => {
       try {
         const response = await fetch(`/api/search/live?q=${encodeURIComponent(q)}`, {
-          headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+          headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+          credentials: 'same-origin',
         });
         if (!response.ok) return;
+
         const data = await response.json();
         const items = Array.isArray(data) ? data : (data.data || data.results || []);
         if (!searchDropdown) return;
+
         searchDropdown.innerHTML = '';
         if (!items.length) {
           searchDropdown.innerHTML = '<div class="search-recent-title">Không tìm thấy truyện</div>';
           return;
         }
+
         items.slice(0, 8).forEach((item) => {
           const title = item.title || item.name || '';
           const slug = item.slug || '';
@@ -54,7 +62,7 @@
           searchDropdown.appendChild(el);
         });
       } catch (_) {
-        // Search must never break the rest of the page if the API is unavailable.
+        // Search failure must not break the rest of the page.
       }
     }, 180);
   });
@@ -63,41 +71,8 @@
     if (!event.target.closest('.search-wrap')) closeSearch();
   });
 
-  const loginButton = $('#login-btn');
-  loginButton?.addEventListener('click', () => { window.location.href = '/login'; });
-  $('#library-btn')?.addEventListener('click', () => { window.location.href = '/user/library'; });
-
-  // Laravel remains the source of truth for authentication. This adapts the
-  // existing prototype header to Guest vs authenticated Member/Admin state.
-  const syncAuthHeader = async () => {
-    if (!loginButton) return;
-
-    try {
-      const response = await fetch('/api/user/statistics/overview', {
-        headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-        credentials: 'same-origin',
-      });
-
-      if (!response.ok) return;
-      const contentType = response.headers.get('content-type') || '';
-      if (!contentType.includes('application/json')) return;
-
-      const adminLink = $('.header-right .btn-login[href*="/admin"]');
-      if (adminLink) {
-        loginButton.style.display = 'none';
-        return;
-      }
-
-      loginButton.textContent = 'Tài Khoản';
-      loginButton.setAttribute('aria-label', 'Mở tủ sách cá nhân');
-      loginButton.title = 'Tài khoản của bạn';
-      loginButton.onclick = () => { window.location.href = '/user/library'; };
-    } catch (_) {
-      // Guest users keep the default Login button.
-    }
-  };
-
-  syncAuthHeader();
+  // Header auth links are real <a>/<form> elements rendered by Blade.
+  // Do not override them with JS redirects or probe protected APIs.
 
   $('#download-app-btn')?.addEventListener('click', () => {
     const target = $('#download-app-banner');
@@ -107,9 +82,12 @@
   const header = $('#site-header');
   const nav = $('.main-nav');
   if (header && nav) {
-    $$('.nav-link', nav).forEach((link) => link.addEventListener('click', () => header.classList.remove('menu-open')));
+    $$('.nav-link', nav).forEach((link) => {
+      link.addEventListener('click', () => header.classList.remove('menu-open'));
+    });
   }
 
+  // Laravel homepage banner CRUD supplies .banner-slide elements.
   const slides = $$('.banner-slide');
   if (slides.length > 1) {
     let index = 0;
