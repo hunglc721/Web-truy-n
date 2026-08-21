@@ -5,7 +5,21 @@
 
 @push('styles')
 <style>
-  .analytics-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:22px}.analytics-kpi{background:var(--admin-card);border:1px solid var(--admin-border);border-radius:var(--admin-radius);padding:18px}.analytics-kpi-label{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:var(--admin-text-muted);margin-bottom:7px}.analytics-kpi-value{font-size:28px;font-weight:900;color:#fff}.analytics-kpi-sub{font-size:11.5px;color:var(--admin-text-muted);margin-top:4px}.analytics-two-col{display:grid;grid-template-columns:1.2fr .8fr;gap:20px;margin-bottom:20px}.analytics-bars{display:flex;flex-direction:column;gap:12px}.analytics-bar-row{display:grid;grid-template-columns:minmax(130px,1fr) 3fr 60px;align-items:center;gap:12px}.analytics-bar-track{height:9px;border-radius:999px;background:rgba(255,255,255,.06);overflow:hidden}.analytics-bar-fill{height:100%;background:linear-gradient(90deg,#6c63ff,#ff2a6d);border-radius:999px}.status-list{display:flex;flex-direction:column;gap:10px}.status-item{display:flex;justify-content:space-between;align-items:center;padding:11px 12px;background:rgba(255,255,255,.035);border:1px solid var(--admin-border);border-radius:9px}.activity-line{padding:10px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:12.5px}.activity-line:last-child{border-bottom:0}@media(max-width:950px){.analytics-two-col{grid-template-columns:1fr}.analytics-bar-row{grid-template-columns:120px 1fr 50px}}
+  .analytics-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(195px,1fr));gap:14px;margin-bottom:22px}
+  .analytics-kpi{background:var(--admin-card);border:1px solid var(--admin-border);border-radius:var(--admin-radius);padding:16px 18px;min-width:0;overflow:hidden}
+  .analytics-kpi-label{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:var(--admin-text-muted);margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .analytics-kpi-value{font-size:22px;font-weight:900;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.3px;line-height:1.25}
+  .analytics-kpi-sub{font-size:11.5px;color:var(--admin-text-muted);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .analytics-two-col{display:grid;grid-template-columns:1.2fr .8fr;gap:20px;margin-bottom:20px}
+  .analytics-bars{display:flex;flex-direction:column;gap:12px}
+  .analytics-bar-row{display:grid;grid-template-columns:minmax(130px,1fr) 3fr 60px;align-items:center;gap:12px}
+  .analytics-bar-track{height:9px;border-radius:999px;background:rgba(255,255,255,.06);overflow:hidden}
+  .analytics-bar-fill{height:100%;background:linear-gradient(90deg,#6c63ff,#ff2a6d);border-radius:999px}
+  .status-list{display:flex;flex-direction:column;gap:10px}
+  .status-item{display:flex;justify-content:space-between;align-items:center;padding:11px 12px;background:rgba(255,255,255,.035);border:1px solid var(--admin-border);border-radius:9px}
+  .activity-line{padding:10px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:12.5px}
+  .activity-line:last-child{border-bottom:0}
+  @media(max-width:950px){.analytics-two-col{grid-template-columns:1fr}.analytics-bar-row{grid-template-columns:120px 1fr 50px}}
 </style>
 @endpush
 
@@ -16,13 +30,13 @@
 </div>
 
 <div class="analytics-kpis">
-  <div class="analytics-kpi"><div class="analytics-kpi-label">📚 Bộ Truyện</div><div class="analytics-kpi-value">{{ number_format($stats['comics']) }}</div><div class="analytics-kpi-sub">Tổng số bộ trong hệ thống</div></div>
-  <div class="analytics-kpi"><div class="analytics-kpi-label">📖 Chapter</div><div class="analytics-kpi-value">{{ number_format($stats['chapters']) }}</div><div class="analytics-kpi-sub">Tổng số chương</div></div>
-  <div class="analytics-kpi"><div class="analytics-kpi-label">👥 Thành Viên</div><div class="analytics-kpi-value">{{ number_format($stats['users']) }}</div><div class="analytics-kpi-sub">Tài khoản đã tạo</div></div>
-  <div class="analytics-kpi"><div class="analytics-kpi-label">👁 Tổng Lượt Xem</div><div class="analytics-kpi-value">{{ number_format($stats['views']) }}</div><div class="analytics-kpi-sub">Cộng dồn lượt xem truyện</div></div>
-  <div class="analytics-kpi"><div class="analytics-kpi-label">💬 Bình Luận</div><div class="analytics-kpi-value">{{ number_format($stats['comments']) }}</div><div class="analytics-kpi-sub">Mọi trạng thái</div></div>
-  <div class="analytics-kpi"><div class="analytics-kpi-label">⚠️ Báo Cáo</div><div class="analytics-kpi-value">{{ number_format($stats['reports']) }}</div><div class="analytics-kpi-sub">Báo lỗi từ độc giả</div></div>
-  <div class="analytics-kpi"><div class="analytics-kpi-label">🖼️ Banner</div><div class="analytics-kpi-value">{{ number_format($stats['banners']) }}</div><div class="analytics-kpi-sub">{{ number_format($stats['active_banners']) }} đang hiệu lực</div></div>
+  <div class="analytics-kpi"><div class="analytics-kpi-label">📚 Bộ Truyện</div><div class="analytics-kpi-value" title="{{ number_format($stats['comics']) }}">{{ number_format($stats['comics']) }}</div><div class="analytics-kpi-sub">Tổng số bộ trong hệ thống</div></div>
+  <div class="analytics-kpi"><div class="analytics-kpi-label">📖 Chapter</div><div class="analytics-kpi-value" title="{{ number_format($stats['chapters']) }}">{{ number_format($stats['chapters']) }}</div><div class="analytics-kpi-sub">Tổng số chương</div></div>
+  <div class="analytics-kpi"><div class="analytics-kpi-label">👥 Thành Viên</div><div class="analytics-kpi-value" title="{{ number_format($stats['users']) }}">{{ number_format($stats['users']) }}</div><div class="analytics-kpi-sub">Tài khoản đã tạo</div></div>
+  <div class="analytics-kpi"><div class="analytics-kpi-label">👁 Tổng Lượt Xem</div><div class="analytics-kpi-value" title="{{ number_format($stats['views']) }}" style="color:#60a5fa">{{ number_format($stats['views']) }}</div><div class="analytics-kpi-sub">Cộng dồn lượt xem truyện</div></div>
+  <div class="analytics-kpi"><div class="analytics-kpi-label">💬 Bình Luận</div><div class="analytics-kpi-value" title="{{ number_format($stats['comments']) }}">{{ number_format($stats['comments']) }}</div><div class="analytics-kpi-sub">Mọi trạng thái</div></div>
+  <div class="analytics-kpi"><div class="analytics-kpi-label">⚠️ Báo Cáo</div><div class="analytics-kpi-value" title="{{ number_format($stats['reports']) }}">{{ number_format($stats['reports']) }}</div><div class="analytics-kpi-sub">Báo lỗi từ độc giả</div></div>
+  <div class="analytics-kpi"><div class="analytics-kpi-label">🖼️ Banner</div><div class="analytics-kpi-value" title="{{ number_format($stats['banners']) }}">{{ number_format($stats['banners']) }}</div><div class="analytics-kpi-sub">{{ number_format($stats['active_banners']) }} đang hiệu lực</div></div>
 </div>
 
 <div class="analytics-two-col">
