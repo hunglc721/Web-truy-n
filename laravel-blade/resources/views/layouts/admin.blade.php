@@ -96,6 +96,8 @@
 
     <nav class="sidebar-nav">
       <a href="{{ route('admin.dashboard') }}" class="sidebar-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">📊 Tổng quan</a>
+      <a href="{{ route('admin.analytics.index') }}" class="sidebar-link {{ request()->routeIs('admin.analytics.*') ? 'active' : '' }}">📈 Thống kê & Báo cáo</a>
+
       <div class="sidebar-section-label">NỘI DUNG</div>
       <a href="{{ route('admin.comics.index') }}" class="sidebar-link {{ request()->routeIs('admin.comics.*') ? 'active' : '' }}">📚 Quản lý Truyện</a>
       <a href="{{ route('admin.comics.index') }}#section-add-chapter" class="sidebar-link {{ request()->routeIs('admin.comics.chapters.*') ? 'active' : '' }}">📖 Quản lý Chương</a>
