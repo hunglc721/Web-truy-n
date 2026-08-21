@@ -16,6 +16,7 @@ use App\Http\Controllers\RatingController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\UserDashboardController;
 use App\Http\Controllers\UserStatisticsController;
+use App\Http\Controllers\BannerController;
 use App\Http\Controllers\Admin\AdminComicController;
 use App\Http\Controllers\Admin\AdminGenreController;
 use App\Http\Controllers\Admin\AdminTagController;
@@ -38,6 +39,7 @@ Route::get('/schedule', [ScheduleController::class, 'index'])->name('schedule');
 Route::get('/originals', [OriginalsController::class, 'index'])->name('originals');
 Route::get('/truyen/{slug}', [ComicController::class, 'show'])->name('comics.show');
 Route::get('/truyen/{comicSlug}/{chapterSlug}', [ChapterController::class, 'show'])->name('chapters.show');
+Route::get('/banners/{banner}/click', [BannerController::class, 'click'])->name('banners.click');
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
@@ -53,29 +55,20 @@ Route::middleware('auth')->group(function () {
     Route::get('/user/likes', [UserDashboardController::class, 'likes'])->name('user.likes');
     Route::get('/user/comments', [UserDashboardController::class, 'comments'])->name('user.comments');
     Route::get('/user/ratings', [UserDashboardController::class, 'ratings'])->name('user.ratings');
-
     Route::get('/user/library', [LibraryController::class, 'index'])->name('user.library');
     Route::post('/user/library/toggle/{comic}', [LibraryController::class, 'toggle'])->name('library.toggle');
     Route::delete('/user/history/clear', [LibraryController::class, 'clearHistory'])->name('history.clear');
 
-    Route::post('/api/reading-history', [ChapterController::class, 'saveHistory'])
-        ->middleware('throttle:history-save')->name('history.save');
-    Route::post('/api/comments', [CommentController::class, 'store'])
-        ->middleware('throttle:comments')->name('comments.store');
-    Route::post('/api/comments/{comment}/toggle-like', [CommentController::class, 'toggleLike'])
-        ->middleware('throttle:like-toggle')->name('comments.toggleLike');
+    Route::post('/api/reading-history', [ChapterController::class, 'saveHistory'])->middleware('throttle:history-save')->name('history.save');
+    Route::post('/api/comments', [CommentController::class, 'store'])->middleware('throttle:comments')->name('comments.store');
+    Route::post('/api/comments/{comment}/toggle-like', [CommentController::class, 'toggleLike'])->middleware('throttle:like-toggle')->name('comments.toggleLike');
     Route::patch('/api/comments/{comment}', [CommentController::class, 'update'])->name('comments.update');
     Route::delete('/api/comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy');
 
-    Route::post('/api/comics/{comicId}/toggle-library', [ComicActionController::class, 'toggleLibrary'])
-        ->middleware('throttle:library-toggle')->name('comics.toggleLibrary');
-    Route::post('/api/comics/{comicId}/toggle-like', [ComicActionController::class, 'toggleLike'])
-        ->middleware('throttle:like-toggle')->name('comics.toggleLike');
-
-    Route::post('/api/comics/{comicId}/ratings', [RatingController::class, 'store'])
-        ->middleware('throttle:like-toggle')->name('comics.ratings.store');
-    Route::delete('/api/comics/{comicId}/ratings', [RatingController::class, 'destroy'])
-        ->middleware('throttle:like-toggle')->name('comics.ratings.destroy');
+    Route::post('/api/comics/{comicId}/toggle-library', [ComicActionController::class, 'toggleLibrary'])->middleware('throttle:library-toggle')->name('comics.toggleLibrary');
+    Route::post('/api/comics/{comicId}/toggle-like', [ComicActionController::class, 'toggleLike'])->middleware('throttle:like-toggle')->name('comics.toggleLike');
+    Route::post('/api/comics/{comicId}/ratings', [RatingController::class, 'store'])->middleware('throttle:like-toggle')->name('comics.ratings.store');
+    Route::delete('/api/comics/{comicId}/ratings', [RatingController::class, 'destroy'])->middleware('throttle:like-toggle')->name('comics.ratings.destroy');
     Route::get('/api/comics/{comicId}/my-rating', [RatingController::class, 'userRating'])->name('comics.ratings.user');
 
     Route::get('/api/user/statistics/overview', [UserStatisticsController::class, 'overview'])->name('user.statistics.overview');
@@ -85,20 +78,13 @@ Route::middleware('auth')->group(function () {
     Route::get('/api/user/statistics/export', [UserStatisticsController::class, 'export'])->name('user.statistics.export');
 });
 
-Route::get('/api/comics/{comicId}/ratings/summary', [RatingController::class, 'summary'])
-    ->middleware('throttle:api')->name('comics.ratings.summary');
-Route::get('/api/comics/{comicId}/ratings/reviews', [RatingController::class, 'reviews'])
-    ->middleware('throttle:api')->name('comics.ratings.reviews');
-Route::get('/api/search/live', [SearchController::class, 'live'])
-    ->middleware('throttle:api')->name('search.live');
-Route::get('/api/search/advanced', [SearchController::class, 'advanced'])
-    ->middleware('throttle:api')->name('search.advanced');
-Route::get('/api/comments', [CommentController::class, 'index'])
-    ->middleware('throttle:api')->name('comments.index');
-Route::get('/api/recommendations', [RecommendationController::class, 'index'])
-    ->middleware('throttle:api')->name('recommendations.index');
-Route::post('/api/reports', [\App\Http\Controllers\ReportController::class, 'store'])
-    ->middleware('throttle:api')->name('reports.store');
+Route::get('/api/comics/{comicId}/ratings/summary', [RatingController::class, 'summary'])->middleware('throttle:api')->name('comics.ratings.summary');
+Route::get('/api/comics/{comicId}/ratings/reviews', [RatingController::class, 'reviews'])->middleware('throttle:api')->name('comics.ratings.reviews');
+Route::get('/api/search/live', [SearchController::class, 'live'])->middleware('throttle:api')->name('search.live');
+Route::get('/api/search/advanced', [SearchController::class, 'advanced'])->middleware('throttle:api')->name('search.advanced');
+Route::get('/api/comments', [CommentController::class, 'index'])->middleware('throttle:api')->name('comments.index');
+Route::get('/api/recommendations', [RecommendationController::class, 'index'])->middleware('throttle:api')->name('recommendations.index');
+Route::post('/api/reports', [\App\Http\Controllers\ReportController::class, 'store'])->middleware('throttle:api')->name('reports.store');
 
 Route::middleware(['auth', AdminMiddleware::class])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
@@ -170,7 +156,6 @@ Route::middleware(['auth', AdminMiddleware::class])->prefix('admin')->name('admi
 
     Route::get('/logs', [AdminAuditLogController::class, 'index'])->name('logs.index');
     Route::delete('/logs/clear', [AdminAuditLogController::class, 'clear'])->name('logs.clear');
-
     Route::get('/permissions', fn () => view('admin.permissions.index'))->name('permissions.index');
     Route::get('/settings', [AdminSettingController::class, 'index'])->name('settings.index');
     Route::put('/settings', [AdminSettingController::class, 'update'])->name('settings.update');
