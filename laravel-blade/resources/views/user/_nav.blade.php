@@ -9,6 +9,7 @@
 
 <nav class="user-hub-nav" aria-label="Khu vực thành viên" style="display:flex;flex-wrap:wrap;gap:8px;margin:0 0 24px;">
     @php
+        $unreadNotifications = auth()->user()?->unreadNotifications()->count() ?? 0;
         $userNav = [
             ['route' => 'user.dashboard', 'label' => '🏠 Tổng quan'],
             ['route' => 'user.library', 'label' => '📚 Tủ truyện'],
@@ -16,6 +17,7 @@
             ['route' => 'user.likes', 'label' => '❤️ Yêu thích'],
             ['route' => 'user.comments', 'label' => '💬 Bình luận'],
             ['route' => 'user.ratings', 'label' => '⭐ Đánh giá'],
+            ['route' => 'user.notifications.index', 'label' => '🔔 Thông báo' . ($unreadNotifications ? ' (' . $unreadNotifications . ')' : '')],
         ];
     @endphp
 
