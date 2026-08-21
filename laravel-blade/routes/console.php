@@ -127,7 +127,46 @@ Artisan::command('queue:retry-failed-chapters', function () {
     $this->info("✅ Đã re-queue {$failedChapters->count()} chapters bị lỗi.");
 })->purpose('Retry xử lý ảnh cho các chapters bị lỗi');
 
+/**
+ * Flush view counters từ cache buffer xuống database theo batch (gộp 1 câu SQL CASE WHEN).
+ *
+ * Usage: php artisan views:flush
+ */
+Artisan::command('views:flush', function () {
+    $job = new \App\Jobs\FlushViewCounters();
+    $chaptersCount = $job->flushChapters();
+    $comicsCount = $job->flushComics();
+    $this->info("✅ Đã flush view counters xuống database: {$chaptersCount} chapters, {$comicsCount} comics.");
+})->purpose('Flush view counters từ cache buffer xuống database');
+
+/**
+ * Tự động quét và phát hành các chapters đã tới giờ hẹn (published_at <= now()).
+ *
+ * Usage: php artisan chapters:publish-scheduled
+ */
+Artisan::command('chapters:publish-scheduled', function () {
+    $job = new \App\Jobs\PublishScheduledChapters();
+    $count = $job->handle();
+    if ($count > 0) {
+        $this->info("✅ Đã kích hoạt phát hành và làm mới cache cho {$count} chapters.");
+    } else {
+        $this->info('ℹ️ Không có chapter nào cần kích hoạt tại thời điểm này.');
+    }
+})->purpose('Tự động phát hành các chapter đến giờ hẹn và làm mới cache');
+
 // ── Scheduled Tasks ──────────────────────────────────────────────────────────
+
+// Tự động phát hành chapters đến giờ hẹn mỗi phút
+Schedule::command('chapters:publish-scheduled')
+    ->everyMinute()
+    ->withoutOverlapping()
+    ->runInBackground();
+
+// Flush view counters mỗi 5 phút xuống CSDL bằng batch update
+Schedule::command('views:flush')
+    ->everyFiveMinutes()
+    ->withoutOverlapping()
+    ->runInBackground();
 
 Schedule::command('queue:retry-failed-chapters')
     ->dailyAt('03:00')

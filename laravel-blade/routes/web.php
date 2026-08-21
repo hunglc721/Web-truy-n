@@ -18,6 +18,10 @@ use App\Http\Controllers\Admin\AdminTagController;
 use App\Http\Controllers\Admin\AdminAuthorController;
 use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Admin\AdminChapterController;
+use App\Http\Controllers\Admin\AdminCommentController;
+use App\Http\Controllers\Admin\AdminReportController;
+use App\Http\Controllers\Admin\AdminScheduleController;
+use App\Http\Controllers\Admin\AdminBannerController;
 use App\Http\Middleware\AdminMiddleware;
 
 /*
@@ -79,10 +83,20 @@ Route::middleware('auth')->group(function () {
         ->name('comics.toggleLike');
 });
 
+// ── API Bình luận (Công khai cho cả Guest & User đọc, Rate limit: 120 req/phút) ──
+Route::get('/api/comments', [CommentController::class, 'index'])
+    ->middleware('throttle:api')
+    ->name('comments.index');
+
 // ── API Gợi ý truyện (Công khai cho cả Guest & User, Rate limit: 120 req/phút) ──
 Route::get('/api/recommendations', [RecommendationController::class, 'index'])
     ->middleware('throttle:api')
     ->name('recommendations.index');
+
+// ── API Báo lỗi ảnh / Nội dung (Công khai cho cả Guest & User, Rate limit: 60 req/phút) ──
+Route::post('/api/reports', [\App\Http\Controllers\ReportController::class, 'store'])
+    ->middleware('throttle:api')
+    ->name('reports.store');
 
 
 // --- ROUTE ADMIN (Bảo mật với Auth + AdminMiddleware) ---
@@ -140,11 +154,32 @@ Route::middleware(['auth', AdminMiddleware::class])->prefix('admin')->name('admi
     Route::patch('/users/{user}/toggle-role', [AdminUserController::class, 'toggleRole'])->name('users.toggleRole');
     Route::patch('/users/{user}/toggle-ban', [AdminUserController::class, 'toggleBan'])->name('users.toggleBan');
 
-    // ── Tương tác & Vận hành & Hệ thống ────────────────────────────────
-    Route::get('/comments', fn() => view('admin.comments.index'))->name('comments.index');
-    Route::get('/reports', fn() => view('admin.reports.index'))->name('reports.index');
-    Route::get('/schedules', fn() => view('admin.schedules.index'))->name('schedules.index');
-    Route::get('/banners', fn() => view('admin.banners.index'))->name('banners.index');
+    // ── Quản lý & Kiểm duyệt Bình luận (BE-09) ─────────────────────────
+    Route::get('/comments', [AdminCommentController::class, 'index'])->name('comments.index');
+    Route::patch('/comments/{comment}/approve', [AdminCommentController::class, 'approve'])->name('comments.approve');
+    Route::patch('/comments/{comment}/hide', [AdminCommentController::class, 'hide'])->name('comments.hide');
+    Route::delete('/comments/{comment}', [AdminCommentController::class, 'destroy'])->name('comments.destroy');
+    Route::post('/comments/{id}/restore', [AdminCommentController::class, 'restore'])->name('comments.restore');
+    Route::post('/comments/{comment}/ban-user', [AdminCommentController::class, 'banUser'])->name('comments.banUser');
+
+    // ── Trung Tâm Xử Lý Báo Cáo Sự Cố (BE-10 Report Center) ────────────
+    Route::get('/reports', [AdminReportController::class, 'index'])->name('reports.index');
+    Route::patch('/reports/{report}/status', [AdminReportController::class, 'updateStatus'])->name('reports.updateStatus');
+    Route::delete('/reports/{report}', [AdminReportController::class, 'destroy'])->name('reports.destroy');
+
+    // ── Quản lý Lịch Phát Sóng Tuần (BE-11) ────────────────────────────
+    Route::get('/schedules', [AdminScheduleController::class, 'index'])->name('schedules.index');
+    Route::post('/schedules', [AdminScheduleController::class, 'store'])->name('schedules.store');
+    Route::delete('/schedules/{schedule}', [AdminScheduleController::class, 'destroy'])->name('schedules.destroy');
+
+    // ── Quản lý Banner Quảng cáo Trang chủ (BE-12) ─────────────────────
+    Route::get('/banners', [AdminBannerController::class, 'index'])->name('banners.index');
+    Route::post('/banners', [AdminBannerController::class, 'store'])->name('banners.store');
+    Route::put('/banners/{banner}', [AdminBannerController::class, 'update'])->name('banners.update');
+    Route::patch('/banners/{banner}/toggle-active', [AdminBannerController::class, 'toggleActive'])->name('banners.toggleActive');
+    Route::delete('/banners/{banner}', [AdminBannerController::class, 'destroy'])->name('banners.destroy');
+
+    // ── Vận hành & Hệ thống ────────────────────────────────────────────
     Route::get('/permissions', fn() => view('admin.permissions.index'))->name('permissions.index');
     Route::get('/settings', fn() => view('admin.settings.index'))->name('settings.index');
 });

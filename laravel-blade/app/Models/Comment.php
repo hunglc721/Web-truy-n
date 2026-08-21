@@ -17,6 +17,7 @@ class Comment extends Model
     const STATUS_APPROVED = 'approved';
     const STATUS_SPAM     = 'spam';
     const STATUS_PENDING  = 'pending';
+    const STATUS_HIDDEN   = 'hidden';
 
     protected $fillable = [
         'user_id',
@@ -76,6 +77,14 @@ class Comment extends Model
         return $this->hasMany(Comment::class, 'parent_id')->orderBy('created_at', 'asc');
     }
 
+    /**
+     * Danh sách các báo cáo vi phạm liên quan đến bình luận này.
+     */
+    public function reports(): HasMany
+    {
+        return $this->hasMany(Report::class, 'comment_id');
+    }
+
     // ─────────────────────────────────────────────────────────────
     // ACCESSORS
     // ─────────────────────────────────────────────────────────────
@@ -100,5 +109,29 @@ class Comment extends Model
     public function scopeApproved($query)
     {
         return $query->where('status', self::STATUS_APPROVED);
+    }
+
+    /**
+     * Lấy bình luận đang chờ duyệt.
+     */
+    public function scopePending($query)
+    {
+        return $query->where('status', self::STATUS_PENDING);
+    }
+
+    /**
+     * Lấy bình luận đã bị ẩn hoặc đánh dấu spam.
+     */
+    public function scopeHidden($query)
+    {
+        return $query->whereIn('status', [self::STATUS_HIDDEN, self::STATUS_SPAM]);
+    }
+
+    /**
+     * Lấy bình luận bị người dùng báo cáo vi phạm hoặc có cờ spam.
+     */
+    public function scopeReported($query)
+    {
+        return $query->where('status', self::STATUS_SPAM)->orWhereHas('reports');
     }
 }

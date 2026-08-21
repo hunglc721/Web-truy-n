@@ -8,6 +8,8 @@ use App\Models\ActivityLog;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class AdminUserController extends Controller
 {
@@ -106,6 +108,11 @@ class AdminUserController extends Controller
             // Khóa tài khoản
             $user->update(['banned_at' => now()]);
 
+            // Vô hiệu hóa toàn bộ session hiện tại của user bị ban
+            if (Schema::hasTable('sessions')) {
+                DB::table('sessions')->where('user_id', $user->id)->delete();
+            }
+
             // Ghi activity log khóa tài khoản
             ActivityLog::record('admin.user.banned', $user, [
                 'banned_by' => Auth::id(),
@@ -113,7 +120,7 @@ class AdminUserController extends Controller
             ]);
 
             return redirect()->route('admin.users.index')
-                ->with('success', "Đã khóa tài khoản \"{$user->name}\".");
+                ->with('success', "Đã khóa tài khoản \"{$user->name}\" và vô hiệu hóa các phiên đăng nhập.");
         }
     }
 

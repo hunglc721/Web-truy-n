@@ -21,8 +21,13 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        $middleware->web(append: [
+            \App\Http\Middleware\EnsureUserNotBanned::class,
+        ]);
+
         $middleware->alias([
-            'admin' => \App\Http\Middleware\AdminMiddleware::class,
+            'admin'      => \App\Http\Middleware\AdminMiddleware::class,
+            'not_banned' => \App\Http\Middleware\EnsureUserNotBanned::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

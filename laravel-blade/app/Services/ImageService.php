@@ -108,6 +108,21 @@ class ImageService
     }
 
     /**
+     * Upload ảnh bìa truyện vào thư mục comics/covers/.
+     * Trả về đường dẫn tương đối (dùng với Storage::url()).
+     *
+     * @param  UploadedFile $file
+     * @return string       Đường dẫn tương đối, ví dụ: "comics/covers/abc123.webp"
+     */
+    public function uploadCover(UploadedFile $file): string
+    {
+        $extension = $file->getClientOriginalExtension() ?: 'jpg';
+        $filename  = Str::random(16) . '.' . $extension;
+
+        return $file->storeAs('comics/covers', $filename, $this->disk);
+    }
+
+    /**
      * Trả về đường dẫn thư mục lưu ảnh theo quy ước.
      * comics/{comic_id}/chapters/{chapter_id}
      */

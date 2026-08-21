@@ -138,4 +138,10 @@ class User extends Authenticatable
         $history = $this->readingHistories()->where('comic_id', $comicId)->first();
         return $history ? $history->chapter : null;
     }
+
+    /** Lấy bản ghi Lịch sử đọc gần nhất của user cho 1 bộ truyện (kèm phần trăm vị trí đọc) */
+    public function readingHistoryForComic(int $comicId): ?ReadingHistory
+    {
+        return $this->readingHistories()->with('chapter')->where('comic_id', $comicId)->first();
+    }
 }

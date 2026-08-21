@@ -19,6 +19,31 @@
 @section('content')
 <main id="main-content">
 
+  {{-- ==================== HERO BANNERS (BE-12) ==================== --}}
+  @if(isset($banners) && $banners->isNotEmpty())
+    <section class="banner-slider-section" id="hero-banner-section" style="max-width: 1200px; margin: 20px auto 24px; padding: 0 16px;">
+      <div class="banner-carousel" style="position: relative; border-radius: 16px; overflow: hidden; box-shadow: 0 12px 35px rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.08);">
+        @foreach($banners as $index => $banner)
+          <div class="banner-slide" style="{{ $index === 0 ? 'display: block;' : 'display: none;' }}">
+            <a href="{{ $banner->link_url ?: '#' }}" {{ $banner->link_url ? 'target="_blank"' : '' }} style="display: block; position: relative;">
+              <img
+                src="{{ $banner->display_image }}"
+                alt="{{ $banner->title }}"
+                style="width: 100%; height: auto; max-height: 420px; object-fit: cover; display: block;"
+                loading="{{ $index === 0 ? 'eager' : 'lazy' }}"
+              />
+              <div style="position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(to top, rgba(13,15,20,0.95) 0%, transparent 100%); padding: 30px 24px 20px;">
+                <h3 style="color: #fff; font-size: 20px; font-weight: 800; margin: 0; text-shadow: 0 2px 8px rgba(0,0,0,0.8);">
+                  {{ $banner->title }}
+                </h3>
+              </div>
+            </a>
+          </div>
+        @endforeach
+      </div>
+    </section>
+  @endif
+
   {{-- ==================== TRENDING HERO ==================== --}}
   <section class="hero-section" id="trending-section" aria-label="Trending comics">
     <div class="hero-content-wrap">

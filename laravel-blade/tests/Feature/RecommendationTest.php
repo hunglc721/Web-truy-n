@@ -132,13 +132,16 @@ class RecommendationTest extends TestCase
     {
         $user = User::factory()->create();
         $comic = Comic::factory()->create();
-        $chapter = Chapter::factory()->create(['comic_id' => $comic->id]);
+        $chapter = Chapter::factory()->create([
+            'comic_id'     => $comic->id,
+            'published_at' => now()->subMinute(),
+        ]);
 
         $service = app(RecommendationService::class);
 
         // Prime cache
         $service->forUser($user, 6);
-        $this->assertTrue(Cache::has("recommendations.user.{$user->id}.limit_6"));
+        $this->assertTrue(Cache::has("recommendations.user.{$user->id}.v0.limit_6"));
 
         // Gửi request save reading history
         $this->actingAs($user)->postJson(route('history.save'), [
@@ -146,7 +149,7 @@ class RecommendationTest extends TestCase
             'chapter_id' => $chapter->id,
         ])->assertStatus(200);
 
-        // Cache cho user phải bị invalidate
-        $this->assertFalse(Cache::has("recommendations.user.{$user->id}.limit_6"));
+        // Version key cho user phải tăng lên 1
+        $this->assertEquals(1, Cache::get("rec_ver.user.{$user->id}"));
     }
 }

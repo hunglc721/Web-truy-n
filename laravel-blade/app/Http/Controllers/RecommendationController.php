@@ -17,19 +17,25 @@ class RecommendationController extends Controller
      * GET /api/recommendations
      *
      * Trả về danh sách truyện gợi ý dạng JSON chuẩn RESTful.
+     *
      * Query Parameters:
-     *   - limit: int (mặc định 6, tối đa 24)
-     *   - comic_id: int (tuỳ chọn: tìm truyện tương tự theo comic này)
+     *   - limit:    int (mặc định 6, tối đa 24)
+     *   - comic_id: int (tuỳ chọn — tìm truyện tương tự theo comic này)
+     *
+     * SECURITY: user_id KHÔNG được nhận từ query param — luôn lấy từ auth().
+     * Điều này ngăn client tùy ý giả mạo identity để lấy recommendations của user khác.
      *
      * Responses:
-     *   - Nếu có ?comic_id -> Trả về similar comics
-     *   - Nếu User đã đăng nhập -> Personalized recommendations (theo sở thích đọc)
-     *   - Nếu là Guest -> Trending / Top Rated recommendations
+     *   - Nếu có ?comic_id → Trả về similar comics (genre + tag signal)
+     *   - Nếu User đã đăng nhập → Personalized recommendations (genre + tag signal)
+     *   - Nếu là Guest → Trending / Top Rated recommendations
      */
     public function index(Request $request): JsonResponse
     {
         $limit = min(max((int) $request->query('limit', 6), 1), 24);
         $comicId = $request->query('comic_id');
+
+        // user_id luôn lấy từ auth() — KHÔNG bao giờ nhận từ query param
         $user = auth()->user();
 
         $source = 'trending';
@@ -41,6 +47,7 @@ class RecommendationController extends Controller
                 $comics = $this->recommendationService->forComic($comic, $limit);
                 $source = 'similar';
             } else {
+                // comic_id không tồn tại → fallback về personalized / trending
                 $comics = $user
                     ? $this->recommendationService->forUser($user, $limit)
                     : $this->recommendationService->forGuest($limit);
@@ -71,6 +78,7 @@ class RecommendationController extends Controller
                     'views'          => $comic->formatted_views ?? number_format($comic->views),
                     'raw_views'      => $comic->views,
                     'genres'         => $comic->genres->pluck('name')->toArray(),
+                    'tags'           => $comic->tags->pluck('name')->toArray(),
                     'authors'        => $comic->authors->pluck('name')->toArray(),
                     'latest_chapter' => $comic->latestChapter?->label ?? ($comic->chapters_count ? "Ch.{$comic->chapters_count}" : null),
                 ];

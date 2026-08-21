@@ -48,13 +48,11 @@ class AdminMiddlewareTest extends TestCase
 
         $this->actingAs($banned)
              ->get('/admin')
-             ->assertRedirect('/');
+             ->assertRedirect(route('login'));
     }
 
-    public function test_banned_admin_still_has_access(): void
+    public function test_banned_admin_is_intercepted_by_banned_middleware(): void
     {
-        // Admin bị banned_at vẫn có is_admin = true
-        // Policy chặn ban ở CommentController, không ở AdminMiddleware
         $bannedAdmin = User::factory()->create([
             'is_admin'  => true,
             'banned_at' => now(),
@@ -62,7 +60,7 @@ class AdminMiddlewareTest extends TestCase
 
         $this->actingAs($bannedAdmin)
              ->get('/admin')
-             ->assertRedirect(route('admin.comics.index'));
+             ->assertRedirect(route('login'));
     }
 
     public function test_is_admin_method_returns_correct_value(): void

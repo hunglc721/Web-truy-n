@@ -16,11 +16,13 @@ class ReadingHistory extends Model
         'user_id',
         'comic_id',
         'chapter_id',
+        'scroll_percent',
         'last_read_at',
     ];
 
     protected $casts = [
-        'last_read_at' => 'datetime',
+        'scroll_percent' => 'float',
+        'last_read_at'   => 'datetime',
     ];
 
     // ─────────────────────────────────────────────────────────────

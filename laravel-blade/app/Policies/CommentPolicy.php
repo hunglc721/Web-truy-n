@@ -22,9 +22,10 @@ class CommentPolicy
     }
 
     /**
-     * User chỉ được sửa bình luận của chính mình trong vòng 15 phút sau khi đăng.
+     * User chỉ được sửa bình luận của chính mình trong cửa sổ thời gian cho phép.
      * Admin được sửa bất kỳ bình luận nào bất cứ lúc nào.
      *
+     * Cửa sổ chỉnh sửa đọc từ config('comments.edit_window_minutes').
      * Được gọi qua: $this->authorize('update', $comment)
      */
     public function update(User $user, Comment $comment): Response
@@ -37,8 +38,8 @@ class CommentPolicy
             return Response::denyWithStatus(403, 'Bạn không có quyền sửa bình luận này.');
         }
 
-        // Chỉ cho phép sửa trong vòng 15 phút
-        $editWindowMinutes = 15;
+        $editWindowMinutes = (int) config('comments.edit_window_minutes', 15);
+
         if ($comment->created_at->diffInMinutes(now()) > $editWindowMinutes) {
             return Response::denyWithStatus(
                 403,
@@ -72,5 +73,24 @@ class CommentPolicy
         return $user->isAdmin()
             ? Response::allow()
             : Response::denyWithStatus(403, 'Chỉ Quản trị viên mới có thể khôi phục bình luận.');
+    }
+
+    /**
+     * Admin có thể xem danh sách bình luận cần kiểm duyệt (kể cả pending/spam).
+     * User thường chỉ xem được bình luận đã approved.
+     *
+     * Dùng cho Admin moderation panel.
+     * Được gọi qua: $this->authorize('view', $comment)
+     */
+    public function view(User $user, Comment $comment): Response
+    {
+        if ($user->isAdmin()) {
+            return Response::allow();
+        }
+
+        // User thường chỉ được xem bình luận đã được duyệt
+        return $comment->status === Comment::STATUS_APPROVED
+            ? Response::allow()
+            : Response::denyWithStatus(403, 'Bình luận này chưa được duyệt.');
     }
 }

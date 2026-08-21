@@ -80,9 +80,25 @@
         {{-- ACTION BUTTONS --}}
         <div class="spotlight-actions" style="display:flex; flex-wrap:wrap; gap:12px; align-items:center; margin-top:16px;">
 
-          {{-- Đọc từ đầu --}}
-          @if($comic->chapters->isNotEmpty())
-            @php $firstChapter = $comic->chapters->last(); @endphp
+          {{-- Nút Đọc Tiếp / Đọc Từ Đầu thông minh --}}
+          @php
+            $lastHistory  = auth()->check() ? auth()->user()->readingHistoryForComic($comic->id) : null;
+            $lastChapter  = $lastHistory?->chapter;
+            $firstChapter = $comic->chapters->last();
+          @endphp
+
+          @if($lastChapter)
+            {{-- Đã có lịch sử đọc → Hiện nút "Đọc Tiếp" với tiến độ % --}}
+            <a href="{{ route('chapters.show', [$comic->slug, $lastChapter->slug]) }}" class="btn-spotlight-read" style="background: linear-gradient(135deg, #FF5E36, #FF2A6D); box-shadow: 0 4px 20px rgba(255, 94, 54, 0.4);">
+              📖 Đọc Tiếp (Ch.{{ $lastChapter->chapter_number }}{{ $lastHistory->scroll_percent > 0 ? ' - ' . round($lastHistory->scroll_percent) . '%' : '' }})
+            </a>
+            @if($firstChapter && $firstChapter->id !== $lastChapter->id)
+              <a href="{{ route('chapters.show', [$comic->slug, $firstChapter->slug]) }}" class="btn-spotlight-sub" style="text-decoration:none; padding:10px 18px; border-radius:10px; font-weight:700;">
+                Đọc Từ Đầu (Ch.{{ $firstChapter->chapter_number }})
+              </a>
+            @endif
+          @elseif($firstChapter)
+            {{-- Chưa có lịch sử → Hiện nút "Đọc Từ Đầu" --}}
             <a href="{{ route('chapters.show', [$comic->slug, $firstChapter->slug]) }}" class="btn-spotlight-read">
               🚀 Đọc Từ Đầu (Ch.{{ $firstChapter->chapter_number }})
             </a>

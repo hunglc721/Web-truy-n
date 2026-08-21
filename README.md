@@ -1,10 +1,10 @@
-# 📚 WebComics - Nền Tảng Đọc Truyện Tranh & Quản Trị Manga/Webtoon Toàn Diện
+# 📚 WebComics - Nền Tảng Đọc Truyện Tranh & Quản Trị Manga/Webtoon
 
-> Dự án website đọc truyện tranh trực tuyến hiện đại, tối ưu trải nghiệm đọc trên mọi thiết bị và tích hợp bảng điều khiển quản trị (Admin Dashboard) mạnh mẽ.
+> Dự án website đọc truyện tranh trực tuyến hiện đại (Laravel 11 & Blade Templates) kết hợp bộ Prototype giao diện mẫu (HTML/CSS/JS).
 
 [![PHP Version](https://img.shields.io/badge/PHP-8.2%2B-777BB4?style=flat&logo=php&logoColor=white)](https://php.net)
 [![Laravel Framework](https://img.shields.io/badge/Laravel-11.x-FF2D20?style=flat&logo=laravel&logoColor=white)](https://laravel.com)
-[![Node.js Prototype](https://img.shields.io/badge/Node.js-18%2B-339933?style=flat&logo=nodedotjs&logoColor=white)](https://nodejs.org)
+[![Node.js Prototype](https://img.shields.io/badge/Prototype-Mockup%20UI-339933?style=flat&logo=nodedotjs&logoColor=white)](https://nodejs.org)
 [![Database](https://img.shields.io/badge/Database-MySQL%20%7C%20SQLite-4479A1?style=flat&logo=mysql&logoColor=white)](https://mysql.com)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
@@ -12,13 +12,13 @@
 
 ## 📑 Mục Lục
 - [1. Hướng Dẫn Khởi Động Dự Án](#-1-hướng-dẫn-khởi-động-dự-án)
-  - [Cách 1: Chạy Bản Prototype (Node.js - Siêu Nhanh, Không Cần Database)](#cách-1-chạy-bản-prototype-nodejs---siêu-nhanh-không-cần-database)
+  - [Cách 1: Chạy Bản Prototype (Mockup UI tĩnh, không có Database)](#cách-1-chạy-bản-prototype-mockup-ui-tĩnh-không-có-database)
   - [Cách 2: Chạy Bản Laravel 11 (Fullstack Backend Production-Ready)](#cách-2-chạy-bản-laravel-11-fullstack-backend-production-ready)
-- [2. Mục Đích & Công Dụng Của Website](#-2-mục-đích--công-dụng-của-website)
-- [3. Các Tính Năng Nổi Bật](#-3-các-tính-năng-nổi-bật)
+- [2. Mục Đích & Kiến Trúc Dự Án](#-2-mục-đích--kiến-trúc-dự-án)
+- [3. Tình Trạng Tính Năng Chi Tiết](#-3-tình-trạng-tính-năng-chi-tiết)
   - [3.1 Dành Cho Độc Giả (Client / Reader)](#31-dành-cho-độc-giả-client--reader)
-  - [3.2 Dành Cho Quản Trị Viên (Admin & Biên Tập Viên)](#32-dành-cho-quản-trị-viên-admin--biên-tập-viên)
-- [4. Cấu Trúc Dự Án](#-4-cấu-trúc-dự-án)
+  - [3.2 Dành Cho Quản Trị Viên (Admin Dashboard)](#32-dành-cho-quản-trị-viên-admin-dashboard)
+- [4. Cấu Trúc Thư Mục](#-4-cấu-trúc-thư-mục)
 - [5. Hướng Dẫn Sử Dụng Chi Tiết](#-5-hướng-dẫn-sử-dụng-chi-tiết)
 - [6. Công Nghệ & Bảo Mật](#-6-công-nghệ--bảo-mật)
 
@@ -26,37 +26,37 @@
 
 ## 🚀 1. Hướng Dẫn Khởi Động Dự Án
 
-Bạn có thể lựa chọn 1 trong 2 cách khởi chạy tùy theo nhu cầu:
+Dự án gồm 2 phần riêng biệt, bạn có thể lựa chọn khởi chạy tùy theo nhu cầu:
 
-### Cách 1: Chạy Bản Prototype (Node.js - Siêu Nhanh, Không Cần Database)
-> *Phù hợp để trình chiếu UI/UX, kiểm thử nhanh giao diện độc giả và bảng điều khiển quản trị ngay lập tức.*
+### Cách 1: Chạy Bản Prototype (Mockup UI tĩnh, không có Database)
+> ⚠️ **Lưu ý:** Thư mục `prototype/` là **bản vẽ giao diện (Mockup UI)** được viết bằng HTML5/CSS3/Vanilla JS thuần, dữ liệu demo lưu tại `localStorage` trình duyệt. Đây **không phải sản phẩm chạy thật**, dùng để kiểm thử nhanh trải nghiệm UI/UX.
 
 * **Yêu cầu:** Máy tính đã cài [Node.js](https://nodejs.org/) (phiên bản 18+).
 
 ```bash
 # 1. Mở Terminal tại thư mục gốc của dự án (Web truyện)
-# 2. Khởi chạy máy chủ tích hợp:
+# 2. Khởi chạy máy chủ phục vụ file tĩnh:
 node server.js
 ```
-* 🌐 **Địa chỉ trang chủ:** [http://localhost:3000](http://localhost:3000)
-* ⚙️ **Giao diện quản trị (Admin):** [http://localhost:3000/admin.html](http://localhost:3000/admin.html)
-* 🏷️ **Trang lọc thể loại:** [http://localhost:3000/genres.html](http://localhost:3000/genres.html)
-* 📅 **Lịch phát sóng:** [http://localhost:3000/schedule.html](http://localhost:3000/schedule.html)
+* 🌐 **Địa chỉ trang chủ prototype:** [http://localhost:3000](http://localhost:3000)
+* ⚙️ **Bản vẽ quản trị prototype:** [http://localhost:3000/admin.html](http://localhost:3000/admin.html)
+* 🏷️ **Bản vẽ thể loại:** [http://localhost:3000/genres.html](http://localhost:3000/genres.html)
+* 📅 **Bản vẽ lịch phát sóng:** [http://localhost:3000/schedule.html](http://localhost:3000/schedule.html)
 
 ---
 
 ### Cách 2: Chạy Bản Laravel 11 (Fullstack Backend Production-Ready)
-> *Dành cho môi trường phát triển đầy đủ với cơ sở dữ liệu, phân quyền tài khoản, bình luận, tủ sách và lưu trữ file thật.*
+> ✅ **Đây là sản phẩm hoàn chỉnh**: Hoạt động với cơ sở dữ liệu thật (MySQL/SQLite), xử lý logic nghiệp vụ, phân quyền tài khoản, thuật toán gợi ý, kiểm duyệt nội dung, bảo mật và lưu trữ file thật.
 
 * **Yêu cầu:** 
-  - PHP ≥ 8.2 (đã bật extensions: `pdo`, `mbstring`, `openssl`, `curl`, `fileinfo`, `gd`)
+  - PHP ≥ 8.2 (extensions: `pdo`, `mbstring`, `openssl`, `curl`, `fileinfo`, `gd`)
   - [Composer](https://getcomposer.org/)
   - Cơ sở dữ liệu: MySQL 8.x hoặc SQLite
 
 **Các bước cài đặt chi tiết:**
 
 ```bash
-# Bước 1: Di chuyển vào thư mục Laravel
+# Bước 1: Di chuyển vào thư mục backend Laravel
 cd laravel-blade
 
 # Bước 2: Cài đặt các thư viện PHP
@@ -83,11 +83,10 @@ php artisan key:generate
   ```env
   DB_CONNECTION=sqlite
   ```
-  *(Tạo file rỗng `database/database.sqlite` nếu dùng SQLite)*
 
-**Bước 6: Khởi tạo bảng & nạp dữ liệu mẫu**
+**Bước 6: Khởi tạo bảng CSDL & nạp dữ liệu mẫu**
 ```bash
-php artisan migrate --seed
+php artisan migrate:fresh --seed
 ```
 
 **Bước 7: Tạo liên kết thư mục tải ảnh (Symlink)**
@@ -95,156 +94,182 @@ php artisan migrate --seed
 php artisan storage:link
 ```
 
-**Bước 8: Khởi chạy máy chủ**
+**Bước 8: Khởi chạy máy chủ phát triển**
 ```bash
 php artisan serve
 ```
 * 🌐 **Địa chỉ trang web:** [http://localhost:8000](http://localhost:8000)
 
-#### 🔑 Tài khoản đăng nhập mặc định:
-| Vai trò | Email đăng nhập | Mật khẩu mặc định | Quyền hạn |
+#### 🔑 Tài khoản đăng nhập mẫu sẵn có sau khi seed:
+| Vai trò | Email đăng nhập | Mật khẩu mặc định | Quyền hạn thực tế |
 |:---|:---|:---|:---|
-| **Quản trị viên (Admin)** | `admin@example.com` | `password` | Toàn quyền truy cập `/admin` |
-| **Độc giả (Member)** | `user@example.com` | `password` | Đọc truyện, bình luận, lưu tủ sách |
+| **Quản trị viên (Admin)** | `admin@example.com` | `password` | Truy cập trang quản trị `/admin`, quản lý truyện, chapter, danh mục, thành viên |
+| **Độc giả (Member)** | `user@example.com` | `password` | Đọc truyện, đánh giá, lưu tủ sách, bình luận |
 
 ---
 
-## 🌟 2. Mục Đích & Công Dụng Của Website
+## 🌟 2. Mục Đích & Kiến Trúc Dự Án
 
-**WebComics** được xây dựng nhằm giải quyết toàn diện bài toán xuất bản, phân phối và trải nghiệm đọc truyện tranh trực tuyến (Manga, Manhwa, Webtoon, Comic).
-
-### 🎯 Tác dụng & Lợi ích chính:
-1. **Phục vụ Độc giả (End-Users):**
-   - **Tối ưu trải nghiệm đọc:** Tốc độ tải ảnh siêu tốc, cuộn trang dọc mượt mà chuẩn Webtoon không ngắt quãng, tự động lưu lịch sử đọc và chương đang đọc dở.
-   - **Khám phá kho truyện phong phú:** Dễ dàng tìm kiếm với bộ lọc đa thể loại thông minh, bảng xếp hạng Top Trending theo ngày/tuần/tháng và lịch phát sóng định kỳ.
-   - **Tương tác cộng đồng:** Tham gia bình luận, đánh giá, tương tác dưới từng chương truyện và cá nhân hóa tủ sách yêu thích.
-
-2. **Phục vụ Nhóm Dịch & Tác Giả (Creators / Translators / Editors):**
-   - **Đơn giản hóa quy trình xuất bản:** Hỗ trợ đăng tải truyện, tải ảnh hàng loạt (bulk upload) cho các chương truyện nhanh chóng.
-   - **Tổ chức nội dung chuyên nghiệp:** Phân loại theo Thể loại (Genres), Thẻ (Tags), Tác giả & Họa sĩ (Authors).
-   - **Lên lịch phát hành tự động:** Hẹn giờ ra mắt chương mới theo từng ngày trong tuần để duy trì lượng độc giả trung thành.
-
-3. **Phục vụ Nhà Quản Trị & Đơn Vị Phát Hành (Site Owners / Admins):**
-   - **Báo cáo & Thống kê trực quan (Analytics):** Theo dõi lưu lượng truy cập, lượt xem chương, số thành viên mới và bộ truyện hot nhất theo thời gian thực.
-   - **Kiểm duyệt & Quản trị an toàn:** Quản lý tài khoản người dùng, phân quyền Admin/Member, kiểm duyệt bình luận và xử lý các báo cáo sự cố (ảnh lỗi, sai thứ tự trang).
-   - **Khai thác thương mại:** Quản lý vị trí banner quảng cáo, sự kiện và truyện bản quyền (Originals).
+**WebComics** giải quyết toàn diện bài toán đọc và quản trị truyện tranh trực tuyến (Manga, Manhwa, Webtoon):
+1. **Trải nghiệm đọc tối ưu:** Đọc cuộn dọc mượt mà, tự động lưu lịch sử đọc, đánh dấu yêu thích và bình luận tương tác.
+2. **Quản trị xuất bản:** Đăng tải truyện, tải ảnh bulk upload cho chapter, gắn thẻ/thể loại/tác giả, hẹn giờ xuất bản chapter (Publish Gate).
+3. **Cơ chế đề xuất thông minh:** Thuật toán Multi-Signal Content Filtering gợi ý truyện theo thể loại và nhãn dựa trên lịch sử đọc 30 ngày và tủ sách cá nhân.
+4. **An toàn & Kiểm duyệt:** Lọc từ cấm teencode tự động, chặn spam link/quảng cáo, chặn người dùng bị khóa tài khoản theo thời gian thực (Middleware Ban Check).
 
 ---
 
-## ✨ 3. Các Tính Năng Nổi Bật
+## ✨ 3. Tình Trạng Tính Năng Chi Tiết
 
-### 3.1 Dành Cho Độc Giả (Client / Reader)
-* 🏠 **Trang Chủ Hiện Đại:** Hero Banner nổi bật các siêu phẩm, bảng xếp hạng Top Trending (Rank 1, 2, 3 độc quyền) và danh sách truyện mới cập nhật theo thời gian thực.
+### 3.1 Dành Cho Độc Giả (Client / Reader) — *Đã hoàn thiện & chạy thật 100%*
+* 🏠 **Trang Chủ Hiện Đại:** Hero Banner, bảng xếp hạng Top Trending (Rank 1, 2, 3) và danh sách truyện mới cập nhật (tự động lọc chỉ hiển thị chương đã phát hành).
 * 📖 **Trình Đọc Chương Chuyên Nghiệp (Webtoon Reader):**
-  * Chế độ cuộn dọc liên tục mượt mà, tối ưu cho cả máy tính và điện thoại.
-  * Bộ điều hướng nhanh: Chuyển chương Trước/Sau, chọn chương từ danh sách thả xuống.
-  * Tự động ghi nhớ chương vừa đọc để độc giả quay lại đọc tiếp bất cứ lúc nào.
+  * Chế độ cuộn dọc liên tục mượt mà, tối ưu desktop & mobile.
+  * Điều hướng thông minh: Chuyển chương Trước/Sau, chọn chương từ danh sách dropdown.
+  * **Hẹn giờ phát hành (Publish Gate):** Chương chưa tới giờ phát hành sẽ trả về 404 đối với độc giả, Admin vẫn xem trước (preview) bình thường.
+  * Tự động lưu tiến độ đọc vào Lịch sử đọc qua AJAX khi cuộn trang.
 * 🔍 **Tìm Kiếm & Bộ Lọc Nâng Cao:**
-  * Tìm kiếm tức thì theo tên truyện, tên tác giả.
-  * Lọc kết hợp đa thể loại (Hành động, Tình cảm, Isekai, Trinh thám, Võ thuật, Hài hước,...).
-  * Lọc theo trạng thái (*Đang phát hành / Đã hoàn thành*) và sắp xếp (*Xem nhiều nhất, Đánh giá cao nhất, Mới nhất*).
-* 📅 **Lịch Phát Sóng (Schedule):** Theo dõi lịch ra mắt chương mới từ Thứ 2 đến Chủ Nhật.
-* ⭐ **Độc Quyền (Originals):** Khu vực dành riêng cho các tác phẩm Webtoon bản quyền đặc sắc.
+  * Lọc kết hợp đa thể loại (Action, Romance, Fantasy, Isekai,...).
+  * Lọc theo trạng thái (*Đang phát hành, Đã hoàn thành, Tạm ngưng, Đã hủy*) và sắp xếp (*Xem nhiều nhất, Đánh giá cao nhất, Mới nhất*).
+* 📅 **Lịch Phát Sóng (Schedule):** Xem danh sách truyện ra mắt theo từng thứ trong tuần.
+* ⭐ **Độc Quyền (Originals):** Danh mục riêng dành cho các tác phẩm Webtoon bản quyền.
 * 📚 **Tủ Sách & Lịch Sử Cá Nhân (Personal Library):**
-  * Đánh dấu yêu thích và lưu truyện vào tủ sách chỉ với 1 click.
-  * Xem lại lịch sử đọc chi tiết, hỗ trợ xóa lịch sử khi cần.
-* 💬 **Hệ Thống Bình Luận & Tương Tác:**
-  * Bình luận trực tiếp dưới từng chương và phản hồi (reply).
-  * Tích hợp chống spam (Rate Limit / Throttle).
-* 🌓 **Giao Diện Đa Dụng (Dark/Light Mode):** Chuyển đổi tông màu bảo vệ mắt khi đọc truyện ban đêm.
+  * Thêm/bỏ theo dõi truyện vào tủ sách cá nhân (AJAX Toggle).
+  * Xem danh sách lịch sử đọc chi tiết, hỗ trợ nút xóa sạch lịch sử.
+* 💬 **Bình Luận & Tương Tác (Comments Engine):**
+  * Đăng bình luận theo truyện hoặc theo từng chương cụ thể.
+  * Hỗ trợ trả lời (Reply 1 cấp) với validation kiểm tra cùng truyện/chương.
+  * **Tự động lọc nội dung:** Thay thế từ cấm/teencode thành `***`, gắn cờ `spam` và chuyển vào danh sách chờ duyệt nếu chứa liên kết ngoài/quảng cáo.
+  * Chỉnh sửa bình luận trong vòng 15 phút (CommentPolicy), xóa mềm bình luận (SoftDeletes).
+  * Chống spam: Giới hạn tần suất đăng (Rate limit 5 req/phút).
+* 🎯 **Hệ Thống Gợi Ý Thông Minh (Recommendation API):**
+  * Khách vãng lai (Guest): Gợi ý Top Trending & Đánh giá cao.
+  * Đã đăng nhập: Gợi ý cá nhân hóa dựa trên Thể loại (Genre) + Nhãn (Tag) đã đọc và lưu tủ sách.
+  * Trang chi tiết truyện: Gợi ý các bộ truyện tương tự (Similar Comics).
+  * Cơ chế bộ nhớ đệm đa tầng (Version-Key Cache Invalidation) tự động làm mới khi có hành vi đọc mới.
+* 🌓 **Giao Diện Đa Dụng (Dark/Light Mode):** Chuyển đổi tông màu trực tiếp trên giao diện.
 
 ---
 
-### 3.2 Dành Cho Quản Trị Viên (Admin & Biên Tập Viên)
-* 📊 **Dashboard Thống Kê (Analytics):** Báo cáo trực quan tổng số truyện, tổng chương, lượt xem, người dùng mới và tương tác.
-* 📚 **Quản Lý Truyện (Comics Management):** Thêm mới, chỉnh sửa thông tin, upload ảnh bìa, đặt trạng thái (Hoàn thành / Đang tiến hành), gắn thể loại, tag, tác giả.
+### 3.2 Dành Cho Quản Trị Viên (Admin Dashboard)
+
+#### ✅ Các tính năng đã hoàn thiện & chạy thật (Backend + CSDL đầy đủ):
+* 📚 **Quản Lý Truyện (Comics Management):**
+  * Xem danh sách phân trang, tìm kiếm bộ truyện.
+  * Thêm mới & Chỉnh sửa truyện qua `StoreComicRequest` / `UpdateComicRequest`.
+  * Upload ảnh bìa lưu trữ an toàn, tự động tạo slug chuẩn SEO.
+  * Đồng bộ thể loại (Genres), nhãn (Tags), tác giả & họa sĩ (Authors).
+  * Thiết lập trạng thái: *Đang phát hành (ongoing), Hoàn thành (completed), Tạm ngưng (hiatus), Đã hủy (cancelled)*.
+  * Xóa mềm truyện (SoftDeletes) kèm ghi nhận nhật ký (ActivityLog).
 * 📑 **Quản Lý Chương (Chapters Management):**
-  * Thêm chương mới, sửa số thứ tự chương.
-  * Tải lên danh sách ảnh hàng loạt (Bulk Chapter Pages Upload) và sắp xếp thứ tự trang.
-* 🏷️ **Quản Lý Danh Mục:** Thể loại (Genres), Thẻ phụ (Tags), Tác giả & Họa sĩ (Authors).
-* 👥 **Quản Lý Thành Viên (Users):** Danh sách người dùng, phân quyền (Admin / Member), khóa tài khoản (Ban/Unban) khi có hành vi xấu.
-* 🛡️ **Kiểm Duyệt Nội Dung & Báo Cáo:**
-  * Quản lý & duyệt bình luận (Comments Moderation).
-  * Tiếp nhận và giải quyết phản hồi lỗi từ độc giả (Report Center: ảnh lỗi, sai thứ tự,...).
-* 🎨 **Quản Lý Banners & Quảng Cáo:** Thay đổi slide trang chủ, banner giới thiệu sự kiện.
-* 📜 **Nhật Ký Hệ Thống (Audit Logs):** Theo dõi mọi thao tác thay đổi dữ liệu của đội ngũ quản trị.
+  * Quản lý danh sách chương theo từng bộ truyện (Route scope bindings chống can thiệp chéo).
+  * Thêm chương mới, tải lên danh sách ảnh hàng loạt (Bulk Upload) hoặc nhập link ảnh.
+  * Đặt lịch phát hành chương (`published_at`) trong tương lai để hẹn giờ ra mắt.
+  * Ràng buộc Unique Composite Index (`comic_id`, `slug`) và (`comic_id`, `chapter_number`) chống trùng lặp dữ liệu ở tầng CSDL.
+* 🏷️ **Quản Lý Thể Loại (Genres Management):** Thêm mới, sửa, xóa các thể loại truyện.
+* 🔖 **Quản Lý Nhãn (Tags Management):** Thêm mới, sửa, xóa các tag (HOT, NEW, 18+,...).
+* ✍️ **Quản Lý Tác Giả (Authors Management):** Thêm mới, sửa, xóa thông tin tác giả/họa sĩ.
+* 👥 **Quản Lý Thành Viên (Users Management):**
+  * Danh sách thành viên, lọc theo vai trò (Admin / Member) và trạng thái (Bình thường / Bị khóa).
+  * Phân quyền Quản trị viên (`toggleRole`) — có cơ chế bảo vệ ngăn tự tước quyền của chính mình.
+  * Khóa / Mở khóa tài khoản (`toggleBan`) — ngăn khóa Admin, tự động hủy toàn bộ session của tài khoản bị khóa trong CSDL.
+  * **Middleware `EnsureUserNotBanned`:** Lập tức phát hiện cờ ban, đăng xuất và đẩy người dùng ra trang đăng nhập ngay tại request kế tiếp.
+* 💬 **Kiểm Duyệt & Quản Lý Bình Luận (Comments Moderation):**
+  * Quản lý toàn bộ bình luận với các tab trạng thái: *Tất cả, Đã duyệt (Approved), Chờ duyệt (Pending), Đã ẩn (Hidden/Spam), Bị báo cáo (Reported), Thùng rác (Soft-deleted)*.
+  * Tìm kiếm theo tên người dùng, email, nội dung bình luận hoặc tên truyện.
+  * Thao tác trực tiếp: Duyệt bình luận (`approve`), Ẩn bình luận (`hide`), Xóa mềm (`SoftDeletes`), Khôi phục từ thùng rác (`restore`).
+  * Khóa tài khoản nhanh (`banUser`) tác giả bình luận vi phạm trực tiếp từ bảng kiểm duyệt.
+* ⚠️ **Trung Tâm Xử Lý Báo Cáo Sự Cố (Report Center):**
+  * Tiếp nhận báo cáo sự cố ảnh hỏng từ độc giả (FE-03) theo thời gian thực.
+  * Quản lý trạng thái theo luồng 3 bước: *Chưa xử lý (Pending) $\to$ Đang xử lý (Processing) $\to$ Đã khắc phục (Resolved)* hoặc Bác bỏ (Dismissed).
+  * Nút điều hướng nhanh (`🎯 Xem trang X`): Mở trực tiếp reader và cuộn chính xác tới trang ảnh bị sự cố.
+* 📅 **Quản Lý Lịch Phát Sóng Tuần (Weekly Schedule Management):**
+  * Giao diện lịch phát hành 7 ngày trong tuần trực quan (Chủ Nhật - Thứ Bảy).
+  * Gán bộ truyện, ngày phát sóng trong tuần (`day_of_week`) và khung giờ phát hành (`release_time`).
+  * **Cơ chế tự động phát hành (Publish-Gate & Scheduled Job):** Command `chapters:publish-scheduled` chạy mỗi phút quét các chapter đã đến giờ hẹn (`published_at <= now()`), tự động làm mới cache trang chủ (`home.latest`, `home.trending`) và lịch phát sóng mà không cần thao tác tay.
+* 🖼️ **Quản Lý Banner Trang Chủ (Homepage Hero Banners):**
+  * CRUD banner quảng cáo/hero slider trang chủ hoàn chỉnh, hỗ trợ upload file ảnh hoặc nhập URL ảnh ngoài.
+  * Tùy chỉnh thứ tự ưu tiên (`order`), bật/tắt nhanh (`toggleActive`), gán link đích và thời hạn hiệu lực (`start_at` $\to$ `end_at`).
+  * **Tự động kích hoạt & Tự động ẩn khi hết hạn:** Banner hết hạn (`end_at < now()`) hoặc chưa tới giờ bắt đầu (`start_at > now()`) tự động ẩn khỏi trang chủ mà không cần xóa tay.
+
+#### 🚧 Các module giao diện mẫu (Đang trong lộ trình phát triển / Hiện là View tĩnh):
+> ℹ️ *Các route dưới đây đã được định tuyến trong `routes/web.php` và trả về giao diện Blade mẫu để tham khảo UI, chưa gắn controller xử lý nghiệp vụ CSDL thực tế:*
+
+* 📊 **Dashboard Thống Kê Tổng Quan (`/admin`):** *(chưa hoàn thiện)* — Hiện tự động chuyển hướng về trang Quản lý truyện (`admin.comics.index`).
+* 🔑 **Phân Quyền Chi Tiết (`/admin/permissions`):** *(chưa hoàn thiện)* — Giao diện mẫu ma trận quyền hạn nâng cao. (Hệ thống hiện phân quyền theo 2 cấp độ: Admin và Member qua `AdminMiddleware`).
+* ⚙️ **Cài Đặt Hệ Thống (`/admin/settings`):** *(chưa hoàn thiện)* — Giao diện mẫu cấu hình website.
+* 📜 **Giao Diện Xem Nhật Ký Hệ Thống (Audit Logs):** *(chưa hoàn thiện)* — Model `ActivityLog` và cơ chế ghi log tự động khi tạo/sửa/xóa/đăng nhập đã hoạt động ngầm trong CSDL, giao diện bảng tra cứu chuyên biệt trên Admin đang được phát triển.
 
 ---
 
-## 🗂️ 4. Cấu Trúc Dự Án
-
-Dự án được phát triển theo mô hình 2 tầng linh hoạt:
+## 🗂️ 4. Cấu Trúc Thư Mục
 
 ```
 Web truyện/
-├── prototype/                 # Giao diện tĩnh & demo mockup nhanh (HTML5, CSS3, Vanilla JS)
-│   ├── index.html             # Trang chủ
-│   ├── detail.html            # Trang chi tiết truyện & trình đọc
-│   ├── genres.html            # Trang lọc thể loại
-│   ├── schedule.html          # Lịch phát sóng
-│   ├── originals.html         # Danh mục truyện độc quyền
-│   ├── admin*.html            # 12+ màn hình quản trị hoàn chỉnh
-│   ├── app.js                 # Xử lý logic phía client, lưu trữ LocalStorage
-│   └── style.css              # Hệ thống CSS Design System chuẩn Webtoon
+├── prototype/                 # GIAO DIỆN MẪU TĨNH (Mockup UI - Không kết nối DB)
+│   ├── index.html             # Bản vẽ trang chủ
+│   ├── detail.html            # Bản vẽ trang chi tiết truyện & trình đọc
+│   ├── genres.html            # Bản vẽ trang lọc thể loại
+│   ├── schedule.html          # Bản vẽ lịch phát sóng
+│   ├── originals.html         # Bản vẽ danh mục truyện độc quyền
+│   ├── admin*.html            # Bản vẽ các màn hình quản trị mẫu
+│   ├── app.js                 # Mock logic client, lưu LocalStorage
+│   └── style.css              # Design System CSS chuẩn Webtoon
 │
-├── laravel-blade/             # Source code backend hoàn chỉnh (Laravel 11 Production)
+├── laravel-blade/             # ỨNG DỤNG CHÍNH (Laravel 11 Fullstack Production)
 │   ├── app/
-│   │   ├── Http/Controllers/ # Bộ điều khiển (HomeController, ChapterController, Admin/...)
-│   │   ├── Models/            # Eloquent Models (Comic, Chapter, Genre, Tag, User,...)
-│   │   ├── Services/          # Service Layer (LibraryService, RecommendationService,...)
-│   │   └── Middleware/        # AdminMiddleware, ThrottleMiddleware...
+│   │   ├── Http/
+│   │   │   ├── Controllers/   # HomeController, ComicController, ChapterController, Admin/...
+│   │   │   ├── Middleware/    # AdminMiddleware, EnsureUserNotBanned
+│   │   │   └── Requests/      # StoreCommentRequest, StoreComicRequest, UpdateComicRequest...
+│   │   ├── Models/            # Comic, Chapter, Genre, Tag, Author, User, Comment, ActivityLog...
+│   │   ├── Policies/          # CommentPolicy
+│   │   ├── Services/          # RecommendationService, ImageService, CommentFilterService, LibraryService...
+│   │   └── Observers/         # ComicObserver, ChapterObserver (Tự động xóa Cache)
+│   ├── config/                # comments.php, badwords.php...
 │   ├── database/
-│   │   ├── migrations/        # Cấu trúc CSDL chuẩn hóa (foreign keys, indexes)
-│   │   └── seeders/           # Dữ liệu mẫu (35+ truyện, tài khoản test)
-│   ├── resources/views/       # Giao diện Blade Templates kế thừa & module hóa
-│   ├── routes/web.php         # Hệ thống định tuyến URL chuẩn SEO
-│   └── public/                # Static assets (CSS, JS, upload storage)
+│   │   ├── migrations/        # 22+ migrations chuẩn hóa CSDL, composite indexes & unique constraints
+│   │   └── seeders/           # Dữ liệu mẫu (11+ bộ truyện đầy đủ chapter, tags, genres, schedules)
+│   ├── resources/views/       # Hệ thống Blade templates
+│   ├── routes/web.php         # Hệ thống định tuyến URL chuẩn SEO & bảo mật
+│   └── tests/                 # 61 Unit & Feature tests (100% Passed)
 │
-├── server.js                  # Máy chủ Node.js phục vụ chạy nhanh thư mục prototype/
-├── .gitignore                 # Cấu hình bỏ qua các file nhạy cảm & dependencies
-└── README.md                  # Hướng dẫn chi tiết dự án
+├── server.js                  # Máy chủ Node.js phục vụ chạy thử thư mục prototype/
+├── .gitignore                 # Cấu hình an toàn
+└── README.md                  # Tài liệu hướng dẫn dự án
 ```
 
 ---
 
 ## 📖 5. Hướng Dẫn Sử Dụng Chi Tiết
 
-### 5.1 Hướng Dẫn Dành Cho Độc Giả
+### 5.1 Dành Cho Độc Giả
 
-1. **Tìm & Lựa Chọn Truyện:**
-   - Tại thanh điều hướng (Navbar), nhập từ khóa vào ô tìm kiếm để tra cứu truyện nhanh.
-   - Nhấp vào mục **"Thể Loại"** để lọc truyện theo sở thích (ví dụ: *Action + Fantasy*).
-   - Nhấp vào mục **"Lịch Phát Sóng"** để xem hôm nay có chương mới của truyện nào.
-
-2. **Trải Nghiệm Đọc Truyện:**
-   - Vào trang chi tiết truyện, nhấp **"Đọc Từ Đầu"** hoặc **"Đọc Tiếp"** để vào giao diện đọc chương.
-   - Cuộn chuột hoặc vuốt màn hình để đọc từng trang ảnh.
-   - Sử dụng thanh công cụ điều khiển nổi (Floating toolbar) để chuyển chương hoặc quay về mục lục.
-
-3. **Lưu Truyện & Bình Luận:**
-   - Bấm vào biểu tượng **"Thêm vào tủ sách"** (Bookmark) ở trang chi tiết để nhận thông báo khi có chương mới.
-   - Kéo xuống cuối chương để gửi bình luận, trao đổi ý kiến với những người đọc khác.
+1. **Khám Phá & Đọc Truyện:**
+   - Sử dụng thanh tìm kiếm trên Navbar để tìm truyện theo tên hoặc tác giả.
+   - Nhấp vào mục **"Thể Loại"** để lọc kết hợp theo thể loại và trạng thái truyện.
+   - Tại trang chi tiết, nhấn **"Đọc Từ Đầu"** hoặc chọn chương từ mục lục để mở trình đọc cuộn dọc.
+2. **Tương Tác & Lưu Trữ:**
+   - Nhấn **"Thêm vào tủ sách"** để theo dõi truyện (yêu cầu đăng nhập).
+   - Truy cập **"Tủ sách"** trên menu cá nhân để xem danh sách truyện đang theo dõi và lịch sử đọc.
+   - Kéo xuống cuối mỗi chương để viết bình luận hoặc trả lời bình luận của độc giả khác.
 
 ---
 
-### 5.2 Hướng Dẫn Dành Cho Quản Trị Viên
+### 5.2 Dành Cho Quản Trị Viên
 
-1. **Truy Cập Trang Quản Trị:**
-   - Đăng nhập bằng tài khoản Admin, sau đó truy cập đường dẫn `/admin`.
-
-2. **Đăng Tải & Cập Nhật Truyện Mới:**
-   - Vào mục **Comics (Quản lý truyện)** ➡️ Nhấp nút **"Thêm Truyện Mới"** (`Create Comic`).
-   - Nhập tiêu đề truyện, chọn tác giả, chọn các thể loại và tải lên ảnh bìa (Cover Image).
-   - Bấm **Lưu** để khởi tạo bộ truyện trên hệ thống.
-
-3. **Thêm Chương & Tải Ảnh Lên (Upload Chapter):**
-   - Tại danh sách truyện, nhấp vào nút **"Quản lý Chapters"** của truyện tương ứng.
-   - Bấm **"Thêm Chapter Mới"**, điền số thứ tự chương (VD: *Chapter 1* hoặc *Chapter 25*).
-   - Tải lên danh sách ảnh nội dung chương (hỗ trợ JPG, PNG, WebP) và nhấn **Xuất Bản**.
-
-4. **Quản Lý Người Dùng & Bình Luận:**
-   - Vào mục **Users** để kiểm tra danh sách thành viên, nâng quyền lên Quản trị viên hoặc tạm khóa tài khoản có hành vi vi phạm.
-   - Vào mục **Comments** và **Reports** để duyệt các bình luận phản cảm hoặc xử lý báo cáo chương hỏng.
+1. **Đăng Nhập Quản Trị:**
+   - Đăng nhập tài khoản `admin@example.com` / `password`, truy cập menu quản trị hoặc đường dẫn `/admin`.
+2. **Đăng & Quản Lý Truyện:**
+   - Vào mục **Comics** ➡️ Bấm **"Thêm Truyện Mới"**.
+   - Điền tiêu đề, mô tả, chọn trạng thái (*ongoing / completed / hiatus / cancelled*), tích chọn thể loại, nhãn, tác giả và tải ảnh bìa.
+   - Bấm **Lưu** để khởi tạo bộ truyện.
+3. **Thêm Chapter Mới & Hẹn Giờ:**
+   - Tại danh sách truyện, bấm **"Quản lý Chapters"** của bộ truyện tương ứng ➡️ Bấm **"Thêm Chapter Mới"**.
+   - Nhập số chương, tải lên danh sách ảnh nội dung (Bulk Upload).
+   - *(Tùy chọn)* Đặt ngày phát hành trong tương lai để hẹn giờ ra mắt.
+4. **Quản Lý Danh Mục & Người Dùng:**
+   - Thêm/sửa/xóa Thể loại (Genres), Thẻ (Tags), Tác giả (Authors).
+   - Vào mục **Users** để xem danh sách thành viên, nâng quyền Admin hoặc Khóa tài khoản vi phạm (người dùng bị khóa sẽ bị đăng xuất ngay lập tức).
 
 ---
 
@@ -253,15 +278,16 @@ Web truyện/
 ### 💻 Công Nghệ Sử Dụng
 - **Backend:** Laravel 11 (PHP 8.2+), Eloquent ORM, Blade Template Engine.
 - **Frontend:** HTML5 Semantic, CSS3 Hiện Đại (CSS Variables, Flexbox/Grid, Glassmorphism, Micro-animations), JavaScript ES6+.
-- **Database:** MySQL 8 / SQLite với cơ chế Indexing tối ưu truy vấn.
-- **Mock Dev Server:** Node.js HTTP Server với cơ chế bảo vệ ngăn chặn Directory Traversal.
+- **Database:** MySQL 8 / SQLite với cơ chế Indexing tối ưu (Composite Index cho các truy vấn phức tạp).
+- **Bộ nhớ đệm (Cache Engine):** Version-Key Pattern cho Recommendation Engine, Cache danh sách chương và trang chủ.
 
-### 🔒 Tính Năng Bảo Mật Đã Triển Khai
-- **Bảo Vệ Đường Dẫn & Role-Based Access Control:** Sử dụng `AdminMiddleware` ngăn chặn người dùng thường truy cập trang quản trị.
-- **Chống Spam API (Rate Limiting / Throttle):** Giới hạn tần suất gọi API bình luận, lưu lịch sử và tương tác nhằm chống tấn công DDoS và spam bot.
-- **Bảo Vệ Biểu Mẫu:** Toàn bộ form submit đều được tích hợp mã `CSRF Token`.
-- **Chuẩn Hóa Đường Dẫn (SEO Slug Sanitization):** Ràng buộc Regex `[a-z0-9\-]` cho slug truyện và chương nhằm chặn mã độc và URL rác.
-- **Bảo Mật Dữ Liệu:** File `.env` chứa mật khẩu cơ sở dữ liệu và app key được cấu hình an toàn trong `.gitignore`.
+### 🔒 Tính Năng Bảo Mật Đã Triển Khai Thực Tế
+- **Phân Quyền Chặt Chẽ:** `AdminMiddleware` bảo vệ toàn bộ phân vùng `/admin`, `EnsureUserNotBanned` chặn tức thì các tài khoản bị khóa.
+- **Chống Spam & Giới Hạn Tần Suất (Rate Limiting):** Áp dụng `throttle` cho các route nhạy cảm (đăng bình luận, lưu lịch sử đọc, thêm tủ sách).
+- **Bảo Vệ Biểu Mẫu:** Bắt buộc `CSRF Token` cho tất cả phương thức POST / PUT / PATCH / DELETE.
+- **Kiểm Soát Dữ Liệu Đầu Vào (Form Requests):** Tách biệt validation qua `StoreComicRequest`, `UpdateComicRequest`, `StoreCommentRequest`, `UpdateCommentRequest`, `StoreChapterRequest`.
+- **Ràng Buộc Tầng CSDL:** Unique Constraint (`comic_id`, `slug`) và (`comic_id`, `chapter_number`) chống xung đột dữ liệu.
+- **Lọc Nội Dung Độc Hại:** Tự động lọc từ cấm tiếng Việt/teencode và chặn liên kết spam trong bình luận (`CommentFilterService`).
 
 ---
 

@@ -8,6 +8,7 @@ use App\Events\CommentCreated;
 use App\Models\ActivityLog;
 use App\Models\Comment;
 use App\Services\CommentFilterService;
+use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
 
@@ -18,6 +19,42 @@ class CommentController extends Controller
     public function __construct(CommentFilterService $filterService)
     {
         $this->filterService = $filterService;
+    }
+
+    /**
+     * Lấy danh sách bình luận (phân biệt cấp truyện vs cấp chapter).
+     * Query Parameters:
+     *   - comic_id: int (bắt buộc)
+     *   - chapter_id: int (tuỳ chọn) - nếu có thì lấy comment của chapter đó, nếu không có thì lấy comment cấp truyện (chapter_id IS NULL)
+     *   - parent_id: null (chỉ lấy top-level comments, replies được eager load)
+     */
+    public function index(Request $request): JsonResponse
+    {
+        $request->validate([
+            'comic_id'   => 'required|exists:comics,id',
+            'chapter_id' => 'nullable|exists:chapters,id',
+        ]);
+
+        $query = Comment::with(['user', 'replies.user'])
+            ->where('comic_id', $request->comic_id)
+            ->whereNull('parent_id')
+            ->approved()
+            ->orderBy('created_at', 'desc');
+
+        if ($request->filled('chapter_id')) {
+            // Luồng 1: Bình luận thuộc về chương cụ thể
+            $query->where('chapter_id', $request->chapter_id);
+        } else {
+            // Luồng 2: Bình luận cấp truyện (không gắn với chương nào)
+            $query->whereNull('chapter_id');
+        }
+
+        $comments = $query->paginate(20);
+
+        return response()->json([
+            'status'   => 'success',
+            'comments' => $comments,
+        ]);
     }
 
     /**
@@ -33,13 +70,13 @@ class CommentController extends Controller
         $comment = Comment::create([
             'user_id'    => auth()->id(),
             'comic_id'   => $request->comic_id,
-            'chapter_id' => $request->chapter_id,
-            'parent_id'  => $request->parent_id,
+            'chapter_id' => $request->chapter_id ?: null,
+            'parent_id'  => $request->parent_id ?: null,
             'content'    => $processed['content'],
             'status'     => $processed['status'],
         ]);
 
-        $comment->load('user');
+        $comment->load(['user', 'replies.user']);
 
         // Fire event — LogCommentCreated listener ghi ActivityLog
         CommentCreated::dispatch($comment);
@@ -58,6 +95,8 @@ class CommentController extends Controller
                 'content'   => e($comment->content),
                 'status'    => $comment->status,
                 'time_ago'  => 'Vừa xong',
+                'parent_id' => $comment->parent_id,
+                'chapter_id'=> $comment->chapter_id,
             ],
         ]);
     }

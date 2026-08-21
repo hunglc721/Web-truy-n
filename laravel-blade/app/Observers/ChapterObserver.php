@@ -18,8 +18,16 @@ class ChapterObserver
      */
     protected function invalidateForComic(int $comicId): void
     {
-        // Dropdown danh sách chương trong reader
+        // Dropdown danh sách chương trong reader (reader cache)
         Cache::forget("comic.{$comicId}.chapters_list");
+
+        // Dropdown danh sách chương trong reader (admin preview cache)
+        Cache::forget("comic.{$comicId}.chapters_list.admin");
+
+        // Comic detail page cache (reader + admin tách riêng)
+        // Xóa cả 2 vì có thể chapters count / list đã thay đổi
+        Cache::forget("comic.detail.{$comicId}");
+        Cache::forget("comic.detail.{$comicId}.admin");
 
         // Home page: latest updates phụ thuộc vào chapter mới nhất
         Cache::forget('home.latest');

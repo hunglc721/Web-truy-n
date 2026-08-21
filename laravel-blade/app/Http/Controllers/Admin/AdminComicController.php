@@ -3,16 +3,21 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\StoreComicRequest;
+use App\Http\Requests\Admin\UpdateComicRequest;
 use App\Models\ActivityLog;
-use App\Models\Comic;
-use App\Models\Chapter;
-use App\Models\Genre;
 use App\Models\Author;
-use Illuminate\Http\Request;
-use Illuminate\Support\Str;
+use App\Models\Comic;
+use App\Models\Genre;
+use App\Models\Tag;
+use App\Services\ImageService;
 
 class AdminComicController extends Controller
 {
+    public function __construct(
+        protected ImageService $imageService
+    ) {}
+
     /**
      * Danh sách tất cả bộ truyện (Admin Dashboard)
      */
@@ -30,37 +35,42 @@ class AdminComicController extends Controller
      */
     public function create()
     {
-        $genres = Genre::all();
-        $authors = Author::all();
-        return view('admin.comics.create', compact('genres', 'authors'));
+        $genres  = Genre::orderBy('name')->get();
+        $authors = Author::orderBy('name')->get();
+        $tags    = Tag::orderBy('name')->get();
+
+        return view('admin.comics.create', compact('genres', 'authors', 'tags'));
     }
 
     /**
-     * Lưu bộ truyện mới vào CSDL
+     * Lưu bộ truyện mới vào CSDL.
+     * Validation & authorization đã được xử lý bởi StoreComicRequest.
      */
-    public function store(Request $request)
+    public function store(StoreComicRequest $request)
     {
-        $validated = $request->validate([
-            'title'       => 'required|string|max:255',
-            'cover_image' => 'required|url',
-            'description' => 'required|string',
-            'status'      => 'required|in:ONGOING,COMPLETED',
-        ]);
+        $data = $request->safe()->except(['genre_ids', 'tag_ids', 'author_ids', 'cover_image']);
 
-        $validated['slug'] = Str::slug($validated['title']);
-        $validated['is_original'] = $request->has('is_original');
-        $validated['is_featured'] = $request->has('is_featured');
+        // Xử lý upload ảnh bìa (nếu có)
+        if ($request->hasFile('cover_image')) {
+            $data['cover_image'] = $this->imageService->uploadCover($request->file('cover_image'));
+        }
 
-        $comic = Comic::create($validated);
+        $comic = Comic::create($data);
 
-        if ($request->has('genres')) {
-            $comic->genres()->sync($request->input('genres'));
+        // Sync quan hệ nhiều-nhiều
+        $comic->genres()->sync($request->input('genre_ids', []));
+        $comic->tags()->sync($request->input('tag_ids', []));
+
+        if (!empty($request->input('author_ids'))) {
+            $comic->authors()->sync($request->input('author_ids'));
         }
 
         // Ghi activity log
         ActivityLog::record('admin.comic.created', $comic, [
-            'title'  => $comic->title,
-            'genres' => $request->input('genres', []),
+            'title'      => $comic->title,
+            'genre_ids'  => $request->input('genre_ids', []),
+            'tag_ids'    => $request->input('tag_ids', []),
+            'author_ids' => $request->input('author_ids', []),
         ]);
 
         return redirect()->route('admin.comics.index')
@@ -72,38 +82,45 @@ class AdminComicController extends Controller
      */
     public function edit($id)
     {
-        $comic = Comic::with(['genres', 'authors'])->findOrFail($id);
-        $genres = Genre::all();
-        $authors = Author::all();
-        return view('admin.comics.edit', compact('comic', 'genres', 'authors'));
+        $comic   = Comic::with(['genres', 'authors', 'tags'])->findOrFail($id);
+        $genres  = Genre::orderBy('name')->get();
+        $authors = Author::orderBy('name')->get();
+        $tags    = Tag::orderBy('name')->get();
+
+        return view('admin.comics.edit', compact('comic', 'genres', 'authors', 'tags'));
     }
 
     /**
-     * Cập nhật thông tin bộ truyện
+     * Cập nhật thông tin bộ truyện.
+     * Validation & authorization đã được xử lý bởi UpdateComicRequest.
      */
-    public function update(Request $request, $id)
+    public function update(UpdateComicRequest $request, $id)
     {
         $comic = Comic::findOrFail($id);
 
-        $validated = $request->validate([
-            'title'       => 'required|string|max:255',
-            'cover_image' => 'required|url',
-            'description' => 'required|string',
-            'status'      => 'required|in:ONGOING,COMPLETED',
-        ]);
+        $data = $request->safe()->except(['genre_ids', 'tag_ids', 'author_ids', 'cover_image']);
 
-        $validated['is_original'] = $request->has('is_original');
-        $validated['is_featured'] = $request->has('is_featured');
+        // Xử lý upload ảnh bìa mới (nếu có)
+        if ($request->hasFile('cover_image')) {
+            $data['cover_image'] = $this->imageService->uploadCover($request->file('cover_image'));
+        }
 
-        $comic->update($validated);
+        $comic->update($data);
 
-        if ($request->has('genres')) {
-            $comic->genres()->sync($request->input('genres'));
+        // Sync quan hệ nhiều-nhiều (chỉ khi field được gửi lên)
+        if ($request->has('genre_ids')) {
+            $comic->genres()->sync($request->input('genre_ids', []));
+        }
+        if ($request->has('tag_ids')) {
+            $comic->tags()->sync($request->input('tag_ids', []));
+        }
+        if ($request->has('author_ids')) {
+            $comic->authors()->sync($request->input('author_ids', []));
         }
 
         // Ghi activity log
         ActivityLog::record('admin.comic.updated', $comic, [
-            'changed_fields' => array_keys($validated),
+            'changed_fields' => array_keys($data),
         ]);
 
         return redirect()->route('admin.comics.index')
@@ -111,7 +128,7 @@ class AdminComicController extends Controller
     }
 
     /**
-     * Xóa bộ truyện
+     * Xóa bộ truyện (soft delete)
      */
     public function destroy($id)
     {
@@ -127,49 +144,5 @@ class AdminComicController extends Controller
 
         return redirect()->route('admin.comics.index')
             ->with('success', 'Đã xóa bộ truyện!');
-    }
-
-    /**
-     * Giao diện thêm Chapter mới cho bộ truyện
-     */
-    public function createChapter($comicId)
-    {
-        $comic = Comic::findOrFail($comicId);
-        $nextChapterNumber = ($comic->chapters()->max('chapter_number') ?? 0) + 1;
-
-        return view('admin.chapters.create', compact('comic', 'nextChapterNumber'));
-    }
-
-    /**
-     * Lưu Chapter mới với danh sách đường dẫn ảnh
-     */
-    public function storeChapter(Request $request, $comicId)
-    {
-        $comic = Comic::findOrFail($comicId);
-
-        $request->validate([
-            'chapter_number' => 'required|numeric',
-            'title'          => 'nullable|string|max:255',
-            'pages_raw'      => 'required|string', // Nhập danh sách đường dẫn ảnh (mỗi dòng 1 link URL)
-        ]);
-
-        // Tách danh sách đường dẫn ảnh theo dòng mới
-        $pages = array_values(array_filter(
-            array_map('trim', explode("\n", $request->input('pages_raw'))),
-            fn($url) => !empty($url)
-        ));
-
-        Chapter::create([
-            'comic_id'       => $comic->id,
-            'chapter_number' => $request->input('chapter_number'),
-            'title'          => $request->input('title') ?: 'Chapter ' . $request->input('chapter_number'),
-            'slug'           => 'chapter-' . $request->input('chapter_number'),
-            'pages'          => $pages,
-            'published_at'   => now(),
-            'is_free'        => true,
-        ]);
-
-        return redirect()->route('admin.comics.index')
-            ->with('success', 'Thêm Chapter ' . $request->input('chapter_number') . ' thành công!');
     }
 }

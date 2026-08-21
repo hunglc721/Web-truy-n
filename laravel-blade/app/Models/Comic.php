@@ -62,10 +62,24 @@ class Comic extends Model
     }
 
     /**
-     * Lấy chương mới nhất (dùng trong home/update list).
+     * Lấy chương mới nhất đã phát hành (dùng trong home/update list & detail page).
+     * Chỉ trả về chương có published_at <= now() — che chương lên lịch tương lai.
+     *
      * Comic::find(1)->latestChapter — dùng eager load: with('latestChapter')
      */
     public function latestChapter(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(Chapter::class)
+                    ->ofMany(['chapter_number' => 'max'], fn ($q) => $q->where('published_at', '<=', now()));
+    }
+
+    /**
+     * Lấy chương mới nhất kể cả chưa phát hành — dành cho Admin preview.
+     * Dùng trong Admin Dashboard để xem danh sách chương đã lên lịch.
+     *
+     * Comic::find(1)->latestChapterPreview
+     */
+    public function latestChapterPreview(): \Illuminate\Database\Eloquent\Relations\HasOne
     {
         return $this->hasOne(Chapter::class)->latestOfMany('chapter_number');
     }
@@ -97,9 +111,20 @@ class Comic extends Model
     }
 
     /**
-     * Tất cả bình luận thuộc về bộ truyện (bao gồm bình luận cấp truyện và bình luận ở chapter).
+     * Bình luận cấp truyện (chapter_id IS NULL).
      */
     public function comments(): HasMany
+    {
+        return $this->hasMany(Comment::class)
+                    ->whereNull('chapter_id')
+                    ->whereNull('parent_id')
+                    ->orderBy('created_at', 'desc');
+    }
+
+    /**
+     * Tất cả bình luận thuộc về bộ truyện (bao gồm cả bình luận cấp truyện và bình luận ở các chapter).
+     */
+    public function allComments(): HasMany
     {
         return $this->hasMany(Comment::class)->whereNull('parent_id')->orderBy('created_at', 'desc');
     }

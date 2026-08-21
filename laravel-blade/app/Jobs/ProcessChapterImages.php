@@ -36,27 +36,25 @@ class ProcessChapterImages implements ShouldQueue
      */
     public int $timeout = 300;
 
-    /**
-     * Tên queue riêng biệt để không block queue chính
-     */
-    public string $queue = 'chapter-images';
-
     public function __construct(
         public readonly Comic   $comic,
         public readonly Chapter $chapter,
         public readonly array   $tmpPaths,  // Đường dẫn tmp/ trên disk 'public'
         public readonly array   $urlList = [], // URL list từ textarea
-    ) {}
+    ) {
+        $this->onQueue('chapter-images');
+    }
 
     public function handle(ImageService $imageService): void
     {
         $this->chapter->update(['processing_status' => 'processing']);
 
         try {
-            $folder     = $imageService->chapterFolder($this->comic->id, $this->chapter->id);
-            $finalPages = [];
+            $folder          = $imageService->chapterFolder($this->comic->id, $this->chapter->id);
+            $finalPages      = [];
+            $pageDimensions  = [];
 
-            // Di chuyển từng file từ tmp/ sang thư mục chính thức
+            // Di chuyển từng file từ tmp/ sang thư mục chính thức và đo kích thước ảnh
             foreach ($this->tmpPaths as $idx => $tmpPath) {
                 $filename  = basename($tmpPath);
                 $destPath  = "{$folder}/{$filename}";
@@ -66,14 +64,34 @@ class ProcessChapterImages implements ShouldQueue
                 \Storage::disk('public')->put($destPath, $content);
                 \Storage::disk('public')->delete($tmpPath);
 
-                $finalPages[] = $destPath;
+                // Đo kích thước ảnh (width, height)
+                $dimensions = @getimagesizefromstring($content);
+                if (!$dimensions) {
+                    $fullPath = \Storage::disk('public')->path($destPath);
+                    $dimensions = @getimagesize($fullPath);
+                }
+                $width  = $dimensions[0] ?? 800;
+                $height = $dimensions[1] ?? 1200;
+
+                $finalPages[]     = $destPath;
+                $pageDimensions[] = [
+                    'width'  => (int) $width,
+                    'height' => (int) $height,
+                ];
             }
 
-            // Merge URL list
-            $finalPages = array_merge($finalPages, $this->urlList);
+            // Merge URL list nếu có
+            foreach ($this->urlList as $url) {
+                $finalPages[]     = $url;
+                $pageDimensions[] = [
+                    'width'  => 800,
+                    'height' => 1200,
+                ];
+            }
 
             $this->chapter->update([
                 'pages'             => $finalPages,
+                'page_dimensions'   => $pageDimensions,
                 'processing_status' => 'ready',
             ]);
 

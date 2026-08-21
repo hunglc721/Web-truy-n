@@ -3,9 +3,7 @@
 /laravel-blade/.env
 /laravel-blade/.env.backup
 /laravel-blade/.env.*.backup
-/laravel-blade/storage/framework/cache/
-/laravel-blade/storage/framework/sessions/
-/laravel-blade/storage/framework/views/
+/laravel-blade/storage/framework/
 /laravel-blade/storage/logs/
 /laravel-blade/storage/app/public/
 /laravel-blade/bootstrap/cache/*.php
