@@ -180,7 +180,11 @@
 
       {{-- Prev Chapter --}}
       @if($prevChapter)
-        <a href="{{ route('chapters.show', [$comic->slug, $prevChapter->slug]) }}" class="reader-controls-btn" id="btn-prev-chap" title="Chương trước (Phím ←)">
+        @php
+          $prevSlug = $prevChapter->slug ?: ('chapter-' . ($prevChapter->chapter_number ?? 1));
+          $cSlug = $comic->slug ?: ('comic-' . $comic->id);
+        @endphp
+        <a href="{{ route('chapters.show', [$cSlug, $prevSlug]) }}" class="reader-controls-btn" id="btn-prev-chap" title="Chương trước (Phím ←)">
           ← Chap trước
         </a>
       @else
@@ -190,7 +194,11 @@
       {{-- Select Chapter Dropdown --}}
       <select onchange="if(this.value) location.href = this.value;" class="reader-chapter-select">
         @foreach($allChapters as $item)
-          <option value="{{ route('chapters.show', [$comic->slug, $item->slug]) }}"
+          @php
+            $itemSlug = $item->slug ?: ('chapter-' . ($item->chapter_number ?? 1));
+            $cSlug = $comic->slug ?: ('comic-' . $comic->id);
+          @endphp
+          <option value="{{ route('chapters.show', [$cSlug, $itemSlug]) }}"
                   {{ $item->id == $chapter->id ? 'selected' : '' }}>
             Ch.{{ $item->chapter_number }} - {{ Str::limit($item->title, 25) }}
           </option>
@@ -199,7 +207,11 @@
 
       {{-- Next Chapter --}}
       @if($nextChapter)
-        <a href="{{ route('chapters.show', [$comic->slug, $nextChapter->slug]) }}" class="reader-controls-btn" id="btn-next-chap" title="Chương sau (Phím →)">
+        @php
+          $nextSlug = $nextChapter->slug ?: ('chapter-' . ($nextChapter->chapter_number ?? 1));
+          $cSlug = $comic->slug ?: ('comic-' . $comic->id);
+        @endphp
+        <a href="{{ route('chapters.show', [$cSlug, $nextSlug]) }}" class="reader-controls-btn" id="btn-next-chap" title="Chương sau (Phím →)">
           Chap sau →
         </a>
       @else
@@ -368,7 +380,11 @@
     gap: 12px;
   ">
     @if($prevChapter)
-      <a href="{{ route('chapters.show', [$comic->slug, $prevChapter->slug]) }}" class="reader-controls-btn" style="padding:10px 20px; background:var(--primary); border-color:var(--primary)">
+      @php
+        $prevSlug = $prevChapter->slug ?: ('chapter-' . ($prevChapter->chapter_number ?? 1));
+        $cSlug = $comic->slug ?: ('comic-' . $comic->id);
+      @endphp
+      <a href="{{ route('chapters.show', [$cSlug, $prevSlug]) }}" class="reader-controls-btn" style="padding:10px 20px; background:var(--primary); border-color:var(--primary)">
         ← Chapter Trước (Ch.{{ $prevChapter->chapter_number }})
       </a>
     @else
@@ -380,7 +396,11 @@
     </a>
 
     @if($nextChapter)
-      <a href="{{ route('chapters.show', [$comic->slug, $nextChapter->slug]) }}" class="reader-controls-btn" style="padding:10px 20px; background:var(--primary); border-color:var(--primary)">
+      @php
+        $nextSlug = $nextChapter->slug ?: ('chapter-' . ($nextChapter->chapter_number ?? 1));
+        $cSlug = $comic->slug ?: ('comic-' . $comic->id);
+      @endphp
+      <a href="{{ route('chapters.show', [$cSlug, $nextSlug]) }}" class="reader-controls-btn" style="padding:10px 20px; background:var(--primary); border-color:var(--primary)">
         Chapter Sau (Ch.{{ $nextChapter->chapter_number }}) →
       </a>
     @else

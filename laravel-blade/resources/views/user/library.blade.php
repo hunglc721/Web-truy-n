@@ -153,7 +153,11 @@
                   </div>
 
                   @if($item->lastReadChapter)
-                    <a href="{{ route('chapters.show', [$comic->slug, $item->lastReadChapter->slug]) }}" class="btn btn-login" style="
+                    @php
+                      $lastChapSlug = $item->lastReadChapter->slug ?: ('chapter-' . ($item->lastReadChapter->chapter_number ?? 1));
+                      $comicSlug = $comic->slug ?: ('comic-' . $comic->id);
+                    @endphp
+                    <a href="{{ route('chapters.show', [$comicSlug, $lastChapSlug]) }}" class="btn btn-login" style="
                       font-size: 12px; padding: 8px 12px; text-align: center; text-decoration: none; font-weight: 700; width: 100%;
                     ">
                       📖 Đọc tiếp Ch.{{ $item->lastReadChapter->chapter_number }}
@@ -232,7 +236,11 @@
                       🕒 {{ $history->last_read_at ? $history->last_read_at->diffForHumans() : 'Vừa xong' }}
                     </td>
                     <td style="padding: 14px 18px; text-align: right;">
-                      <a href="{{ route('chapters.show', [$history->comic->slug, $history->chapter->slug]) }}" class="btn btn-login" style="
+                      @php
+                        $histChapSlug = $history->chapter->slug ?: ('chapter-' . ($history->chapter->chapter_number ?? 1));
+                        $histComicSlug = $history->comic->slug ?: ('comic-' . $history->comic->id);
+                      @endphp
+                      <a href="{{ route('chapters.show', [$histComicSlug, $histChapSlug]) }}" class="btn btn-login" style="
                         font-size: 12px; padding: 6px 14px; text-decoration: none; font-weight: 700;
                       ">
                         📖 Đọc Tiếp

@@ -53,10 +53,13 @@ class ChapterController extends Controller
 
         // 3. SEO Canonical: nếu URL không dùng slug chuẩn → redirect 301
         //    Tránh duplicate content: /truyen/solo-leveling/1 và /truyen/solo-leveling/chuong-1
-        if ($chapterSlug !== $chapter->slug) {
+        $canonicalChapterSlug = $chapter->slug ?: 'chapter-' . $chapter->chapter_number;
+        $canonicalComicSlug   = $comic->slug ?: 'comic-' . $comic->id;
+
+        if ($chapterSlug !== $canonicalChapterSlug) {
             return redirect()->route('chapters.show', [
-                'comicSlug'   => $comic->slug,
-                'chapterSlug' => $chapter->slug,
+                'comicSlug'   => $canonicalComicSlug,
+                'chapterSlug' => $canonicalChapterSlug,
             ], 301);
         }
 

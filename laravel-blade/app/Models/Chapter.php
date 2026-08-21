@@ -35,6 +35,27 @@ class Chapter extends Model
     ];
 
     // ─────────────────────────────────────────────────────────────
+    // AUTO SLUG & ACCESSOR
+    // ─────────────────────────────────────────────────────────────
+    protected static function booted(): void
+    {
+        static::saving(function (Chapter $chapter) {
+            if (empty($chapter->slug)) {
+                $chapter->slug = 'chapter-' . ($chapter->chapter_number ?? 1);
+            }
+        });
+    }
+
+    /**
+     * Luôn đảm bảo slug không bao giờ trả về null hoặc rỗng.
+     * Chống ngoại lệ UrlGenerationException khi generate route chapters.show.
+     */
+    public function getSlugAttribute(?string $value): string
+    {
+        return !empty($value) ? $value : 'chapter-' . ($this->chapter_number ?? $this->id ?? 1);
+    }
+
+    // ─────────────────────────────────────────────────────────────
     // RELATIONSHIPS
     // ─────────────────────────────────────────────────────────────
 

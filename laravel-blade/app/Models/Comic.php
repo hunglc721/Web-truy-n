@@ -43,9 +43,17 @@ class Comic extends Model
     {
         static::creating(function (Comic $comic) {
             if (empty($comic->slug)) {
-                $comic->slug = Str::slug($comic->title);
+                $comic->slug = Str::slug($comic->title ?: 'comic-' . ($comic->id ?? time()));
             }
         });
+    }
+
+    /**
+     * Luôn đảm bảo slug không bao giờ trả về null hoặc rỗng.
+     */
+    public function getSlugAttribute(?string $value): string
+    {
+        return !empty($value) ? $value : Str::slug($this->title ?: 'comic-' . ($this->id ?? 1));
     }
 
     // ─────────────────────────────────────────────────────────────

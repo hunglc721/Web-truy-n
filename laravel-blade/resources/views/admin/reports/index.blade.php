@@ -125,7 +125,9 @@
 
                 {{-- Nút nhảy trực tiếp tới trang ảnh bị lỗi (FE-03 & BE-10) --}}
                 @php
-                  $readerUrl = route('chapters.show', [$rpt->comic->slug, $rpt->chapter->slug]) . ($rpt->page_number ? '#page-' . $rpt->page_number : '');
+                  $rptChapSlug  = $rpt->chapter->slug ?: ('chapter-' . ($rpt->chapter->chapter_number ?? 1));
+                  $rptComicSlug = $rpt->comic->slug ?: ('comic-' . $rpt->comic->id);
+                  $readerUrl    = route('chapters.show', [$rptComicSlug, $rptChapSlug]) . ($rpt->page_number ? '#page-' . $rpt->page_number : '');
                 @endphp
                 <div class="mt-2 flex items-center gap-2">
                   <a href="{{ $readerUrl }}" target="_blank" class="inline-flex items-center gap-1 px-2.5 py-1 bg-indigo-500/20 hover:bg-indigo-500/35 text-indigo-300 border border-indigo-500/30 rounded text-xs font-bold transition" title="Mở reader và cuộn trực tiếp tới trang lỗi">
