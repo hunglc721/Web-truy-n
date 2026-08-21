@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Models\Chapter;
 use App\Models\Comic;
+use App\Services\ChapterNotificationService;
 use App\Services\ImageService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -12,40 +13,23 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 
-/**
- * Job xử lý upload bulk ảnh cho Chapter bất đồng bộ.
- *
- * Flow:
- *  1. AdminChapterController::store() lưu files vào tmp/
- *  2. Dispatch job này, redirect về admin ngay lập tức
- *  3. Job: move từ tmp/ → comics/{id}/chapters/{id}/, merge URLs, update pages
- *  4. Cập nhật processing_status = 'ready' | 'failed'
- */
 class ProcessChapterImages implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    /**
-     * Số lần retry khi job thất bại.
-     * (upload thất bại do disk full, network glitch...)
-     */
     public int $tries = 3;
-
-    /**
-     * Timeout tối đa (giây) — 100 ảnh * ~3s = ~300s
-     */
     public int $timeout = 300;
 
     public function __construct(
         public readonly Comic   $comic,
         public readonly Chapter $chapter,
-        public readonly array   $tmpPaths,  // Đường dẫn tmp/ trên disk 'public'
-        public readonly array   $urlList = [], // URL list từ textarea
+        public readonly array   $tmpPaths,
+        public readonly array   $urlList = [],
     ) {
         $this->onQueue('chapter-images');
     }
 
-    public function handle(ImageService $imageService): void
+    public function handle(ImageService $imageService, ChapterNotificationService $notificationService): void
     {
         $this->chapter->update(['processing_status' => 'processing']);
 
@@ -54,17 +38,14 @@ class ProcessChapterImages implements ShouldQueue
             $finalPages      = [];
             $pageDimensions  = [];
 
-            // Di chuyển từng file từ tmp/ sang thư mục chính thức và đo kích thước ảnh
             foreach ($this->tmpPaths as $idx => $tmpPath) {
                 $filename  = basename($tmpPath);
                 $destPath  = "{$folder}/{$filename}";
 
-                // Đọc nội dung từ tmp rồi lưu vào dest
                 $content = \Storage::disk('public')->get($tmpPath);
                 \Storage::disk('public')->put($destPath, $content);
                 \Storage::disk('public')->delete($tmpPath);
 
-                // Đo kích thước ảnh (width, height)
                 $dimensions = @getimagesizefromstring($content);
                 if (!$dimensions) {
                     $fullPath = \Storage::disk('public')->path($destPath);
@@ -80,7 +61,6 @@ class ProcessChapterImages implements ShouldQueue
                 ];
             }
 
-            // Merge URL list nếu có
             foreach ($this->urlList as $url) {
                 $finalPages[]     = $url;
                 $pageDimensions[] = [
@@ -95,6 +75,7 @@ class ProcessChapterImages implements ShouldQueue
                 'processing_status' => 'ready',
             ]);
 
+            $notificationService->dispatchIfEligible($this->chapter);
         } catch (\Throwable $e) {
             $this->chapter->update(['processing_status' => 'failed']);
 
@@ -106,13 +87,10 @@ class ProcessChapterImages implements ShouldQueue
                 'max_tries'  => $this->tries,
             ]);
 
-            throw $e; // Cho phép retry
+            throw $e;
         }
     }
 
-    /**
-     * Gọi khi job thất bại sau tất cả các lần retry.
-     */
     public function failed(\Throwable $e): void
     {
         $this->chapter->update(['processing_status' => 'failed']);
