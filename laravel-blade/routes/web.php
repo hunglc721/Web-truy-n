@@ -17,6 +17,8 @@ use App\Http\Controllers\SearchController;
 use App\Http\Controllers\UserDashboardController;
 use App\Http\Controllers\UserStatisticsController;
 use App\Http\Controllers\BannerController;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\Admin\AdminComicController;
 use App\Http\Controllers\Admin\AdminGenreController;
 use App\Http\Controllers\Admin\AdminTagController;
@@ -32,6 +34,7 @@ use App\Http\Controllers\Admin\AdminAnalyticsController;
 use App\Http\Controllers\Admin\AdminAuditLogController;
 use App\Http\Controllers\Admin\AdminPermissionController;
 use App\Http\Controllers\Admin\AdminSettingController;
+use App\Http\Controllers\Admin\AdminNotificationController;
 use App\Http\Middleware\AdminMiddleware;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -41,6 +44,8 @@ Route::get('/originals', [OriginalsController::class, 'index'])->name('originals
 Route::get('/truyen/{slug}', [ComicController::class, 'show'])->name('comics.show');
 Route::get('/truyen/{comicSlug}/{chapterSlug}', [ChapterController::class, 'show'])->name('chapters.show');
 Route::get('/banners/{banner}/click', [BannerController::class, 'click'])->name('banners.click');
+Route::get('/api/announcements/active', [AnnouncementController::class, 'active'])->name('announcements.active');
+Route::post('/api/announcements/{announcement}/dismiss', [AnnouncementController::class, 'dismiss'])->name('announcements.dismiss');
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
@@ -59,6 +64,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/user/library', [LibraryController::class, 'index'])->name('user.library');
     Route::post('/user/library/toggle/{comic}', [LibraryController::class, 'toggle'])->name('library.toggle');
     Route::delete('/user/history/clear', [LibraryController::class, 'clearHistory'])->name('history.clear');
+
+    Route::get('/user/notifications', [NotificationController::class, 'index'])->name('user.notifications.index');
+    Route::get('/user/notifications/header', [NotificationController::class, 'header'])->name('user.notifications.header');
+    Route::get('/user/notifications/{id}/open', [NotificationController::class, 'open'])->name('user.notifications.open');
+    Route::patch('/user/notifications/read-all', [NotificationController::class, 'markAllRead'])->name('user.notifications.readAll');
+    Route::delete('/user/notifications/{id}', [NotificationController::class, 'destroy'])->name('user.notifications.destroy');
 
     Route::post('/api/reading-history', [ChapterController::class, 'saveHistory'])->middleware('throttle:history-save')->name('history.save');
     Route::post('/api/comments', [CommentController::class, 'store'])->middleware('throttle:comments')->name('comments.store');
@@ -167,6 +178,13 @@ Route::middleware(['auth', AdminMiddleware::class])->prefix('admin')->name('admi
         Route::put('/banners/{banner}', [AdminBannerController::class, 'update'])->name('banners.update');
         Route::patch('/banners/{banner}/toggle-active', [AdminBannerController::class, 'toggleActive'])->name('banners.toggleActive');
         Route::delete('/banners/{banner}', [AdminBannerController::class, 'destroy'])->name('banners.destroy');
+    });
+
+    Route::middleware('permission:notifications.manage')->group(function () {
+        Route::get('/notifications', [AdminNotificationController::class, 'index'])->name('notifications.index');
+        Route::post('/notifications', [AdminNotificationController::class, 'store'])->name('notifications.store');
+        Route::patch('/notifications/{announcement}/toggle', [AdminNotificationController::class, 'toggle'])->name('notifications.toggle');
+        Route::delete('/notifications/{announcement}', [AdminNotificationController::class, 'destroy'])->name('notifications.destroy');
     });
 
     Route::get('/logs', [AdminAuditLogController::class, 'index'])->middleware('permission:audit.view')->name('logs.index');
