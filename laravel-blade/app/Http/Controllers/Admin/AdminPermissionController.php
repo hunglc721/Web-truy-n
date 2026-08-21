@@ -13,14 +13,13 @@ class AdminPermissionController extends Controller
 {
     public function index()
     {
-        $roles = Role::with('permissions')
-            ->whereIn('slug', ['admin', 'moderator', 'editor', 'viewer'])
-            ->orderByRaw("FIELD(slug, 'admin', 'moderator', 'editor', 'viewer')")
-            ->get();
+        $order = ['admin', 'moderator', 'editor', 'viewer'];
 
-        // SQLite không hỗ trợ FIELD(), nên fallback sort ở Collection nếu query lỗi là không đáng.
-        // Dùng sortBy để giữ test SQLite tương thích.
-        $roles = $roles->sortBy(fn ($role) => array_search($role->slug, ['admin', 'moderator', 'editor', 'viewer'], true))->values();
+        $roles = Role::with('permissions')
+            ->whereIn('slug', $order)
+            ->get()
+            ->sortBy(fn ($role) => array_search($role->slug, $order, true))
+            ->values();
 
         $permissions = Permission::orderBy('slug')->get();
 
