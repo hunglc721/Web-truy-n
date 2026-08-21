@@ -25,6 +25,7 @@ use App\Http\Controllers\Admin\AdminBannerController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminAuditLogController;
 use App\Http\Controllers\RatingController;
+use App\Http\Controllers\SearchController;
 use App\Http\Middleware\AdminMiddleware;
 
 /*
@@ -106,6 +107,15 @@ Route::get('/api/comics/{comicId}/ratings/summary', [RatingController::class, 's
 Route::get('/api/comics/{comicId}/ratings/reviews', [RatingController::class, 'reviews'])
     ->middleware('throttle:api')
     ->name('comics.ratings.reviews');
+
+// ── API Tìm kiếm nhanh & Lọc nâng cao (Live & Advanced Search) ────────
+Route::get('/api/search/live', [SearchController::class, 'live'])
+    ->middleware('throttle:api')
+    ->name('search.live');
+
+Route::get('/api/search/advanced', [SearchController::class, 'advanced'])
+    ->middleware('throttle:api')
+    ->name('search.advanced');
 
 // ── API Bình luận (Công khai cho cả Guest & User đọc, Rate limit: 120 req/phút) ──
 Route::get('/api/comments', [CommentController::class, 'index'])
