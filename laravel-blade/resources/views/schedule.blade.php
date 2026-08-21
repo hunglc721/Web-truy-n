@@ -1,84 +1,73 @@
-{{--
-  ============================================================
-  FILE: resources/views/schedule.blade.php  (DYNAMIC VERSION)
-  Variables từ ScheduleController::index():
-    $days            — Collection  [{day, name, full, count, active, is_today}]
-    $comics          — Collection<Comic>
-    $selectedDay     — int (0-6)
-    $selectedDayName — string ("Thursday")
-  ============================================================
---}}
 @extends('layouts.main')
 
-@section('title', $selectedDayName.' Release Schedule - WebComics | Daily Updated Manga')
+@php
+  $dayLabels = [
+    0 => ['short' => 'CHỦ NHẬT', 'full' => 'Chủ Nhật'],
+    1 => ['short' => 'THỨ 2', 'full' => 'Thứ Hai'],
+    2 => ['short' => 'THỨ 3', 'full' => 'Thứ Ba'],
+    3 => ['short' => 'THỨ 4', 'full' => 'Thứ Tư'],
+    4 => ['short' => 'THỨ 5', 'full' => 'Thứ Năm'],
+    5 => ['short' => 'THỨ 6', 'full' => 'Thứ Sáu'],
+    6 => ['short' => 'THỨ 7', 'full' => 'Thứ Bảy'],
+  ];
+  $selectedDayLabel = $dayLabels[$selectedDay]['full'] ?? 'Hôm Nay';
+@endphp
+
+@section('title', 'Lịch Ra Truyện '.$selectedDayLabel.' - WebComics')
 
 @section('meta')
-  <meta name="description" content="Check out the weekly update schedule for your favorite Webtoons, Manhua & Manga on WebComics. Updated daily!" />
+  <meta name="description" content="Xem lịch cập nhật Manga, Manhwa và Manhua theo từng ngày trong tuần trên WebComics." />
 @endsection
 
 @section('content')
 <main class="page-container">
   <div class="container">
-
-    {{-- Breadcrumb --}}
     <div class="page-header">
       <div class="breadcrumb">
-        <a href="{{ route('home') }}">Home</a> &rsaquo; <span>Schedule</span>
+        <a href="{{ route('home') }}">Trang Chủ</a> &rsaquo; <span>Lịch Ra Truyện</span>
       </div>
-      <h1 class="page-title">Weekly Update Schedule</h1>
-      <p class="page-subtitle">Never miss a new chapter! Check release days for all series.</p>
+      <h1 class="page-title">Lịch Phát Sóng Truyện Hàng Tuần</h1>
+      <p class="page-subtitle">Không bỏ lỡ chương mới. Chọn một ngày để xem các bộ truyện có lịch phát hành tương ứng.</p>
     </div>
 
-    {{-- DAY SELECTOR BAR — dynamic từ $days --}}
     <div class="schedule-day-bar">
-      {{--
-        ✅ @foreach thay thế 7 thẻ <a> hardcode
-        Mỗi item: {day, name("THU"), full("Thursday"), count, active, is_today}
-      --}}
       @foreach($days as $day)
         <a href="{{ route('schedule', ['day' => $day['day']]) }}"
-           class="sched-day-item {{ $day['active'] ? 'active' : '' }}">
-          <span class="day-name">{{ $day['name'] }}</span>
+           class="sched-day-item {{ $day['active'] ? 'active' : '' }}"
+           aria-current="{{ $day['active'] ? 'page' : 'false' }}">
+          <span class="day-name">{{ $dayLabels[$day['day']]['short'] ?? $day['name'] }}</span>
           <span class="day-count">
-            {{ $day['count'] }} Series
-            {{-- Flame emoji cho ngày có nhiều nhất --}}
-            @if($day['count'] === $days->max('count')) 🔥 @endif
+            {{ $day['count'] }} Bộ Truyện
+            @if($day['count'] > 0 && $day['count'] === $days->max('count')) 🔥 @endif
           </span>
         </a>
       @endforeach
     </div>
 
-    {{-- CURRENT DAY HEADER --}}
     <div class="sched-current-title">
-      <h2>{{ $selectedDayName }} Releases</h2>
-      {{-- Chỉ hiện "UPDATING TODAY" nếu đang xem ngày hôm nay --}}
+      <h2>Lịch Ra Truyện {{ $selectedDayLabel }}</h2>
       @if($selectedDay === now()->dayOfWeek)
-        <span class="badge-status-live">● UPDATING TODAY</span>
+        <span class="badge-status-live">● ĐANG CẬP NHẬT HÔM NAY</span>
       @endif
     </div>
 
-    {{-- COMICS GRID của ngày được chọn --}}
     <div class="browse-grid">
-
-      {{-- ✅ @forelse thay thế các div.browse-card hardcode --}}
       @forelse($comics as $comic)
         @php
-          $chapter      = $comic->latestChapter;
-          $primaryTag   = $comic->tags->firstWhere('slug', 'hot')
-                       ?? $comic->tags->first();
+          $chapter = $comic->latestChapter;
+          $primaryTag = $comic->tags->firstWhere('slug', 'hot') ?? $comic->tags->first();
           $primaryGenre = $comic->genres->first();
         @endphp
 
-        <div class="browse-card">
+        <article class="browse-card">
           <div class="browse-cover">
-            <img src="{{ $comic->cover_image }}"
-                 alt="{{ $comic->title }}"
-                 class="cover-img"
-                 loading="lazy" />
+            <a href="{{ route('comics.show', $comic->slug) }}" aria-label="Xem {{ $comic->title }}">
+              <img src="{{ $comic->cover_image }}" alt="{{ $comic->title }}" class="cover-img" loading="lazy" />
+            </a>
 
             @if($chapter)
               <span class="badge-tag {{ $primaryTag?->slug === 'hot' ? 'hot' : 'new' }}">
-                NEW {{ $chapter->label }}
+                MỚI {{ $chapter->label }}
               </span>
             @endif
 
@@ -89,28 +78,23 @@
             <h3 class="browse-title">
               <a href="{{ route('comics.show', $comic->slug) }}">{{ $comic->title }}</a>
             </h3>
-            {{-- Thời gian cập nhật: "Updated: 2 hours ago" --}}
-            <p class="browse-author">
-              Updated: {{ $chapter?->time_ago ?? 'Today' }}
-            </p>
+            <p class="browse-author">Cập nhật: {{ $chapter?->time_ago ?? 'Hôm nay' }}</p>
             <p class="browse-meta">
-              <span>{{ $primaryGenre?->name }}</span>
+              <span>{{ $primaryGenre?->name ?? 'Đang cập nhật' }}</span>
               @if($chapter)
-                &middot; <span>{{ $chapter->label }} Released</span>
+                &middot; <span>{{ $chapter->label }}</span>
               @endif
             </p>
             <p class="browse-desc">{{ Str::limit($comic->description, 90) }}</p>
           </div>
-        </div>
+        </article>
       @empty
-        <div style="grid-column:1/-1; text-align:center; padding:80px; color:var(--text-sub);">
-          <p style="font-size:48px; margin-bottom:16px;">📅</p>
-          <p>No releases scheduled for {{ $selectedDayName }}.</p>
+        <div style="grid-column:1/-1;text-align:center;padding:80px;color:var(--text-sub);">
+          <p style="font-size:48px;margin-bottom:16px;">📅</p>
+          <p>Chưa có truyện nào được xếp lịch vào {{ $selectedDayLabel }}.</p>
         </div>
       @endforelse
-
     </div>
-
   </div>
 </main>
 @endsection
