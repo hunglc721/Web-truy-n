@@ -27,6 +27,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'admin'       => \App\Http\Middleware\AdminMiddleware::class,
+            'permission'  => \App\Http\Middleware\PermissionMiddleware::class,
             'not_banned'  => \App\Http\Middleware\EnsureUserNotBanned::class,
             'maintenance' => \App\Http\Middleware\MaintenanceModeMiddleware::class,
         ]);
