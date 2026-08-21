@@ -18,14 +18,23 @@ return new class extends Migration
             $table->timestamps();
         });
 
+        Schema::create('chapter_notification_receipts', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('chapter_id')->constrained()->cascadeOnDelete();
+            $table->timestamp('delivered_at')->nullable();
+            $table->timestamps();
+            $table->unique(['user_id', 'chapter_id']);
+        });
+
         Schema::create('announcements', function (Blueprint $table) {
             $table->id();
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('target_user_id')->nullable()->constrained('users')->nullOnDelete();
             $table->string('title', 160);
             $table->text('message');
-            $table->string('severity', 20)->default('info'); // info|success|warning|emergency
-            $table->string('audience', 30)->default('all'); // all|guests|authenticated|role|user
+            $table->string('severity', 20)->default('info');
+            $table->string('audience', 30)->default('all');
             $table->string('role_slug', 50)->nullable();
             $table->string('link_url', 500)->nullable();
             $table->boolean('show_banner')->default(true);
@@ -85,6 +94,7 @@ return new class extends Migration
         });
 
         Schema::dropIfExists('announcements');
+        Schema::dropIfExists('chapter_notification_receipts');
         Schema::dropIfExists('notifications');
     }
 };
