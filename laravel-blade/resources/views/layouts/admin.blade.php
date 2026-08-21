@@ -386,6 +386,15 @@
 
     <nav class="sidebar-nav">
 
+      <a href="{{ route('admin.dashboard') }}"
+         class="sidebar-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/>
+          <rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/>
+        </svg>
+        Tổng quan
+      </a>
+
       {{-- 1. NHÓM NỘI DUNG --}}
       <div class="sidebar-section-label">NỘI DUNG</div>
 

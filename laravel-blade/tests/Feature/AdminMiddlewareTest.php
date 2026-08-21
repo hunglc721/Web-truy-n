@@ -21,7 +21,7 @@ class AdminMiddlewareTest extends TestCase
 
         $this->actingAs($admin)
              ->get('/admin')
-             ->assertRedirect(route('admin.comics.index')); // dashboard redirect
+             ->assertOk(); // renders Admin Dashboard
     }
 
     public function test_is_admin_false_redirects_to_home(): void

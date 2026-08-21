@@ -190,11 +190,13 @@ php artisan serve
   * CRUD banner quảng cáo/hero slider trang chủ hoàn chỉnh, hỗ trợ upload file ảnh hoặc nhập URL ảnh ngoài.
   * Tùy chỉnh thứ tự ưu tiên (`order`), bật/tắt nhanh (`toggleActive`), gán link đích và thời hạn hiệu lực (`start_at` $\to$ `end_at`).
   * **Tự động kích hoạt & Tự động ẩn khi hết hạn:** Banner hết hạn (`end_at < now()`) hoặc chưa tới giờ bắt đầu (`start_at > now()`) tự động ẩn khỏi trang chủ mà không cần xóa tay.
+* 📊 **Dashboard Thống Kê Tổng Quan (Realtime Admin Dashboard):**
+  * Trang tổng quan trung tâm tại `/admin`, thống kê 6 chỉ số quan trọng (Tổng truyện, Chapter, Thành viên, Lượt đọc, Bình luận chờ duyệt, Báo cáo sự cố).
+  * Điều hướng nhanh tới các khu vực quản trị, bảng Top truyện xem nhiều nhất và Feed hoạt động quản trị gần đây (Activity Logs).
 
 #### 🚧 Các module giao diện mẫu (Đang trong lộ trình phát triển / Hiện là View tĩnh):
 > ℹ️ *Các route dưới đây đã được định tuyến trong `routes/web.php` và trả về giao diện Blade mẫu để tham khảo UI, chưa gắn controller xử lý nghiệp vụ CSDL thực tế:*
 
-* 📊 **Dashboard Thống Kê Tổng Quan (`/admin`):** *(chưa hoàn thiện)* — Hiện tự động chuyển hướng về trang Quản lý truyện (`admin.comics.index`).
 * 🔑 **Phân Quyền Chi Tiết (`/admin/permissions`):** *(chưa hoàn thiện)* — Giao diện mẫu ma trận quyền hạn nâng cao. (Hệ thống hiện phân quyền theo 2 cấp độ: Admin và Member qua `AdminMiddleware`).
 * ⚙️ **Cài Đặt Hệ Thống (`/admin/settings`):** *(chưa hoàn thiện)* — Giao diện mẫu cấu hình website.
 * 📜 **Giao Diện Xem Nhật Ký Hệ Thống (Audit Logs):** *(chưa hoàn thiện)* — Model `ActivityLog` và cơ chế ghi log tự động khi tạo/sửa/xóa/đăng nhập đã hoạt động ngầm trong CSDL, giao diện bảng tra cứu chuyên biệt trên Admin đang được phát triển.

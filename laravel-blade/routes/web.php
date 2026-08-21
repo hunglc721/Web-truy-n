@@ -22,6 +22,7 @@ use App\Http\Controllers\Admin\AdminCommentController;
 use App\Http\Controllers\Admin\AdminReportController;
 use App\Http\Controllers\Admin\AdminScheduleController;
 use App\Http\Controllers\Admin\AdminBannerController;
+use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Middleware\AdminMiddleware;
 
 /*
@@ -102,8 +103,8 @@ Route::post('/api/reports', [\App\Http\Controllers\ReportController::class, 'sto
 // --- ROUTE ADMIN (Bảo mật với Auth + AdminMiddleware) ---
 Route::middleware(['auth', AdminMiddleware::class])->prefix('admin')->name('admin.')->group(function () {
 
-    // Dashboard redirect
-    Route::get('/', fn() => redirect()->route('admin.comics.index'))->name('dashboard');
+    // ── Bảng Điều Khiển Tổng Quan (Dashboard) ──────────────────────────
+    Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
 
     // ── Quản lý Truyện ──────────────────────────────────────────────────
     Route::get('/comics', [AdminComicController::class, 'index'])->name('comics.index');
