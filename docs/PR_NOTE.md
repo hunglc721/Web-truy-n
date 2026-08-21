@@ -1,0 +1,1 @@
+Migration work is intentionally isolated on `feat/merge-prototype-into-laravel-blade` until the remaining UI parity and final runtime cleanup are verified.
