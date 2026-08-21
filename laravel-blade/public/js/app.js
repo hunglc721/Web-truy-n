@@ -7,7 +7,6 @@
   const $ = (selector, root = document) => root.querySelector(selector);
   const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 
-  // Trending / horizontal carousels from the prototype.
   $$('.trending-scroll-wrap').forEach((wrap) => {
     const list = $('.trending-list', wrap);
     const left = $('.scroll-left', wrap);
@@ -18,13 +17,11 @@
     right?.addEventListener('click', () => list.scrollBy({ left: amount(), behavior: 'smooth' }));
   });
 
-  // Search dropdown + Laravel live-search endpoint.
   const searchInput = $('#search-input');
   const searchDropdown = $('#search-dropdown');
   let searchTimer = null;
-
-  const closeSearch = () => searchDropdown?.classList.remove('is-open');
-  const openSearch = () => searchDropdown?.classList.add('is-open');
+  const closeSearch = () => searchDropdown?.classList.remove('visible');
+  const openSearch = () => searchDropdown?.classList.add('visible');
 
   searchInput?.addEventListener('focus', () => openSearch());
   searchInput?.addEventListener('input', () => {
@@ -66,30 +63,20 @@
     if (!event.target.closest('.search-wrap')) closeSearch();
   });
 
-  // Prototype login button now uses the real Laravel auth route.
-  $('#login-btn')?.addEventListener('click', () => {
-    window.location.href = '/login';
-  });
+  $('#login-btn')?.addEventListener('click', () => { window.location.href = '/login'; });
+  $('#library-btn')?.addEventListener('click', () => { window.location.href = '/user/library'; });
 
-  // Library icon uses the real Blade route for authenticated users and login otherwise.
-  $('#library-btn')?.addEventListener('click', () => {
-    window.location.href = '/user/library';
-  });
-
-  // Download button keeps the prototype interaction without inventing an app URL.
   $('#download-app-btn')?.addEventListener('click', () => {
     const target = $('#download-app-banner');
     if (target) target.scrollIntoView({ behavior: 'smooth', block: 'center' });
   });
 
-  // Close/open mobile navigation when the existing prototype CSS exposes the toggle.
   const header = $('#site-header');
   const nav = $('.main-nav');
   if (header && nav) {
     $$('.nav-link', nav).forEach((link) => link.addEventListener('click', () => header.classList.remove('menu-open')));
   }
 
-  // Hero/banner carousel used by the Laravel homepage banner CRUD.
   const slides = $$('.banner-slide');
   if (slides.length > 1) {
     let index = 0;
