@@ -1,39 +1,28 @@
 <?php
-// app/Http/Controllers/Admin/AdminTagController.php
 
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\ActivityLog;
 use App\Models\Tag;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class AdminTagController extends Controller
 {
-    /**
-     * Danh sách tất cả tags, kèm số truyện.
-     */
     public function index()
     {
-        $tags = Tag::withCount('comics')
-            ->orderBy('name', 'asc')
-            ->paginate(25);
-
+        $tags = Tag::withCount('comics')->orderBy('name')->paginate(25);
         return view('admin.tags.index', compact('tags'));
     }
 
-    /**
-     * Giao diện thêm tag mới.
-     */
     public function create()
     {
         return view('admin.tags.create');
     }
 
-    /**
-     * Lưu tag mới.
-     */
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -46,27 +35,18 @@ class AdminTagController extends Controller
             'color.regex'   => 'Màu phải đúng định dạng hex (ví dụ: #FF5733).',
         ]);
 
-        $validated['slug'] = $validated['slug']
-            ? Str::slug($validated['slug'])
-            : Str::slug($validated['name']);
+        $validated['slug'] = $validated['slug'] ? Str::slug($validated['slug']) : Str::slug($validated['name']);
+        $tag = Tag::create($validated);
+        ActivityLog::record('admin.tag.created', $tag);
 
-        Tag::create($validated);
-
-        return redirect()->route('admin.tags.index')
-            ->with('success', "Thêm tag \"{$validated['name']}\" thành công!");
+        return redirect()->route('admin.tags.index')->with('success', "Thêm tag \"{$tag->name}\" thành công!");
     }
 
-    /**
-     * Giao diện chỉnh sửa tag.
-     */
     public function edit(Tag $tag)
     {
         return view('admin.tags.edit', compact('tag'));
     }
 
-    /**
-     * Cập nhật tag.
-     */
     public function update(Request $request, Tag $tag)
     {
         $validated = $request->validate([
@@ -79,30 +59,49 @@ class AdminTagController extends Controller
             'color.regex'   => 'Màu phải đúng định dạng hex (ví dụ: #FF5733).',
         ]);
 
-        $validated['slug'] = $validated['slug']
-            ? Str::slug($validated['slug'])
-            : Str::slug($validated['name']);
-
+        $validated['slug'] = $validated['slug'] ? Str::slug($validated['slug']) : Str::slug($validated['name']);
         $tag->update($validated);
+        ActivityLog::record('admin.tag.updated', $tag);
 
-        return redirect()->route('admin.tags.index')
-            ->with('success', "Cập nhật tag \"{$tag->name}\" thành công!");
+        return redirect()->route('admin.tags.index')->with('success', "Cập nhật tag \"{$tag->name}\" thành công!");
     }
 
-    /**
-     * Xóa tag.
-     */
     public function destroy(Tag $tag)
     {
         if ($tag->comics()->exists()) {
-            return redirect()->route('admin.tags.index')
-                ->with('error', "Không thể xóa tag \"{$tag->name}\" vì đang được gán cho truyện.");
+            return redirect()->route('admin.tags.index')->with('error', "Không thể xóa tag \"{$tag->name}\" vì đang được gán cho truyện.");
         }
 
         $name = $tag->name;
+        ActivityLog::record('admin.tag.deleted', $tag, ['name' => $name]);
         $tag->delete();
 
-        return redirect()->route('admin.tags.index')
-            ->with('success', "Đã xóa tag \"{$name}\".");
+        return redirect()->route('admin.tags.index')->with('success', "Đã xóa tag \"{$name}\".");
+    }
+
+    public function bulkDestroy(Request $request)
+    {
+        $validated = $request->validate([
+            'ids'   => 'required|array|min:1|max:100',
+            'ids.*' => 'integer|distinct|exists:tags,id',
+        ]);
+
+        $tags = Tag::withCount('comics')->whereIn('id', $validated['ids'])->get();
+        $blocked = $tags->where('comics_count', '>', 0);
+        $deletable = $tags->where('comics_count', 0);
+
+        DB::transaction(function () use ($deletable) {
+            foreach ($deletable as $tag) {
+                ActivityLog::record('admin.tag.deleted', $tag, ['bulk' => true, 'name' => $tag->name]);
+                $tag->delete();
+            }
+        });
+
+        $message = 'Đã xóa ' . $deletable->count() . ' tag không được sử dụng.';
+        if ($blocked->isNotEmpty()) {
+            $message .= ' Bỏ qua ' . $blocked->count() . ' tag đang được gán cho truyện.';
+        }
+
+        return redirect()->route('admin.tags.index')->with($deletable->isNotEmpty() ? 'success' : 'error', $message);
     }
 }
