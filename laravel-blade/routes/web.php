@@ -64,13 +64,11 @@ Route::middleware('auth')->group(function () {
     Route::post('/api/comments/{comment}/toggle-like', [CommentController::class, 'toggleLike'])->middleware('throttle:like-toggle')->name('comments.toggleLike');
     Route::patch('/api/comments/{comment}', [CommentController::class, 'update'])->name('comments.update');
     Route::delete('/api/comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy');
-
     Route::post('/api/comics/{comicId}/toggle-library', [ComicActionController::class, 'toggleLibrary'])->middleware('throttle:library-toggle')->name('comics.toggleLibrary');
     Route::post('/api/comics/{comicId}/toggle-like', [ComicActionController::class, 'toggleLike'])->middleware('throttle:like-toggle')->name('comics.toggleLike');
     Route::post('/api/comics/{comicId}/ratings', [RatingController::class, 'store'])->middleware('throttle:like-toggle')->name('comics.ratings.store');
     Route::delete('/api/comics/{comicId}/ratings', [RatingController::class, 'destroy'])->middleware('throttle:like-toggle')->name('comics.ratings.destroy');
     Route::get('/api/comics/{comicId}/my-rating', [RatingController::class, 'userRating'])->name('comics.ratings.user');
-
     Route::get('/api/user/statistics/overview', [UserStatisticsController::class, 'overview'])->name('user.statistics.overview');
     Route::get('/api/user/statistics/genres', [UserStatisticsController::class, 'genres'])->name('user.statistics.genres');
     Route::get('/api/user/statistics/badges', [UserStatisticsController::class, 'badges'])->name('user.statistics.badges');
@@ -109,6 +107,7 @@ Route::middleware(['auth', AdminMiddleware::class])->prefix('admin')->name('admi
     Route::get('/genres', [AdminGenreController::class, 'index'])->name('genres.index');
     Route::get('/genres/create', [AdminGenreController::class, 'create'])->name('genres.create');
     Route::post('/genres', [AdminGenreController::class, 'store'])->name('genres.store');
+    Route::delete('/genres/bulk', [AdminGenreController::class, 'bulkDestroy'])->name('genres.bulkDestroy');
     Route::get('/genres/{genre}/edit', [AdminGenreController::class, 'edit'])->name('genres.edit');
     Route::put('/genres/{genre}', [AdminGenreController::class, 'update'])->name('genres.update');
     Route::delete('/genres/{genre}', [AdminGenreController::class, 'destroy'])->name('genres.destroy');
@@ -116,6 +115,7 @@ Route::middleware(['auth', AdminMiddleware::class])->prefix('admin')->name('admi
     Route::get('/tags', [AdminTagController::class, 'index'])->name('tags.index');
     Route::get('/tags/create', [AdminTagController::class, 'create'])->name('tags.create');
     Route::post('/tags', [AdminTagController::class, 'store'])->name('tags.store');
+    Route::delete('/tags/bulk', [AdminTagController::class, 'bulkDestroy'])->name('tags.bulkDestroy');
     Route::get('/tags/{tag}/edit', [AdminTagController::class, 'edit'])->name('tags.edit');
     Route::put('/tags/{tag}', [AdminTagController::class, 'update'])->name('tags.update');
     Route::delete('/tags/{tag}', [AdminTagController::class, 'destroy'])->name('tags.destroy');
