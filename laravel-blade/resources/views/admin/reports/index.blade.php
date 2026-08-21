@@ -1,281 +1,44 @@
 @extends('layouts.admin')
+@section('title','Báo cáo lỗi')
+@section('breadcrumb','Báo cáo lỗi')
 
-@section('title', 'Báo cáo Lỗi Chapter')
+@push('styles')
+<style>
+  .report-flow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:13px 15px;border:1px solid var(--admin-border);background:rgba(255,255,255,.025);border-radius:10px;margin-bottom:18px;font-size:12px;color:var(--admin-text-muted)}
+  .report-filter{display:flex;gap:7px;flex-wrap:wrap}.report-filter a{padding:7px 11px;border:1px solid var(--admin-border);border-radius:8px;text-decoration:none;color:var(--admin-text-muted);font-size:12px;font-weight:800;background:rgba(255,255,255,.04)}.report-filter a.active{border-color:var(--admin-primary);background:rgba(108,99,255,.15);color:var(--admin-primary)}
+  .report-location{max-width:260px}.report-desc{max-width:360px;white-space:normal;line-height:1.5}.report-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}.report-note{width:190px;min-height:62px}.report-type{font-size:11px;font-weight:800;padding:4px 8px;border-radius:999px;border:1px solid rgba(245,158,11,.3);color:#fbbf24;background:rgba(245,158,11,.12)}
+</style>
+@endpush
 
 @section('content')
-<div class="ph">
-  <h1>⚠️ Trung Tâm Xử Lý Báo Cáo Sự Cố (Report Center)</h1>
-  <p>Tiếp nhận và xử lý sự cố ảnh hỏng từ độc giả theo luồng trạng thái 3 bước, hỗ trợ nhảy trực tiếp tới trang ảnh bị lỗi.</p>
+<div class="admin-page-header"><h1 class="admin-page-title">⚠️ Trung Tâm Xử Lý Báo Cáo</h1><p class="admin-page-sub">Theo dõi lỗi chapter, mở thẳng vị trí lỗi, ghi chú xử lý và chuyển trạng thái theo workflow thực.</p></div>
+
+<div class="admin-stats-row">
+  @foreach([['all','Tổng báo cáo',$stats['total'],'primary'],['pending','Chưa xử lý',$stats['pending'],''],['processing','Đang xử lý',$stats['processing'],''],['resolved','Đã khắc phục',$stats['resolved'],''],['dismissed','Đã bác bỏ',$stats['dismissed'],'']] as [$key,$label,$value,$class])
+    <a class="admin-stat-card" href="{{ route('admin.reports.index',['status'=>$key]) }}" style="text-decoration:none;color:inherit;{{ $statusFilter===$key?'outline:2px solid var(--admin-primary);':'' }}"><div class="admin-stat-label">{{ $label }}</div><div class="admin-stat-value {{ $class }}">{{ number_format($value) }}</div></a>
+  @endforeach
 </div>
 
-{{-- Thống kê nhanh --}}
-<div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
-  <a href="{{ route('admin.reports.index', ['status' => 'all']) }}" class="bg-slate-900/70 hover:bg-slate-850 border border-slate-800 rounded-xl p-3.5 transition {{ $statusFilter === 'all' ? 'ring-2 ring-indigo-500' : '' }}">
-    <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Tổng Báo Cáo</div>
-    <div class="text-2xl font-black text-indigo-400 mt-1">{{ number_format($stats['total']) }}</div>
-  </a>
-  <a href="{{ route('admin.reports.index', ['status' => 'pending']) }}" class="bg-slate-900/70 hover:bg-slate-850 border border-slate-800 rounded-xl p-3.5 transition {{ $statusFilter === 'pending' ? 'ring-2 ring-amber-500' : '' }}">
-    <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider">⏳ Chưa Xử Lý</div>
-    <div class="text-2xl font-black text-amber-400 mt-1">{{ number_format($stats['pending']) }}</div>
-  </a>
-  <a href="{{ route('admin.reports.index', ['status' => 'processing']) }}" class="bg-slate-900/70 hover:bg-slate-850 border border-slate-800 rounded-xl p-3.5 transition {{ $statusFilter === 'processing' ? 'ring-2 ring-blue-500' : '' }}">
-    <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider">🔄 Đang Xử Lý</div>
-    <div class="text-2xl font-black text-blue-400 mt-1">{{ number_format($stats['processing']) }}</div>
-  </a>
-  <a href="{{ route('admin.reports.index', ['status' => 'resolved']) }}" class="bg-slate-900/70 hover:bg-slate-850 border border-slate-800 rounded-xl p-3.5 transition {{ $statusFilter === 'resolved' ? 'ring-2 ring-emerald-500' : '' }}">
-    <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider">✅ Đã Khắc Phục</div>
-    <div class="text-2xl font-black text-emerald-400 mt-1">{{ number_format($stats['resolved']) }}</div>
-  </a>
-  <a href="{{ route('admin.reports.index', ['status' => 'dismissed']) }}" class="bg-slate-900/70 hover:bg-slate-850 border border-slate-800 rounded-xl p-3.5 transition {{ $statusFilter === 'dismissed' ? 'ring-2 ring-slate-400' : '' }}">
-    <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider">⚪ Đã Bác Bỏ</div>
-    <div class="text-2xl font-black text-slate-400 mt-1">{{ number_format($stats['dismissed']) }}</div>
-  </a>
-</div>
+<div class="report-flow"><strong style="color:var(--admin-text)">Luồng xử lý:</strong><span class="badge badge-warning">1. Pending</span><span>→</span><span class="badge badge-info">2. Processing</span><span>→</span><span class="badge badge-success">3. Resolved</span><span>hoặc</span><span class="badge badge-muted">Dismissed</span></div>
 
-{{-- Luồng xử lý mẫu --}}
-<div class="bg-slate-900/50 border border-slate-800 rounded-xl px-4 py-3 mb-6 flex items-center gap-3 text-xs text-slate-400 flex-wrap">
-  <span class="font-bold text-slate-300">Luồng xử lý chuẩn:</span>
-  <span class="px-2.5 py-1 rounded-full font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30">1. Chưa xử lý (Pending)</span>
-  <span>➔</span>
-  <span class="px-2.5 py-1 rounded-full font-bold bg-blue-500/15 text-blue-400 border border-blue-500/30">2. Đang kiểm tra / Sửa ảnh (Processing)</span>
-  <span>➔</span>
-  <span class="px-2.5 py-1 rounded-full font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">3. Đã khắc phục xong (Resolved)</span>
-</div>
-
-<div class="bg-slate-900 border border-slate-800 rounded-xl p-5">
-  {{-- Header & Bộ lọc Tabs + Tìm kiếm --}}
-  <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 mb-4 border-b border-slate-800">
-    <div class="flex items-center gap-1.5 flex-wrap">
-      <a href="{{ route('admin.reports.index', ['status' => 'all', 'search' => request('search'), 'type' => request('type')]) }}"
-         class="px-3 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap {{ $statusFilter === 'all' ? 'bg-indigo-600 text-white' : 'bg-slate-800 hover:bg-slate-700 text-slate-300' }}">
-        Tất cả ({{ $stats['total'] }})
-      </a>
-      <a href="{{ route('admin.reports.index', ['status' => 'pending', 'search' => request('search'), 'type' => request('type')]) }}"
-         class="px-3 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap {{ $statusFilter === 'pending' ? 'bg-amber-600 text-white' : 'bg-slate-800 hover:bg-slate-700 text-amber-400 border border-amber-500/30' }}">
-        ⏳ Chưa xử lý ({{ $stats['pending'] }})
-      </a>
-      <a href="{{ route('admin.reports.index', ['status' => 'processing', 'search' => request('search'), 'type' => request('type')]) }}"
-         class="px-3 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap {{ $statusFilter === 'processing' ? 'bg-blue-600 text-white' : 'bg-slate-800 hover:bg-slate-700 text-blue-400 border border-blue-500/30' }}">
-        🔄 Đang xử lý ({{ $stats['processing'] }})
-      </a>
-      <a href="{{ route('admin.reports.index', ['status' => 'resolved', 'search' => request('search'), 'type' => request('type')]) }}"
-         class="px-3 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap {{ $statusFilter === 'resolved' ? 'bg-emerald-600 text-white' : 'bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-emerald-500/30' }}">
-        ✅ Đã khắc phục ({{ $stats['resolved'] }})
-      </a>
-      <a href="{{ route('admin.reports.index', ['status' => 'dismissed', 'search' => request('search'), 'type' => request('type')]) }}"
-         class="px-3 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap {{ $statusFilter === 'dismissed' ? 'bg-slate-600 text-white' : 'bg-slate-800 hover:bg-slate-700 text-slate-400 border border-slate-700' }}">
-        ⚪ Đã bác bỏ ({{ $stats['dismissed'] }})
-      </a>
-    </div>
-
-    {{-- Form Tìm kiếm & Lọc Loại lỗi --}}
-    <form method="GET" action="{{ route('admin.reports.index') }}" class="flex items-center gap-2 flex-wrap">
-      <input type="hidden" name="status" value="{{ $statusFilter }}">
-      
-      <select name="type" onchange="this.form.submit()" class="px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-xs text-slate-200 outline-none">
-        <option value="all" {{ request('type') == 'all' ? 'selected' : '' }}>Tất cả loại lỗi</option>
-        <option value="broken_image" {{ request('type') == 'broken_image' ? 'selected' : '' }}>🖼️ Ảnh hỏng (404)</option>
-        <option value="wrong_order" {{ request('type') == 'wrong_order' ? 'selected' : '' }}>🔄 Sai thứ tự trang</option>
-        <option value="missing_page" {{ request('type') == 'missing_page' ? 'selected' : '' }}>📄 Thiếu trang</option>
-        <option value="content_error" {{ request('type') == 'content_error' ? 'selected' : '' }}>⚠️ Sai nội dung / Dịch</option>
-      </select>
-
-      <input type="text" name="search" value="{{ request('search') }}" placeholder="🔍 Tìm truyện, mô tả, IP..." 
-             class="px-3.5 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-xs text-slate-200 outline-none focus:border-indigo-500 w-52" />
-      <button type="submit" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-lg text-xs transition">
-        Tìm
-      </button>
-      @if(request('search') || request('type'))
-        <a href="{{ route('admin.reports.index', ['status' => $statusFilter]) }}" class="px-2 py-1.5 bg-slate-800 text-slate-400 hover:text-white rounded-lg text-xs">✕</a>
-      @endif
-    </form>
+<div class="admin-card" style="margin-bottom:18px;padding:16px 18px;">
+  <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;">
+    <div class="report-filter">@foreach(['all'=>'Tất cả','pending'=>'⏳ Chưa xử lý','processing'=>'🔄 Đang xử lý','resolved'=>'✅ Đã khắc phục','dismissed'=>'⚪ Bác bỏ'] as $key=>$label)<a class="{{ $statusFilter===$key?'active':'' }}" href="{{ route('admin.reports.index',['status'=>$key,'type'=>request('type'),'search'=>request('search')]) }}">{{ $label }}</a>@endforeach</div>
+    <form method="GET" action="{{ route('admin.reports.index') }}" style="display:flex;gap:7px;align-items:center;flex-wrap:wrap;"><input type="hidden" name="status" value="{{ $statusFilter }}"><select name="type" class="form-control" style="width:175px"><option value="all">Tất cả loại lỗi</option><option value="broken_image" {{ $typeFilter==='broken_image'?'selected':'' }}>Ảnh hỏng</option><option value="wrong_order" {{ $typeFilter==='wrong_order'?'selected':'' }}>Sai thứ tự</option><option value="missing_page" {{ $typeFilter==='missing_page'?'selected':'' }}>Thiếu trang</option><option value="content_error" {{ $typeFilter==='content_error'?'selected':'' }}>Sai nội dung/dịch</option></select><input class="form-control" style="width:230px" name="search" value="{{ $search }}" placeholder="Truyện, mô tả, IP..."><button class="btn-admin btn-admin-primary btn-sm">🔍 Lọc</button>@if($search || ($typeFilter && $typeFilter!=='all'))<a class="btn-admin btn-admin-ghost btn-sm" href="{{ route('admin.reports.index',['status'=>$statusFilter]) }}">✕</a>@endif</form>
   </div>
-
-  {{-- Bảng Báo cáo --}}
-  <div class="overflow-x-auto">
-    <table class="w-full text-left border-collapse">
-      <thead>
-        <tr class="border-b border-slate-800 text-xs uppercase tracking-wider text-slate-400 bg-slate-950/40">
-          <th class="p-3 whitespace-nowrap">#ID / Thời gian</th>
-          <th class="p-3 whitespace-nowrap">Vị trí Lỗi (Truyện / Chap / Trang)</th>
-          <th class="p-3 whitespace-nowrap">Loại sự cố</th>
-          <th class="p-3 whitespace-nowrap">Người báo</th>
-          <th class="p-3 whitespace-nowrap text-center">Trạng thái</th>
-          <th class="p-3 whitespace-nowrap text-right">Hành động Xử lý</th>
-        </tr>
-      </thead>
-      <tbody class="divide-y divide-slate-800/60 text-sm">
-        @forelse($reports as $rpt)
-          <tr class="hover:bg-slate-800/30 transition">
-            {{-- ID & Time --}}
-            <td class="p-3 whitespace-nowrap align-top">
-              <div class="font-mono text-xs font-bold text-indigo-400">#RP-{{ str_pad($rpt->id, 4, '0', STR_PAD_LEFT) }}</div>
-              <div class="text-xs text-slate-400 mt-1">{{ $rpt->time_ago }}</div>
-            </td>
-
-            {{-- Truyện / Chapter / Trang lỗi --}}
-            <td class="p-3 align-top max-w-xs">
-              @if($rpt->comic && $rpt->chapter)
-                <div class="font-bold text-slate-200 truncate max-w-[200px]" title="{{ $rpt->comic->title }}">
-                  {{ $rpt->comic->title }}
-                </div>
-                <div class="text-xs text-slate-400 mt-0.5">
-                  Ch.{{ $rpt->chapter->chapter_number }} — {{ Str::limit($rpt->chapter->title ?: 'Chương ' . $rpt->chapter->chapter_number, 20) }}
-                </div>
-
-                {{-- Nút nhảy trực tiếp tới trang ảnh bị lỗi (FE-03 & BE-10) --}}
-                @php
-                  $rptChapSlug  = $rpt->chapter->slug ?: ('chapter-' . ($rpt->chapter->chapter_number ?? 1));
-                  $rptComicSlug = $rpt->comic->slug ?: ('comic-' . $rpt->comic->id);
-                  $readerUrl    = route('chapters.show', [$rptComicSlug, $rptChapSlug]) . ($rpt->page_number ? '#page-' . $rpt->page_number : '');
-                @endphp
-                <div class="mt-2 flex items-center gap-2">
-                  <a href="{{ $readerUrl }}" target="_blank" class="inline-flex items-center gap-1 px-2.5 py-1 bg-indigo-500/20 hover:bg-indigo-500/35 text-indigo-300 border border-indigo-500/30 rounded text-xs font-bold transition" title="Mở reader và cuộn trực tiếp tới trang lỗi">
-                    🎯 {{ $rpt->page_number ? 'Trang ' . $rpt->page_number : 'Xem Chapter' }} ↗
-                  </a>
-                  @if($rpt->image_url)
-                    <a href="{{ $rpt->image_url }}" target="_blank" class="text-[11px] text-slate-400 hover:text-slate-200 underline" title="{{ $rpt->image_url }}">
-                      Link ảnh gốc
-                    </a>
-                  @endif
-                </div>
-              @elseif($rpt->comic)
-                <strong class="text-indigo-400">{{ $rpt->comic->title }}</strong>
-                <div class="text-xs text-slate-400">Trang chi tiết truyện</div>
-              @else
-                <span class="text-slate-500 italic">Dữ liệu truyện đã bị xóa</span>
-              @endif
-            </td>
-
-            {{-- Loại sự cố & Mô tả --}}
-            <td class="p-3 align-top max-w-xs">
-              <div>
-                <span class="inline-block px-2 py-0.5 rounded text-xs font-bold {{ $rpt->type === 'broken_image' ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' : 'bg-amber-500/20 text-amber-400 border border-amber-500/30' }}">
-                  {{ $rpt->type_label }}
-                </span>
-              </div>
-              @if($rpt->description)
-                <div class="text-xs text-slate-300 mt-1.5 bg-slate-950/60 p-2 rounded border border-slate-800 break-words">
-                  "{{ $rpt->description }}"
-                </div>
-              @endif
-              @if($rpt->admin_note)
-                <div class="text-[11px] text-emerald-400 mt-1 font-medium">
-                  💬 Ghi chú Admin: {{ $rpt->admin_note }}
-                </div>
-              @endif
-            </td>
-
-            {{-- Người báo --}}
-            <td class="p-3 whitespace-nowrap align-top">
-              @if($rpt->user)
-                <div class="font-bold text-slate-200 text-xs">{{ $rpt->user->name }}</div>
-                <div class="text-[11px] text-slate-400">{{ $rpt->user->email }}</div>
-              @else
-                <div class="text-xs text-slate-400 italic">Khách vãng lai</div>
-              @endif
-              @if($rpt->ip_address)
-                <div class="text-[10px] font-mono text-slate-500 mt-0.5">IP: {{ $rpt->ip_address }}</div>
-              @endif
-            </td>
-
-            {{-- Trạng thái --}}
-            <td class="p-3 whitespace-nowrap text-center align-top">
-              @if($rpt->status === 'pending')
-                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30">
-                  🟡 Chưa xử lý
-                </span>
-              @elseif($rpt->status === 'processing')
-                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-blue-500/15 text-blue-400 border border-blue-500/30">
-                  🔄 Đang xử lý
-                </span>
-              @elseif($rpt->status === 'resolved')
-                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
-                  ✅ Đã khắc phục
-                </span>
-              @else
-                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-slate-800 text-slate-400 border border-slate-700">
-                  ⚪ Đã bác bỏ
-                </span>
-              @endif
-            </td>
-
-            {{-- Thao tác thay đổi trạng thái --}}
-            <td class="p-3 whitespace-nowrap text-right align-top">
-              <div class="flex items-center justify-end gap-1.5 flex-wrap">
-                {{-- Form Chuyển sang Đang xử lý --}}
-                @if($rpt->status === 'pending')
-                  <form method="POST" action="{{ route('admin.reports.updateStatus', $rpt) }}">
-                    @csrf
-                    @method('PATCH')
-                    <input type="hidden" name="status" value="processing">
-                    <button type="submit" class="px-2.5 py-1 bg-blue-500/15 hover:bg-blue-500/30 text-blue-400 border border-blue-500/30 rounded-md text-xs font-semibold transition" title="Bắt đầu xử lý">
-                      🔄 Xử lý
-                    </button>
-                  </form>
-                @endif
-
-                {{-- Form Đã khắc phục --}}
-                @if($rpt->status !== 'resolved')
-                  <form method="POST" action="{{ route('admin.reports.updateStatus', $rpt) }}">
-                    @csrf
-                    @method('PATCH')
-                    <input type="hidden" name="status" value="resolved">
-                    <button type="submit" class="px-2.5 py-1 bg-emerald-500/15 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/30 rounded-md text-xs font-semibold transition" title="Đánh dấu đã sửa xong">
-                      ✅ Đã sửa
-                    </button>
-                  </form>
-                @endif
-
-                {{-- Form Mở lại / Bác bỏ --}}
-                @if($rpt->status === 'resolved' || $rpt->status === 'dismissed')
-                  <form method="POST" action="{{ route('admin.reports.updateStatus', $rpt) }}">
-                    @csrf
-                    @method('PATCH')
-                    <input type="hidden" name="status" value="pending">
-                    <button type="submit" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 rounded-md text-xs font-semibold transition" title="Mở lại báo cáo">
-                      ↩ Mở lại
-                    </button>
-                  </form>
-                @elseif($rpt->status !== 'dismissed')
-                  <form method="POST" action="{{ route('admin.reports.updateStatus', $rpt) }}">
-                    @csrf
-                    @method('PATCH')
-                    <input type="hidden" name="status" value="dismissed">
-                    <button type="submit" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-400 border border-slate-700 rounded-md text-xs font-semibold transition" title="Bác bỏ báo cáo">
-                      ✕ Bác bỏ
-                    </button>
-                  </form>
-                @endif
-
-                {{-- Xóa báo cáo --}}
-                <form method="POST" action="{{ route('admin.reports.destroy', $rpt) }}" onsubmit="return confirm('Xóa bản ghi báo cáo sự cố này?');">
-                  @csrf
-                  @method('DELETE')
-                  <button type="submit" class="px-2 py-1 bg-rose-500/10 hover:bg-rose-500/25 text-rose-400 border border-rose-500/20 rounded-md text-xs font-semibold transition" title="Xóa">
-                    🗑️
-                  </button>
-                </form>
-              </div>
-            </td>
-          </tr>
-        @empty
-          <tr>
-            <td colspan="6" class="p-12 text-center text-slate-500">
-              <div class="text-4xl mb-2">📭</div>
-              <p class="font-semibold text-slate-400">Không có báo cáo sự cố nào trong danh mục này.</p>
-            </td>
-          </tr>
-        @endforelse
-      </tbody>
-    </table>
-  </div>
-
-  {{-- Phân trang --}}
-  @if($reports->hasPages())
-    <div class="mt-5 pt-4 border-t border-slate-800">
-      {{ $reports->links() }}
-    </div>
-  @endif
 </div>
+
+<div class="admin-card"><div style="overflow-x:auto"><table class="admin-table"><thead><tr><th># / Thời gian</th><th>Vị trí lỗi</th><th>Loại & mô tả</th><th>Người báo</th><th style="text-align:center">Trạng thái</th><th>Ghi chú Admin</th><th style="text-align:right">Xử lý</th></tr></thead><tbody>
+@forelse($reports as $rpt)
+<tr>
+  <td><strong style="color:var(--admin-primary);font-family:monospace">#RP-{{ str_pad($rpt->id,4,'0',STR_PAD_LEFT) }}</strong><div style="font-size:11px;color:var(--admin-text-muted);margin-top:4px">{{ $rpt->time_ago }}</div></td>
+  <td class="report-location">@if($rpt->comic)<strong>{{ $rpt->comic->title }}</strong>@if($rpt->chapter)<div style="font-size:11px;color:var(--admin-text-muted);margin:4px 0">Ch.{{ $rpt->chapter->chapter_number }}{{ $rpt->page_number?' · Trang '.$rpt->page_number:'' }}</div><a href="{{ route('chapters.show',[$rpt->comic->slug,$rpt->chapter->slug]).($rpt->page_number?'#page-'.$rpt->page_number:'') }}" target="_blank" class="btn-admin btn-admin-ghost btn-sm">🎯 Mở vị trí lỗi ↗</a>@else<div style="font-size:11px;color:var(--admin-text-muted)">Trang chi tiết truyện</div>@endif @else<span style="color:var(--admin-text-muted)">Dữ liệu đã xóa</span>@endif</td>
+  <td class="report-desc"><span class="report-type">{{ $rpt->type_label }}</span>@if($rpt->description)<div style="margin-top:7px">{{ $rpt->description }}</div>@endif @if($rpt->image_url)<a href="{{ $rpt->image_url }}" target="_blank" style="font-size:11px;color:var(--admin-primary)">Ảnh lỗi gốc ↗</a>@endif</td>
+  <td>@if($rpt->user)<strong>{{ $rpt->user->name }}</strong><div style="font-size:11px;color:var(--admin-text-muted)">{{ $rpt->user->email }}</div>@else<span style="color:var(--admin-text-muted)">Khách</span>@endif @if($rpt->ip_address)<div style="font-size:10px;color:var(--admin-text-muted);font-family:monospace;margin-top:3px">{{ $rpt->ip_address }}</div>@endif</td>
+  <td style="text-align:center">@if($rpt->status==='pending')<span class="badge badge-warning">⏳ Pending</span>@elseif($rpt->status==='processing')<span class="badge badge-info">🔄 Processing</span>@elseif($rpt->status==='resolved')<span class="badge badge-success">✅ Resolved</span>@else<span class="badge badge-muted">⚪ Dismissed</span>@endif</td>
+  <td><form id="report-status-{{ $rpt->id }}" method="POST" action="{{ route('admin.reports.updateStatus',$rpt) }}">@csrf @method('PATCH')<textarea name="admin_note" class="form-control report-note" placeholder="Ghi chú xử lý...">{{ $rpt->admin_note }}</textarea></form></td>
+  <td><div class="report-actions">@if($rpt->status!=='processing')<button form="report-status-{{ $rpt->id }}" name="status" value="processing" class="btn-admin btn-admin-ghost btn-sm" style="color:#60a5fa">🔄 Xử lý</button>@endif @if($rpt->status!=='resolved')<button form="report-status-{{ $rpt->id }}" name="status" value="resolved" class="btn-admin btn-admin-success btn-sm">✅ Xong</button>@endif @if($rpt->status!=='pending')<button form="report-status-{{ $rpt->id }}" name="status" value="pending" class="btn-admin btn-admin-ghost btn-sm">↩ Mở lại</button>@endif @if($rpt->status!=='dismissed')<button form="report-status-{{ $rpt->id }}" name="status" value="dismissed" class="btn-admin btn-admin-ghost btn-sm">Bác bỏ</button>@endif<form method="POST" action="{{ route('admin.reports.destroy',$rpt) }}" onsubmit="return confirm('Xóa báo cáo này?')">@csrf @method('DELETE')<button class="btn-admin btn-admin-danger btn-sm">🗑️</button></form></div></td>
+</tr>
+@empty<tr><td colspan="7"><div style="padding:48px;text-align:center;color:var(--admin-text-muted)">📭 Không có báo cáo phù hợp.</div></td></tr>@endforelse
+</tbody></table></div><div class="pagination-wrap">{{ $reports->links() }}</div></div>
 @endsection
