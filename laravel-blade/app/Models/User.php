@@ -13,6 +13,9 @@ class User extends Authenticatable
 {
     use HasFactory, Notifiable;
 
+    /** @var array<int,string>|null */
+    protected ?array $permissionSlugCache = null;
+
     protected $fillable = [
         'name',
         'email',
@@ -47,31 +50,24 @@ class User extends Authenticatable
         return !is_null($this->banned_at);
     }
 
-    /**
-     * Giữ tương thích với cột is_admin cũ, đồng thời hỗ trợ role admin mới.
-     */
     public function isAdmin(): bool
     {
         if ((bool) $this->is_admin) {
             return true;
         }
 
-        if ($this->relationLoaded('role')) {
-            return $this->role?->slug === 'admin';
-        }
-
-        return $this->role()->where('slug', 'admin')->exists();
+        $this->loadMissing('role');
+        return $this->role?->slug === 'admin';
     }
 
     public function roleSlug(): string
     {
-        if ($this->isAdmin()) {
+        if ((bool) $this->is_admin) {
             return 'admin';
         }
 
-        return $this->relationLoaded('role')
-            ? ($this->role?->slug ?? 'member')
-            : ($this->role()->value('slug') ?? 'member');
+        $this->loadMissing('role');
+        return $this->role?->slug ?? 'member';
     }
 
     public function isRole(string $role): bool
@@ -80,7 +76,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Admin cũ/mới luôn có toàn quyền. Các role khác lấy quyền từ DB.
+     * Admin cũ/mới luôn có toàn quyền. Staff role load permission một lần/request.
      */
     public function hasPermission(string $permission): bool
     {
@@ -88,9 +84,7 @@ class User extends Authenticatable
             return true;
         }
 
-        return $this->role()
-            ->whereHas('permissions', fn ($q) => $q->where('permissions.slug', $permission))
-            ->exists();
+        return in_array($permission, $this->permissionSlugs(), true);
     }
 
     public function hasAnyPermission(array $permissions): bool
@@ -103,9 +97,7 @@ class User extends Authenticatable
             return false;
         }
 
-        return $this->role()
-            ->whereHas('permissions', fn ($q) => $q->whereIn('permissions.slug', $permissions))
-            ->exists();
+        return count(array_intersect($permissions, $this->permissionSlugs())) > 0;
     }
 
     public function canAccessAdmin(): bool
@@ -116,6 +108,20 @@ class User extends Authenticatable
 
         return in_array($this->roleSlug(), ['moderator', 'editor', 'viewer'], true)
             && $this->hasPermission('dashboard.view');
+    }
+
+    /** @return array<int,string> */
+    protected function permissionSlugs(): array
+    {
+        if ($this->permissionSlugCache !== null) {
+            return $this->permissionSlugCache;
+        }
+
+        $this->loadMissing('role.permissions');
+
+        return $this->permissionSlugCache = $this->role
+            ? $this->role->permissions->pluck('slug')->all()
+            : [];
     }
 
     public function libraries(): HasMany
