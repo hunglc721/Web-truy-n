@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -25,29 +26,29 @@ class AdminUserRoleTest extends TestCase
         $this->assertTrue($admin->fresh()->isAdmin());
     }
 
-    public function test_last_admin_cannot_be_demoted(): void
+    public function test_last_admin_cannot_be_demoted_by_another_authorized_role(): void
     {
         $admin = User::factory()->create([
             'is_admin' => true,
             'role_id' => Role::where('slug', 'admin')->value('id'),
         ]);
-        $member = User::factory()->create([
+
+        $moderatorRole = Role::where('slug', 'moderator')->firstOrFail();
+        $moderatorRole->permissions()->syncWithoutDetaching([
+            Permission::where('slug', 'users.manage_role')->value('id'),
+        ]);
+        $moderator = User::factory()->create([
             'is_admin' => false,
-            'role_id' => Role::where('slug', 'member')->value('id'),
+            'role_id' => $moderatorRole->id,
         ]);
 
-        // Thực hiện bằng một admin thứ hai tạm thời rồi xóa để kiểm tra logic last-admin
-        $actor = User::factory()->create([
-            'is_admin' => true,
-            'role_id' => Role::where('slug', 'admin')->value('id'),
-        ]);
-        $actor->delete();
+        $this->actingAs($moderator)
+            ->patch(route('admin.users.updateRole', $admin), ['role' => 'member'])
+            ->assertSessionHas('error');
 
-        $this->actingAs($admin)
-            ->patch(route('admin.users.updateRole', $member), ['role' => 'editor'])
-            ->assertRedirect();
-
-        $this->assertSame('editor', $member->fresh()->roleSlug());
+        $admin->refresh();
+        $this->assertTrue($admin->isAdmin());
+        $this->assertSame('admin', $admin->roleSlug());
     }
 
     public function test_admin_can_assign_editor_role_to_member(): void
