@@ -9,8 +9,7 @@ class AdminMiddleware
 {
     public function handle(Request $request, Closure $next)
     {
-        // Task 9: Chuẩn hóa – chỉ dùng is_admin (cột role không tồn tại trong schema)
-        if (auth()->check() && auth()->user()->isAdmin()) {
+        if ($request->user()?->canAccessAdmin()) {
             return $next($request);
         }
 
