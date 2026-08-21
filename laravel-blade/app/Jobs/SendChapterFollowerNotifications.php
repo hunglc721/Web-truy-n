@@ -10,7 +10,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\DB;
 
 class SendChapterFollowerNotifications implements ShouldQueue
 {
@@ -37,7 +37,30 @@ class SendChapterFollowerNotifications implements ShouldQueue
             ->whereHas('libraries', fn ($q) => $q->where('comic_id', $chapter->comic_id))
             ->orderBy('id')
             ->chunkById(500, function ($users) use ($chapter) {
-                Notification::send($users, new NewChapterNotification($chapter));
+                foreach ($users as $user) {
+                    DB::transaction(function () use ($user, $chapter) {
+                        $inserted = DB::table('chapter_notification_receipts')->insertOrIgnore([
+                            'user_id' => $user->id,
+                            'chapter_id' => $chapter->id,
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]);
+
+                        if ($inserted !== 1) {
+                            return;
+                        }
+
+                        $user->notify(new NewChapterNotification($chapter));
+
+                        DB::table('chapter_notification_receipts')
+                            ->where('user_id', $user->id)
+                            ->where('chapter_id', $chapter->id)
+                            ->update([
+                                'delivered_at' => now(),
+                                'updated_at' => now(),
+                            ]);
+                    });
+                }
             });
     }
 
