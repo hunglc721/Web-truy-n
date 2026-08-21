@@ -63,8 +63,41 @@
     if (!event.target.closest('.search-wrap')) closeSearch();
   });
 
-  $('#login-btn')?.addEventListener('click', () => { window.location.href = '/login'; });
+  const loginButton = $('#login-btn');
+  loginButton?.addEventListener('click', () => { window.location.href = '/login'; });
   $('#library-btn')?.addEventListener('click', () => { window.location.href = '/user/library'; });
+
+  // Laravel remains the source of truth for authentication. This adapts the
+  // existing prototype header to Guest vs authenticated Member/Admin state.
+  const syncAuthHeader = async () => {
+    if (!loginButton) return;
+
+    try {
+      const response = await fetch('/api/user/statistics/overview', {
+        headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+        credentials: 'same-origin',
+      });
+
+      if (!response.ok) return;
+      const contentType = response.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) return;
+
+      const adminLink = $('.header-right .btn-login[href*="/admin"]');
+      if (adminLink) {
+        loginButton.style.display = 'none';
+        return;
+      }
+
+      loginButton.textContent = 'Tài Khoản';
+      loginButton.setAttribute('aria-label', 'Mở tủ sách cá nhân');
+      loginButton.title = 'Tài khoản của bạn';
+      loginButton.onclick = () => { window.location.href = '/user/library'; };
+    } catch (_) {
+      // Guest users keep the default Login button.
+    }
+  };
+
+  syncAuthHeader();
 
   $('#download-app-btn')?.addEventListener('click', () => {
     const target = $('#download-app-banner');
