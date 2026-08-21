@@ -8,6 +8,7 @@ use App\Models\ActivityLog;
 use App\Models\Announcement;
 use App\Models\Role;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
@@ -50,12 +51,20 @@ class AdminNotificationController extends Controller
             'target_user_id' => 'nullable|required_if:audience,user|exists:users,id',
             'link_url' => 'nullable|string|max:500',
             'starts_at' => 'nullable|date',
-            'ends_at' => 'nullable|date|after:starts_at',
+            'ends_at' => 'nullable|date',
         ]);
 
         $link = $this->validateLink($validated['link_url'] ?? null);
         $audience = $validated['audience'];
         $severity = $validated['severity'];
+        $startsAt = !empty($validated['starts_at']) ? Carbon::parse($validated['starts_at']) : now();
+        $endsAt = !empty($validated['ends_at']) ? Carbon::parse($validated['ends_at']) : null;
+
+        if ($endsAt && $endsAt->lte($startsAt)) {
+            throw ValidationException::withMessages([
+                'ends_at' => 'Thời gian kết thúc phải sau thời gian bắt đầu.',
+            ]);
+        }
 
         $announcement = Announcement::create([
             'created_by' => $request->user()->id,
@@ -70,8 +79,8 @@ class AdminNotificationController extends Controller
             'send_to_inbox' => $audience === 'guests' ? false : $request->boolean('send_to_inbox'),
             'is_dismissible' => $request->boolean('is_dismissible'),
             'is_active' => true,
-            'starts_at' => $validated['starts_at'] ?? now(),
-            'ends_at' => $validated['ends_at'] ?? null,
+            'starts_at' => $startsAt,
+            'ends_at' => $endsAt,
         ]);
 
         if ($announcement->send_to_inbox) {
