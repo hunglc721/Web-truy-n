@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="csrf-token" content="{{ csrf_token() }}" />
   <title>@yield('title', ($siteSettings['site_name'] ?? 'WebComics') . ' - ' . ($siteSettings['tagline'] ?? 'Đọc Manhua, Manhwa & Manga Online'))</title>
   @hasSection('meta')
     @yield('meta')
@@ -45,12 +46,7 @@
         <div class="search-wrap">
           <input id="search-input" type="search" placeholder="Tìm kiếm truyện tranh..." aria-label="Tìm kiếm" class="search-input" autocomplete="off" />
           <span class="search-icon" aria-hidden="true"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
-          <div class="search-dropdown" id="search-dropdown">
-            <div class="search-recent-title">Tìm kiếm thịnh hành</div>
-            <div class="search-item"><span class="search-item-icon">🔥</span>Solo Leveling</div>
-            <div class="search-item"><span class="search-item-icon">⚔️</span>Tower of God</div>
-            <div class="search-item"><span class="search-item-icon">💜</span>Omniscient Reader</div>
-          </div>
+          <div class="search-dropdown" id="search-dropdown"><div class="search-recent-title">Tìm kiếm thịnh hành</div></div>
         </div>
 
         <a href="https://comicscreator.webcomicsapp.com/#/login" target="_blank" rel="noopener" class="header-action-link" id="publish-link">Đăng Truyện</a>
@@ -69,7 +65,7 @@
           @if(auth()->user()->isAdmin())
             <a href="{{ route('admin.dashboard') }}" class="btn btn-login" style="background:var(--primary); text-decoration:none;">🛡️ Quản Trị</a>
           @endif
-          <a href="{{ route('user.library') }}" class="btn btn-login" style="text-decoration:none; max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="{{ auth()->user()->name }}">👤 {{ auth()->user()->name }}</a>
+          <a href="{{ route('user.dashboard') }}" class="btn btn-login" style="text-decoration:none; max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="Khu vực thành viên của {{ auth()->user()->name }}">👤 {{ auth()->user()->name }}</a>
           <form action="{{ route('logout') }}" method="POST" style="margin:0;">@csrf<button type="submit" class="btn btn-download">Đăng Xuất</button></form>
         @endguest
       </div>
@@ -88,49 +84,18 @@
   <footer class="site-footer" id="site-footer">
     <div class="container">
       <div class="footer-newsletter-card">
-        <div class="newsletter-info">
-          <span class="newsletter-tag">🚀 CỘNG ĐỒNG {{ strtoupper($siteSettings['site_name'] ?? 'WEBCOMICS') }}</span>
-          <h3 class="newsletter-title">Theo dõi chương mới và truyện nổi bật</h3>
-          <p class="newsletter-sub">{{ $siteSettings['tagline'] ?? 'Khám phá truyện mới, lịch phát hành và các tác phẩm đang thịnh hành.' }}</p>
-        </div>
-        <form class="newsletter-form" onsubmit="event.preventDefault();">
-          <input type="email" placeholder="Nhập email của bạn..." required class="newsletter-input" />
-          <button type="submit" class="btn-newsletter-sub">Theo Dõi</button>
-        </form>
+        <div class="newsletter-info"><span class="newsletter-tag">🚀 CỘNG ĐỒNG {{ strtoupper($siteSettings['site_name'] ?? 'WEBCOMICS') }}</span><h3 class="newsletter-title">Theo dõi chương mới và truyện nổi bật</h3><p class="newsletter-sub">{{ $siteSettings['tagline'] ?? 'Khám phá truyện mới, lịch phát hành và các tác phẩm đang thịnh hành.' }}</p></div>
+        <form class="newsletter-form" onsubmit="event.preventDefault();"><input type="email" placeholder="Nhập email của bạn..." required class="newsletter-input" /><button type="submit" class="btn-newsletter-sub">Theo Dõi</button></form>
       </div>
 
       <div class="footer-main-grid">
-        <div class="fgrid-brand-col">
-          <a href="{{ route('home') }}" class="logo-link" aria-label="{{ $siteSettings['site_name'] ?? 'WebComics' }} Trang chủ">
-            <div class="logo-icon">
-              <svg width="40" height="40" viewBox="0 0 44 44" fill="none"><rect width="44" height="44" rx="12" fill="url(#footer-logo-grad2)"/><defs><linearGradient id="footer-logo-grad2" x1="0" y1="0" x2="44" y2="44"><stop offset="0%" stop-color="#FF5E36"/><stop offset="100%" stop-color="#FF2A6D"/></linearGradient></defs><text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle" font-family="Inter" font-weight="900" font-size="18" fill="white">WC</text></svg>
-            </div>
-            <span class="logo-text">{{ $siteSettings['site_name'] ?? 'WebComics' }}</span>
-          </a>
-          <p class="fbrand-desc">{{ $siteSettings['tagline'] ?? 'Nền tảng đọc Manga, Manhwa và Manhua trực tuyến.' }}</p>
-        </div>
-
+        <div class="fgrid-brand-col"><a href="{{ route('home') }}" class="logo-link" aria-label="{{ $siteSettings['site_name'] ?? 'WebComics' }} Trang chủ"><div class="logo-icon"><svg width="40" height="40" viewBox="0 0 44 44" fill="none"><rect width="44" height="44" rx="12" fill="url(#footer-logo-grad2)"/><defs><linearGradient id="footer-logo-grad2" x1="0" y1="0" x2="44" y2="44"><stop offset="0%" stop-color="#FF5E36"/><stop offset="100%" stop-color="#FF2A6D"/></linearGradient></defs><text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle" font-family="Inter" font-weight="900" font-size="18" fill="white">WC</text></svg></div><span class="logo-text">{{ $siteSettings['site_name'] ?? 'WebComics' }}</span></a><p class="fbrand-desc">{{ $siteSettings['tagline'] ?? 'Nền tảng đọc Manga, Manhwa và Manhua trực tuyến.' }}</p></div>
         <div class="fgrid-col"><h4 class="fcol-heading">Khám Phá</h4><ul class="fcol-list"><li><a href="{{ route('home') }}">Truyện Thịnh Hành</a></li><li><a href="{{ route('genres') }}">Tất Cả Thể Loại</a></li><li><a href="{{ route('schedule') }}">Lịch Ra Truyện</a></li><li><a href="{{ route('originals') }}">Truyện Độc Quyền</a></li></ul></div>
-
-        <div class="fgrid-col">
-          <h4 class="fcol-heading">Tài Khoản</h4>
-          <ul class="fcol-list">
-            @guest
-              <li><a href="{{ route('login') }}">Đăng Nhập</a></li><li><a href="{{ route('register') }}">Đăng Ký</a></li>
-            @else
-              <li><a href="{{ route('user.library') }}">Tủ Truyện</a></li>
-              @if(auth()->user()->isAdmin())<li><a href="{{ route('admin.dashboard') }}">Trang Quản Trị</a></li>@endif
-            @endguest
-          </ul>
-        </div>
-
+        <div class="fgrid-col"><h4 class="fcol-heading">Tài Khoản</h4><ul class="fcol-list">@guest<li><a href="{{ route('login') }}">Đăng Nhập</a></li><li><a href="{{ route('register') }}">Đăng Ký</a></li>@else<li><a href="{{ route('user.dashboard') }}">Tổng Quan</a></li><li><a href="{{ route('user.library') }}">Tủ Truyện</a></li><li><a href="{{ route('user.history') }}">Lịch Sử</a></li><li><a href="{{ route('user.likes') }}">Yêu Thích</a></li>@if(auth()->user()->isAdmin())<li><a href="{{ route('admin.dashboard') }}">Trang Quản Trị</a></li>@endif@endguest</ul></div>
         <div class="fgrid-col"><h4 class="fcol-heading">Hỗ Trợ</h4><ul class="fcol-list"><li><a href="#">Điều Khoản Sử Dụng</a></li><li><a href="#">Chính Sách Riêng Tư</a></li><li><a href="#">Bản Quyền & DMCA</a></li><li><a href="#">Trung Tâm Trợ Giúp</a></li></ul></div>
       </div>
 
-      <div class="footer-bottom-bar">
-        <div class="fbottom-left"><p class="fcopy-text">&copy; {{ date('Y') }} {{ $siteSettings['site_name'] ?? 'WebComics' }}. All rights reserved.</p></div>
-        <div class="fbottom-right"><div class="lang-selector"><span class="lang-icon">🌐</span><select class="lang-select" aria-label="Ngôn ngữ"><option value="vi" selected>Tiếng Việt</option><option value="en">English</option></select></div></div>
-      </div>
+      <div class="footer-bottom-bar"><div class="fbottom-left"><p class="fcopy-text">&copy; {{ date('Y') }} {{ $siteSettings['site_name'] ?? 'WebComics' }}. All rights reserved.</p></div><div class="fbottom-right"><div class="lang-selector"><span class="lang-icon">🌐</span><select class="lang-select" aria-label="Ngôn ngữ"><option value="vi" selected>Tiếng Việt</option><option value="en">English</option></select></div></div></div>
     </div>
   </footer>
 
