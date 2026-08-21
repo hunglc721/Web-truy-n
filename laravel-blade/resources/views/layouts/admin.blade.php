@@ -44,7 +44,8 @@
     @if($adminUser->hasAnyPermission(['users.view','permissions.manage']))<div class="sidebar-section-label">NGƯỜI DÙNG</div>@endif
     @if($adminUser->hasPermission('users.view'))<a href="{{ route('admin.users.index') }}" class="sidebar-link {{ request()->routeIs('admin.users.*')?'active':'' }}">👥 Thành viên</a>@endif
     @if($adminUser->hasPermission('permissions.manage'))<a href="{{ route('admin.permissions.index') }}" class="sidebar-link {{ request()->routeIs('admin.permissions.*')?'active':'' }}">🔒 Phân quyền</a>@endif
-    @if($adminUser->hasAnyPermission(['audit.view','settings.manage']))<div class="sidebar-section-label">HỆ THỐNG</div>@endif
+    @if($adminUser->hasAnyPermission(['notifications.manage','audit.view','settings.manage']))<div class="sidebar-section-label">HỆ THỐNG</div>@endif
+    @if($adminUser->hasPermission('notifications.manage'))<a href="{{ route('admin.notifications.index') }}" class="sidebar-link {{ request()->routeIs('admin.notifications.*')?'active':'' }}">🔔 Thông báo</a>@endif
     @if($adminUser->hasPermission('audit.view'))<a href="{{ route('admin.logs.index') }}" class="sidebar-link {{ request()->routeIs('admin.logs.*')?'active':'' }}">📜 Nhật ký</a>@endif
     @if($adminUser->hasPermission('settings.manage'))<a href="{{ route('admin.settings.index') }}" class="sidebar-link {{ request()->routeIs('admin.settings.*')?'active':'' }}">⚙️ Cài đặt Website</a>@endif
     <a href="{{ route('home') }}" target="_blank" rel="noopener" class="sidebar-link">↗ Xem trang web</a>
