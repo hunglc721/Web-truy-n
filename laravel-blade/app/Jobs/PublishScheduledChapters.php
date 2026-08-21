@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Models\Chapter;
+use App\Services\ChapterNotificationService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -15,13 +16,8 @@ class PublishScheduledChapters implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    /**
-     * Thực thi quét và kích hoạt phát hành các chapter đã đến giờ hẹn (published_at <= now()).
-     * Xóa cache trang chủ (home.latest, home.trending) và cache gợi ý khi có chapter mới được publish.
-     */
     public function handle(): int
     {
-        // 1. Tìm các chapter vừa đến giờ phát hành (trong vòng 10 phút gần nhất)
         $now = now();
         $recentThreshold = $now->copy()->subMinutes(10);
 
@@ -34,10 +30,11 @@ class PublishScheduledChapters implements ShouldQueue
             return 0;
         }
 
-        // 2. Invalidate cache trang chủ và cache truyện tương ứng
         Cache::forget('home.latest');
         Cache::forget('home.trending');
         Cache::forget('recommendations.guest');
+
+        $notificationService = app(ChapterNotificationService::class);
 
         foreach ($justPublishedChapters as $chap) {
             if ($chap->comic) {
@@ -45,9 +42,13 @@ class PublishScheduledChapters implements ShouldQueue
                 Cache::forget("comic.{$chap->comic_id}.chapters_list");
                 Cache::forget("comic.related.{$chap->comic_id}");
             }
+
+            if ($chap->processing_status === 'ready') {
+                $notificationService->dispatchIfEligible($chap);
+            }
         }
 
-        Log::info("PublishScheduledChapters: Đã kích hoạt phát hành và làm mới cache cho {$justPublishedChapters->count()} chapters.");
+        Log::info("PublishScheduledChapters: Đã kích hoạt phát hành, làm mới cache và kiểm tra thông báo cho {$justPublishedChapters->count()} chapters.");
 
         return $justPublishedChapters->count();
     }
