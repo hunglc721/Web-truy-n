@@ -2,22 +2,21 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Carbon\Carbon;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Comment extends Model
 {
     use HasFactory, SoftDeletes;
 
-    // Trạng thái hợp lệ cho cột status
-    const STATUS_APPROVED = 'approved';
-    const STATUS_SPAM     = 'spam';
-    const STATUS_PENDING  = 'pending';
-    const STATUS_HIDDEN   = 'hidden';
+    public const STATUS_APPROVED = 'approved';
+    public const STATUS_SPAM = 'spam';
+    public const STATUS_PENDING = 'pending';
+    public const STATUS_HIDDEN = 'hidden';
 
     protected $fillable = [
         'user_id',
@@ -25,7 +24,7 @@ class Comment extends Model
         'chapter_id',
         'parent_id',
         'content',
-        'status',       // Fix #1: thêm status vào fillable – trước đây bị silent-fail khi create()
+        'status',
         'likes_count',
     ];
 
@@ -33,103 +32,66 @@ class Comment extends Model
         'likes_count' => 'integer',
     ];
 
-    // ─────────────────────────────────────────────────────────────
-    // RELATIONSHIPS
-    // ─────────────────────────────────────────────────────────────
-
-    /**
-     * Bình luận thuộc về 1 User.
-     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    /**
-     * Bình luận thuộc về 1 Truyện (Comic).
-     */
     public function comic(): BelongsTo
     {
         return $this->belongsTo(Comic::class);
     }
 
-    /**
-     * Bình luận thuộc về 1 Chapter cụ thể (có thể null nếu ở trang detail truyện).
-     */
     public function chapter(): BelongsTo
     {
         return $this->belongsTo(Chapter::class);
     }
 
-    /**
-     * Bình luận cha (nếu là phản hồi).
-     */
     public function parent(): BelongsTo
     {
         return $this->belongsTo(Comment::class, 'parent_id');
     }
 
-    /**
-     * Danh sách các bình luận phản hồi (nhiều câu trả lời).
-     */
     public function replies(): HasMany
     {
-        return $this->hasMany(Comment::class, 'parent_id')->orderBy('created_at', 'asc');
+        return $this->hasMany(Comment::class, 'parent_id')->orderBy('created_at');
     }
 
-    /**
-     * Danh sách các báo cáo vi phạm liên quan đến bình luận này.
-     */
     public function reports(): HasMany
     {
         return $this->hasMany(Report::class, 'comment_id');
     }
 
-    // ─────────────────────────────────────────────────────────────
-    // ACCESSORS
-    // ─────────────────────────────────────────────────────────────
+    public function likes(): HasMany
+    {
+        return $this->hasMany(CommentLike::class);
+    }
 
-    /**
-     * Trả về thời gian tạo dạng "2 hours ago"
-     * Blade: {{ $comment->time_ago }}
-     */
+    public function likedBy(?int $userId): bool
+    {
+        return $userId ? $this->likes()->where('user_id', $userId)->exists() : false;
+    }
+
     public function getTimeAgoAttribute(): string
     {
         return $this->created_at ? Carbon::parse($this->created_at)->diffForHumans() : '';
     }
 
-    // ─────────────────────────────────────────────────────────────
-    // SCOPES
-    // ─────────────────────────────────────────────────────────────
-
-    /**
-     * Chỉ lấy bình luận đã được duyệt (status = 'approved').
-     * Dùng: Comment::approved()->where('comic_id', $id)->get()
-     */
     public function scopeApproved($query)
     {
         return $query->where('status', self::STATUS_APPROVED);
     }
 
-    /**
-     * Lấy bình luận đang chờ duyệt.
-     */
     public function scopePending($query)
     {
         return $query->where('status', self::STATUS_PENDING);
     }
 
-    /**
-     * Lấy bình luận đã bị ẩn hoặc đánh dấu spam.
-     */
     public function scopeHidden($query)
     {
         return $query->whereIn('status', [self::STATUS_HIDDEN, self::STATUS_SPAM]);
     }
 
-    /**
-     * Lấy bình luận bị người dùng báo cáo vi phạm hoặc có cờ spam.
-     */
     public function scopeReported($query)
     {
         return $query->where('status', self::STATUS_SPAM)->orWhereHas('reports');
