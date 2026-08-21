@@ -23,6 +23,7 @@ use App\Http\Controllers\Admin\AdminReportController;
 use App\Http\Controllers\Admin\AdminScheduleController;
 use App\Http\Controllers\Admin\AdminBannerController;
 use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\AdminAnalyticsController;
 use App\Http\Controllers\Admin\AdminAuditLogController;
 use App\Http\Controllers\Admin\AdminSettingController;
 use App\Http\Controllers\RatingController;
@@ -30,7 +31,6 @@ use App\Http\Controllers\SearchController;
 use App\Http\Controllers\UserStatisticsController;
 use App\Http\Middleware\AdminMiddleware;
 
-// --- ROUTE PUBLIC ---
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/genres', [GenreController::class, 'index'])->name('genres');
 Route::get('/schedule', [ScheduleController::class, 'index'])->name('schedule');
@@ -38,7 +38,6 @@ Route::get('/originals', [OriginalsController::class, 'index'])->name('originals
 Route::get('/truyen/{slug}', [ComicController::class, 'show'])->name('comics.show');
 Route::get('/truyen/{comicSlug}/{chapterSlug}', [ChapterController::class, 'show'])->name('chapters.show');
 
-// --- AUTH ---
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [AuthController::class, 'login']);
@@ -47,7 +46,6 @@ Route::middleware('guest')->group(function () {
 });
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->name('logout');
 
-// --- MEMBER FEATURES ---
 Route::middleware('auth')->group(function () {
     Route::get('/user/library', [LibraryController::class, 'index'])->name('user.library');
     Route::post('/user/library/toggle/{comic}', [LibraryController::class, 'toggle'])->name('library.toggle');
@@ -55,7 +53,6 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/api/reading-history', [ChapterController::class, 'saveHistory'])
         ->middleware('throttle:history-save')->name('history.save');
-
     Route::post('/api/comments', [CommentController::class, 'store'])
         ->middleware('throttle:comments')->name('comments.store');
     Route::patch('/api/comments/{comment}', [CommentController::class, 'update'])->name('comments.update');
@@ -70,8 +67,7 @@ Route::middleware('auth')->group(function () {
         ->middleware('throttle:like-toggle')->name('comics.ratings.store');
     Route::delete('/api/comics/{comicId}/ratings', [RatingController::class, 'destroy'])
         ->middleware('throttle:like-toggle')->name('comics.ratings.destroy');
-    Route::get('/api/comics/{comicId}/my-rating', [RatingController::class, 'userRating'])
-        ->name('comics.ratings.user');
+    Route::get('/api/comics/{comicId}/my-rating', [RatingController::class, 'userRating'])->name('comics.ratings.user');
 
     Route::get('/api/user/statistics/overview', [UserStatisticsController::class, 'overview'])->name('user.statistics.overview');
     Route::get('/api/user/statistics/genres', [UserStatisticsController::class, 'genres'])->name('user.statistics.genres');
@@ -80,7 +76,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/api/user/statistics/export', [UserStatisticsController::class, 'export'])->name('user.statistics.export');
 });
 
-// --- PUBLIC APIs ---
 Route::get('/api/comics/{comicId}/ratings/summary', [RatingController::class, 'summary'])
     ->middleware('throttle:api')->name('comics.ratings.summary');
 Route::get('/api/comics/{comicId}/ratings/reviews', [RatingController::class, 'reviews'])
@@ -96,9 +91,9 @@ Route::get('/api/recommendations', [RecommendationController::class, 'index'])
 Route::post('/api/reports', [\App\Http\Controllers\ReportController::class, 'store'])
     ->middleware('throttle:api')->name('reports.store');
 
-// --- ADMIN ---
 Route::middleware(['auth', AdminMiddleware::class])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/analytics', [AdminAnalyticsController::class, 'index'])->name('analytics.index');
 
     Route::get('/comics', [AdminComicController::class, 'index'])->name('comics.index');
     Route::get('/comics/create', [AdminComicController::class, 'create'])->name('comics.create');
