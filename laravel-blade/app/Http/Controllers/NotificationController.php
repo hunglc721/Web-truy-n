@@ -80,7 +80,7 @@ class NotificationController extends Controller
             return true;
         }
 
-        $host = parse_url($url, PHP_URL_HOST);
-        return $host && $host === parse_url(config('app.url'), PHP_URL_HOST);
+        return filter_var($url, FILTER_VALIDATE_URL)
+            && in_array(parse_url($url, PHP_URL_SCHEME), ['http', 'https'], true);
     }
 }
