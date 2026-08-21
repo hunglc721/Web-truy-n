@@ -185,6 +185,100 @@
       </div>
     </div>
 
+    {{-- RATINGS & REVIEWS SECTION --}}
+    <div id="ratings-section" class="rating-section-card">
+      <div class="section-header" style="margin-bottom: 20px;">
+        <h2 class="section-title">⭐ Đánh Giá & Nhận Xét</h2>
+      </div>
+
+      {{-- Overview & Histogram --}}
+      <div class="rating-grid">
+        <div class="rating-score-box">
+          <div class="rating-score-num" id="rating-avg-display">{{ number_format($comic->avg_rating, 1) }}</div>
+          <div class="rating-stars-display" id="rating-stars-icons">
+            @php
+              $fullStars = floor($comic->avg_rating);
+              $halfStar = ($comic->avg_rating - $fullStars) >= 0.5;
+            @endphp
+            @for($i = 1; $i <= 5; $i++)
+              @if($i <= $fullStars)
+                ★
+              @elseif($i == $fullStars + 1 && $halfStar)
+                ★
+              @else
+                ☆
+              @endif
+            @endfor
+          </div>
+          <div class="rating-score-total">Dựa trên <strong id="rating-total-display">{{ $comic->total_ratings }}</strong> lượt đánh giá</div>
+        </div>
+
+        {{-- Breakdown Histogram (1 -> 5 stars) --}}
+        <div class="rating-histogram" id="rating-histogram-bars">
+          @for($s = 5; $s >= 1; $s--)
+            <div class="rating-bar-row">
+              <span class="rating-bar-label">{{ $s }} ★</span>
+              <div class="rating-bar-track">
+                <div class="rating-bar-fill" id="bar-fill-{{ $s }}" style="width: 0%;"></div>
+              </div>
+              <span class="rating-bar-percent" id="bar-percent-{{ $s }}">0%</span>
+            </div>
+          @endfor
+        </div>
+      </div>
+
+      {{-- User Interactive Rating Box --}}
+      @auth
+        <div class="user-rating-box">
+          <h3 style="font-size: 15px; font-weight: 700; color: var(--text-main); margin-bottom: 4px;">
+            ✍️ Đánh giá của bạn
+          </h3>
+          <p style="font-size: 13px; color: var(--text-sub); margin-bottom: 10px;">
+            Chọn số sao và để lại cảm nhận của bạn về bộ truyện này
+          </p>
+
+          <div class="star-rating-select" id="star-selector">
+            <button type="button" class="star-btn" data-value="1" title="1 sao">★</button>
+            <button type="button" class="star-btn" data-value="2" title="2 sao">★</button>
+            <button type="button" class="star-btn" data-value="3" title="3 sao">★</button>
+            <button type="button" class="star-btn" data-value="4" title="4 sao">★</button>
+            <button type="button" class="star-btn" data-value="5" title="5 sao">★</button>
+          </div>
+          <input type="hidden" id="selected-score" value="0" />
+
+          <textarea id="rating-review-input" class="rating-review-textarea" placeholder="Viết cảm nhận của bạn về truyện (tùy chọn)..." maxlength="1000"></textarea>
+
+          <div style="display: flex; gap: 10px; align-items: center;">
+            <button type="button" id="btn-submit-rating" class="btn-spotlight-read" style="padding: 8px 18px; font-size: 13.5px;">
+              Gửi Đánh Giá
+            </button>
+            <button type="button" id="btn-delete-rating" class="btn-spotlight-sub" style="display: none; padding: 8px 16px; font-size: 13px; color: #ef4444; border-color: rgba(239, 68, 68, 0.4);">
+              Xóa Đánh Giá
+            </button>
+          </div>
+        </div>
+      @else
+        <div class="user-rating-box" style="text-align: center; padding: 24px;">
+          <p style="color: var(--text-sub); font-size: 14px; margin-bottom: 12px;">
+            Vui lòng đăng nhập để gửi đánh giá và nhận xét cho bộ truyện này.
+          </p>
+          <a href="{{ route('login') }}" class="btn-spotlight-read" style="display: inline-block; padding: 8px 20px; font-size: 13.5px;">
+            Đăng Nhập Ngay
+          </a>
+        </div>
+      @endauth
+
+      {{-- Reviews List --}}
+      <div id="reviews-list-container" style="margin-top: 28px;">
+        <h3 style="font-size: 15px; font-weight: 700; color: var(--text-main); margin-bottom: 16px;">
+          💬 Nhận xét gần đây
+        </h3>
+        <div id="reviews-items">
+          <p style="color: var(--text-muted); font-size: 13.5px;">Đang tải nhận xét...</p>
+        </div>
+      </div>
+    </div>
+
     {{-- RELATED COMICS --}}
     @if($relatedComics->isNotEmpty())
       <div class="comics-section" style="padding-top:48px;">
@@ -335,5 +429,221 @@
       btn.disabled = false;
     }
   });
+
+  // ─── RATING & REVIEWS COMPONENT LOGIC ─────────────────────────────
+  const COMIC_ID = {{ $comic->id }};
+  const isUserLoggedIn = {{ auth()->check() ? 'true' : 'false' }};
+
+  // Helper render stars string
+  function renderStars(score) {
+    const full = Math.floor(score);
+    const half = (score - full) >= 0.5;
+    let stars = '';
+    for (let i = 1; i <= 5; i++) {
+      if (i <= full) stars += '★';
+      else if (i === full + 1 && half) stars += '★';
+      else stars += '☆';
+    }
+    return stars;
+  }
+
+  // Load Breakdown Histogram
+  async function loadRatingSummary() {
+    try {
+      const res = await fetch(`/api/comics/${COMIC_ID}/ratings/summary`);
+      if (!res.ok) return;
+      const json = await res.json();
+      if (json.status === 'success' && json.data) {
+        const data = json.data;
+        document.getElementById('rating-avg-display').textContent = Number(data.avg_rating).toFixed(1);
+        document.getElementById('rating-stars-icons').textContent = renderStars(data.avg_rating);
+        document.getElementById('rating-total-display').textContent = data.total_ratings;
+
+        for (let s = 1; s <= 5; s++) {
+          const starInfo = data.stars[s] || { count: 0, percentage: 0 };
+          const fillEl = document.getElementById(`bar-fill-${s}`);
+          const pctEl  = document.getElementById(`bar-percent-${s}`);
+          if (fillEl) fillEl.style.width = `${starInfo.percentage}%`;
+          if (pctEl)  pctEl.textContent  = `${starInfo.percentage}%`;
+        }
+      }
+    } catch (err) {
+      console.error('Lỗi load summary rating:', err);
+    }
+  }
+
+  // Load Recent Reviews
+  async function loadReviews() {
+    const container = document.getElementById('reviews-items');
+    if (!container) return;
+    try {
+      const res = await fetch(`/api/comics/${COMIC_ID}/ratings/reviews?per_page=5`);
+      if (!res.ok) return;
+      const json = await res.json();
+      if (json.status === 'success' && json.data && json.data.data) {
+        const list = json.data.data;
+        if (list.length === 0) {
+          container.innerHTML = '<p style="color: var(--text-muted); font-size: 13.5px;">Chưa có nhận xét nào. Hãy là người đầu tiên để lại cảm nhận!</p>';
+          return;
+        }
+        container.innerHTML = list.map(item => `
+          <div class="review-item">
+            <div class="review-item-header">
+              <span class="review-user-name">${item.user ? item.user.name : 'Độc giả'}</span>
+              <span class="review-badge">★ ${Number(item.score).toFixed(1)}</span>
+            </div>
+            <p class="review-text">${item.review ? item.review.replace(/</g, "&lt;").replace(/>/g, "&gt;") : ''}</p>
+          </div>
+        `).join('');
+      }
+    } catch (err) {
+      console.error('Lỗi load reviews:', err);
+    }
+  }
+
+  // User Star Selector Logic
+  const starBtns = document.querySelectorAll('.star-btn');
+  const selectedScoreInput = document.getElementById('selected-score');
+  const reviewInput = document.getElementById('rating-review-input');
+  const btnDeleteRating = document.getElementById('btn-delete-rating');
+
+  function highlightStars(count) {
+    starBtns.forEach(btn => {
+      const val = parseInt(btn.dataset.value, 10);
+      if (val <= count) {
+        btn.classList.add('hovered');
+      } else {
+        btn.classList.remove('hovered');
+      }
+    });
+  }
+
+  function setSelectedStars(count) {
+    if (selectedScoreInput) selectedScoreInput.value = count;
+    starBtns.forEach(btn => {
+      const val = parseInt(btn.dataset.value, 10);
+      if (val <= count) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+    });
+  }
+
+  starBtns.forEach(btn => {
+    btn.addEventListener('mouseenter', () => highlightStars(parseInt(btn.dataset.value, 10)));
+    btn.addEventListener('mouseleave', () => {
+      const current = parseInt(selectedScoreInput?.value || '0', 10);
+      starBtns.forEach(b => b.classList.remove('hovered'));
+      setSelectedStars(current);
+    });
+    btn.addEventListener('click', () => {
+      const val = parseInt(btn.dataset.value, 10);
+      setSelectedStars(val);
+    });
+  });
+
+  // Load User's Previous Rating if logged in
+  async function loadUserRating() {
+    if (!isUserLoggedIn) return;
+    try {
+      const res = await fetch(`/api/comics/${COMIC_ID}/my-rating`);
+      if (!res.ok) return;
+      const json = await res.json();
+      if (json.status === 'success' && json.has_rated) {
+        setSelectedStars(Math.round(json.score));
+        if (reviewInput && json.review) reviewInput.value = json.review;
+        if (btnDeleteRating) btnDeleteRating.style.display = 'inline-block';
+        const submitBtn = document.getElementById('btn-submit-rating');
+        if (submitBtn) submitBtn.textContent = 'Cập Nhật Đánh Giá';
+      }
+    } catch (err) {
+      console.error('Lỗi load user rating:', err);
+    }
+  }
+
+  // Submit Rating
+  document.getElementById('btn-submit-rating')?.addEventListener('click', async function () {
+    const score = parseFloat(selectedScoreInput?.value || '0');
+    if (!score || score < 1 || score > 5) {
+      showToast('⚠️ Vui lòng chọn số sao từ 1 đến 5!', 'error');
+      return;
+    }
+
+    const review = reviewInput ? reviewInput.value.trim() : '';
+    const btn = this;
+    btn.disabled = true;
+
+    try {
+      const res = await fetch(`/api/comics/${COMIC_ID}/ratings`, {
+        method: 'POST',
+        headers: {
+          'Content-Type':     'application/json',
+          'X-CSRF-TOKEN':     CSRF_TOKEN,
+          'Accept':           'application/json',
+          'X-Requested-With': 'XMLHttpRequest',
+        },
+        body: JSON.stringify({ score, review }),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.status === 'success') {
+        showToast(data.message || '⭐ Đã gửi đánh giá thành công!');
+        if (btnDeleteRating) btnDeleteRating.style.display = 'inline-block';
+        btn.textContent = 'Cập Nhật Đánh Giá';
+        loadRatingSummary();
+        loadReviews();
+      } else {
+        showToast(data.message || '❌ Không thể gửi đánh giá.', 'error');
+      }
+    } catch (err) {
+      console.error('Lỗi gửi rating:', err);
+      showToast('❌ Có lỗi xảy ra, vui lòng thử lại!', 'error');
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  // Delete Rating
+  btnDeleteRating?.addEventListener('click', async function () {
+    if (!confirm('Bạn có chắc chắn muốn xóa đánh giá này không?')) return;
+    const btn = this;
+    btn.disabled = true;
+
+    try {
+      const res = await fetch(`/api/comics/${COMIC_ID}/ratings`, {
+        method: 'DELETE',
+        headers: {
+          'X-CSRF-TOKEN':     CSRF_TOKEN,
+          'Accept':           'application/json',
+          'X-Requested-With': 'XMLHttpRequest',
+        },
+      });
+
+      const data = await res.json();
+      if (res.ok && data.status === 'success') {
+        showToast(data.message || 'Đã xóa đánh giá.');
+        setSelectedStars(0);
+        if (reviewInput) reviewInput.value = '';
+        btn.style.display = 'none';
+        const submitBtn = document.getElementById('btn-submit-rating');
+        if (submitBtn) submitBtn.textContent = 'Gửi Đánh Giá';
+        loadRatingSummary();
+        loadReviews();
+      } else {
+        showToast(data.message || '❌ Không thể xóa đánh giá.', 'error');
+      }
+    } catch (err) {
+      console.error('Lỗi xóa rating:', err);
+      showToast('❌ Có lỗi xảy ra, vui lòng thử lại!', 'error');
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  // Initialize ratings on load
+  loadRatingSummary();
+  loadReviews();
+  loadUserRating();
 </script>
 @endpush

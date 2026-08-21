@@ -140,7 +140,7 @@
               </h3>
               {{-- "Fantasy · Mystery" --}}
               <p class="of-genre">
-                {{ $comic->genres->pluck('name')->join(' &middot; ') }}
+                {{ $comic->genres->pluck('name')->join(' · ') }}
               </p>
               {{-- "👥 8.6M Readers · 590 Chapters" --}}
               <p class="of-stats">

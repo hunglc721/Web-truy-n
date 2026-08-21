@@ -24,6 +24,7 @@ use App\Http\Controllers\Admin\AdminScheduleController;
 use App\Http\Controllers\Admin\AdminBannerController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminAuditLogController;
+use App\Http\Controllers\RatingController;
 use App\Http\Middleware\AdminMiddleware;
 
 /*
@@ -83,7 +84,28 @@ Route::middleware('auth')->group(function () {
     Route::post('/api/comics/{comicId}/toggle-like', [ComicActionController::class, 'toggleLike'])
         ->middleware('throttle:like-toggle')
         ->name('comics.toggleLike');
+
+    // ── Đánh giá & Nhận xét truyện (AJAX JSON) ───────────────────────────
+    Route::post('/api/comics/{comicId}/ratings', [RatingController::class, 'store'])
+        ->middleware('throttle:like-toggle')
+        ->name('comics.ratings.store');
+
+    Route::delete('/api/comics/{comicId}/ratings', [RatingController::class, 'destroy'])
+        ->middleware('throttle:like-toggle')
+        ->name('comics.ratings.destroy');
+
+    Route::get('/api/comics/{comicId}/my-rating', [RatingController::class, 'userRating'])
+        ->name('comics.ratings.user');
 });
+
+// ── API Đánh giá & Thống kê sao (Công khai cho cả Guest & User) ─────────
+Route::get('/api/comics/{comicId}/ratings/summary', [RatingController::class, 'summary'])
+    ->middleware('throttle:api')
+    ->name('comics.ratings.summary');
+
+Route::get('/api/comics/{comicId}/ratings/reviews', [RatingController::class, 'reviews'])
+    ->middleware('throttle:api')
+    ->name('comics.ratings.reviews');
 
 // ── API Bình luận (Công khai cho cả Guest & User đọc, Rate limit: 120 req/phút) ──
 Route::get('/api/comments', [CommentController::class, 'index'])

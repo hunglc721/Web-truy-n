@@ -164,7 +164,7 @@
               <a href="{{ route('comics.show', $comic->slug) }}">{{ $comic->title }}</a>
             </h3>
             <p class="browse-author">
-              Tác giả: {{ $comic->authors->pluck('name')->join(' &middot; ') ?: 'Đang cập nhật' }}
+              Tác giả: {{ $comic->authors->pluck('name')->join(' · ') ?: 'Đang cập nhật' }}
             </p>
             <p class="browse-meta">
               <span>{{ $primaryGenre?->name }}</span>

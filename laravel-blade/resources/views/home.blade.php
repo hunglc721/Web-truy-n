@@ -75,7 +75,7 @@
 
               {{-- Hiển thị thể loại dạng "Action · Fantasy" --}}
               <p class="tcard-genre">
-                {{ $comic->genres->pluck('name')->join(' &middot; ') }}
+                {{ $comic->genres->pluck('name')->join(' · ') }}
               </p>
             </a>
           @empty

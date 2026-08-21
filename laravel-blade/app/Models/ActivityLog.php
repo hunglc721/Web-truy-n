@@ -31,6 +31,8 @@ class ActivityLog extends Model
     const ACTION_COMIC_UNFOLLOWED = 'comic.unfollowed';
     const ACTION_COMIC_LIKED      = 'comic.liked';
     const ACTION_COMIC_UNLIKED    = 'comic.unliked';
+    const ACTION_COMIC_RATED      = 'comic.rated';
+    const ACTION_COMIC_UNRATED    = 'comic.unrated';
 
     // Admin — Comic
     const ACTION_ADMIN_COMIC_CREATED = 'admin.comic.created';
