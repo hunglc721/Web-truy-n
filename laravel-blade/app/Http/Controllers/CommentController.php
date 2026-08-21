@@ -10,7 +10,6 @@ use App\Models\Comment;
 use App\Services\CommentFilterService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Log;
 
 class CommentController extends Controller
 {
@@ -21,13 +20,6 @@ class CommentController extends Controller
         $this->filterService = $filterService;
     }
 
-    /**
-     * Lấy danh sách bình luận (phân biệt cấp truyện vs cấp chapter).
-     * Query Parameters:
-     *   - comic_id: int (bắt buộc)
-     *   - chapter_id: int (tuỳ chọn) - nếu có thì lấy comment của chapter đó, nếu không có thì lấy comment cấp truyện (chapter_id IS NULL)
-     *   - parent_id: null (chỉ lấy top-level comments, replies được eager load)
-     */
     public function index(Request $request): JsonResponse
     {
         $request->validate([
@@ -42,10 +34,8 @@ class CommentController extends Controller
             ->orderBy('created_at', 'desc');
 
         if ($request->filled('chapter_id')) {
-            // Luồng 1: Bình luận thuộc về chương cụ thể
             $query->where('chapter_id', $request->chapter_id);
         } else {
-            // Luồng 2: Bình luận cấp truyện (không gắn với chương nào)
             $query->whereNull('chapter_id');
         }
 
@@ -57,14 +47,8 @@ class CommentController extends Controller
         ]);
     }
 
-    /**
-     * Lưu bình luận mới qua AJAX.
-     * Authorization & validation đã được xử lý bởi StoreCommentRequest.
-     * Rate limiting: throttle:comments (5 req/phút) áp dụng tại route.
-     */
     public function store(StoreCommentRequest $request): JsonResponse
     {
-        // Chạy Filter Service: phát hiện spam link & lọc từ cấm
         $processed = $this->filterService->process($request->content);
 
         $comment = Comment::create([
@@ -77,8 +61,6 @@ class CommentController extends Controller
         ]);
 
         $comment->load(['user', 'replies.user']);
-
-        // Fire event — LogCommentCreated listener ghi ActivityLog
         CommentCreated::dispatch($comment);
 
         $isSpam = $processed['status'] === Comment::STATUS_SPAM;
@@ -91,7 +73,9 @@ class CommentController extends Controller
                 : 'Đã đăng bình luận thành công!',
             'comment' => [
                 'id'        => $comment->id,
-                'user_name' => $comment->user->name ?? 'User',
+                // Reader inserts this response into an HTML fragment, so both
+                // user-controlled fields must be escaped before returning.
+                'user_name' => e($comment->user->name ?? 'User'),
                 'content'   => e($comment->content),
                 'status'    => $comment->status,
                 'time_ago'  => 'Vừa xong',
@@ -101,19 +85,12 @@ class CommentController extends Controller
         ]);
     }
 
-    /**
-     * Sửa nội dung bình luận qua AJAX.
-     * Authorization: CommentPolicy::update() — chủ bình luận trong 15 phút, admin bất kỳ lúc.
-     * Route: PATCH /api/comments/{comment}
-     */
     public function update(UpdateCommentRequest $request, Comment $comment): JsonResponse
     {
-        // Lọc lại nội dung sau khi sửa (chặn thêm spam/từ cấm mới)
         $processed = $this->filterService->process($request->content);
 
         $comment->update([
             'content' => $processed['content'],
-            // Nếu nội dung sau khi sửa chứa spam, chuyển về pending duyệt lại
             'status'  => $processed['status'] === Comment::STATUS_SPAM
                 ? Comment::STATUS_PENDING
                 : $comment->status,
@@ -129,16 +106,10 @@ class CommentController extends Controller
         ]);
     }
 
-    /**
-     * Xóa mềm bình luận qua AJAX.
-     * Authorization: CommentPolicy::delete() — chủ bình luận hoặc admin.
-     * Route: DELETE /api/comments/{comment}
-     */
     public function destroy(Comment $comment): JsonResponse
     {
         $this->authorize('delete', $comment);
 
-        // Ghi log trước khi xóa (admin moderation audit trail)
         ActivityLog::record('comment.deleted', $comment, [
             'comic_id'     => $comment->comic_id,
             'chapter_id'   => $comment->chapter_id,
@@ -146,7 +117,7 @@ class CommentController extends Controller
             'is_own'       => $comment->user_id === auth()->id(),
         ]);
 
-        $comment->delete(); // SoftDelete
+        $comment->delete();
 
         return response()->json([
             'status'  => 'success',
