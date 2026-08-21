@@ -147,6 +147,7 @@ Route::middleware(['auth', AdminMiddleware::class])->prefix('admin')->name('admi
     Route::patch('/users/{user}/toggle-ban', [AdminUserController::class, 'toggleBan'])->name('users.toggleBan');
 
     Route::get('/comments', [AdminCommentController::class, 'index'])->name('comments.index');
+    Route::post('/comments/bulk', [AdminCommentController::class, 'bulk'])->name('comments.bulk');
     Route::patch('/comments/{comment}/approve', [AdminCommentController::class, 'approve'])->name('comments.approve');
     Route::patch('/comments/{comment}/hide', [AdminCommentController::class, 'hide'])->name('comments.hide');
     Route::delete('/comments/{comment}', [AdminCommentController::class, 'destroy'])->name('comments.destroy');
