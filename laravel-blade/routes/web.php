@@ -26,6 +26,7 @@ use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminAuditLogController;
 use App\Http\Controllers\RatingController;
 use App\Http\Controllers\SearchController;
+use App\Http\Controllers\UserStatisticsController;
 use App\Http\Middleware\AdminMiddleware;
 
 /*
@@ -97,6 +98,22 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/api/comics/{comicId}/my-rating', [RatingController::class, 'userRating'])
         ->name('comics.ratings.user');
+
+    // ── Thống Kê & Phân Tích Độc Giả (AJAX JSON) ───────────────────────
+    Route::get('/api/user/statistics/overview', [UserStatisticsController::class, 'overview'])
+        ->name('user.statistics.overview');
+
+    Route::get('/api/user/statistics/genres', [UserStatisticsController::class, 'genres'])
+        ->name('user.statistics.genres');
+
+    Route::get('/api/user/statistics/badges', [UserStatisticsController::class, 'badges'])
+        ->name('user.statistics.badges');
+
+    Route::get('/api/user/statistics/weekly', [UserStatisticsController::class, 'weekly'])
+        ->name('user.statistics.weekly');
+
+    Route::get('/api/user/statistics/export', [UserStatisticsController::class, 'export'])
+        ->name('user.statistics.export');
 });
 
 // ── API Đánh giá & Thống kê sao (Công khai cho cả Guest & User) ─────────
