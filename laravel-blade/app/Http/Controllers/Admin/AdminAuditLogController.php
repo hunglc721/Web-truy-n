@@ -10,20 +10,17 @@ use Illuminate\Support\Facades\Auth;
 
 class AdminAuditLogController extends Controller
 {
-    /**
-     * Danh sách nhật ký hoạt động hệ thống kèm bộ lọc và tìm kiếm.
-     */
     public function index(Request $request)
     {
-        $query = ActivityLog::with(['user'])->latest('id');
+        $query = ActivityLog::with('user')->latest('id');
 
-        // Tìm kiếm theo từ khóa (tên user, action, ip, subject)
         if ($request->filled('q')) {
-            $keyword = trim($request->q);
+            $keyword = trim((string) $request->q);
             $query->where(function ($q) use ($keyword) {
                 $q->where('action', 'like', "%{$keyword}%")
                     ->orWhere('ip_address', 'like', "%{$keyword}%")
                     ->orWhere('subject_type', 'like', "%{$keyword}%")
+                    ->orWhere('subject_id', $keyword)
                     ->orWhereHas('user', function ($uq) use ($keyword) {
                         $uq->where('name', 'like', "%{$keyword}%")
                             ->orWhere('email', 'like', "%{$keyword}%");
@@ -31,18 +28,14 @@ class AdminAuditLogController extends Controller
             });
         }
 
-        // Lọc theo nhóm Action
         if ($request->filled('action_group')) {
-            $group = $request->action_group;
-            $query->where('action', 'like', "{$group}%");
+            $query->where('action', 'like', $request->action_group . '%');
         }
 
-        // Lọc theo User cụ thể
         if ($request->filled('user_id')) {
-            $query->where('user_id', $request->user_id);
+            $query->where('user_id', $request->integer('user_id'));
         }
 
-        // Lọc theo ngày
         if ($request->filled('date_from')) {
             $query->whereDate('created_at', '>=', $request->date_from);
         }
@@ -51,22 +44,26 @@ class AdminAuditLogController extends Controller
         }
 
         $logs = $query->paginate(25)->withQueryString();
-
-        // Danh sách các nhóm hành động để filter
         $actionGroups = [
-            'admin.comic'    => 'Quản lý Truyện & Chapter',
-            'admin.comment'  => 'Kiểm duyệt Bình luận',
-            'admin.report'   => 'Xử lý Báo cáo',
-            'admin.schedule' => 'Lịch Phát Sóng',
-            'admin.banner'   => 'Banner Quảng cáo',
-            'admin.user'     => 'Quản lý Thành viên',
-            'auth'           => 'Đăng nhập / Đăng xuất',
-            'comment'        => 'Tương tác Bình luận',
-            'comic'          => 'Tương tác Yêu thích',
+            'admin.comic' => 'Quản lý Truyện',
+            'admin.chapter' => 'Quản lý Chapter',
+            'admin.genre' => 'Thể loại',
+            'admin.tag' => 'Tags',
+            'admin.author' => 'Tác giả',
+            'admin.comment' => 'Kiểm duyệt Bình luận',
+            'admin.report' => 'Xử lý Báo cáo',
+            'admin.schedule' => 'Lịch Phát Hành',
+            'admin.banner' => 'Banner',
+            'admin.user' => 'Thành viên',
+            'admin.permissions' => 'Phân quyền',
+            'admin.settings' => 'Cài đặt',
+            'auth' => 'Đăng nhập / Đăng xuất',
+            'comment' => 'Tương tác Bình luận',
+            'comic' => 'Tương tác Truyện',
         ];
 
-        $users = User::where('is_admin', true)
-            ->orWhereHas('activityLogs')
+        $users = User::whereHas('activityLogs')
+            ->orWhere('is_admin', true)
             ->select('id', 'name', 'email')
             ->orderBy('name')
             ->get();
@@ -75,26 +72,24 @@ class AdminAuditLogController extends Controller
     }
 
     /**
-     * Dọn dẹp nhật ký hoạt động cũ.
+     * Chỉ dọn log cũ theo retention; không hỗ trợ xóa sạch toàn bộ audit trail.
      */
     public function clear(Request $request)
     {
-        $days = (int) $request->input('days', 30);
-
-        if ($days > 0) {
-            $deletedCount = ActivityLog::where('created_at', '<', now()->subDays($days))->delete();
-            $msg = "Đã dọn dẹp {$deletedCount} bản ghi nhật ký cũ hơn {$days} ngày.";
-        } else {
-            $deletedCount = ActivityLog::query()->delete();
-            $msg = "Đã xóa toàn bộ {$deletedCount} bản ghi nhật ký hoạt động.";
-        }
-
-        ActivityLog::record('admin.logs.cleared', null, [
-            'admin_id'      => Auth::id(),
-            'deleted_count' => $deletedCount,
-            'days'          => $days,
+        $validated = $request->validate([
+            'days' => 'required|integer|in:30,60,90,180,365',
         ]);
 
-        return redirect()->route('admin.logs.index')->with('success', $msg);
+        $days = (int) $validated['days'];
+        $deletedCount = ActivityLog::where('created_at', '<', now()->subDays($days))->delete();
+
+        ActivityLog::record('admin.logs.retention_cleanup', null, [
+            'admin_id' => Auth::id(),
+            'deleted_count' => $deletedCount,
+            'retention_days' => $days,
+        ]);
+
+        return redirect()->route('admin.logs.index')
+            ->with('success', "Đã dọn {$deletedCount} log cũ hơn {$days} ngày; các log mới vẫn được giữ nguyên.");
     }
 }
