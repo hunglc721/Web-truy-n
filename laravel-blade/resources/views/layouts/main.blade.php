@@ -3,8 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>@yield('title', 'WebComics - Đọc Manhua, Manhwa & Manga Online')</title>
-  @yield('meta')
+  <title>@yield('title', ($siteSettings['site_name'] ?? 'WebComics') . ' - ' . ($siteSettings['tagline'] ?? 'Đọc Manhua, Manhwa & Manga Online'))</title>
+  @hasSection('meta')
+    @yield('meta')
+  @else
+    <meta name="description" content="{{ $siteSettings['meta_description'] ?? 'Nền tảng đọc truyện tranh trực tuyến WebComics.' }}" />
+    <meta name="keywords" content="{{ $siteSettings['seo_keywords'] ?? 'đọc truyện,manga,manhwa,manhua,webtoon' }}" />
+  @endif
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -14,24 +19,18 @@
 </head>
 <body class="dark-theme" data-auth-state="{{ auth()->check() ? (auth()->user()->isAdmin() ? 'admin' : 'member') : 'guest' }}">
 
-  {{-- ===================== HEADER ===================== --}}
   <header class="site-header" id="site-header">
     <div class="header-inner">
       <div class="header-left">
-        <a href="{{ route('home') }}" class="logo-link" aria-label="WebComics Trang chủ">
+        <a href="{{ route('home') }}" class="logo-link" aria-label="{{ $siteSettings['site_name'] ?? 'WebComics' }} Trang chủ">
           <div class="logo-icon">
             <svg width="42" height="42" viewBox="0 0 44 44" fill="none">
               <rect width="44" height="44" rx="12" fill="url(#logo-grad)"/>
-              <defs>
-                <linearGradient id="logo-grad" x1="0" y1="0" x2="44" y2="44">
-                  <stop offset="0%" stop-color="#FF5E36"/>
-                  <stop offset="100%" stop-color="#FF2A6D"/>
-                </linearGradient>
-              </defs>
+              <defs><linearGradient id="logo-grad" x1="0" y1="0" x2="44" y2="44"><stop offset="0%" stop-color="#FF5E36"/><stop offset="100%" stop-color="#FF2A6D"/></linearGradient></defs>
               <text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle" font-family="Inter" font-weight="900" font-size="18" fill="white">WC</text>
             </svg>
           </div>
-          <span class="logo-text">WebComics</span>
+          <span class="logo-text">{{ $siteSettings['site_name'] ?? 'WebComics' }}</span>
         </a>
 
         <nav class="main-nav" aria-label="Menu chính">
@@ -45,11 +44,7 @@
       <div class="header-right">
         <div class="search-wrap">
           <input id="search-input" type="search" placeholder="Tìm kiếm truyện tranh..." aria-label="Tìm kiếm" class="search-input" autocomplete="off" />
-          <span class="search-icon" aria-hidden="true">
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-            </svg>
-          </span>
+          <span class="search-icon" aria-hidden="true"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
           <div class="search-dropdown" id="search-dropdown">
             <div class="search-recent-title">Tìm kiếm thịnh hành</div>
             <div class="search-item"><span class="search-item-icon">🔥</span>Solo Leveling</div>
@@ -63,10 +58,7 @@
 
         <div class="nav-icon-group">
           <a class="icon-btn" id="library-btn" aria-label="Tủ truyện" title="Tủ truyện" href="{{ auth()->check() ? route('user.library') : route('login') }}">
-            <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
-              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
-            </svg>
+            <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
           </a>
         </div>
 
@@ -77,47 +69,29 @@
           @if(auth()->user()->isAdmin())
             <a href="{{ route('admin.dashboard') }}" class="btn btn-login" style="background:var(--primary); text-decoration:none;">🛡️ Quản Trị</a>
           @endif
-
-          <a href="{{ route('user.library') }}" class="btn btn-login" style="text-decoration:none; max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="{{ auth()->user()->name }}">
-            👤 {{ auth()->user()->name }}
-          </a>
-
-          <form action="{{ route('logout') }}" method="POST" style="margin:0;">
-            @csrf
-            <button type="submit" class="btn btn-download">Đăng Xuất</button>
-          </form>
+          <a href="{{ route('user.library') }}" class="btn btn-login" style="text-decoration:none; max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="{{ auth()->user()->name }}">👤 {{ auth()->user()->name }}</a>
+          <form action="{{ route('logout') }}" method="POST" style="margin:0;">@csrf<button type="submit" class="btn btn-download">Đăng Xuất</button></form>
         @endguest
       </div>
     </div>
   </header>
-  {{-- ===================== END HEADER ===================== --}}
 
   @if(session('success'))
-    <div class="container" style="padding-top:16px;">
-      <div style="padding:12px 16px; border-radius:10px; background:rgba(34,197,94,.12); border:1px solid rgba(34,197,94,.25); color:#4ade80; font-weight:600;">
-        {{ session('success') }}
-      </div>
-    </div>
+    <div class="container" style="padding-top:16px;"><div style="padding:12px 16px;border-radius:10px;background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.25);color:#4ade80;font-weight:600;">{{ session('success') }}</div></div>
   @endif
-
   @if(session('error'))
-    <div class="container" style="padding-top:16px;">
-      <div style="padding:12px 16px; border-radius:10px; background:rgba(239,68,68,.12); border:1px solid rgba(239,68,68,.25); color:#f87171; font-weight:600;">
-        {{ session('error') }}
-      </div>
-    </div>
+    <div class="container" style="padding-top:16px;"><div style="padding:12px 16px;border-radius:10px;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.25);color:#f87171;font-weight:600;">{{ session('error') }}</div></div>
   @endif
 
   @yield('content')
 
-  {{-- ===================== FOOTER ===================== --}}
   <footer class="site-footer" id="site-footer">
     <div class="container">
       <div class="footer-newsletter-card">
         <div class="newsletter-info">
-          <span class="newsletter-tag">🚀 CỘNG ĐỒNG WEBCOMICS</span>
+          <span class="newsletter-tag">🚀 CỘNG ĐỒNG {{ strtoupper($siteSettings['site_name'] ?? 'WEBCOMICS') }}</span>
           <h3 class="newsletter-title">Theo dõi chương mới và truyện nổi bật</h3>
-          <p class="newsletter-sub">Khám phá truyện mới, lịch phát hành và các tác phẩm đang thịnh hành.</p>
+          <p class="newsletter-sub">{{ $siteSettings['tagline'] ?? 'Khám phá truyện mới, lịch phát hành và các tác phẩm đang thịnh hành.' }}</p>
         </div>
         <form class="newsletter-form" onsubmit="event.preventDefault();">
           <input type="email" placeholder="Nhập email của bạn..." required class="newsletter-input" />
@@ -127,77 +101,38 @@
 
       <div class="footer-main-grid">
         <div class="fgrid-brand-col">
-          <a href="{{ route('home') }}" class="logo-link" aria-label="WebComics Trang chủ">
+          <a href="{{ route('home') }}" class="logo-link" aria-label="{{ $siteSettings['site_name'] ?? 'WebComics' }} Trang chủ">
             <div class="logo-icon">
-              <svg width="40" height="40" viewBox="0 0 44 44" fill="none">
-                <rect width="44" height="44" rx="12" fill="url(#footer-logo-grad2)"/>
-                <defs>
-                  <linearGradient id="footer-logo-grad2" x1="0" y1="0" x2="44" y2="44">
-                    <stop offset="0%" stop-color="#FF5E36"/>
-                    <stop offset="100%" stop-color="#FF2A6D"/>
-                  </linearGradient>
-                </defs>
-                <text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle" font-family="Inter" font-weight="900" font-size="18" fill="white">WC</text>
-              </svg>
+              <svg width="40" height="40" viewBox="0 0 44 44" fill="none"><rect width="44" height="44" rx="12" fill="url(#footer-logo-grad2)"/><defs><linearGradient id="footer-logo-grad2" x1="0" y1="0" x2="44" y2="44"><stop offset="0%" stop-color="#FF5E36"/><stop offset="100%" stop-color="#FF2A6D"/></linearGradient></defs><text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle" font-family="Inter" font-weight="900" font-size="18" fill="white">WC</text></svg>
             </div>
-            <span class="logo-text">WebComics</span>
+            <span class="logo-text">{{ $siteSettings['site_name'] ?? 'WebComics' }}</span>
           </a>
-          <p class="fbrand-desc">Nền tảng đọc Manga, Manhwa và Manhua trực tuyến.</p>
+          <p class="fbrand-desc">{{ $siteSettings['tagline'] ?? 'Nền tảng đọc Manga, Manhwa và Manhua trực tuyến.' }}</p>
         </div>
 
-        <div class="fgrid-col">
-          <h4 class="fcol-heading">Khám Phá</h4>
-          <ul class="fcol-list">
-            <li><a href="{{ route('home') }}">Truyện Thịnh Hành</a></li>
-            <li><a href="{{ route('genres') }}">Tất Cả Thể Loại</a></li>
-            <li><a href="{{ route('schedule') }}">Lịch Ra Truyện</a></li>
-            <li><a href="{{ route('originals') }}">Truyện Độc Quyền</a></li>
-          </ul>
-        </div>
+        <div class="fgrid-col"><h4 class="fcol-heading">Khám Phá</h4><ul class="fcol-list"><li><a href="{{ route('home') }}">Truyện Thịnh Hành</a></li><li><a href="{{ route('genres') }}">Tất Cả Thể Loại</a></li><li><a href="{{ route('schedule') }}">Lịch Ra Truyện</a></li><li><a href="{{ route('originals') }}">Truyện Độc Quyền</a></li></ul></div>
 
         <div class="fgrid-col">
           <h4 class="fcol-heading">Tài Khoản</h4>
           <ul class="fcol-list">
             @guest
-              <li><a href="{{ route('login') }}">Đăng Nhập</a></li>
-              <li><a href="{{ route('register') }}">Đăng Ký</a></li>
+              <li><a href="{{ route('login') }}">Đăng Nhập</a></li><li><a href="{{ route('register') }}">Đăng Ký</a></li>
             @else
               <li><a href="{{ route('user.library') }}">Tủ Truyện</a></li>
-              @if(auth()->user()->isAdmin())
-                <li><a href="{{ route('admin.dashboard') }}">Trang Quản Trị</a></li>
-              @endif
+              @if(auth()->user()->isAdmin())<li><a href="{{ route('admin.dashboard') }}">Trang Quản Trị</a></li>@endif
             @endguest
           </ul>
         </div>
 
-        <div class="fgrid-col">
-          <h4 class="fcol-heading">Hỗ Trợ</h4>
-          <ul class="fcol-list">
-            <li><a href="#">Điều Khoản Sử Dụng</a></li>
-            <li><a href="#">Chính Sách Riêng Tư</a></li>
-            <li><a href="#">Bản Quyền & DMCA</a></li>
-            <li><a href="#">Trung Tâm Trợ Giúp</a></li>
-          </ul>
-        </div>
+        <div class="fgrid-col"><h4 class="fcol-heading">Hỗ Trợ</h4><ul class="fcol-list"><li><a href="#">Điều Khoản Sử Dụng</a></li><li><a href="#">Chính Sách Riêng Tư</a></li><li><a href="#">Bản Quyền & DMCA</a></li><li><a href="#">Trung Tâm Trợ Giúp</a></li></ul></div>
       </div>
 
       <div class="footer-bottom-bar">
-        <div class="fbottom-left">
-          <p class="fcopy-text">&copy; {{ date('Y') }} WebComics. All rights reserved.</p>
-        </div>
-        <div class="fbottom-right">
-          <div class="lang-selector">
-            <span class="lang-icon">🌐</span>
-            <select class="lang-select" aria-label="Ngôn ngữ">
-              <option value="vi" selected>Tiếng Việt</option>
-              <option value="en">English</option>
-            </select>
-          </div>
-        </div>
+        <div class="fbottom-left"><p class="fcopy-text">&copy; {{ date('Y') }} {{ $siteSettings['site_name'] ?? 'WebComics' }}. All rights reserved.</p></div>
+        <div class="fbottom-right"><div class="lang-selector"><span class="lang-icon">🌐</span><select class="lang-select" aria-label="Ngôn ngữ"><option value="vi" selected>Tiếng Việt</option><option value="en">English</option></select></div></div>
       </div>
     </div>
   </footer>
-  {{-- ===================== END FOOTER ===================== --}}
 
   <script src="{{ asset('js/app.js') }}"></script>
   @stack('scripts')
