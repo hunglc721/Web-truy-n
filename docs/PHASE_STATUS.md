@@ -1,54 +1,68 @@
 # Current Migration Phase Status
 
-## Completed in `feat/merge-prototype-into-laravel-blade`
+## Completed on `main`
 
-### Phase 1 — Architecture and authorization boundary
-- Laravel is the single real application.
-- Guest reading remains public.
-- Member-only actions remain behind `auth`.
-- Admin remains protected by `AdminMiddleware` + `is_admin`.
-- Existing Laravel auth/models/services were preserved instead of rewritten.
+### Architecture / runtime
+- Laravel Blade is the single real application.
+- `prototype/` is UI/UX reference only.
+- Root Node mock server is removed from runtime.
+- Laravel DB/Auth/API/validation/business logic remain the source of truth.
 
-### Phase 2 — Shared client integration
-- Added same-origin `public/js/app.js`.
-- Live search uses `/api/search/live`.
-- Prototype carousel/banner interactions work without Node/mock API dependencies.
-- Shared Blade header now renders Guest, Member and Admin states directly.
-- JS no longer probes protected APIs to guess login state.
+### Public / Member
+- Home, Genres, Schedule, Originals, Comic Detail and Reader are Laravel-backed.
+- Guest reading stays public.
+- Library, History, Comic Likes, Comments, Replies, Comment Likes, Ratings/Reviews and User Hub use Laravel data/auth.
+- Prototype localStorage/mock business state is not used by Laravel runtime.
 
-### Phase 3 — One runtime / one URL
-- Removed root `server.js` standalone Node prototype runtime.
-- Rewrote README to document only `laravel-blade` as the runtime.
-- Added `prototype/README.md` marking prototype files as UI reference only.
+### Admin
+- Comics, Chapters, Genres, Tags, Authors, Users, Comments, Reports, Schedules, Banners, Analytics, Audit Logs and Settings use real Laravel backend flows.
+- Authors now include search, upload/preview, validation, safe delete and audit logging.
+- Users now include Member/Admin/Moderator/Editor/Viewer roles, stats, filtering, role assignment and ban safety.
+- Schedule now supports real add/update/delete/active-state interactions and feeds the public `/schedule` page.
+- Audit Log now shows real actor/action/subject/IP/payload and only supports retention cleanup rather than destructive wipe-all.
 
-### Phase 4 — Admin prototype gaps
-- Fixed broken Admin layout structure by restoring the missing `.admin-sidebar` wrapper.
-- Added `/admin/analytics` backed by real DB metrics.
-- Added `/admin/permissions` Blade page mapped to the real 2-role Member/Admin model.
-- Added `/admin/settings` as a real persistent module instead of localStorage.
+### Roles / Permissions
+- Added DB-backed `roles`, `permissions` and `permission_role` tables.
+- Existing Admin accounts remain compatible through `is_admin`.
+- Added granular `permission:*` route middleware.
+- Admin always has full access.
+- Moderator, Editor and Viewer are granted scoped permissions from DB.
+- `/admin/permissions` edits the real permission matrix.
+- Admin sidebar renders modules according to permissions while backend routes independently enforce authorization.
 
-### Phase 5 — Persistent site settings / maintenance
-- Added `settings` table and `Setting` model.
-- Added `AdminSettingController` and DB-backed settings form.
-- Public layout consumes site name, tagline and default SEO metadata from settings.
-- Added maintenance middleware and 503 page.
-- Admin/login remains reachable while maintenance is active.
+### Responsive / cleanup
+- Admin shell now uses an off-canvas mobile sidebar and responsive shared components.
+- Major Admin tables/modals have responsive overflow/layout handling.
+- Fake Download App promo was removed because the app-download feature is deferred.
+- Coin Store and internal Creator Publishing remain intentionally out of scope.
+- Searches found no Laravel runtime references to `localhost:3000` or business `localStorage` state.
 
-### Phase 6 — Regression coverage added
-- `GuestReaderAccessTest`
-- `HeaderRoleStateTest`
-- `AdminSettingsTest`
-- `AdminAnalyticsTest`
-- Existing Admin/Comment/CRUD tests remain in the suite.
+### Regression coverage added
+- Existing Guest/Auth/Header/Settings/Analytics tests retained.
+- Added role/permission enforcement coverage.
+- Added Author management constraints/search coverage.
+- Added Schedule CRUD/public synchronization coverage.
+- Added User role/ban safety coverage.
+- Updated AdminMiddleware coverage for DB-backed staff roles.
 
-## Remaining work
+## Remaining verification
 
-- Visual parity review for Schedule and Originals.
-- Visual parity review for Reader while preserving publish gate/history/reporting.
-- Visual parity review for Member Library.
-- Visual parity review for each existing Admin CRUD screen against prototype.
-- Review any prototype-only decorative/client interactions that still make sense after Laravel integration.
-- Run the complete Laravel test suite in a PHP/Composer environment and fix any failures.
-- Final branch diff/review before merge into `main`.
+Implementation work for the agreed migration scope is complete. The remaining step is environment verification:
 
-`prototype/` itself does not need to be deleted: it remains useful as design documentation, but it is no longer executable product runtime.
+```bash
+cd laravel-blade
+php artisan migrate
+php artisan optimize:clear
+php artisan route:list
+php artisan test
+```
+
+The full suite has **not** been executed through the current GitHub-only editing environment, so regression status must remain unverified until those commands are run locally.
+
+## Deferred intentionally
+
+- Coin Store / payment / wallet
+- Real mobile app download
+- Internal Creator Publishing portal
+
+These are product features, not unfinished prototype-to-Blade migration requirements for the current scope.
