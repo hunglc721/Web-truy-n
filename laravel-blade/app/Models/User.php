@@ -102,6 +102,14 @@ class User extends Authenticatable
     }
 
     /**
+     * Nhật ký hoạt động của user.
+     */
+    public function activityLogs(): HasMany
+    {
+        return $this->hasMany(ActivityLog::class);
+    }
+
+    /**
      * Các truyện user đã thích.
      * Auth::user()->likes
      */

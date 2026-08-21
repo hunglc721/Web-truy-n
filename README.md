@@ -193,13 +193,16 @@ php artisan serve
 * 📊 **Dashboard Thống Kê Tổng Quan (Realtime Admin Dashboard):**
   * Trang tổng quan trung tâm tại `/admin`, thống kê 6 chỉ số quan trọng (Tổng truyện, Chapter, Thành viên, Lượt đọc, Bình luận chờ duyệt, Báo cáo sự cố).
   * Điều hướng nhanh tới các khu vực quản trị, bảng Top truyện xem nhiều nhất và Feed hoạt động quản trị gần đây (Activity Logs).
+* 📜 **Giao Diện Tra Cứu Nhật Ký Hoạt Động (Audit Logs Center):**
+  * Bảng tra cứu toàn diện tại `/admin/logs`, hỗ trợ lọc theo từ khóa, nhóm hành động (`admin.comic`, `admin.comment`, `admin.report`, `admin.schedule`, `admin.banner`, `admin.user`, `auth`), theo tài khoản quản trị và khoảng thời gian.
+  * Hiển thị chi tiết payload JSON, địa chỉ IP và phân loại badge màu trực quan theo từng loại thao tác.
+  * Hỗ trợ dọn dẹp nhật ký cũ (30 ngày, 60 ngày, 90 ngày hoặc toàn bộ) an toàn.
 
 #### 🚧 Các module giao diện mẫu (Đang trong lộ trình phát triển / Hiện là View tĩnh):
 > ℹ️ *Các route dưới đây đã được định tuyến trong `routes/web.php` và trả về giao diện Blade mẫu để tham khảo UI, chưa gắn controller xử lý nghiệp vụ CSDL thực tế:*
 
 * 🔑 **Phân Quyền Chi Tiết (`/admin/permissions`):** *(chưa hoàn thiện)* — Giao diện mẫu ma trận quyền hạn nâng cao. (Hệ thống hiện phân quyền theo 2 cấp độ: Admin và Member qua `AdminMiddleware`).
 * ⚙️ **Cài Đặt Hệ Thống (`/admin/settings`):** *(chưa hoàn thiện)* — Giao diện mẫu cấu hình website.
-* 📜 **Giao Diện Xem Nhật Ký Hệ Thống (Audit Logs):** *(chưa hoàn thiện)* — Model `ActivityLog` và cơ chế ghi log tự động khi tạo/sửa/xóa/đăng nhập đã hoạt động ngầm trong CSDL, giao diện bảng tra cứu chuyên biệt trên Admin đang được phát triển.
 
 ---
 

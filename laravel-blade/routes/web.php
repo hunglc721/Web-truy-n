@@ -23,6 +23,7 @@ use App\Http\Controllers\Admin\AdminReportController;
 use App\Http\Controllers\Admin\AdminScheduleController;
 use App\Http\Controllers\Admin\AdminBannerController;
 use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\AdminAuditLogController;
 use App\Http\Middleware\AdminMiddleware;
 
 /*
@@ -179,6 +180,10 @@ Route::middleware(['auth', AdminMiddleware::class])->prefix('admin')->name('admi
     Route::put('/banners/{banner}', [AdminBannerController::class, 'update'])->name('banners.update');
     Route::patch('/banners/{banner}/toggle-active', [AdminBannerController::class, 'toggleActive'])->name('banners.toggleActive');
     Route::delete('/banners/{banner}', [AdminBannerController::class, 'destroy'])->name('banners.destroy');
+
+    // ── Nhật Ký Hoạt Động Hệ Thống (Audit Logs) ───────────────────────
+    Route::get('/logs', [AdminAuditLogController::class, 'index'])->name('logs.index');
+    Route::delete('/logs/clear', [AdminAuditLogController::class, 'clear'])->name('logs.clear');
 
     // ── Vận hành & Hệ thống ────────────────────────────────────────────
     Route::get('/permissions', fn() => view('admin.permissions.index'))->name('permissions.index');
