@@ -12,6 +12,10 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\LibraryController;
 use App\Http\Controllers\ComicActionController;
 use App\Http\Controllers\RecommendationController;
+use App\Http\Controllers\RatingController;
+use App\Http\Controllers\SearchController;
+use App\Http\Controllers\UserDashboardController;
+use App\Http\Controllers\UserStatisticsController;
 use App\Http\Controllers\Admin\AdminComicController;
 use App\Http\Controllers\Admin\AdminGenreController;
 use App\Http\Controllers\Admin\AdminTagController;
@@ -26,9 +30,6 @@ use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminAnalyticsController;
 use App\Http\Controllers\Admin\AdminAuditLogController;
 use App\Http\Controllers\Admin\AdminSettingController;
-use App\Http\Controllers\RatingController;
-use App\Http\Controllers\SearchController;
-use App\Http\Controllers\UserStatisticsController;
 use App\Http\Middleware\AdminMiddleware;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -47,6 +48,12 @@ Route::middleware('guest')->group(function () {
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->name('logout');
 
 Route::middleware('auth')->group(function () {
+    Route::get('/user', [UserDashboardController::class, 'dashboard'])->name('user.dashboard');
+    Route::get('/user/history', [UserDashboardController::class, 'history'])->name('user.history');
+    Route::get('/user/likes', [UserDashboardController::class, 'likes'])->name('user.likes');
+    Route::get('/user/comments', [UserDashboardController::class, 'comments'])->name('user.comments');
+    Route::get('/user/ratings', [UserDashboardController::class, 'ratings'])->name('user.ratings');
+
     Route::get('/user/library', [LibraryController::class, 'index'])->name('user.library');
     Route::post('/user/library/toggle/{comic}', [LibraryController::class, 'toggle'])->name('library.toggle');
     Route::delete('/user/history/clear', [LibraryController::class, 'clearHistory'])->name('history.clear');
@@ -55,6 +62,8 @@ Route::middleware('auth')->group(function () {
         ->middleware('throttle:history-save')->name('history.save');
     Route::post('/api/comments', [CommentController::class, 'store'])
         ->middleware('throttle:comments')->name('comments.store');
+    Route::post('/api/comments/{comment}/toggle-like', [CommentController::class, 'toggleLike'])
+        ->middleware('throttle:like-toggle')->name('comments.toggleLike');
     Route::patch('/api/comments/{comment}', [CommentController::class, 'update'])->name('comments.update');
     Route::delete('/api/comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy');
 
