@@ -13,25 +13,15 @@ class LibraryController extends Controller
         protected LibraryService $libraryService
     ) {}
 
-    /**
-     * Trang Tủ sách cá nhân & Lịch sử đọc của User
-     * URL: /user/library
-     */
     public function index()
     {
         $user = Auth::user();
-
         $libraries = $this->libraryService->getUserLibrary($user, 12);
-        $readingHistories = $this->libraryService->getReadingHistory($user, 20);
         $stats = $this->libraryService->getUserReadingStats($user);
 
-        return view('user.library', compact('libraries', 'readingHistories', 'stats'));
+        return view('user.library', compact('libraries', 'stats'));
     }
 
-    /**
-     * API / Route AJAX xử lý nút "Theo dõi" / "Bỏ theo dõi" (Toggle Bookmark)
-     * URL: POST /user/library/toggle/{comic}
-     */
     public function toggle(Request $request, Comic $comic)
     {
         $user = Auth::user();
@@ -39,11 +29,12 @@ class LibraryController extends Controller
         if (!$user) {
             if ($request->expectsJson() || $request->ajax()) {
                 return response()->json([
-                    'status'  => 'unauthorized',
-                    'message' => 'Vui lòng đăng nhập để thực hiện chức năng Theo dõi truyện.',
-                    'redirect'=> route('login'),
+                    'status'   => 'unauthorized',
+                    'message'  => 'Vui lòng đăng nhập để theo dõi truyện.',
+                    'redirect' => route('login'),
                 ], 401);
             }
+
             return redirect()->route('login')->with('error', 'Vui lòng đăng nhập để theo dõi truyện!');
         }
 
@@ -61,10 +52,6 @@ class LibraryController extends Controller
         return back()->with('success', $result['message']);
     }
 
-    /**
-     * Xóa toàn bộ Lịch sử đọc của User
-     * URL: DELETE /user/history/clear
-     */
     public function clearHistory(Request $request)
     {
         $user = Auth::user();
