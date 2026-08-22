@@ -23,45 +23,198 @@
     right?.addEventListener('click', () => list.scrollBy({ left: amount(), behavior: 'smooth' }));
   });
 
+  // Setup Genre Tabs Scroll & Navigation Buttons
+  $$('.genre-tabs-wrapper').forEach((wrap) => {
+    const list = $('.genre-tabs', wrap);
+    const leftBtn = $('.genre-scroll-left', wrap);
+    const rightBtn = $('.genre-scroll-right', wrap);
+    if (!list) return;
+
+    const updateButtons = () => {
+      const maxScroll = list.scrollWidth - list.clientWidth;
+      if (maxScroll <= 5) {
+        if (leftBtn) leftBtn.style.display = 'none';
+        if (rightBtn) rightBtn.style.display = 'none';
+        return;
+      }
+      if (leftBtn) {
+        leftBtn.style.display = 'flex';
+        leftBtn.disabled = list.scrollLeft <= 5;
+        leftBtn.classList.toggle('disabled', list.scrollLeft <= 5);
+      }
+      if (rightBtn) {
+        rightBtn.style.display = 'flex';
+        rightBtn.disabled = list.scrollLeft >= maxScroll - 5;
+        rightBtn.classList.toggle('disabled', list.scrollLeft >= maxScroll - 5);
+      }
+    };
+
+    const scrollAmount = () => Math.max(220, Math.floor(list.clientWidth * 0.65));
+    leftBtn?.addEventListener('click', () => {
+      list.scrollBy({ left: -scrollAmount(), behavior: 'smooth' });
+    });
+    rightBtn?.addEventListener('click', () => {
+      list.scrollBy({ left: scrollAmount(), behavior: 'smooth' });
+    });
+
+    list.addEventListener('scroll', updateButtons, { passive: true });
+    window.addEventListener('resize', updateButtons, { passive: true });
+
+    // Scroll active item into view
+    const activeTab = $('.genre-tab.active', list);
+    if (activeTab) {
+      activeTab.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    }
+
+    setTimeout(updateButtons, 80);
+  });
+
   const searchInput = $('#search-input');
   const searchDropdown = $('#search-dropdown');
   let searchTimer = null;
   const closeSearch = () => searchDropdown?.classList.remove('visible');
   const openSearch = () => searchDropdown?.classList.add('visible');
 
-  // Load and display hot search keywords
-  const loadHotKeywords = async () => {
+  // Search History Management
+  const SEARCH_HISTORY_KEY = 'webcomics_search_history';
+  const MAX_SEARCH_HISTORY = 8;
+
+  const getSearchHistory = () => {
+    try {
+      const raw = localStorage.getItem(SEARCH_HISTORY_KEY);
+      const parsed = raw ? JSON.parse(raw) : [];
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (_) {
+      return [];
+    }
+  };
+
+  const saveSearchHistory = (history) => {
+    try {
+      localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(history.slice(0, MAX_SEARCH_HISTORY)));
+    } catch (_) {}
+  };
+
+  const addSearchHistory = (term) => {
+    const clean = (term || '').trim();
+    if (!clean || clean.length < 2) return;
+    const history = getSearchHistory().filter(item => item.toLowerCase() !== clean.toLowerCase());
+    history.unshift(clean);
+    saveSearchHistory(history);
+  };
+
+  const removeSearchHistoryItem = (term) => {
+    const history = getSearchHistory().filter(item => item !== term);
+    saveSearchHistory(history);
+  };
+
+  const clearSearchHistory = () => {
+    try {
+      localStorage.removeItem(SEARCH_HISTORY_KEY);
+    } catch (_) {}
+  };
+
+  // Render initial dropdown with search history & hot keywords
+  const renderInitialSearchDropdown = async () => {
     if (!searchDropdown) return;
+    searchDropdown.innerHTML = '';
+
+    const history = getSearchHistory();
+    const hasHistory = history.length > 0;
+
+    if (hasHistory) {
+      const histSection = document.createElement('div');
+      histSection.className = 'search-section';
+      histSection.innerHTML = `
+        <div class="search-section-header">
+          <span class="search-section-title">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Lịch sử tìm kiếm
+          </span>
+          <button type="button" class="btn-clear-history" id="clear-all-history-btn">Xoá tất cả</button>
+        </div>
+        <div class="search-history-chips"></div>
+      `;
+
+      const chipsWrap = histSection.querySelector('.search-history-chips');
+      history.forEach((keyword) => {
+        const chip = document.createElement('div');
+        chip.className = 'search-history-chip';
+        chip.innerHTML = `
+          <span class="history-chip-text" title="${escapeHtml(keyword)}">
+            <svg class="history-clock-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            ${escapeHtml(keyword)}
+          </span>
+          <button type="button" class="history-chip-del" title="Xoá mục này">&times;</button>
+        `;
+
+        chip.querySelector('.history-chip-text').addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (searchInput) searchInput.value = keyword;
+          addSearchHistory(keyword);
+          window.location.href = `/genres?q=${encodeURIComponent(keyword)}`;
+        });
+
+        chip.querySelector('.history-chip-del').addEventListener('click', (e) => {
+          e.stopPropagation();
+          removeSearchHistoryItem(keyword);
+          renderInitialSearchDropdown();
+        });
+
+        chipsWrap.appendChild(chip);
+      });
+
+      histSection.querySelector('#clear-all-history-btn')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        clearSearchHistory();
+        renderInitialSearchDropdown();
+      });
+
+      searchDropdown.appendChild(histSection);
+    }
+
+    // Hot keywords section
     try {
       const res = await fetch('/api/search/hot', { headers: { Accept: 'application/json' } });
-      if (!res.ok) return;
-      const data = await res.json();
-      const keywords = data.data || [];
-      if (!keywords.length) return;
-
-      searchDropdown.innerHTML = '<div class="search-recent-title" style="padding:8px 12px;font-weight:800;font-size:12px;color:var(--text-sub);">🔥 TỪ KHOÁ HOT</div>';
-      const wrap = document.createElement('div');
-      wrap.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;padding:4px 12px 12px;';
-
-      keywords.forEach((kw) => {
-        const chip = document.createElement('a');
-        chip.href = `/genres?q=${encodeURIComponent(kw.keyword)}`;
-        chip.className = 'chip';
-        chip.style.cssText = 'font-size:12px;padding:4px 10px;text-decoration:none;border-radius:999px;background:rgba(255,255,255,.08);color:#fff;display:inline-flex;align-items:center;gap:4px;';
-        chip.innerHTML = `<span>🔍</span> ${escapeHtml(kw.keyword)}`;
-        chip.addEventListener('click', (e) => {
-          if (searchInput) searchInput.value = kw.keyword;
-        });
-        wrap.appendChild(chip);
-      });
-      searchDropdown.appendChild(wrap);
+      if (res.ok) {
+        const data = await res.json();
+        const keywords = data.data || [];
+        if (keywords.length) {
+          const hotSection = document.createElement('div');
+          hotSection.className = 'search-section';
+          if (hasHistory) {
+            hotSection.style.borderTop = '1px solid rgba(255,255,255,0.06)';
+            hotSection.style.marginTop = '4px';
+            hotSection.style.paddingTop = '6px';
+          }
+          hotSection.innerHTML = `
+            <div class="search-section-header">
+              <span class="search-section-title">🔥 TỪ KHOÁ HOT</span>
+            </div>
+            <div class="search-hot-chips"></div>
+          `;
+          const hotWrap = hotSection.querySelector('.search-hot-chips');
+          keywords.forEach((kw) => {
+            const chip = document.createElement('a');
+            chip.href = `/genres?q=${encodeURIComponent(kw.keyword)}`;
+            chip.className = 'search-hot-chip';
+            chip.innerHTML = `<span>🔥</span> ${escapeHtml(kw.keyword)}`;
+            chip.addEventListener('click', () => {
+              if (searchInput) searchInput.value = kw.keyword;
+              addSearchHistory(kw.keyword);
+            });
+            hotWrap.appendChild(chip);
+          });
+          searchDropdown.appendChild(hotSection);
+        }
+      }
     } catch (_) {}
   };
 
   searchInput?.addEventListener('focus', () => {
     openSearch();
     if (!searchInput.value.trim()) {
-      loadHotKeywords();
+      renderInitialSearchDropdown();
     }
   });
 
@@ -69,6 +222,7 @@
     if (e.key === 'Enter') {
       const q = searchInput.value.trim();
       if (q) {
+        addSearchHistory(q);
         window.location.href = `/genres?q=${encodeURIComponent(q)}`;
       }
     }
@@ -80,7 +234,7 @@
     clearTimeout(searchTimer);
 
     if (!q) {
-      loadHotKeywords();
+      renderInitialSearchDropdown();
       return;
     }
 
@@ -122,6 +276,9 @@
               </div>
             </div>
           `;
+          el.addEventListener('click', () => {
+            if (title) addSearchHistory(title);
+          });
           searchDropdown.appendChild(el);
         });
 
@@ -129,8 +286,11 @@
         const viewAll = document.createElement('a');
         viewAll.href = `/genres?q=${encodeURIComponent(q)}`;
         viewAll.className = 'search-item';
-        viewAll.style.cssText = 'display:block;text-align:center;padding:10px;font-size:13px;font-weight:700;color:var(--primary);background:rgba(255,94,54,.08);';
+        viewAll.style.cssText = 'display:block;text-align:center;padding:10px;font-size:13px;font-weight:700;color:var(--primary);background:rgba(255,94,54,.08);border-radius:8px;margin-top:4px;';
         viewAll.innerHTML = `Xem tất cả kết quả cho "${escapeHtml(q)}" →`;
+        viewAll.addEventListener('click', () => {
+          addSearchHistory(q);
+        });
         searchDropdown.appendChild(viewAll);
       } catch (_) {}
     }, 180);
@@ -355,7 +515,8 @@
         all.className = 'wc-notification-all';
         all.textContent = 'Xem tất cả thông báo';
         dropdown.appendChild(all);
-      }
+      } catch (_) {}
+    }
   }
 
   function setupGuestContinueReading() {

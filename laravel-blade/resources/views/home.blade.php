@@ -121,7 +121,24 @@
     </div>
   </section>
 
-  <section class="genre-section" id="genre-section"><div class="container"><div class="genre-tabs" id="genre-tabs" role="tablist"><a href="{{ route('genres') }}" class="genre-tab {{ !request('genre')?'active':'' }}">Tất Cả</a>@foreach($genres as $genre)<a href="{{ route('genres',['genre'=>$genre->slug]) }}" class="genre-tab {{ request('genre')===$genre->slug?'active':'' }}">{{ $genre->icon }} {{ $genre->name }}</a>@endforeach</div></div></section>
+  <section class="genre-section" id="genre-section">
+    <div class="container">
+      <div class="genre-tabs-wrapper">
+        <button type="button" class="genre-scroll-btn genre-scroll-left" aria-label="Cuộn trái" title="Xem các mục trước">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div class="genre-tabs" id="genre-tabs" role="tablist">
+          <a href="{{ route('genres') }}" class="genre-tab {{ !request('genre')?'active':'' }}">Tất Cả</a>
+          @foreach($genres as $genre)
+            <a href="{{ route('genres',['genre'=>$genre->slug]) }}" class="genre-tab {{ request('genre')===$genre->slug?'active':'' }}">{{ $genre->icon }} {{ $genre->name }}</a>
+          @endforeach
+        </div>
+        <button type="button" class="genre-scroll-btn genre-scroll-right" aria-label="Cuộn phải" title="Xem thêm thể loại">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+    </div>
+  </section>
 
   <section class="comics-section" id="new-updates-section"><div class="container"><div class="section-header"><h2 class="section-title">📚 Chương Mới Cập Nhật</h2><a href="{{ route('genres') }}" class="see-all">Xem Tất Cả →</a></div><div class="comics-grid" id="new-updates-grid">
     @forelse($latestUpdates as $comic)

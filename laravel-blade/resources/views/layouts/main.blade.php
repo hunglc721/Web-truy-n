@@ -26,19 +26,61 @@
   <header class="site-header" id="site-header">
     <div class="header-inner">
       <div class="header-left">
-        <a href="{{ route('home') }}" class="logo-link" aria-label="{{ $siteSettings['site_name'] ?? 'WebComics' }} Trang chủ"><div class="logo-icon"><svg width="42" height="42" viewBox="0 0 44 44" fill="none"><rect width="44" height="44" rx="12" fill="url(#logo-grad)"/><defs><linearGradient id="logo-grad" x1="0" y1="0" x2="44" y2="44"><stop offset="0%" stop-color="#FF5E36"/><stop offset="100%" stop-color="#FF2A6D"/></linearGradient></defs><text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle" font-family="Inter" font-weight="900" font-size="18" fill="white">WC</text></svg></div><span class="logo-text">{{ $siteSettings['site_name'] ?? 'WebComics' }}</span></a>
-        <nav class="main-nav" aria-label="Menu chính"><a href="{{ route('home') }}" class="nav-link {{ request()->routeIs('home') ? 'active' : '' }}">Trang Chủ</a><a href="{{ route('genres') }}" class="nav-link {{ request()->routeIs('genres') ? 'active' : '' }}">Thể Loại</a><a href="{{ route('schedule') }}" class="nav-link {{ request()->routeIs('schedule') ? 'active' : '' }}">Lịch Ra Truyện</a><a href="{{ route('originals') }}" class="nav-link {{ request()->routeIs('originals') ? 'active' : '' }}">Độc Quyền</a></nav>
+        <a href="{{ route('home') }}" class="logo-link" aria-label="{{ $siteSettings['site_name'] ?? 'WebComics' }} Trang chủ">
+          <div class="logo-icon">
+            <svg width="40" height="40" viewBox="0 0 44 44" fill="none">
+              <rect width="44" height="44" rx="13" fill="url(#logo-grad)"/>
+              <defs>
+                <linearGradient id="logo-grad" x1="0" y1="0" x2="44" y2="44">
+                  <stop offset="0%" stop-color="#FF5E36"/>
+                  <stop offset="100%" stop-color="#FF2A6D"/>
+                </linearGradient>
+              </defs>
+              <text x="50%" y="54%" dominant-baseline="middle" text-anchor="middle" font-family="Inter, -apple-system, sans-serif" font-weight="900" font-size="19" fill="white" letter-spacing="-0.5">WC</text>
+            </svg>
+          </div>
+          <span class="logo-text">{{ $siteSettings['site_name'] ?? 'WebComics' }}</span>
+        </a>
+        <nav class="main-nav" aria-label="Menu chính">
+          <a href="{{ route('home') }}" class="nav-link {{ request()->routeIs('home') ? 'active' : '' }}">Trang Chủ</a>
+          <a href="{{ route('genres') }}" class="nav-link {{ request()->routeIs('genres') ? 'active' : '' }}">Thể Loại</a>
+          <a href="{{ route('schedule') }}" class="nav-link {{ request()->routeIs('schedule') ? 'active' : '' }}">Lịch Ra Truyện</a>
+          <a href="{{ route('originals') }}" class="nav-link {{ request()->routeIs('originals') ? 'active' : '' }}">Độc Quyền</a>
+        </nav>
       </div>
       <div class="header-right">
-        <div class="search-wrap"><input id="search-input" type="search" placeholder="Tìm kiếm truyện tranh..." aria-label="Tìm kiếm" class="search-input" autocomplete="off" /><span class="search-icon" aria-hidden="true"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span><div class="search-dropdown" id="search-dropdown"><div class="search-recent-title">Tìm kiếm thịnh hành</div></div></div>
-        <button type="button" class="header-action-link" id="pwa-install-btn" style="display:none;background:rgba(255,94,54,.15);color:var(--primary);border:1px solid rgba(255,94,54,.3);border-radius:8px;padding:6px 12px;font-weight:700;cursor:pointer;align-items:center;gap:4px;">📲 Cài App</button>
-        <a href="https://comicscreator.webcomicsapp.com/#/login" target="_blank" rel="noopener" class="header-action-link" id="publish-link">Đăng Truyện</a><div class="header-divider"></div>
-        <div class="nav-icon-group"><a class="icon-btn" id="library-btn" aria-label="Tủ truyện" title="Tủ truyện" href="{{ auth()->check() ? route('user.library') : route('login') }}"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></a></div>
+        <div class="search-wrap">
+          <input id="search-input" type="search" placeholder="Tìm kiếm truyện..." aria-label="Tìm kiếm truyện tranh" class="search-input" autocomplete="off" />
+          <span class="search-icon" aria-hidden="true">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <circle cx="11" cy="11" r="8"/>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+          </span>
+          <div class="search-dropdown" id="search-dropdown">
+            <div class="search-recent-title">Tìm kiếm thịnh hành</div>
+          </div>
+        </div>
+        <button type="button" class="header-action-link" id="pwa-install-btn" style="display:none;background:rgba(255,94,54,.15);color:var(--primary);border:1px solid rgba(255,94,54,.3);border-radius:999px;padding:6px 14px;font-weight:700;cursor:pointer;align-items:center;gap:6px;">📲 Cài App</button>
+        <a href="https://comicscreator.webcomicsapp.com/#/login" target="_blank" rel="noopener" class="header-action-link" id="publish-link" title="Đăng truyện cho tác giả & nhóm dịch">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+          <span>Đăng Truyện</span>
+        </a>
+        <div class="header-divider"></div>
+        <div class="nav-icon-group">
+          <a class="icon-btn" id="library-btn" aria-label="Tủ truyện" title="Tủ truyện của bạn" href="{{ auth()->check() ? route('user.library') : route('login') }}">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+            </svg>
+          </a>
+        </div>
         @guest
-          <a href="{{ route('login') }}" class="btn btn-login" style="text-decoration:none">Đăng Nhập</a><a href="{{ route('register') }}" class="btn btn-download" style="text-decoration:none">Đăng Ký</a>
+          <a href="{{ route('login') }}" class="btn btn-login">Đăng Nhập</a>
+          <a href="{{ route('register') }}" class="btn btn-download">Đăng Ký</a>
         @else
-          @if(auth()->user()->canAccessAdmin())<a href="{{ route('admin.dashboard') }}" class="btn btn-login" style="background:var(--primary);text-decoration:none">🛡️ Quản Trị</a>@endif
-          <a href="{{ route('user.dashboard') }}" class="btn btn-login" style="text-decoration:none;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="Khu vực thành viên của {{ auth()->user()->name }}">👤 {{ auth()->user()->name }}</a>
+          @if(auth()->user()->canAccessAdmin())<a href="{{ route('admin.dashboard') }}" class="btn btn-login" style="background:linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%);color:#fff;border-color:transparent">🛡️ Quản Trị</a>@endif
+          <a href="{{ route('user.dashboard') }}" class="btn btn-login" style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="Khu vực thành viên của {{ auth()->user()->name }}">👤 {{ auth()->user()->name }}</a>
           <form action="{{ route('logout') }}" method="POST" style="margin:0">@csrf<button type="submit" class="btn btn-download">Đăng Xuất</button></form>
         @endguest
       </div>

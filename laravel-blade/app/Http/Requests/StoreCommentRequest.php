@@ -90,6 +90,7 @@ class StoreCommentRequest extends FormRequest
             ],
 
             'content' => "required|string|min:{$minLength}|max:{$maxLength}",
+            '_hp_website_title' => 'nullable|max:0', // Honeypot field: must be empty
         ];
     }
 

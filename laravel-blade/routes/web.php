@@ -64,13 +64,39 @@ Route::post('/api/teams/{id}/follow', [\App\Http\Controllers\TeamController::cla
 Route::post('/api/push/subscribe', [\App\Http\Controllers\PushNotificationController::class, 'subscribe'])->name('api.push.subscribe');
 Route::post('/api/push/unsubscribe', [\App\Http\Controllers\PushNotificationController::class, 'unsubscribe'])->name('api.push.unsubscribe');
 
+Route::get('/auth/{provider}/redirect', [\App\Http\Controllers\SocialAuthController::class, 'redirect'])->name('auth.social.redirect');
+Route::get('/auth/{provider}/callback', [\App\Http\Controllers\SocialAuthController::class, 'callback'])->name('auth.social.callback');
+
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [AuthController::class, 'login']);
     Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
     Route::post('/register', [AuthController::class, 'register']);
+
+    Route::get('/forgot-password', [\App\Http\Controllers\PasswordResetController::class, 'showForgotForm'])->name('password.request');
+    Route::post('/forgot-password', [\App\Http\Controllers\PasswordResetController::class, 'sendResetLink'])->name('password.email');
+    Route::get('/reset-password/{token}', [\App\Http\Controllers\PasswordResetController::class, 'showResetForm'])->name('password.reset');
+    Route::post('/reset-password', [\App\Http\Controllers\PasswordResetController::class, 'reset'])->name('password.update');
 });
+
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->name('logout');
+
+// Email Verification Routes
+Route::middleware('auth')->group(function () {
+    Route::get('/email/verify', [\App\Http\Controllers\EmailVerificationController::class, 'notice'])->name('verification.notice');
+    Route::get('/email/verify/{id}/{hash}', [\App\Http\Controllers\EmailVerificationController::class, 'verify'])->middleware(['signed', 'throttle:6,1'])->name('verification.verify');
+    Route::post('/email/verification-notification', [\App\Http\Controllers\EmailVerificationController::class, 'send'])->middleware('throttle:6,1')->name('verification.send');
+
+    // 2FA Routes
+    Route::get('/user/2fa', [\App\Http\Controllers\TwoFactorAuthController::class, 'show'])->name('2fa.show');
+    Route::post('/user/2fa/enable', [\App\Http\Controllers\TwoFactorAuthController::class, 'enable'])->name('2fa.enable');
+    Route::post('/user/2fa/disable', [\App\Http\Controllers\TwoFactorAuthController::class, 'disable'])->name('2fa.disable');
+    Route::get('/2fa/challenge', [\App\Http\Controllers\TwoFactorAuthController::class, 'showChallenge'])->name('2fa.challenge');
+    Route::post('/2fa/challenge', [\App\Http\Controllers\TwoFactorAuthController::class, 'verifyChallenge'])->name('2fa.challenge.verify');
+
+    // Session Management
+    Route::post('/user/logout-other-devices', [AuthController::class, 'logoutOtherDevices'])->name('user.logoutOtherDevices');
+});
 
 Route::middleware('auth')->group(function () {
     Route::get('/user', [UserDashboardController::class, 'dashboard'])->name('user.dashboard');

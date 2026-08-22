@@ -22,6 +22,7 @@ use App\Observers\ScheduleObserver;
 use App\Policies\CommentPolicy;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
@@ -37,6 +38,9 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        Paginator::defaultView('vendor.pagination.custom');
+        Paginator::defaultSimpleView('vendor.pagination.custom');
+
         Gate::policy(Comment::class, CommentPolicy::class);
         Chapter::observe(ChapterObserver::class);
         Comic::observe(ComicObserver::class);

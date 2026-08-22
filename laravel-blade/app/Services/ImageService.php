@@ -48,7 +48,30 @@ class ImageService
     }
 
     /**
-     * Upload 1 file ảnh, tạo tên file có padding số trang.
+     * Danh sách MIME type ảnh hợp lệ được phép upload (Kiểm tra Magic Bytes).
+     */
+    protected array $allowedMimes = [
+        'image/jpeg',
+        'image/png',
+        'image/webp',
+        'image/gif',
+        'image/avif',
+    ];
+
+    /**
+     * Kiểm tra MIME thực tế từ Magic Bytes của file.
+     */
+    public function validateRealMime(UploadedFile $file): bool
+    {
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $realMime = finfo_file($finfo, $file->getRealPath());
+        finfo_close($finfo);
+
+        return in_array($realMime, $this->allowedMimes, true);
+    }
+
+    /**
+     * Upload 1 file ảnh, kiểm tra MIME thật, strip EXIF metadata và lưu vào storage.
      *
      * @param  UploadedFile $file
      * @param  string       $folder
@@ -57,9 +80,36 @@ class ImageService
      */
     public function uploadSingle(UploadedFile $file, string $folder, int $index = 0): string
     {
+        if (!$this->validateRealMime($file)) {
+            throw new \InvalidArgumentException('Tệp tải lên không phải là hình ảnh hợp lệ (Phát hiện MIME không an toàn).');
+        }
+
         $pageNumber = str_pad($index + 1, 3, '0', STR_PAD_LEFT);
-        $extension  = $file->getClientOriginalExtension() ?: 'jpg';
+        $extension  = strtolower($file->getClientOriginalExtension() ?: 'jpg');
         $filename   = "page_{$pageNumber}_" . Str::random(6) . ".{$extension}";
+        $targetPath = "{$folder}/{$filename}";
+
+        // Tự động Strip EXIF Metadata nếu là JPEG/PNG và có GD extension
+        if (function_exists('imagecreatefromstring') && in_array($extension, ['jpg', 'jpeg', 'png'], true)) {
+            $content = file_get_contents($file->getRealPath());
+            $gdImg = @imagecreatefromstring($content);
+
+            if ($gdImg !== false) {
+                ob_start();
+                if ($extension === 'png') {
+                    imagealphablending($gdImg, false);
+                    imagesavealpha($gdImg, true);
+                    imagepng($gdImg);
+                } else {
+                    imagejpeg($gdImg, null, 90);
+                }
+                $cleanData = ob_get_clean();
+                imagedestroy($gdImg);
+
+                Storage::disk($this->disk)->put($targetPath, $cleanData);
+                return $targetPath;
+            }
+        }
 
         return $file->storeAs($folder, $filename, $this->disk);
     }

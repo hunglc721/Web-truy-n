@@ -5,10 +5,14 @@ namespace App\Http\Controllers;
 use App\Models\ActivityLog;
 use App\Models\Role;
 use App\Models\User;
+use App\Services\TwoFactorService;
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
 
 class AuthController extends Controller
@@ -33,7 +37,18 @@ class AuthController extends Controller
             'password.required' => 'Vui lòng nhập mật khẩu.',
         ]);
 
+        // 1. Rate Limiting theo Email + IP (Chống brute-force)
+        $throttleKey = Str::lower($request->input('email')) . '|' . $request->ip();
+        if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
+            $seconds = RateLimiter::availableIn($throttleKey);
+            return back()->withInput()->withErrors([
+                'email' => "Bạn đã nhập sai quá nhiều lần. Vui lòng thử lại sau {$seconds} giây.",
+            ]);
+        }
+
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
+            RateLimiter::clear($throttleKey);
+
             /** @var User $user */
             $user = Auth::user();
 
@@ -56,6 +71,14 @@ class AuthController extends Controller
                 'can_access_admin' => $user->canAccessAdmin(),
             ]);
 
+            // Nếu tài khoản bật 2FA, chuyển hướng tới màn hình nhập mã xác thực
+            if ($user->hasTwoFactorEnabled()) {
+                $request->session()->put('2fa_passed', false);
+                return redirect()->route('2fa.challenge');
+            }
+
+            $request->session()->put('2fa_passed', true);
+
             if ($user->canAccessAdmin()) {
                 return redirect()->intended(route('admin.dashboard'))
                     ->with('success', 'Chào mừng ' . $user->name . ' quay trở lại khu quản trị!');
@@ -64,6 +87,8 @@ class AuthController extends Controller
             return redirect()->intended(route('user.library'))
                 ->with('success', 'Đăng nhập thành công! Chào mừng ' . $user->name);
         }
+
+        RateLimiter::hit($throttleKey, 60);
 
         Log::warning('auth.login_failed', [
             'email' => $request->input('email'),
@@ -108,7 +133,10 @@ class AuthController extends Controller
             'role_id' => $memberRoleId,
         ]);
 
+        event(new Registered($user));
+
         Auth::login($user);
+        $request->session()->put('2fa_passed', true);
         ActivityLog::record('auth.register', $user, ['role' => 'member']);
 
         return redirect()->route('user.library')
@@ -123,5 +151,22 @@ class AuthController extends Controller
         $request->session()->regenerateToken();
 
         return redirect('/')->with('success', 'Đã đăng xuất tài khoản thành công.');
+    }
+
+    public function logoutOtherDevices(Request $request)
+    {
+        $request->validate([
+            'password' => 'required|string',
+        ], [
+            'password.required' => 'Vui lòng nhập mật khẩu hiện tại để xác nhận.',
+        ]);
+
+        if (!Hash::check($request->password, Auth::user()->password)) {
+            return back()->withErrors(['password' => 'Mật khẩu không chính xác.']);
+        }
+
+        Auth::logoutOtherDevices($request->password);
+
+        return back()->with('success', 'Đã đăng xuất tài khoản khỏi tất cả các thiết bị và trình duyệt khác thành công!');
     }
 }

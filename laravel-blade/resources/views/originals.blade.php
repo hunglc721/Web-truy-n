@@ -20,11 +20,19 @@
 
 <div class="genre-section">
   <div class="container">
-    <div class="genre-tabs" id="orig-tabs">
-      <a href="{{ route('originals') }}" class="genre-tab active">Biên Tập Viên Chọn</a>
-      @foreach($genres as $genre)
-        <a href="{{ route('genres', ['genre' => $genre->slug]) }}" class="genre-tab">{{ $genre->name }}</a>
-      @endforeach
+    <div class="genre-tabs-wrapper">
+      <button type="button" class="genre-scroll-btn genre-scroll-left" aria-label="Cuộn trái" title="Xem các mục trước">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <div class="genre-tabs" id="orig-tabs">
+        <a href="{{ route('originals') }}" class="genre-tab active">Biên Tập Viên Chọn</a>
+        @foreach($genres as $genre)
+          <a href="{{ route('genres', ['genre' => $genre->slug]) }}" class="genre-tab">{{ $genre->name }}</a>
+        @endforeach
+      </div>
+      <button type="button" class="genre-scroll-btn genre-scroll-right" aria-label="Cuộn phải" title="Xem thêm thể loại">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
     </div>
   </div>
 </div>
