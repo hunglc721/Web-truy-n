@@ -172,3 +172,9 @@ Schedule::command('queue:retry-failed-chapters')
     ->dailyAt('03:00')
     ->withoutOverlapping()
     ->runInBackground();
+
+// Tính toán ma trận gợi ý truyện (Collaborative Filtering) mỗi đêm lúc 02:00
+Schedule::command('comics:compute-recommendations')
+    ->dailyAt('02:00')
+    ->withoutOverlapping()
+    ->runInBackground();

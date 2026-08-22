@@ -80,7 +80,8 @@ class ComicActionController extends Controller
 
         if ($existing) {
             $existing->delete();
-            $likeCount = $comic->likes()->count();
+            $comic->refresh();
+            $likeCount = (int) $comic->likes_count;
             ActivityLog::record('comic.unliked', $comic, ['comic_id' => $comicId]);
             return response()->json([
                 'status'     => 'success',
@@ -95,7 +96,8 @@ class ComicActionController extends Controller
             'comic_id' => $comicId,
             'liked_at' => now(),
         ]);
-        $likeCount = $comic->likes()->count();
+        $comic->refresh();
+        $likeCount = (int) $comic->likes_count;
         ActivityLog::record('comic.liked', $comic, ['comic_id' => $comicId]);
 
         return response()->json([

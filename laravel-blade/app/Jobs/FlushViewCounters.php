@@ -131,20 +131,33 @@ class FlushViewCounters implements ShouldQueue
     protected function batchIncrement(string $table, array $updates): void
     {
         $ids = array_keys($updates);
-        $cases = [];
+        $casesViews = [];
+        $casesViewsCount = [];
         $params = [];
 
         foreach ($updates as $id => $count) {
-            $cases[] = "WHEN id = ? THEN views + ?";
+            $casesViews[] = "WHEN id = ? THEN views + ?";
             $params[] = (int) $id;
             $params[] = (int) $count;
         }
 
-        $caseSql = implode(' ', $cases);
+        $caseSqlViews = implode(' ', $casesViews);
         $placeholders = implode(',', array_fill(0, count($ids), '?'));
-        $params = array_merge($params, array_map('intval', $ids));
 
-        $sql = "UPDATE {$table} SET views = CASE {$caseSql} ELSE views END WHERE id IN ({$placeholders})";
+        if ($table === 'comics') {
+            // Comics có cả cột views và views_count
+            foreach ($updates as $id => $count) {
+                $casesViewsCount[] = "WHEN id = ? THEN views_count + ?";
+                $params[] = (int) $id;
+                $params[] = (int) $count;
+            }
+            $caseSqlViewsCount = implode(' ', $casesViewsCount);
+            $sql = "UPDATE {$table} SET views = CASE {$caseSqlViews} ELSE views END, views_count = CASE {$caseSqlViewsCount} ELSE views_count END WHERE id IN ({$placeholders})";
+        } else {
+            $sql = "UPDATE {$table} SET views = CASE {$caseSqlViews} ELSE views END WHERE id IN ({$placeholders})";
+        }
+
+        $params = array_merge($params, array_map('intval', $ids));
 
         DB::update($sql, $params);
     }

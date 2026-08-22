@@ -73,4 +73,43 @@ class SearchApiTest extends TestCase
             ],
         ]);
     }
+
+    public function test_live_search_endpoint_supports_vietnamese_accent_insensitive_query(): void
+    {
+        $comic = Comic::factory()->create([
+            'title' => 'Võ Luyện Đỉnh Phong',
+        ]);
+
+        // User gõ không dấu: "vo luyen dinh phong"
+        $response = $this->getJson('/api/search/live?q=' . urlencode('vo luyen'));
+
+        $response->assertOk();
+        $response->assertJson([
+            'status' => 'success',
+            'count'  => 1,
+            'data'   => [
+                [
+                    'id'    => $comic->id,
+                    'title' => 'Võ Luyện Đỉnh Phong',
+                ]
+            ],
+        ]);
+    }
+
+    public function test_hot_search_keywords_endpoint_returns_trending_data(): void
+    {
+        Comic::factory()->create(['title' => 'Solo Leveling']);
+
+        // Ghi nhận tìm kiếm
+        $this->getJson('/api/search/live?q=Solo%20Leveling');
+
+        $response = $this->getJson('/api/search/hot?limit=5');
+        $response->assertOk();
+        $response->assertJsonStructure([
+            'status',
+            'data' => [
+                '*' => ['id', 'keyword', 'hits'],
+            ],
+        ]);
+    }
 }

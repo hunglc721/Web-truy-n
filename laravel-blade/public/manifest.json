@@ -1,0 +1,35 @@
+{
+  "name": "WebComics - Đọc Truyện Tranh Online",
+  "short_name": "WebComics",
+  "description": "Nền tảng đọc Manga, Manhwa, Manhua và WebComics Originals hàng đầu với trải nghiệm đọc mượt mà và chế độ đọc offline.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0d0f14",
+  "theme_color": "#ff5e36",
+  "categories": ["books", "entertainment"],
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Khám Phá Thể Loại",
+      "short_name": "Thể Loại",
+      "description": "Tìm kiếm và lọc truyện tranh",
+      "url": "/genres",
+      "icons": [{ "src": "/favicon.ico", "sizes": "64x64" }]
+    },
+    {
+      "name": "Lịch Ra Truyện",
+      "short_name": "Lịch Ra",
+      "description": "Lịch phát hành truyện tranh hàng tuần",
+      "url": "/schedule",
+      "icons": [{ "src": "/favicon.ico", "sizes": "64x64" }]
+    }
+  ]
+}

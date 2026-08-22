@@ -16,12 +16,12 @@ class SearchController extends Controller
 
     /**
      * API Live search autocomplete.
-     * GET /api/search/live?q=solo&limit=6
+     * GET /api/search/live?q=solo&limit=8
      */
     public function live(Request $request): JsonResponse
     {
         $keyword = (string) $request->query('q', '');
-        $limit   = min(20, max(1, (int) $request->query('limit', 6)));
+        $limit   = min(20, max(1, (int) $request->query('limit', 8)));
 
         $results = $this->searchService->liveSearch($keyword, $limit);
 
@@ -34,6 +34,21 @@ class SearchController extends Controller
     }
 
     /**
+     * API Lấy danh sách từ khoá tìm kiếm hot nhất.
+     * GET /api/search/hot?limit=10
+     */
+    public function hot(Request $request): JsonResponse
+    {
+        $limit = min(30, max(1, (int) $request->query('limit', 10)));
+        $keywords = $this->searchService->getHotKeywords($limit);
+
+        return response()->json([
+            'status' => 'success',
+            'data'   => $keywords,
+        ]);
+    }
+
+    /**
      * API Tìm kiếm & Lọc nâng cao.
      * GET /api/search/advanced
      */
@@ -42,8 +57,12 @@ class SearchController extends Controller
         $params = $request->only([
             'q',
             'genres',
+            'genre_mode',
+            'exclude_genres',
             'tags',
             'status',
+            'country',
+            'year',
             'is_original',
             'min_rating',
             'min_chapters',

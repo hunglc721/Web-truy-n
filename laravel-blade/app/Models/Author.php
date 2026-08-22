@@ -38,7 +38,21 @@ class Author extends Model
     public function comics(): BelongsToMany
     {
         return $this->belongsToMany(Comic::class, 'comic_author')
-                    ->withPivot('role')
+                    ->withPivot('role');
+    }
+
+    public function followers(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'author_follows')
                     ->withTimestamps();
+    }
+
+    public function isFollowedBy(?User $user): bool
+    {
+        if (!$user) {
+            return false;
+        }
+
+        return $this->followers()->where('users.id', $user->id)->exists();
     }
 }

@@ -184,4 +184,57 @@ class User extends Authenticatable
     {
         return $this->readingHistories()->with('chapter')->where('comic_id', $comicId)->first();
     }
+
+    public function followedAuthors(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(Author::class, 'author_follows')->withTimestamps();
+    }
+
+    public function followedTeams(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(Team::class, 'team_follows')->withTimestamps();
+    }
+
+    public function pushSubscriptions(): HasMany
+    {
+        return $this->hasMany(PushSubscription::class);
+    }
+
+    public function wallet(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(Wallet::class);
+    }
+
+    public function getOrCreateWallet(): Wallet
+    {
+        return $this->wallet ?? $this->wallet()->create(['balance' => 0, 'locked_balance' => 0]);
+    }
+
+    public function getCoinBalanceAttribute(): int
+    {
+        return (int) ($this->wallet?->balance ?? 0);
+    }
+
+    public function transactions(): HasMany
+    {
+        return $this->hasMany(Transaction::class)->orderByDesc('created_at');
+    }
+
+    public function chapterUnlocks(): HasMany
+    {
+        return $this->hasMany(ChapterUnlock::class);
+    }
+
+    public function subscriptions(): HasMany
+    {
+        return $this->hasMany(Subscription::class);
+    }
+
+    public function isVip(): bool
+    {
+        return $this->subscriptions()
+            ->where('status', 'active')
+            ->where('expires_at', '>', now())
+            ->exists();
+    }
 }

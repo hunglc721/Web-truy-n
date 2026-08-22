@@ -47,6 +47,62 @@
   </section>
   @endif
 
+  {{-- ── KHỐI TIẾP TỤC ĐỌC (CONTINUE READING) ── --}}
+  @auth
+    @if(isset($recentReadings) && $recentReadings->isNotEmpty())
+      <section class="comics-section" style="padding-top: 10px; margin-bottom: -10px;">
+        <div class="container">
+          <div class="section-header">
+            <h2 class="section-title">🕘 Tiếp Tục Đọc</h2>
+            <a href="{{ route('user.history') }}" class="see-all">Toàn Bộ Lịch Sử →</a>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px;">
+            @foreach($recentReadings as $history)
+              @php
+                $comic = $history->comic;
+                $chapter = $history->chapter;
+                $percent = max(5, min(100, (int) round($history->scroll_percent)));
+              @endphp
+              @if($comic && $chapter)
+                <div style="background: var(--bg-surface-1); border: 1px solid var(--border-color); border-radius: 12px; padding: 12px; display: flex; gap: 12px; align-items: center; position: relative; overflow: hidden;">
+                  <a href="{{ route('chapters.show', [$comic->slug, $chapter->slug ?: 'chapter-' . $chapter->chapter_number]) }}" style="flex-shrink: 0;">
+                    <img src="{{ $comic->cover_image }}" alt="{{ $comic->title }}" style="width: 58px; height: 78px; object-fit: cover; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.4);" loading="lazy" />
+                  </a>
+                  <div style="flex: 1; min-width: 0;">
+                    <h3 style="font-size: 14px; font-weight: 700; color: #fff; margin: 0 0 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                      <a href="{{ route('comics.show', $comic->slug) }}" style="color: inherit; text-decoration: none;">{{ $comic->title }}</a>
+                    </h3>
+                    <div style="font-size: 12px; color: var(--text-sub); margin-bottom: 6px;">
+                      Đang đọc: <strong style="color: var(--primary);">Ch.{{ $chapter->chapter_number }}</strong>
+                    </div>
+                    <div style="height: 6px; background: rgba(255,255,255,0.08); border-radius: 999px; overflow: hidden; margin-bottom: 6px;">
+                      <div style="height: 100%; width: {{ $percent }}%; background: linear-gradient(90deg, #ff5e36, #ff2a6d); border-radius: 999px;"></div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                      <span style="font-size: 11px; color: var(--text-sub);">Tiến độ: {{ $percent }}%</span>
+                      <a href="{{ route('chapters.show', [$comic->slug, $chapter->slug ?: 'chapter-' . $chapter->chapter_number]) }}" class="btn-sm" style="font-size: 11px; padding: 3px 8px; background: var(--primary); color: #fff; border-radius: 6px; text-decoration: none; font-weight: 700;">Đọc tiếp →</a>
+                    </div>
+                  </div>
+                </div>
+              @endif
+            @endforeach
+          </div>
+        </div>
+      </section>
+    @endif
+  @else
+    {{-- Guest Continue Reading (Loaded dynamically from localStorage) --}}
+    <section class="comics-section" id="guest-continue-reading" style="display: none; padding-top: 10px; margin-bottom: -10px;">
+      <div class="container">
+        <div class="section-header">
+          <h2 class="section-title">🕘 Tiếp Tục Đọc</h2>
+          <a href="{{ route('login') }}" class="see-all" style="font-size: 12px;">Đăng nhập để đồng bộ lịch sử ☁️</a>
+        </div>
+        <div id="guest-history-cards" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px;"></div>
+      </div>
+    </section>
+  @endauth
+
   <section class="hero-section" id="trending-section" aria-label="Truyện thịnh hành">
     <div class="hero-content-wrap">
       <h2 class="hero-title">🔥 Truyện Thịnh Hành Hiện Nay</h2>

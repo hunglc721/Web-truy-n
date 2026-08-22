@@ -16,43 +16,42 @@ Routes → Controllers → Models / Services
 MySQL hoặc SQLite
 ```
 
-- `laravel-blade/`: ứng dụng chính và là runtime duy nhất.
-- `prototype/`: chỉ giữ làm tài liệu tham khảo UI/UX trong quá trình migration. Không có server riêng và không phải nguồn dữ liệu/nghiệp vụ.
-- Không còn `localhost:3000` hay mock API Node.js.
+- `laravel-blade/`: ứng dụng chính và là runtime duy nhất của dự án.
+- Giao diện được xây dựng bằng Laravel Blade kết hợp CSS/JS hiện đại, hỗ trợ caching đa tầng, queue worker xử lý ảnh/view counts và tối ưu hoá chỉ mục CSDL cho hơn 10.000+ truyện.
 
 ## Quyền truy cập
 
 ### Guest
 Không cần đăng nhập để:
 - xem trang chủ, thể loại, lịch ra truyện, originals;
-- tìm kiếm truyện;
-- xem chi tiết truyện;
-- đọc chapter;
+- tìm kiếm truyện đa tiêu chí;
+- xem chi tiết truyện và danh sách chương;
+- đọc chapter mượt mà với thanh công cụ tuỳ biến;
 - xem bình luận, rating và gợi ý truyện.
 
 ### Member
 Sau khi đăng nhập có thêm:
-- bình luận và trả lời;
-- like / rating;
+- bình luận và trả lời (kèm kiểm duyệt từ khoá & chống spam tự động);
+- like / rating (đánh giá sao và viết nhận xét);
 - thêm hoặc bỏ truyện khỏi tủ sách;
-- lưu lịch sử và tiến độ đọc;
-- xem thống kê cá nhân.
+- lưu lịch sử và tiến độ đọc (tự động khôi phục % scroll);
+- xem thống kê cá nhân và xuất dữ liệu.
 
 ### Admin
-Admin là user có `is_admin = true`.
+Admin là user có `is_admin = true` hoặc được gán quyền tương ứng.
 
 Ngoài toàn bộ quyền của Member, Admin được truy cập `/admin` để quản lý:
-- truyện và chapter;
+- truyện và chapter (xử lý ảnh nền qua queue);
 - thể loại, tag, tác giả;
-- thành viên;
-- bình luận và báo cáo;
-- lịch phát hành và banner;
+- thành viên và phân quyền (RBAC);
+- bình luận và báo cáo vi phạm;
+- lịch phát hành và banner quảng bá;
 - analytics và audit logs;
 - cấu hình website và maintenance mode.
 
-Toàn bộ `/admin/*` được bảo vệ bằng `auth` + `AdminMiddleware`. Việc ẩn nút trên giao diện không được dùng thay cho authorization backend.
+Toàn bộ `/admin/*` được bảo vệ bằng `auth` + `AdminMiddleware` và phân quyền chi tiết. Việc ẩn nút trên giao diện không được dùng thay cho authorization backend.
 
-## Cài đặt
+## Cài đặt & Chạy ứng dụng
 
 ```bash
 cd laravel-blade
@@ -61,7 +60,7 @@ cp .env.example .env
 php artisan key:generate
 ```
 
-Cấu hình database trong `.env`, ví dụ MySQL:
+Cấu hình database trong `.env`, ví dụ MySQL hoặc SQLite:
 
 ```env
 DB_CONNECTION=mysql
@@ -70,9 +69,11 @@ DB_PORT=3306
 DB_DATABASE=web_truyen
 DB_USERNAME=root
 DB_PASSWORD=
+CACHE_STORE=file
+QUEUE_CONNECTION=database
 ```
 
-Sau đó:
+Khởi tạo CSDL, symlink storage và chạy server:
 
 ```bash
 php artisan migrate:fresh --seed
@@ -80,13 +81,23 @@ php artisan storage:link
 php artisan serve
 ```
 
+Chạy Queue Worker (xử lý ảnh chapter, gửi notification, thống kê view):
+
+```bash
+php artisan queue:work --queue=default,chapter-images
+```
+
+Chạy Scheduler (tự động phát hành chương hẹn giờ & flush view counters):
+
+```bash
+php artisan schedule:work
+```
+
 Ứng dụng chạy tại:
 
 ```text
 http://localhost:8000
 ```
-
-Đây là URL duy nhất cần chạy khi phát triển local.
 
 ## Tài khoản seed
 
@@ -98,55 +109,52 @@ http://localhost:8000
 ## Các URL chính
 
 ### Public
-- `/`
-- `/genres`
-- `/schedule`
-- `/originals`
-- `/truyen/{slug}`
-- `/truyen/{comicSlug}/{chapterSlug}`
-- `/login`
-- `/register`
+- `/` — Trang chủ (Banners, Trending, Latest updates)
+- `/genres` — Bộ lọc thể loại đa tiêu chí
+- `/schedule` — Lịch ra mắt truyện theo ngày trong tuần
+- `/originals` — Danh mục WebComics Originals
+- `/truyen/{slug}` — Chi tiết truyện
+- `/truyen/{comicSlug}/{chapterSlug}` — Trình đọc chapter
+- `/login` / `/register` — Xác thực người dùng
 
 ### Member
-- `/user/library`
+- `/user/dashboard` — Trung tâm cá nhân
+- `/user/library` — Tủ sách đã lưu
+- `/user/history` — Lịch sử đọc truyện
+- `/user/likes` — Truyện yêu thích
 
 ### Admin
-- `/admin`
-- `/admin/analytics`
-- `/admin/comics`
-- `/admin/genres`
-- `/admin/tags`
-- `/admin/authors`
-- `/admin/users`
-- `/admin/comments`
-- `/admin/reports`
-- `/admin/schedules`
-- `/admin/banners`
-- `/admin/logs`
-- `/admin/permissions`
-- `/admin/settings`
+- `/admin` — Dashboard thống kê tổng quan
+- `/admin/analytics` — Báo cáo phân tích chi tiết
+- `/admin/comics` — Quản lý truyện & chương
+- `/admin/genres` — Quản lý thể loại
+- `/admin/tags` — Quản lý nhãn truyện
+- `/admin/authors` — Quản lý tác giả
+- `/admin/users` — Quản lý thành viên
+- `/admin/comments` — Duyệt & kiểm duyệt bình luận
+- `/admin/reports` — Xử lý báo cáo vi phạm
+- `/admin/schedules` — Quản lý lịch phát hành
+- `/admin/banners` — Quản lý banner Hero slider
+- `/admin/logs` — Nhật ký hoạt động (Audit log)
+- `/admin/permissions` — Phân quyền vai trò (RBAC)
+- `/admin/settings` — Cấu hình hệ thống & Chế độ bảo trì
 
-## Prototype migration rule
+## Kiến trúc & Tối ưu hoá
 
-Khi đối chiếu `prototype/` với Laravel:
+1. **Counter Cache**: Duy trì các trường `likes_count`, `comments_count`, `rating_avg`, `rating_count`, `views_count` trực tiếp trên bảng `comics` thông qua Model Observers, loại bỏ hoàn toàn các câu query `COUNT(*)` / `AVG()` nặng khi tải trang.
+2. **Read-layer Caching**: Áp dụng `Cache::remember` cho Banners (5m), Trending (15m), Latest (5m), Genres (60m) và Lịch ra truyện (15m). Tự động invalidate tức thì khi dữ liệu thay đổi.
+3. **Async View Buffering & Anti-Spam**: Lượt đọc chương được buffer vào Cache/Redis kèm khoá chống spam theo IP/User trong 15 phút, sau đó flush theo batch định kỳ xuống database qua 1 câu SQL `CASE WHEN` duy nhất.
+4. **Composite Indexes**: Tối ưu hoá toàn bộ các truy vấn lọc, tìm kiếm và phân trang cho dữ liệu quy mô 10.000+ truyện.
 
-1. **UI/UX prototype** là tham chiếu giao diện.
-2. **Laravel** là nguồn sự thật cho auth, authorization, dữ liệu và nghiệp vụ.
-3. Chức năng Laravel đã có thì giữ nguyên, chỉ chỉnh giao diện cho phù hợp prototype.
-4. Không tạo route/model/controller/auth flow thứ hai chỉ vì prototype có mock tương ứng.
-5. Mock data và `localStorage` không được dùng làm state nghiệp vụ của sản phẩm chạy thật.
-6. Mọi request của sản phẩm phải dùng cùng origin Laravel.
-
-Chi tiết migration xem:
+Chi tiết xem tại:
 - `docs/ARCHITECTURE.md`
-- `docs/MIGRATION_CHECKLIST.md`
 - `docs/PHASE_STATUS.md`
 
-## Test
+## Kiểm thử (Tests)
 
 ```bash
 cd laravel-blade
 php artisan test
 ```
 
-Các test tập trung vào public reader access, auth boundary, AdminMiddleware, comments, settings/maintenance, analytics và các module quản trị.
+Bộ test bao gồm unit & feature tests kiểm tra toàn bộ luồng public reading, auth boundary, RBAC, AdminMiddleware, comments moderation, settings, rating services và analytics.

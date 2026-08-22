@@ -11,6 +11,10 @@
     <meta name="description" content="{{ $siteSettings['meta_description'] ?? 'Nền tảng đọc truyện tranh trực tuyến WebComics.' }}" />
     <meta name="keywords" content="{{ $siteSettings['seo_keywords'] ?? 'đọc truyện,manga,manhwa,manhua,webtoon' }}" />
   @endif
+  <link rel="manifest" href="{{ asset('manifest.json') }}" />
+  <meta name="theme-color" content="#ff5e36" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
@@ -27,6 +31,7 @@
       </div>
       <div class="header-right">
         <div class="search-wrap"><input id="search-input" type="search" placeholder="Tìm kiếm truyện tranh..." aria-label="Tìm kiếm" class="search-input" autocomplete="off" /><span class="search-icon" aria-hidden="true"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span><div class="search-dropdown" id="search-dropdown"><div class="search-recent-title">Tìm kiếm thịnh hành</div></div></div>
+        <button type="button" class="header-action-link" id="pwa-install-btn" style="display:none;background:rgba(255,94,54,.15);color:var(--primary);border:1px solid rgba(255,94,54,.3);border-radius:8px;padding:6px 12px;font-weight:700;cursor:pointer;align-items:center;gap:4px;">📲 Cài App</button>
         <a href="https://comicscreator.webcomicsapp.com/#/login" target="_blank" rel="noopener" class="header-action-link" id="publish-link">Đăng Truyện</a><div class="header-divider"></div>
         <div class="nav-icon-group"><a class="icon-btn" id="library-btn" aria-label="Tủ truyện" title="Tủ truyện" href="{{ auth()->check() ? route('user.library') : route('login') }}"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></a></div>
         @guest
@@ -66,11 +71,38 @@
           @endguest
         </ul>
       </div>
-      <div class="fgrid-col"><h4 class="fcol-heading">Hỗ Trợ</h4><span class="footer-static-item">Điều Khoản Sử Dụng</span><span class="footer-static-item">Chính Sách Riêng Tư</span><span class="footer-static-item">Bản Quyền & DMCA</span><span class="footer-static-item">Trung Tâm Trợ Giúp</span></div>
+      <div class="fgrid-col"><h4 class="fcol-heading">Hỗ Trợ</h4><span class="footer-static-item">Điều Khoản Sử Dụng</span><span class="footer-static-item">Chính Sách Riêng Tư</span><a href="{{ route('dmca.show') }}" style="color: var(--text-muted); text-decoration: none; display: block; margin-bottom: 8px;">⚖️ Bản Quyền & DMCA</a><a href="{{ route('teams.index') }}" style="color: var(--text-muted); text-decoration: none; display: block; margin-bottom: 8px;">👥 Danh Sách Nhóm Dịch</a></div>
     </div>
     <div class="footer-bottom-bar"><p class="fcopy-text">&copy; {{ date('Y') }} {{ $siteSettings['site_name'] ?? 'WebComics' }}. All rights reserved.</p><div class="lang-selector"><span class="lang-icon">🌐</span><select class="lang-select" aria-label="Ngôn ngữ"><option value="vi" selected>Tiếng Việt</option></select></div></div>
   </div></footer>
   <script src="{{ asset('js/app.js') }}"></script>
+  <script>
+    // PWA Service Worker & Install Prompt Registration
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW registration failed:', err));
+      });
+    }
+
+    let deferredPrompt;
+    const pwaInstallBtn = document.getElementById('pwa-install-btn');
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      if (pwaInstallBtn) pwaInstallBtn.style.display = 'inline-flex';
+    });
+
+    pwaInstallBtn?.addEventListener('click', async () => {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+          pwaInstallBtn.style.display = 'none';
+        }
+        deferredPrompt = null;
+      }
+    });
+  </script>
   @stack('scripts')
 </body>
 </html>

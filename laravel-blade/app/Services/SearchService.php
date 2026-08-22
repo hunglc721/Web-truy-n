@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Helpers\VietnameseHelper;
 use App\Models\Comic;
+use App\Models\SearchKeyword;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
@@ -13,41 +15,65 @@ use Illuminate\Support\Facades\Cache;
 class SearchService
 {
     private const TTL_LIVE_SEARCH = 300; // 5 phút cache cho tìm kiếm nhanh
+    private const TTL_HOT_KEYWORDS = 900; // 15 phút cache cho từ khóa hot
 
     /**
      * Tìm kiếm nhanh tức thì (Live Autocomplete Search).
-     * Phù hợp cho ô input header search trên website.
+     * Hỗ trợ gõ tiếng Việt có dấu HOẶC không dấu.
      *
      * @param  string  $keyword  Từ khóa tìm kiếm
-     * @param  int     $limit    Số lượng kết quả tối đa trả về (mặc định 6)
+     * @param  int     $limit    Số lượng kết quả tối đa trả về (mặc định 8)
      * @return Collection<Comic>
      */
-    public function liveSearch(string $keyword, int $limit = 6): Collection
+    public function liveSearch(string $keyword, int $limit = 8): Collection
     {
         $cleanKeyword = trim($keyword);
         if (mb_strlen($cleanKeyword) < 2) {
             return collect();
         }
 
-        $cacheKey = 'search.live.' . md5(mb_strtolower($cleanKeyword)) . '.' . $limit;
+        $normalized = VietnameseHelper::removeAccents($cleanKeyword);
+        $cacheKey = 'search.live.' . md5($normalized) . '.' . $limit;
 
-        return Cache::remember($cacheKey, self::TTL_LIVE_SEARCH, function () use ($cleanKeyword, $limit) {
-            $escaped = $this->escapeLikeString($cleanKeyword);
+        $results = Cache::remember($cacheKey, self::TTL_LIVE_SEARCH, function () use ($cleanKeyword, $normalized, $limit) {
+            $escapedOriginal   = $this->escapeLikeString($cleanKeyword);
+            $escapedNormalized = $this->escapeLikeString($normalized);
 
             return Comic::query()
-                ->where(function (Builder $query) use ($escaped) {
-                    $query->where('title', 'like', "%{$escaped}%")
-                        ->orWhereHas('authors', function (Builder $a) use ($escaped) {
-                            $a->where('name', 'like', "%{$escaped}%");
+                ->where(function (Builder $query) use ($escapedOriginal, $escapedNormalized) {
+                    $query->where('title', 'like', "%{$escapedOriginal}%")
+                        ->orWhere('title_normalized', 'like', "%{$escapedNormalized}%")
+                        ->orWhere('alt_titles', 'like', "%{$escapedOriginal}%")
+                        ->orWhere('alt_titles_normalized', 'like', "%{$escapedNormalized}%")
+                        ->orWhereHas('authors', function (Builder $a) use ($escapedOriginal) {
+                            $a->where('name', 'like', "%{$escapedOriginal}%");
                         })
-                        ->orWhereHas('genres', function (Builder $g) use ($escaped) {
-                            $g->where('name', 'like', "%{$escaped}%");
+                        ->orWhereHas('genres', function (Builder $g) use ($escapedOriginal) {
+                            $g->where('name', 'like', "%{$escapedOriginal}%");
                         });
                 })
                 ->with(['genres:id,name,slug', 'latestChapter'])
                 ->orderByDesc('views')
                 ->limit(min(20, max(1, $limit)))
-                ->get(['id', 'title', 'slug', 'cover_image', 'status', 'avg_rating', 'views', 'is_original']);
+                ->get(['id', 'title', 'slug', 'cover_image', 'status', 'country', 'avg_rating', 'views', 'is_original']);
+        });
+
+        // Ghi nhận lượt tìm kiếm vào bảng SearchKeyword
+        SearchKeyword::record($cleanKeyword, $results->count());
+
+        return $results;
+    }
+
+    /**
+     * Lấy danh sách Top từ khoá tìm kiếm hot nhất (Trending Search Terms).
+     *
+     * @param int $limit
+     * @return Collection<SearchKeyword>
+     */
+    public function getHotKeywords(int $limit = 10): Collection
+    {
+        return Cache::remember('search.hot_keywords.' . $limit, self::TTL_HOT_KEYWORDS, function () use ($limit) {
+            return SearchKeyword::hot($limit)->get();
         });
     }
 
@@ -57,8 +83,12 @@ class SearchService
      * @param  array{
      *     q?: string|null,
      *     genres?: array<string>|string|null,
+     *     genre_mode?: string|null,
+     *     exclude_genres?: array<string>|string|null,
      *     tags?: array<string>|string|null,
      *     status?: string|null,
+     *     country?: string|null,
+     *     year?: int|string|null,
      *     is_original?: bool|int|string|null,
      *     min_rating?: float|int|null,
      *     min_chapters?: int|null,
@@ -79,29 +109,50 @@ class SearchService
             ])
             ->withCount(['chapters' => fn($q) => $q->published()]);
 
-        // 1. Tìm theo từ khóa (Title, Description, Tác giả, Tag, Thể loại)
+        // 1. Tìm theo từ khóa (hỗ trợ có dấu và không dấu trên Title, Alt Titles, Description, Tác giả, Tag, Thể loại)
         if (!empty($params['q'])) {
-            $keyword = trim((string) $params['q']);
-            $escaped = $this->escapeLikeString($keyword);
+            $keyword    = trim((string) $params['q']);
+            $normalized = VietnameseHelper::removeAccents($keyword);
 
-            $query->where(function (Builder $q) use ($escaped) {
-                $q->where('title', 'like', "%{$escaped}%")
-                    ->orWhere('description', 'like', "%{$escaped}%")
-                    ->orWhereHas('authors', fn($a) => $a->where('name', 'like', "%{$escaped}%"))
-                    ->orWhereHas('genres', fn($g) => $g->where('name', 'like', "%{$escaped}%"))
-                    ->orWhereHas('tags', fn($t) => $t->where('name', 'like', "%{$escaped}%"));
+            $escapedOriginal   = $this->escapeLikeString($keyword);
+            $escapedNormalized = $this->escapeLikeString($normalized);
+
+            $query->where(function (Builder $q) use ($escapedOriginal, $escapedNormalized) {
+                $q->where('title', 'like', "%{$escapedOriginal}%")
+                    ->orWhere('title_normalized', 'like', "%{$escapedNormalized}%")
+                    ->orWhere('alt_titles', 'like', "%{$escapedOriginal}%")
+                    ->orWhere('alt_titles_normalized', 'like', "%{$escapedNormalized}%")
+                    ->orWhere('description', 'like', "%{$escapedOriginal}%")
+                    ->orWhereHas('authors', fn($a) => $a->where('name', 'like', "%{$escapedOriginal}%"))
+                    ->orWhereHas('genres', fn($g) => $g->where('name', 'like', "%{$escapedOriginal}%"))
+                    ->orWhereHas('tags', fn($t) => $t->where('name', 'like', "%{$escapedOriginal}%"));
             });
+
+            // Ghi nhận lượt tìm kiếm
+            SearchKeyword::record($keyword, 1);
         }
 
-        // 2. Lọc theo Thể loại (hỗ trợ nhiều thể loại)
+        // 2. Lọc theo Thể loại (hỗ trợ AND hoặc OR)
         $genres = $this->normalizeArrayParam($params['genres'] ?? null);
+        $genreMode = strtolower((string) ($params['genre_mode'] ?? 'and'));
+
         if (!empty($genres)) {
-            foreach ($genres as $genreSlug) {
-                $query->whereHas('genres', fn($g) => $g->where('slug', $genreSlug));
+            if ($genreMode === 'or') {
+                $query->whereHas('genres', fn($g) => $g->whereIn('slug', $genres));
+            } else {
+                foreach ($genres as $genreSlug) {
+                    $query->whereHas('genres', fn($g) => $g->where('slug', $genreSlug));
+                }
             }
         }
 
-        // 3. Lọc theo Tags
+        // 3. Loại trừ Thể loại (Exclude Genres)
+        $excludeGenres = $this->normalizeArrayParam($params['exclude_genres'] ?? null);
+        if (!empty($excludeGenres)) {
+            $query->whereDoesntHave('genres', fn($g) => $g->whereIn('slug', $excludeGenres));
+        }
+
+        // 4. Lọc theo Tags
         $tags = $this->normalizeArrayParam($params['tags'] ?? null);
         if (!empty($tags)) {
             foreach ($tags as $tagSlug) {
@@ -109,33 +160,52 @@ class SearchService
             }
         }
 
-        // 4. Lọc theo Trạng thái (ongoing, completed, hiatus)
+        // 5. Lọc theo Trạng thái (ongoing, completed, hiatus)
         if (!empty($params['status']) && strtolower((string) $params['status']) !== 'all') {
-            $st = (string) $params['status'];
+            $st = strtolower((string) $params['status']);
             $query->where(function (Builder $q) use ($st) {
-                $q->where('status', strtolower($st))
+                $q->where('status', $st)
                     ->orWhere('status', strtoupper($st));
             });
         }
 
-        // 5. Lọc theo Originals
+        // 6. Lọc theo Quốc gia / Xuất xứ (JP, KR, CN, VN, manga, manhwa, manhua)
+        if (!empty($params['country']) && strtolower((string) $params['country']) !== 'all') {
+            $country = strtoupper((string) $params['country']);
+            // Map alias: manga -> JP, manhwa -> KR, manhua -> CN, vietnam -> VN
+            $countryMap = [
+                'MANGA'   => 'JP',
+                'MANHWA'  => 'KR',
+                'MANHUA'  => 'CN',
+                'VIETNAM' => 'VN',
+            ];
+            $targetCountry = $countryMap[$country] ?? $country;
+            $query->where('country', $targetCountry);
+        }
+
+        // 7. Lọc theo Năm phát hành
+        if (!empty($params['year']) && (int) $params['year'] > 1900) {
+            $query->where('released_year', (int) $params['year']);
+        }
+
+        // 8. Lọc theo Originals
         if (isset($params['is_original']) && $params['is_original'] !== '' && $params['is_original'] !== 'all') {
             $isOriginal = filter_var($params['is_original'], FILTER_VALIDATE_BOOLEAN);
             $query->where('is_original', $isOriginal);
         }
 
-        // 6. Lọc theo Điểm đánh giá tối thiểu (min_rating: 1.0 - 5.0)
+        // 9. Lọc theo Điểm đánh giá tối thiểu (min_rating: 1.0 - 5.0)
         if (!empty($params['min_rating']) && (float) $params['min_rating'] > 0) {
             $query->where('avg_rating', '>=', (float) $params['min_rating']);
         }
 
-        // 7. Lọc theo số chương tối thiểu (min_chapters)
+        // 10. Lọc theo số chương tối thiểu (min_chapters)
         if (!empty($params['min_chapters']) && (int) $params['min_chapters'] > 0) {
             $minChap = (int) $params['min_chapters'];
             $query->having('chapters_count', '>=', $minChap);
         }
 
-        // 8. Sắp xếp kết quả (Sort)
+        // 11. Sắp xếp kết quả (Sort)
         $sortBy = (string) ($params['sort'] ?? 'views');
         match ($sortBy) {
             'rating'       => $query->orderByDesc('avg_rating')->orderByDesc('views'),

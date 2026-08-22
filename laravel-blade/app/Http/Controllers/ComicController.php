@@ -56,11 +56,11 @@ class ComicController extends Controller
                 ->firstOrFail();
         });
 
-        // ── View Counter — Đếm qua Cache buffer, chống F5 bằng TTL 30 phút ──
+        // ── View Counter — Đếm qua Cache buffer, chống F5 bằng TTL 15 phút ──
         if (!$isAdmin) {
             $userOrIp  = auth()->id() ?? request()->ip();
             $antiF5Key = "view_comic:{$comic->id}:{$userOrIp}";
-            if (Cache::add($antiF5Key, true, 1800)) {
+            if (Cache::add($antiF5Key, true, 900)) {
                 \App\Jobs\FlushViewCounters::recordComicView($comic->id);
             }
         }

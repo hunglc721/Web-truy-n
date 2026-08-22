@@ -29,13 +29,60 @@
   const closeSearch = () => searchDropdown?.classList.remove('visible');
   const openSearch = () => searchDropdown?.classList.add('visible');
 
-  searchInput?.addEventListener('focus', openSearch);
+  // Load and display hot search keywords
+  const loadHotKeywords = async () => {
+    if (!searchDropdown) return;
+    try {
+      const res = await fetch('/api/search/hot', { headers: { Accept: 'application/json' } });
+      if (!res.ok) return;
+      const data = await res.json();
+      const keywords = data.data || [];
+      if (!keywords.length) return;
+
+      searchDropdown.innerHTML = '<div class="search-recent-title" style="padding:8px 12px;font-weight:800;font-size:12px;color:var(--text-sub);">🔥 TỪ KHOÁ HOT</div>';
+      const wrap = document.createElement('div');
+      wrap.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;padding:4px 12px 12px;';
+
+      keywords.forEach((kw) => {
+        const chip = document.createElement('a');
+        chip.href = `/genres?q=${encodeURIComponent(kw.keyword)}`;
+        chip.className = 'chip';
+        chip.style.cssText = 'font-size:12px;padding:4px 10px;text-decoration:none;border-radius:999px;background:rgba(255,255,255,.08);color:#fff;display:inline-flex;align-items:center;gap:4px;';
+        chip.innerHTML = `<span>🔍</span> ${escapeHtml(kw.keyword)}`;
+        chip.addEventListener('click', (e) => {
+          if (searchInput) searchInput.value = kw.keyword;
+        });
+        wrap.appendChild(chip);
+      });
+      searchDropdown.appendChild(wrap);
+    } catch (_) {}
+  };
+
+  searchInput?.addEventListener('focus', () => {
+    openSearch();
+    if (!searchInput.value.trim()) {
+      loadHotKeywords();
+    }
+  });
+
+  searchInput?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      const q = searchInput.value.trim();
+      if (q) {
+        window.location.href = `/genres?q=${encodeURIComponent(q)}`;
+      }
+    }
+  });
+
   searchInput?.addEventListener('input', () => {
     const q = searchInput.value.trim();
     openSearch();
     clearTimeout(searchTimer);
 
-    if (!q) return;
+    if (!q) {
+      loadHotKeywords();
+      return;
+    }
 
     searchTimer = setTimeout(async () => {
       try {
@@ -51,19 +98,40 @@
 
         searchDropdown.innerHTML = '';
         if (!items.length) {
-          searchDropdown.innerHTML = '<div class="search-recent-title">Không tìm thấy truyện</div>';
+          searchDropdown.innerHTML = `<div class="search-recent-title" style="padding:12px;text-align:center;color:var(--text-sub);">Không tìm thấy truyện phù hợp cho "<strong>${escapeHtml(q)}</strong>"</div>`;
           return;
         }
 
-        items.slice(0, 8).forEach((item) => {
+        items.slice(0, 7).forEach((item) => {
           const title = item.title || item.name || '';
           const slug = item.slug || '';
+          const cover = item.cover_image || '';
+          const rating = item.avg_rating ? `★ ${Number(item.avg_rating).toFixed(1)}` : '';
           const el = document.createElement('a');
           el.className = 'search-item';
           el.href = slug ? `/truyen/${encodeURIComponent(slug)}` : '#';
-          el.innerHTML = `<span class="search-item-icon">🔎</span>${escapeHtml(title)}`;
+          el.style.cssText = 'display:flex;align-items:center;gap:10px;padding:8px 12px;text-decoration:none;border-bottom:1px solid rgba(255,255,255,.05);';
+          el.innerHTML = `
+            ${cover ? `<img src="${escapeHtml(cover)}" style="width:34px;height:46px;object-fit:cover;border-radius:4px;flex-shrink:0;" alt="${escapeHtml(title)}"/>` : '<span class="search-item-icon">📖</span>'}
+            <div style="flex:1;min-width:0;">
+              <div style="font-weight:700;font-size:13.5px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(title)}</div>
+              <div style="font-size:11.5px;color:var(--text-sub);display:flex;gap:8px;margin-top:2px;">
+                ${rating ? `<span style="color:#fbbf24;">${rating}</span>` : ''}
+                ${item.country ? `<span style="text-transform:uppercase;">${escapeHtml(item.country)}</span>` : ''}
+                ${item.status ? `<span>${escapeHtml(item.status)}</span>` : ''}
+              </div>
+            </div>
+          `;
           searchDropdown.appendChild(el);
         });
+
+        // Nút xem tất cả kết quả
+        const viewAll = document.createElement('a');
+        viewAll.href = `/genres?q=${encodeURIComponent(q)}`;
+        viewAll.className = 'search-item';
+        viewAll.style.cssText = 'display:block;text-align:center;padding:10px;font-size:13px;font-weight:700;color:var(--primary);background:rgba(255,94,54,.08);';
+        viewAll.innerHTML = `Xem tất cả kết quả cho "${escapeHtml(q)}" →`;
+        searchDropdown.appendChild(viewAll);
       } catch (_) {}
     }, 180);
   });
@@ -287,10 +355,49 @@
         all.className = 'wc-notification-all';
         all.textContent = 'Xem tất cả thông báo';
         dropdown.appendChild(all);
-      } catch (_) {
-        if (!badgeOnly) dropdown.innerHTML = '<div class="wc-notification-empty">Không tải được thông báo.</div>';
       }
-    }
+  }
+
+  function setupGuestContinueReading() {
+    const wrap = document.getElementById('guest-continue-reading');
+    const container = document.getElementById('guest-history-cards');
+    if (!wrap || !container) return;
+
+    try {
+      const historyRaw = localStorage.getItem('webcomics_guest_history');
+      if (!historyRaw) return;
+      const history = JSON.parse(historyRaw);
+      if (!Array.isArray(history) || !history.length) return;
+
+      container.innerHTML = '';
+      history.slice(0, 4).forEach(item => {
+        const percent = Math.max(5, Math.min(100, Math.round(item.percent || 0)));
+        const card = document.createElement('div');
+        card.style.cssText = 'background:var(--bg-surface-1);border:1px solid var(--border-color);border-radius:12px;padding:12px;display:flex;gap:12px;align-items:center;position:relative;overflow:hidden;';
+        card.innerHTML = `
+          <a href="${escapeAttribute(item.url)}" style="flex-shrink:0;">
+            <img src="${escapeAttribute(item.cover)}" alt="${escapeAttribute(item.title)}" style="width:58px;height:78px;object-fit:cover;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,.4);" loading="lazy" />
+          </a>
+          <div style="flex:1;min-width:0;">
+            <h3 style="font-size:14px;font-weight:700;color:#fff;margin:0 0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+              <a href="${escapeAttribute(item.comicUrl || '#')}" style="color:inherit;text-decoration:none;">${escapeHtml(item.title)}</a>
+            </h3>
+            <div style="font-size:12px;color:var(--text-sub);margin-bottom:6px;">
+              Đang đọc: <strong style="color:var(--primary);">${escapeHtml(item.chapterTitle || 'Ch.' + item.chapterNum)}</strong>
+            </div>
+            <div style="height:6px;background:rgba(255,255,255,.08);border-radius:999px;overflow:hidden;margin-bottom:6px;">
+              <div style="height:100%;width:${percent}%;background:linear-gradient(90deg,#ff5e36,#ff2a6d);border-radius:999px;"></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <span style="font-size:11px;color:var(--text-sub);">Tiến độ: ${percent}%</span>
+              <a href="${escapeAttribute(item.url)}" class="btn-sm" style="font-size:11px;padding:3px 8px;background:var(--primary);color:#fff;border-radius:6px;text-decoration:none;font-weight:700;">Đọc tiếp →</a>
+            </div>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+      wrap.style.display = 'block';
+    } catch (_) {}
   }
 
   function installNotificationStyles() {
@@ -315,4 +422,7 @@
   function escapeAttribute(value) {
     return escapeHtml(value).replace(/`/g, '&#96;');
   }
+
+  // Khởi chạy
+  setupGuestContinueReading();
 })();

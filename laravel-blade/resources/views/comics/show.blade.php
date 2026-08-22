@@ -27,6 +27,9 @@
       </div>
       <div class="spotlight-details">
         <div class="spotlight-tags">
+          @if($comic->is_mature || $comic->age_rating === '18+')
+            <span class="genre-tag" style="background: rgba(239,68,68,0.2); color: #f87171; border: 1px solid #ef4444; font-weight: 800;">🔞 18+</span>
+          @endif
           @foreach($comic->genres as $genre)
             <a href="{{ route('genres', ['genre' => $genre->slug]) }}" class="genre-tag">{{ $genre->name }}</a>
           @endforeach
@@ -35,7 +38,21 @@
           @endforeach
         </div>
         <h1 class="spotlight-title">{{ $comic->title }}</h1>
-        <p class="spotlight-author">Tác giả: {{ $comic->authors->pluck('name')->join(' · ') ?: 'Chưa cập nhật' }} · ⭐ {{ number_format($comic->avg_rating,1) }} · 👁 {{ $comic->formatted_views }} · {{ ucfirst($comic->status) }}</p>
+        <p class="spotlight-author">
+          Tác giả: 
+          @forelse($comic->authors as $author)
+            <a href="{{ route('authors.show', $author->slug) }}" style="color: var(--primary); text-decoration: none; font-weight: 700;">{{ $author->name }}</a>@if(!$loop->last), @endif
+          @empty
+            <span>Chưa cập nhật</span>
+          @endforelse
+          @if($comic->teams->isNotEmpty())
+            · Nhóm dịch:
+            @foreach($comic->teams as $team)
+              <a href="{{ route('teams.show', $team->slug) }}" style="color: #38bdf8; text-decoration: none; font-weight: 700;">{{ $team->name }}</a>@if(!$loop->last), @endif
+            @endforeach
+          @endif
+          · ⭐ {{ number_format($comic->avg_rating,1) }} · 👁 {{ $comic->formatted_views }} · {{ ucfirst($comic->status) }}
+        </p>
 
         @php
           $likeCount = $comic->likes()->count();
@@ -158,7 +175,7 @@
     @endphp
     @if($suggested->isNotEmpty())
       <section class="comics-section" style="padding-top:42px;">
-        <div class="section-header"><h2 class="section-title">✨ Dành Cho Bạn</h2></div>
+        <div class="section-header"><h2 class="section-title">👥 Người Đọc Truyện Này Cũng Đọc</h2></div>
         <div class="comics-grid">
           @foreach($suggested as $item)
             <a href="{{ route('comics.show', $item->slug) }}" class="comic-card-sm">
@@ -244,5 +261,62 @@
 
   loadComments(true); loadRatingSummary(); loadReviews(); loadUserRating();
 })();
+
+// ── 18+ AGE GATE VERIFICATION ──
+function confirmAgeGate() {
+  localStorage.setItem('webcomics_age_verified', 'true');
+  const modal = document.getElementById('age-gate-modal');
+  if (modal) modal.style.display = 'none';
+}
+
+@if($comic->is_mature || $comic->age_rating === '18+')
+(function() {
+  const verified = localStorage.getItem('webcomics_age_verified');
+  if (!verified) {
+    const modal = document.getElementById('age-gate-modal');
+    if (modal) modal.style.display = 'flex';
+  }
+})();
+@endif
 </script>
 @endpush
+
+@if($comic->is_mature || $comic->age_rating === '18+')
+<!-- ── AGE VERIFICATION MODAL (18+ GATE) ── -->
+<div id="age-gate-modal" style="
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.88);
+  backdrop-filter: blur(16px);
+  z-index: 999999;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+">
+  <div style="
+    background: rgba(19, 22, 30, 0.98);
+    border: 2px solid #ef4444;
+    border-radius: 20px;
+    max-width: 480px;
+    width: 100%;
+    padding: 32px 28px;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(239, 68, 68, 0.35);
+  ">
+    <div style="font-size: 54px; margin-bottom: 12px;">🔞</div>
+    <h2 style="font-size: 22px; font-weight: 900; color: #fff; margin: 0 0 10px 0;">Cảnh Báo Nội Dung 18+</h2>
+    <p style="color: var(--text-sub); font-size: 14px; line-height: 1.6; margin: 0 0 24px 0;">
+      Bộ truyện <strong>{{ $comic->title }}</strong> có chứa nội dung hoặc hình ảnh dành cho độ tuổi trưởng thành (18+). Bạn phải từ đủ 18 tuổi trở lên để tiếp tục xem tác phẩm này.
+    </p>
+    <div style="display: flex; gap: 12px; justify-content: center;">
+      <a href="{{ route('home') }}" class="btn-spotlight-sub" style="text-decoration: none; padding: 12px 20px; font-weight: 700; border-radius: 10px;">
+        ✕ Rời khỏi đây
+      </a>
+      <button type="button" onclick="confirmAgeGate()" class="btn-spotlight-read" style="background: #ef4444; border-color: #ef4444; padding: 12px 24px; font-weight: 800; border-radius: 10px; cursor: pointer; box-shadow: 0 4px 16px rgba(239,68,68,0.4);">
+        ✓ Tôi Đã Đủ 18 Tuổi
+      </button>
+    </div>
+  </div>
+</div>
+@endif

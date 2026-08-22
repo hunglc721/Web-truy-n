@@ -22,8 +22,8 @@ Target: `main`
 | Guest public reading | ✅ Done | Home, Genres, Schedule, Originals, detail and reader remain public. |
 | Member auth boundary | ✅ Done | Comment/reply/likes/library/rating/history remain authenticated actions. |
 | Shared header | ✅ Done | Guest/Member/staff state rendered server-side. |
-| Single runtime | ✅ Done | Laravel only; root Node mock server removed. |
-| Prototype folder | ✅ Reference-only | No runtime dependency. |
+| Single runtime | ✅ Done | Laravel 11 Blade only; legacy prototype directory retired & removed. |
+| Prototype folder | ✅ Sunset | Đã dọn dẹp hoàn toàn khỏi codebase; toàn bộ tính năng và giao diện đã nằm trong `laravel-blade`. |
 | Home | ✅ Done | DB-backed banners/trending/latest and user shortcuts. |
 | Genres | ✅ Done | DB-backed filtering/pagination; fake Active/Bulk actions removed/replaced. |
 | Schedule public | ✅ Done | Reads active DB schedules. |

@@ -23,6 +23,7 @@ class StoreChapterRequest extends FormRequest
             'is_free'        => 'nullable|boolean',
             'images'         => 'nullable|array',
             'images.*'       => 'image|mimes:jpeg,png,jpg,webp,gif|max:5120',
+            'zip_file'       => 'nullable|file|mimes:zip|max:102400',
             'pages_raw'      => 'nullable|string',
         ];
     }
@@ -39,15 +40,17 @@ class StoreChapterRequest extends FormRequest
             'images.*.image'          => 'File tải lên phải là hình ảnh hợp lệ.',
             'images.*.mimes'          => 'Chấp nhận các định dạng: JPEG, PNG, JPG, WEBP, GIF.',
             'images.*.max'            => 'Kích thước mỗi ảnh tối đa là 5MB.',
+            'zip_file.mimes'          => 'File nén phải có định dạng .ZIP.',
+            'zip_file.max'            => 'Kích thước file ZIP tối đa là 100MB.',
         ];
     }
 
     /**
-     * Sau validation chuẩn: kiểm tra phải có ít nhất 1 ảnh hoặc 1 URL.
+     * Sau validation chuẩn: kiểm tra phải có ít nhất 1 ảnh, 1 file ZIP hoặc 1 URL.
      * Gọi trong Controller trước khi xử lý tiếp.
      */
     public function hasContent(): bool
     {
-        return $this->hasFile('images') || !empty(trim($this->input('pages_raw', '')));
+        return $this->hasFile('images') || $this->hasFile('zip_file') || !empty(trim($this->input('pages_raw', '')));
     }
 }

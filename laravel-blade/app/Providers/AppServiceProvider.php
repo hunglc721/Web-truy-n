@@ -4,12 +4,21 @@ namespace App\Providers;
 
 use App\Events\CommentCreated;
 use App\Listeners\LogCommentCreated;
+use App\Models\Banner;
 use App\Models\Chapter;
 use App\Models\Comic;
+use App\Models\ComicLike;
 use App\Models\Comment;
+use App\Models\Rating;
+use App\Models\Schedule;
 use App\Models\Setting;
+use App\Observers\BannerObserver;
 use App\Observers\ChapterObserver;
+use App\Observers\ComicLikeObserver;
 use App\Observers\ComicObserver;
+use App\Observers\CommentObserver;
+use App\Observers\RatingObserver;
+use App\Observers\ScheduleObserver;
 use App\Policies\CommentPolicy;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -31,6 +40,11 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Comment::class, CommentPolicy::class);
         Chapter::observe(ChapterObserver::class);
         Comic::observe(ComicObserver::class);
+        Comment::observe(CommentObserver::class);
+        ComicLike::observe(ComicLikeObserver::class);
+        Rating::observe(RatingObserver::class);
+        Banner::observe(BannerObserver::class);
+        Schedule::observe(ScheduleObserver::class);
         Event::listen(CommentCreated::class, LogCommentCreated::class);
 
         // Public layout consumes the persistent settings created by the admin UI.

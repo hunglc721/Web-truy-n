@@ -55,13 +55,16 @@ class AdminAnalyticsController extends Controller
             ->groupBy('status')
             ->pluck('total', 'status');
 
+        $hotKeywords = \App\Models\SearchKeyword::hot(10)->get();
+
         return view('admin.analytics.index', compact(
             'stats',
             'topComics',
             'chapterLeaders',
             'recentActivities',
             'commentStatuses',
-            'reportStatuses'
+            'reportStatuses',
+            'hotKeywords'
         ));
     }
 }

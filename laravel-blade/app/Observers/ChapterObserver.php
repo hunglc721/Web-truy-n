@@ -32,6 +32,12 @@ class ChapterObserver
         // Home page: latest updates phụ thuộc vào chapter mới nhất
         Cache::forget('home.latest');
         Cache::forget('home.trending');
+
+        // Schedule cache phụ thuộc vào chapter mới nhất
+        Cache::forget('schedule.day_counts');
+        for ($i = 0; $i <= 6; $i++) {
+            Cache::forget("schedule.day.{$i}");
+        }
     }
 
     public function created(Chapter $chapter): void

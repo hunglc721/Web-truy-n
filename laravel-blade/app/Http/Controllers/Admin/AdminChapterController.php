@@ -89,6 +89,22 @@ class AdminChapterController extends Controller
         $tmpPaths = [];
         $urlList  = [];
 
+        if ($request->hasFile('zip_file')) {
+            $zipFile = $request->file('zip_file');
+            $tmpZipName = 'upload_' . $chapter->id . '_' . time() . '.zip';
+            $storedZipPath = $zipFile->storeAs('tmp/zip_uploads', $tmpZipName);
+            $zipAbsolutePath = storage_path('app/' . $storedZipPath);
+
+            $chapter->update(['processing_status' => 'pending']);
+
+            \App\Jobs\ProcessZipChapterUploadJob::dispatch($comic, $chapter, $zipAbsolutePath)
+                ->onQueue('chapter-images');
+
+            return redirect()
+                ->route('admin.comics.chapters.index', $comic->id)
+                ->with('success', "File .ZIP của Chapter {$chapter->chapter_number} đã được tải lên và đang tự động giải nén, sắp xếp thứ tự và tối ưu ảnh.");
+        }
+
         if ($request->hasFile('images')) {
             $tmpFolder = "tmp/comics/{$comic->id}/chapters/{$chapter->id}";
             foreach ($request->file('images') as $idx => $file) {

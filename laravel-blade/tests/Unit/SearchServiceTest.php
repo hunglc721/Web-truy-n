@@ -112,6 +112,65 @@ class SearchServiceTest extends TestCase
         $this->assertEquals($comic1->id, $res3->items()[0]->id);
     }
 
+    public function test_live_search_matches_vietnamese_without_accents(): void
+    {
+        $comic1 = Comic::factory()->create(['title' => 'Độc Tôn Tam Giới']);
+        $comic2 = Comic::factory()->create(['title' => 'Tôi Thăng Cấp Một Mình', 'alt_titles' => 'Solo Leveling']);
+
+        // User gõ không dấu: "doc ton" -> match "Độc Tôn Tam Giới"
+        $results1 = $this->searchService->liveSearch('doc ton');
+        $this->assertTrue($results1->pluck('id')->contains($comic1->id));
+
+        // User gõ không dấu: "thang cap" -> match "Tôi Thăng Cấp Một Mình"
+        $results2 = $this->searchService->liveSearch('thang cap');
+        $this->assertTrue($results2->pluck('id')->contains($comic2->id));
+
+        // User gõ tên tiếng Anh: "solo leveling" -> match qua alt_titles
+        $results3 = $this->searchService->liveSearch('solo leveling');
+        $this->assertTrue($results3->pluck('id')->contains($comic2->id));
+    }
+
+    public function test_search_records_and_retrieves_hot_keywords(): void
+    {
+        Comic::factory()->create(['title' => 'Solo Leveling']);
+
+        // Thực hiện tìm kiếm để ghi nhận keywords
+        $this->searchService->liveSearch('Solo Leveling');
+        $this->searchService->liveSearch('Solo Leveling');
+        $this->searchService->liveSearch('One Piece');
+
+        $hot = $this->searchService->getHotKeywords(5);
+        $this->assertNotEmpty($hot);
+        $this->assertEquals('Solo Leveling', $hot->first()->keyword);
+        $this->assertGreaterThanOrEqual(2, $hot->first()->hits);
+    }
+
+    public function test_advanced_search_filters_by_country_and_exclude_genres(): void
+    {
+        $genreAction = Genre::create(['name' => 'Action', 'slug' => 'action']);
+        $genreHorror = Genre::create(['name' => 'Horror', 'slug' => 'horror']);
+
+        $manga = Comic::factory()->create([
+            'title'   => 'Tokyo Ghoul',
+            'country' => 'JP',
+        ]);
+        $manga->genres()->attach([$genreAction->id, $genreHorror->id]);
+
+        $manhwa = Comic::factory()->create([
+            'title'   => 'Omniscient Reader',
+            'country' => 'KR',
+        ]);
+        $manhwa->genres()->attach([$genreAction->id]);
+
+        // Lọc genre = action NHƯNG loại trừ horror
+        $resExclude = $this->searchService->advancedSearch([
+            'genres'         => ['action'],
+            'exclude_genres' => ['horror'],
+        ]);
+        $this->assertEquals(1, $resExclude->total());
+        $this->assertEquals($manhwa->id, $resExclude->items()[0]->id);
+    }
+
     public function test_advanced_search_sorts_correctly(): void
     {
         $comicA = Comic::factory()->create(['title' => 'Alpha Hero', 'views' => 100, 'avg_rating' => 4.2]);

@@ -44,8 +44,17 @@
         margin-bottom: 30px;
         display: flex;
         flex-direction: column;
-        gap: 20px;
+        gap: 18px;
       ">
+
+        {{-- 0. Tìm kiếm từ khoá (Search Query) --}}
+        <div class="filter-group" style="display: flex; align-items: center; gap: 16px;">
+          <span class="filter-label" style="font-weight: 700; color: var(--text-sub); min-width: 90px;">Từ khoá:</span>
+          <div style="flex: 1; max-width: 460px; display: flex; gap: 8px;">
+            <input type="text" name="q" value="{{ $q ?? '' }}" placeholder="Tìm theo tên truyện, tác giả (có dấu hoặc không dấu)..." class="form-control" style="flex: 1; background: var(--bg-surface-2); border: 1px solid var(--border-color); border-radius: 8px; padding: 8px 14px; color: #fff; font-size: 14px;" />
+            <button type="submit" class="btn btn-login" style="padding: 8px 16px; border-radius: 8px;">🔍 Tìm</button>
+          </div>
+        </div>
 
         {{-- 1. Lọc theo Thể loại (Genre Chips & Multi-select) --}}
         <div class="filter-group" style="display: flex; align-items: flex-start; gap: 16px;">
@@ -60,7 +69,6 @@
             @foreach($genres as $g)
               @php
                 $isCurrentlySelected = in_array($g->slug, $selectedGenres);
-                // Toggle slug in array for multi-selection link
                 $newSelected = $isCurrentlySelected
                     ? array_diff($selectedGenres, [$g->slug])
                     : array_merge($selectedGenres, [$g->slug]);
@@ -79,41 +87,80 @@
           </div>
         </div>
 
-        {{-- 2. Lọc theo Trạng thái truyện (Status: Tất cả / Ongoing / Completed) --}}
+        {{-- 2. Lọc theo Quốc gia / Xuất xứ (Manga, Manhwa, Manhua, VN) --}}
+        <div class="filter-group" style="display: flex; align-items: center; gap: 16px;">
+          <span class="filter-label" style="font-weight: 700; color: var(--text-sub); min-width: 90px;">Xuất xứ:</span>
+          <div class="filter-chips" style="display: flex; flex-wrap: wrap; gap: 8px;">
+            @foreach([
+              'all'     => '🌐 Tất cả',
+              'manga'   => '🇯🇵 Manga (Nhật Bản)',
+              'manhwa'  => '🇰🇷 Manhwa (Hàn Quốc)',
+              'manhua'  => '🇨🇳 Manhua (Trung Quốc)',
+              'vietnam' => '🇻🇳 WebComics Originals (Việt Nam)',
+            ] as $cKey => $cLabel)
+              <a href="{{ route('genres', array_merge(request()->except(['page', 'country']), ['country' => $cKey])) }}"
+                 class="chip {{ ($country ?? 'all') === $cKey ? 'active' : '' }}">
+                {{ $cLabel }}
+              </a>
+            @endforeach
+          </div>
+        </div>
+
+        {{-- 3. Lọc theo Trạng thái truyện (Status: Tất cả / Ongoing / Completed / Hiatus) --}}
         <div class="filter-group" style="display: flex; align-items: center; gap: 16px;">
           <span class="filter-label" style="font-weight: 700; color: var(--text-sub); min-width: 90px;">Trạng thái:</span>
           <div class="filter-chips" style="display: flex; flex-wrap: wrap; gap: 8px;">
             @foreach([
               'all'       => '🌐 Tất cả',
               'ongoing'   => '🟢 Đang tiến hành (Ongoing)',
-              'completed' => '🔵 Hoàn thành (Completed)'
+              'completed' => '🔵 Hoàn thành (Completed)',
+              'hiatus'    => '🟡 Tạm dừng (Hiatus)',
             ] as $statusKey => $statusLabel)
               <a href="{{ route('genres', array_merge(request()->except(['page', 'status']), ['status' => $statusKey])) }}"
-                 class="chip {{ $status === $statusKey ? 'active' : '' }}">
+                 class="chip {{ ($status ?? 'all') === $statusKey ? 'active' : '' }}">
                 {{ $statusLabel }}
               </a>
             @endforeach
           </div>
         </div>
 
-        {{-- 3. Sắp xếp kết quả (Sort By: Top views / Rating / Latest) --}}
+        {{-- 4. Lọc theo Số chương tối thiểu (Min Chapters) --}}
+        <div class="filter-group" style="display: flex; align-items: center; gap: 16px;">
+          <span class="filter-label" style="font-weight: 700; color: var(--text-sub); min-width: 90px;">Số chương:</span>
+          <div class="filter-chips" style="display: flex; flex-wrap: wrap; gap: 8px;">
+            @foreach([
+              0   => 'Tất cả',
+              10  => '>= 10 Chapter',
+              50  => '>= 50 Chapter',
+              100 => '>= 100 Chapter',
+            ] as $chapMin => $chapLabel)
+              <a href="{{ route('genres', array_merge(request()->except(['page', 'min_chapters']), ['min_chapters' => $chapMin])) }}"
+                 class="chip {{ ((int) ($minChapters ?? 0)) === $chapMin ? 'active' : '' }}">
+                {{ $chapLabel }}
+              </a>
+            @endforeach
+          </div>
+        </div>
+
+        {{-- 5. Sắp xếp kết quả (Sort By: Top views / Rating / Latest / Alphabetical) --}}
         <div class="filter-group" style="display: flex; align-items: center; gap: 16px;">
           <span class="filter-label" style="font-weight: 700; color: var(--text-sub); min-width: 90px;">Sắp xếp:</span>
           <div class="filter-chips" style="display: flex; flex-wrap: wrap; gap: 8px;">
             @foreach([
-              'hot'    => '🔥 Top Lượt Xem (Hottest)',
-              'rating' => '⭐ Đánh Giá Cao (Top Rated)',
-              'latest' => '🆕 Mới Cập Nhật (Latest)'
+              'hot'          => '🔥 Top Lượt Xem (Hottest)',
+              'rating'       => '⭐ Đánh Giá Cao (Top Rated)',
+              'latest'       => '🆕 Mới Cập Nhật (Latest)',
+              'alphabetical' => '🔤 Tên A-Z',
             ] as $sortKey => $sortLabel)
               <a href="{{ route('genres', array_merge(request()->except(['page', 'sort']), ['sort' => $sortKey])) }}"
-                 class="chip {{ $sortBy === $sortKey ? 'active' : '' }}">
+                 class="chip {{ ($sortBy ?? 'hot') === $sortKey ? 'active' : '' }}">
                 {{ $sortLabel }}
               </a>
             @endforeach
           </div>
         </div>
 
-        @if(!empty($selectedGenres) || $status !== 'all' || $sortBy !== 'hot')
+        @if(!empty($selectedGenres) || !empty($excludeGenres) || ($status ?? 'all') !== 'all' || ($country ?? 'all') !== 'all' || !empty($minChapters) || ($sortBy ?? 'hot') !== 'hot' || !empty($q))
           <div style="border-top: 1px solid var(--border-color); padding-top: 14px; display: flex; justify-content: flex-end;">
             <a href="{{ route('genres') }}" style="color: #ef4444; font-size: 13px; font-weight: 700; text-decoration: none;">
               ✖ Xóa tất cả bộ lọc

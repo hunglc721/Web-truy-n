@@ -73,6 +73,21 @@ class HomeController extends Controller
                 ->get();
         });
 
-        return view('home', compact('banners', 'trendingComics', 'genres', 'latestUpdates'));
+        /*
+        |──────────────────────────────────────────────────────────
+        | RECENT READING HISTORY (Khối Tiếp Tục Đọc)
+        |──────────────────────────────────────────────────────────
+        */
+        $recentReadings = auth()->check()
+            ? \App\Models\ReadingHistory::with(['comic.genres', 'chapter'])
+                ->where('user_id', auth()->id())
+                ->whereHas('comic')
+                ->whereHas('chapter')
+                ->latest('last_read_at')
+                ->take(4)
+                ->get()
+            : collect();
+
+        return view('home', compact('banners', 'trendingComics', 'genres', 'latestUpdates', 'recentReadings'));
     }
 }

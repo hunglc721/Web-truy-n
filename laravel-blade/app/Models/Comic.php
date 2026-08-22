@@ -16,32 +16,59 @@ class Comic extends Model
 
     protected $fillable = [
         'title',
+        'title_normalized',
+        'alt_titles',
+        'alt_titles_normalized',
         'slug',
         'cover_image',
         'description',
         'status',
+        'country',
+        'released_year',
         'is_original',
         'is_featured',
         'views',
+        'views_count',
+        'likes_count',
+        'comments_count',
         'avg_rating',
+        'rating_avg',
         'total_ratings',
+        'rating_count',
         'trending_rank',
+        'is_mature',
+        'age_rating',
+        'content_warning',
         'published_at',
     ];
 
     protected $casts = [
-        'is_original'  => 'boolean',
-        'is_featured'  => 'boolean',
-        'avg_rating'   => 'float',
-        'published_at' => 'date',
+        'is_mature'      => 'boolean',
+        'is_original'    => 'boolean',
+        'is_featured'    => 'boolean',
+        'released_year'  => 'integer',
+        'avg_rating'     => 'float',
+        'rating_avg'     => 'float',
+        'total_ratings'  => 'integer',
+        'rating_count'   => 'integer',
+        'likes_count'    => 'integer',
+        'comments_count' => 'integer',
+        'views_count'    => 'integer',
+        'published_at'   => 'date',
     ];
 
     // ─────────────────────────────────────────────────────────────
-    // AUTO SLUG
+    // AUTO SLUG & NORMALIZATION
     // ─────────────────────────────────────────────────────────────
     protected static function booted(): void
     {
-        static::creating(function (Comic $comic) {
+        static::saving(function (Comic $comic) {
+            if (!empty($comic->title)) {
+                $comic->title_normalized = \App\Helpers\VietnameseHelper::removeAccents($comic->title);
+            }
+            if (!empty($comic->alt_titles)) {
+                $comic->alt_titles_normalized = \App\Helpers\VietnameseHelper::removeAccents($comic->alt_titles);
+            }
             if (empty($comic->slug)) {
                 $comic->slug = Str::slug($comic->title ?: 'comic-' . ($comic->id ?? time()));
             }
@@ -200,6 +227,17 @@ class Comic extends Model
         return $this->belongsToMany(Tag::class, 'comic_tag');
     }
 
+    public function teams(): BelongsToMany
+    {
+        return $this->belongsToMany(Team::class, 'comic_team')
+                    ->withTimestamps();
+    }
+
+    public function collaborativeRecommendations(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(ComicRecommendation::class, 'comic_id')->orderBy('score', 'desc');
+    }
+
     // ─────────────────────────────────────────────────────────────
     // SCOPES — dùng trong Controller như: Comic::trending()->get()
     // ─────────────────────────────────────────────────────────────
@@ -253,13 +291,18 @@ class Comic extends Model
         return (string) $views;
     }
 
-    /** Cập nhật avg_rating sau khi có rating mới — gọi từ RatingObserver */
+    /** Cập nhật avg_rating và rating_count sau khi có rating mới — gọi từ RatingObserver */
     public function recalculateRating(): void
     {
-        $avg = $this->ratings()->avg('score') ?? 0;
+        $avg = (float) ($this->ratings()->avg('score') ?? 0);
+        $total = (int) $this->ratings()->count();
+        $roundedAvg = round($avg, 1);
+
         $this->update([
-            'avg_rating'    => round($avg, 1),
-            'total_ratings' => $this->ratings()->count(),
+            'avg_rating'    => $roundedAvg,
+            'rating_avg'    => $roundedAvg,
+            'total_ratings' => $total,
+            'rating_count'  => $total,
         ]);
     }
 }

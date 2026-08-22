@@ -107,15 +107,15 @@ class ChapterController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(20);
 
-        // 7. Đếm view qua Cache buffer — chống spam F5 bằng TTL 30 phút
-        //    Key: view:{chapter_id}:{user_id|ip} — Không lưu vào session (tránh phình session)
+        // 7. Đếm view qua Cache buffer — chống spam F5 bằng TTL 15 phút
+        //    Key: view_chapter:{chapter_id}:{user_id|ip} — Không lưu vào session (tránh phình session)
         //    Admin preview không tính vào view count (tránh skew số liệu)
         if (!$isAdmin) {
             $userOrIp  = auth()->id() ?? request()->ip();
-            $antiF5Key = "view:{$chapter->id}:{$userOrIp}";
+            $antiF5Key = "view_chapter:{$chapter->id}:{$userOrIp}";
 
             // Cache::add() trả về true nếu key CHƯA từng tồn tại (atomic chống F5)
-            if (Cache::add($antiF5Key, true, 1800)) {
+            if (Cache::add($antiF5Key, true, 900)) {
                 FlushViewCounters::recordView($comic->id, $chapter->id);
             }
         }

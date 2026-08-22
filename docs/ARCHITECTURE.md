@@ -1,131 +1,126 @@
 # WebComics Architecture
 
-## Runtime model
+## 1. Runtime Model
 
-`laravel-blade/` is the only application that should be run for the real website.
+`laravel-blade/` là ứng dụng chính và là runtime duy nhất của hệ thống:
 
-- `prototype/` is a UI/UX reference and source for visual behavior.
-- `server.js` is not part of the production runtime.
-- The real website uses one Laravel origin, one session/authentication system, one database, and one route tree.
-- Prototype `localStorage` and mock API state must not be used for production features.
+- **Framework**: Laravel 11 + PHP 8.3.
+- **Frontend / Rendering**: Server-side Blade templates kết hợp Vanilla CSS & JavaScript (`public/js/app.js`), responsive tối ưu cho cả desktop và mobile.
+- **Single Origin**: Mọi request web và API nội bộ đều chạy trên cùng một origin Laravel, sử dụng chung session, cookie CSRF và auth context.
+- **Legacy Prototype**: Bản prototype HTML/JS ban đầu đã được di dời và hợp nhất 100% vào `laravel-blade/` (đã dọn dẹp khỏi source tree).
 
-## Visitor and role model
+## 2. Visitor and Role Model
 
 ### Guest
-
-Guests can browse the website without logging in:
-
-- Home
-- Genres
-- Schedule
-- Originals
-- Comic detail pages
-- Chapter reader
-- Public search
-- Public ratings/reviews display
-- Public comments display
-- Recommendations
-
-A guest must log in only when attempting an authenticated action.
+Khách vãng lai có thể trải nghiệm đầy đủ các tính năng đọc mà không bắt buộc đăng nhập:
+- Trang chủ (Hero Banners, Trending, Latest updates)
+- Danh mục thể loại & bộ lọc đa tiêu chí (`/genres`)
+- Lịch phát hành theo ngày trong tuần (`/schedule`)
+- Danh mục WebComics Originals (`/originals`)
+- Xem chi tiết truyện, danh sách chương (`/truyen/{slug}`)
+- Trình đọc chapter mượt mà (`/truyen/{comicSlug}/{chapterSlug}`)
+- Tìm kiếm tức thì & xem đánh giá / bình luận công khai
 
 ### Member
+Người dùng đã đăng nhập có thêm các tương tác cá nhân:
+- Gửi bình luận và trả lời (hệ thống tự động lọc từ nhạy cảm và phát hiện spam)
+- Yêu thích truyện (Like) & Đánh giá sao kèm nhận xét (Rating & Review)
+- Thêm / Bỏ truyện khỏi Tủ sách cá nhân (`/user/library`)
+- Tự động lưu tiến độ đọc (khôi phục % vị trí cuộn trang)
+- Bảng điều khiển cá nhân (`/user/dashboard`) và báo cáo thống kê đọc
 
-A normal authenticated user keeps all guest permissions and can additionally:
+### Staff & Admin (RBAC)
+Được bảo vệ nghiêm ngặt bằng `AdminMiddleware` và phân quyền chi tiết (RBAC) theo vai trò:
+- **Admin**: Toàn quyền quản trị hệ thống, truyện, chapter, thành viên, cài đặt.
+- **Editor**: Quản lý truyện, chương, banner, lịch phát hành.
+- **Moderator**: Quản lý bình luận, báo cáo vi phạm, nội dung người dùng.
+- **Viewer**: Xem thống kê và nhật ký hoạt động.
 
-- Comment and reply
-- Like comics
-- Rate comics/reviews
-- Add/remove comics from Library
-- Save reading history/progress
-- View personal library and reading statistics
+## 3. High-Performance Architecture (Scale to 10k+ Comics)
 
-### Admin
+```text
+[ Browser / Client ]
+       │
+       ▼
+[ Nginx / Cloudflare ]
+       │
+       ▼
+[ Laravel 11 App ] ──► [ Multi-Tier Cache (Redis/File) ]
+       │                ├── Banners (TTL 5m)
+       │                ├── Trending / Latest (TTL 5-15m)
+       │                ├── Genres / Schedules (TTL 15-60m)
+       │                └── Anti-Spam F5 Lock (TTL 15m)
+       │
+       ├──► [ Async Queue Worker ]
+       │      ├── ProcessChapterImages (Tối ưu ảnh & dimensions)
+       │      ├── FlushViewCounters (Gộp view buffer -> 1 câu SQL CASE WHEN)
+       │      └── InvalidateUserRecommendation (Debounced cache refresh)
+       │
+       ▼
+[ Database (MySQL / SQLite) ]
+       ├── Denormalized Counter Caches (likes_count, comments_count, rating_avg, rating_count, views_count)
+       └── Optimized Composite Indexes (slug, [comic_id, chapter_number], [user_id, comic_id])
+```
 
-An admin keeps all member permissions and can access `/admin` and its children.
+### A. Counter Cache & Model Observers
+Bảng `comics` duy trì trực tiếp các chỉ số tổng hợp để trang chủ và danh sách truyện tải nhanh trong < 50ms mà không phải chạy `COUNT(*)` hay `AVG()`:
+- `likes_count`: Duy trì bởi `ComicLikeObserver`.
+- `comments_count`: Duy trì bởi `CommentObserver` (chỉ tính bình luận `approved`).
+- `rating_avg` & `rating_count`: Duy trì bởi `RatingObserver` / `Comic::recalculateRating()`.
+- `views_count`: Đồng bộ cùng `views` qua batch flush.
 
-Admin authorization is enforced server-side by `AdminMiddleware` and `User::isAdmin()`.
+### B. Read-Layer Caching & Invalidation Lifecycle
+- `home.banners`: Lưu cache 5 phút, invalidate khi `BannerObserver` phát hiện thêm/sửa/xoá banner.
+- `home.trending`: Lưu cache 15 phút, invalidate khi có chapter mới được publish hoặc truyện cập nhật.
+- `home.latest`: Lưu cache 5 phút, invalidate ngay khi chapter publish.
+- `schedule.day.{0-6}` & `schedule.day_counts`: Lưu cache 15 phút, invalidate bởi `ScheduleObserver` và `ChapterObserver`.
+- `all_genres`: Lưu cache 60 phút, invalidate khi quản trị viên cập nhật thể loại.
 
-Hiding the Admin button in the UI is not considered security. Direct requests to `/admin` must still be rejected for non-admin users.
+### C. Asynchronous View Buffer & Anti-Spam
+1. Khi người dùng đọc một chương, hệ thống kiểm tra khoá chống spam: `view:{$chapterId}:{$userOrIp}` với TTL 15 phút.
+2. Nếu hợp lệ, counter được tăng nguyên tử trong Cache Buffer (`views:buffer:chapter:{$id}` và `views:buffer:comic:{$id}`).
+3. Định kỳ mỗi 5 phút, Scheduler chạy lệnh `views:flush` (job `FlushViewCounters`) để cập nhật toàn bộ views xuống CSDL trong một câu lệnh `UPDATE ... SET views = CASE ... ELSE views END` duy nhất.
 
-## Route policy
+## 4. Route Policy & Security Boundary
 
 ```text
 PUBLIC
-/
-/genres
-/schedule
-/originals
-/truyen/{slug}
-/truyen/{comicSlug}/{chapterSlug}
-/api/search/*
-/api/recommendations
-/api/comments [read-only GET]
-/api/comics/{comicId}/ratings/* [public read endpoints]
+  GET  /
+  GET  /genres
+  GET  /schedule
+  GET  /originals
+  GET  /truyen/{slug}
+  GET  /truyen/{comicSlug}/{chapterSlug}
+  GET  /api/search/*
+  GET  /api/recommendations
+  GET  /api/comments [read-only GET]
+  GET  /api/comics/{comicId}/ratings/*
 
-AUTHENTICATED USER
-/user/library
-/api/comments [write]
-/api/reading-history
-/api/comics/{comicId}/toggle-library
-/api/comics/{comicId}/toggle-like
-/api/comics/{comicId}/ratings [write]
-/api/user/statistics/*
-/logout
+AUTHENTICATED (MEMBER)
+  GET  /user/dashboard
+  GET  /user/library
+  GET  /user/history
+  GET  /user/likes
+  POST /api/comments [rate-limited]
+  POST /api/reading-history
+  POST /api/comics/{comicId}/toggle-library
+  POST /api/comics/{comicId}/toggle-like
+  POST /api/comics/{comicId}/ratings
 
-ADMIN
-/admin/*
+ADMIN / STAFF (auth + AdminMiddleware + permission:*)
+  GET  /admin
+  GET  /admin/analytics
+  CRUD /admin/comics/*
+  CRUD /admin/genres/*
+  CRUD /admin/tags/*
+  CRUD /admin/authors/*
+  CRUD /admin/users/*
+  CRUD /admin/comments/*
+  CRUD /admin/reports/*
+  CRUD /admin/schedules/*
+  CRUD /admin/banners/*
+  GET  /admin/logs
+  CRUD /admin/permissions/*
+  GET/POST /admin/settings/*
 ```
 
-## UI migration rule
-
-When migrating a prototype screen into Blade:
-
-1. Keep the prototype visual hierarchy, layout, responsive behavior, wording, and interaction style where practical.
-2. Reuse an existing Laravel feature when that feature already exists.
-3. Replace prototype mock data/localStorage with Laravel models, controllers, Blade data, and JSON endpoints.
-4. Do not create duplicate features when Laravel already provides the same capability.
-5. When Laravel already provides a feature but its UI differs from the prototype, adapt the Blade UI to the prototype instead of replacing the backend behavior.
-6. Keep authentication and authorization in Laravel, never in client-side JavaScript alone.
-
-## Expected user flow
-
-```text
-Guest
-  -> browse
-  -> read
-  -> attempts comment/library/like/rating
-  -> login
-
-Member
-  -> browse + read
-  -> authenticated interactions
-  -> logout
-
-Admin
-  -> login
-  -> normal website access
-  -> /admin
-  -> AdminMiddleware
-  -> admin dashboard + management modules
-```
-
-## Current implementation notes
-
-The Laravel application already contains the main authentication and authorization foundation:
-
-- `AuthController` handles login, registration, session regeneration, logout, banned-user checks, and admin/member redirects.
-- `User::isAdmin()` is the single role helper.
-- `AdminMiddleware` protects the `/admin` route group.
-- Blade views already use `@auth`/`@else` for library, like, and rating actions, so guests can still read normally.
-- The prototype interaction layer has been moved onto the Laravel origin through `laravel-blade/public/js/app.js`; it no longer depends on `localhost:3000` for live search and navigation.
-
-## Definition of done for the single-app migration
-
-- No production page requires the Node prototype server.
-- No production feature depends on prototype `localStorage` mock state.
-- Every real URL is served by Laravel.
-- Guest can read without authentication.
-- Auth-required actions redirect or prompt the guest to `/login`.
-- Non-admin authenticated users cannot access `/admin/*` even by typing the URL directly.
-- Admin users can access `/admin/*` while normal users remain restricted.
-- Prototype and Blade screens are visually aligned where the feature is migrated.

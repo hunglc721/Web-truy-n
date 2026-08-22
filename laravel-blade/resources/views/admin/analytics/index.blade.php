@@ -114,6 +114,26 @@
         @endforelse
       </div>
     </section>
-  </div>
+  <section class="admin-card" style="margin-top:20px;">
+    <div class="admin-card-header"><h2 class="admin-card-title">🔥 Top Từ Khoá Tìm Kiếm Thịnh Hành</h2></div>
+    <div style="overflow-x:auto;">
+      <table class="admin-table">
+        <thead><tr><th>#</th><th>Từ khoá</th><th>Chuẩn hoá</th><th>Lượt tìm kiếm (Hits)</th><th style="text-align:right;">Lần tìm gần nhất</th></tr></thead>
+        <tbody>
+          @forelse($hotKeywords as $kw)
+            <tr>
+              <td style="font-weight:900; color:{{ $loop->iteration <= 3 ? '#ff2a6d' : 'var(--admin-text-muted)' }};">#{{ $loop->iteration }}</td>
+              <td style="font-weight:700;color:#fff;">🔍 {{ $kw->keyword }}</td>
+              <td style="color:var(--admin-text-muted);font-family:monospace;font-size:12px;">{{ $kw->keyword_normalized }}</td>
+              <td><span class="admin-badge admin-badge-primary">{{ number_format($kw->hits) }} lượt</span></td>
+              <td style="text-align:right;color:var(--admin-text-muted);font-size:12px;">{{ $kw->last_searched_at?->diffForHumans() ?? 'Vừa xong' }}</td>
+            </tr>
+          @empty
+            <tr><td colspan="5" style="text-align:center;color:var(--admin-text-muted);">Chưa có dữ liệu tìm kiếm.</td></tr>
+          @endforelse
+        </tbody>
+      </table>
+    </div>
+  </section>
 </div>
 @endsection

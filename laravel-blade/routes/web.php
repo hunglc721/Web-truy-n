@@ -41,11 +41,28 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/genres', [GenreController::class, 'index'])->name('genres');
 Route::get('/schedule', [ScheduleController::class, 'index'])->name('schedule');
 Route::get('/originals', [OriginalsController::class, 'index'])->name('originals');
+Route::get('/authors/{slug}', [\App\Http\Controllers\AuthorController::class, 'show'])->name('authors.show');
+Route::get('/teams', [\App\Http\Controllers\TeamController::class, 'index'])->name('teams.index');
+Route::get('/teams/{slug}', [\App\Http\Controllers\TeamController::class, 'show'])->name('teams.show');
+Route::get('/lists', [\App\Http\Controllers\ReadingListController::class, 'index'])->name('lists.index');
+Route::get('/lists/{slug}', [\App\Http\Controllers\ReadingListController::class, 'show'])->name('lists.show');
+Route::get('/dmca', [\App\Http\Controllers\DmcaController::class, 'show'])->name('dmca.show');
+Route::post('/dmca', [\App\Http\Controllers\DmcaController::class, 'store'])->name('dmca.store');
 Route::get('/truyen/{slug}', [ComicController::class, 'show'])->name('comics.show');
 Route::get('/truyen/{comicSlug}/{chapterSlug}', [ChapterController::class, 'show'])->name('chapters.show');
 Route::get('/banners/{banner}/click', [BannerController::class, 'click'])->name('banners.click');
 Route::get('/api/announcements/active', [AnnouncementController::class, 'active'])->name('announcements.active');
 Route::post('/api/announcements/{announcement}/dismiss', [AnnouncementController::class, 'dismiss'])->name('announcements.dismiss');
+
+Route::post('/api/lists', [\App\Http\Controllers\ReadingListController::class, 'store'])->middleware('auth')->name('api.lists.store');
+Route::post('/api/lists/{id}/toggle-like', [\App\Http\Controllers\ReadingListController::class, 'toggleLike'])->middleware('auth')->name('api.lists.toggleLike');
+Route::get('/api/wallet/balance', [\App\Http\Controllers\WalletController::class, 'balance'])->middleware('auth')->name('api.wallet.balance');
+Route::post('/api/wallet/deposit', [\App\Http\Controllers\WalletController::class, 'deposit'])->middleware('auth')->name('api.wallet.deposit');
+Route::post('/api/chapters/{chapterId}/unlock', [\App\Http\Controllers\WalletController::class, 'unlockChapter'])->middleware('auth')->name('api.chapters.unlock');
+Route::post('/api/authors/{id}/follow', [\App\Http\Controllers\AuthorController::class, 'follow'])->name('api.authors.follow');
+Route::post('/api/teams/{id}/follow', [\App\Http\Controllers\TeamController::class, 'follow'])->name('api.teams.follow');
+Route::post('/api/push/subscribe', [\App\Http\Controllers\PushNotificationController::class, 'subscribe'])->name('api.push.subscribe');
+Route::post('/api/push/unsubscribe', [\App\Http\Controllers\PushNotificationController::class, 'unsubscribe'])->name('api.push.unsubscribe');
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
@@ -91,6 +108,7 @@ Route::middleware('auth')->group(function () {
 Route::get('/api/comics/{comicId}/ratings/summary', [RatingController::class, 'summary'])->middleware('throttle:api')->name('comics.ratings.summary');
 Route::get('/api/comics/{comicId}/ratings/reviews', [RatingController::class, 'reviews'])->middleware('throttle:api')->name('comics.ratings.reviews');
 Route::get('/api/search/live', [SearchController::class, 'live'])->middleware('throttle:api')->name('search.live');
+Route::get('/api/search/hot', [SearchController::class, 'hot'])->middleware('throttle:api')->name('search.hot');
 Route::get('/api/search/advanced', [SearchController::class, 'advanced'])->middleware('throttle:api')->name('search.advanced');
 Route::get('/api/comments', [CommentController::class, 'index'])->middleware('throttle:api')->name('comments.index');
 Route::get('/api/recommendations', [RecommendationController::class, 'index'])->middleware('throttle:api')->name('recommendations.index');
