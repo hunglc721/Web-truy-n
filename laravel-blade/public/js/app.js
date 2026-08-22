@@ -88,14 +88,88 @@
     });
   }
 
-  const slides = $$('.banner-slide');
-  if (slides.length > 1) {
-    let index = 0;
-    setInterval(() => {
-      slides[index].style.display = 'none';
-      index = (index + 1) % slides.length;
-      slides[index].style.display = 'block';
-    }, 5000);
+  // ── HERO BANNER CAROUSEL ─────────────────────────────────────────
+  const bannerCarousel = $('#banner-carousel');
+  if (bannerCarousel) {
+    const slides = $$('.banner-slide', bannerCarousel);
+    const dots = $$('.banner-dot', bannerCarousel);
+    const prevBtn = $('#banner-prev', bannerCarousel);
+    const nextBtn = $('#banner-next', bannerCarousel);
+    let currentIndex = 0;
+    let autoPlayTimer = null;
+    const intervalMs = 2000;
+
+    const goToSlide = (newIndex) => {
+      if (!slides.length) return;
+      slides[currentIndex]?.classList.remove('active');
+      dots[currentIndex]?.classList.remove('active');
+
+      currentIndex = (newIndex + slides.length) % slides.length;
+
+      slides[currentIndex]?.classList.add('active');
+      dots[currentIndex]?.classList.add('active');
+    };
+
+    const nextSlide = () => goToSlide(currentIndex + 1);
+    const prevSlide = () => goToSlide(currentIndex - 1);
+
+    const startAutoPlay = () => {
+      stopAutoPlay();
+      if (slides.length > 1) {
+        autoPlayTimer = setInterval(nextSlide, intervalMs);
+      }
+    };
+
+    const stopAutoPlay = () => {
+      if (autoPlayTimer) {
+        clearInterval(autoPlayTimer);
+        autoPlayTimer = null;
+      }
+    };
+
+    nextBtn?.addEventListener('click', (e) => {
+      e.preventDefault();
+      nextSlide();
+      startAutoPlay();
+    });
+
+    prevBtn?.addEventListener('click', (e) => {
+      e.preventDefault();
+      prevSlide();
+      startAutoPlay();
+    });
+
+    dots.forEach((dot, idx) => {
+      dot.addEventListener('click', (e) => {
+        e.preventDefault();
+        goToSlide(idx);
+        startAutoPlay();
+      });
+    });
+
+    // Pause on hover
+    bannerCarousel.addEventListener('mouseenter', stopAutoPlay);
+    bannerCarousel.addEventListener('mouseleave', startAutoPlay);
+
+    // Touch / Swipe support
+    let touchStartX = 0;
+    let touchEndX = 0;
+    bannerCarousel.addEventListener('touchstart', (e) => {
+      touchStartX = e.changedTouches[0].screenX;
+      stopAutoPlay();
+    }, { passive: true });
+
+    bannerCarousel.addEventListener('touchend', (e) => {
+      touchEndX = e.changedTouches[0].screenX;
+      const diff = touchStartX - touchEndX;
+      if (Math.abs(diff) > 40) {
+        if (diff > 0) nextSlide();
+        else prevSlide();
+      }
+      startAutoPlay();
+    }, { passive: true });
+
+    startAutoPlay();
   }
 
   async function loadPublicAnnouncements() {

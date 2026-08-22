@@ -29,8 +29,9 @@ class ProcessChapterImages implements ShouldQueue
         $this->onQueue('chapter-images');
     }
 
-    public function handle(ImageService $imageService, ChapterNotificationService $notificationService): void
+    public function handle(ImageService $imageService, ?ChapterNotificationService $notificationService = null): void
     {
+        $notificationService = $notificationService ?? app(ChapterNotificationService::class);
         $this->chapter->update(['processing_status' => 'processing']);
 
         try {
@@ -46,7 +47,7 @@ class ProcessChapterImages implements ShouldQueue
                 \Storage::disk('public')->put($destPath, $content);
                 \Storage::disk('public')->delete($tmpPath);
 
-                $dimensions = @getimagesizefromstring($content);
+                $dimensions = $content ? @getimagesizefromstring($content) : null;
                 if (!$dimensions) {
                     $fullPath = \Storage::disk('public')->path($destPath);
                     $dimensions = @getimagesize($fullPath);
@@ -54,7 +55,7 @@ class ProcessChapterImages implements ShouldQueue
                 $width  = $dimensions[0] ?? 800;
                 $height = $dimensions[1] ?? 1200;
 
-                $finalPages[]     = $destPath;
+                $finalPages[] = $destPath;
                 $pageDimensions[] = [
                     'width'  => (int) $width,
                     'height' => (int) $height,
@@ -75,7 +76,7 @@ class ProcessChapterImages implements ShouldQueue
                 'processing_status' => 'ready',
             ]);
 
-            $notificationService->dispatchIfEligible($this->chapter);
+            $notificationService?->dispatchIfEligible($this->chapter);
         } catch (\Throwable $e) {
             $this->chapter->update(['processing_status' => 'failed']);
 

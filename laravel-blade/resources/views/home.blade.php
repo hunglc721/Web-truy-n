@@ -10,16 +10,39 @@
 @section('content')
 <main id="main-content">
   @if(isset($banners) && $banners->isNotEmpty())
-  <section class="banner-slider-section" id="hero-banner-section" style="max-width:1200px;margin:20px auto 24px;padding:0 16px;">
-    <div class="banner-carousel" style="position:relative;border-radius:16px;overflow:hidden;box-shadow:0 12px 35px rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.08);">
-      @foreach($banners as $index => $banner)
-      <div class="banner-slide" style="{{ $index===0?'display:block':'display:none' }}">
-        <a href="{{ route('banners.click',$banner) }}" style="display:block;position:relative;">
-          <img src="{{ $banner->display_image }}" alt="{{ $banner->title }}" style="width:100%;height:auto;max-height:420px;object-fit:cover;display:block" loading="{{ $index===0?'eager':'lazy' }}">
-          <div style="position:absolute;inset:auto 0 0;background:linear-gradient(to top,rgba(13,15,20,.95),transparent);padding:34px 24px 20px;"><h2 style="color:#fff;font-size:21px;font-weight:900;margin:0;text-shadow:0 2px 8px rgba(0,0,0,.8)">{{ $banner->title }}</h2></div>
-        </a>
+  <section class="banner-slider-section" id="hero-banner-section">
+    <div class="banner-carousel" id="banner-carousel">
+      <div class="banner-track" id="banner-track">
+        @foreach($banners as $index => $banner)
+        <div class="banner-slide {{ $index === 0 ? 'active' : '' }}" data-slide-index="{{ $index }}">
+          <a href="{{ route('banners.click', $banner) }}" class="banner-link">
+            <div class="banner-img-container">
+              <img src="{{ $banner->display_image }}" alt="{{ $banner->title }}" class="banner-hero-img" loading="{{ $index === 0 ? 'eager' : 'lazy' }}">
+            </div>
+            <div class="banner-overlay">
+              <span class="banner-badge">✨ Nổi bật</span>
+              <h2 class="banner-title">{{ $banner->title }}</h2>
+              <span class="banner-btn-explore">Khám phá ngay →</span>
+            </div>
+          </a>
+        </div>
+        @endforeach
       </div>
-      @endforeach
+
+      @if($banners->count() > 1)
+      <button type="button" class="banner-nav-btn banner-prev" id="banner-prev" aria-label="Banner trước">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <button type="button" class="banner-nav-btn banner-next" id="banner-next" aria-label="Banner kế tiếp">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+
+      <div class="banner-dots" id="banner-dots">
+        @foreach($banners as $index => $banner)
+        <button type="button" class="banner-dot {{ $index === 0 ? 'active' : '' }}" data-dot-index="{{ $index }}" aria-label="Slide {{ $index + 1 }}"></button>
+        @endforeach
+      </div>
+      @endif
     </div>
   </section>
   @endif
