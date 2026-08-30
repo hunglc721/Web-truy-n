@@ -62,7 +62,7 @@
           </div>
         </div>
         <button type="button" class="header-action-link" id="pwa-install-btn" style="display:none;background:rgba(255,94,54,.15);color:var(--primary);border:1px solid rgba(255,94,54,.3);border-radius:999px;padding:6px 14px;font-weight:700;cursor:pointer;align-items:center;gap:6px;">📲 Cài App</button>
-        <a href="https://comicscreator.webcomicsapp.com/#/login" target="_blank" rel="noopener" class="header-action-link" id="publish-link" title="Đăng truyện cho tác giả & nhóm dịch">
+        <a href="{{ route('publish.create') }}" class="header-action-link" id="publish-link" title="Đăng truyện cho tác giả & nhóm dịch">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
           <span>Đăng Truyện</span>
         </a>

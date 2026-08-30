@@ -32,7 +32,7 @@ class PublishScheduledChapters implements ShouldQueue
 
         Cache::forget('home.latest');
         Cache::forget('home.trending');
-        Cache::forget('recommendations.guest');
+        \App\Services\RecommendationService::invalidateGuestCache();
 
         $notificationService = app(ChapterNotificationService::class);
 

@@ -39,14 +39,7 @@
     <div class="admin-stat-label">📚 Tổng Chapter</div>
     <div class="admin-stat-value primary">{{ number_format($stats['total']) }}</div>
   </div>
-  <div class="admin-stat-card">
-    <div class="admin-stat-label">🔓 Miễn Phí</div>
-    <div class="admin-stat-value success">{{ number_format($stats['free']) }}</div>
-  </div>
-  <div class="admin-stat-card">
-    <div class="admin-stat-label">🔒 Premium</div>
-    <div class="admin-stat-value warning">{{ number_format($stats['premium']) }}</div>
-  </div>
+
   <div class="admin-stat-card">
     <div class="admin-stat-label">⚡ Sẵn Sàng (Ready)</div>
     <div class="admin-stat-value info">{{ number_format($stats['ready']) }}</div>
@@ -73,14 +66,7 @@
       <input type="text" name="q" class="form-control" placeholder="Tên hoặc số chapter..." value="{{ request('q') }}">
     </div>
 
-    <div>
-      <label class="form-label" style="font-size:12px">Loại</label>
-      <select name="is_free" class="form-control">
-        <option value="all">Tất cả</option>
-        <option value="1" {{ request('is_free') === '1' ? 'selected' : '' }}>Miễn phí</option>
-        <option value="0" {{ request('is_free') === '0' ? 'selected' : '' }}>Premium</option>
-      </select>
-    </div>
+
 
     <div>
       <label class="form-label" style="font-size:12px">Trạng thái</label>
@@ -94,7 +80,7 @@
 
     <div style="display:flex;gap:6px">
       <button type="submit" class="btn-admin btn-admin-primary">🔍 Lọc</button>
-      @if(request()->hasAny(['comic_id', 'q', 'is_free', 'status']))
+      @if(request()->hasAny(['comic_id', 'q', 'status']))
         <a href="{{ route('admin.chapters.index') }}" class="btn-admin btn-admin-ghost" title="Xóa bộ lọc">✕</a>
       @endif
     </div>
@@ -127,7 +113,7 @@
             <th style="width:90px;text-align:center">Chapter</th>
             <th>Tiêu đề Chapter</th>
             <th style="text-align:center">Số trang</th>
-            <th style="text-align:center">Loại</th>
+
             <th style="text-align:center">Trạng thái</th>
             <th style="text-align:center">Lượt xem</th>
             <th>Ngày đăng</th>
@@ -171,13 +157,7 @@
               <td style="text-align:center">
                 <span class="badge badge-muted">{{ count($chapter->pages ?? []) }} trang</span>
               </td>
-              <td style="text-align:center">
-                @if($chapter->is_free)
-                  <span class="badge badge-success">🔓 Miễn phí</span>
-                @else
-                  <span class="badge badge-warning">🔒 Premium</span>
-                @endif
-              </td>
+
               <td style="text-align:center">
                 @if(($chapter->processing_status ?? 'ready') === 'ready')
                   <span class="badge badge-success">✓ Sẵn sàng</span>

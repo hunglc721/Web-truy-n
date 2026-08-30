@@ -18,6 +18,7 @@
             ['route' => 'user.comments', 'label' => '💬 Bình luận'],
             ['route' => 'user.ratings', 'label' => '⭐ Đánh giá'],
             ['route' => 'user.notifications.index', 'label' => '🔔 Thông báo' . ($unreadNotifications ? ' (' . $unreadNotifications . ')' : '')],
+            ['route' => 'user.publishingRequests', 'label' => '📝 Đơn đăng truyện'],
         ];
     @endphp
 

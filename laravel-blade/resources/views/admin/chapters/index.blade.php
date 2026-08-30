@@ -77,7 +77,7 @@
             <th style="width:70px">Chapter</th>
             <th>Tên Chapter</th>
             <th style="text-align:center">Số trang</th>
-            <th style="text-align:center">Quyền đọc</th>
+
             <th style="text-align:center">Lượt xem</th>
             <th>Ngày đăng</th>
             <th style="text-align:center">Thao tác</th>
@@ -101,13 +101,7 @@
                 {{ count($chapter->pages ?? []) }} trang
               </span>
             </td>
-            <td style="text-align:center">
-              @if($chapter->is_free)
-                <span class="badge badge-success">✅ Miễn phí</span>
-              @else
-                <span class="badge badge-warning">🔒 Trả phí</span>
-              @endif
-            </td>
+
             <td style="text-align:center; font-size:13px; color:var(--admin-text-muted)">
               {{ number_format($chapter->views) }}
             </td>

@@ -18,12 +18,13 @@ class AdminDashboardController extends Controller
     public function index()
     {
         $stats = [
-            'total_comics'       => Comic::count(),
-            'total_chapters'     => Chapter::count(),
-            'total_users'        => User::count(),
-            'total_views'        => Comic::sum('views'),
-            'pending_comments'   => Comment::where('status', Comment::STATUS_PENDING)->count(),
-            'pending_reports'    => Report::where('status', Report::STATUS_PENDING)->count(),
+            'total_comics'           => Comic::count(),
+            'total_chapters'         => Chapter::count(),
+            'total_users'            => User::count(),
+            'total_views'            => Comic::sum('views'),
+            'pending_comments'       => Comment::where('status', Comment::STATUS_PENDING)->count(),
+            'pending_reports'        => Report::where('status', Report::STATUS_PENDING)->count(),
+            'pending_story_requests' => \App\Models\StoryPublishingRequest::pending()->count(),
         ];
 
         // Top 5 truyện có lượt đọc cao nhất

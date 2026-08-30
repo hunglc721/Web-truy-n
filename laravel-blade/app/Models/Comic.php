@@ -270,7 +270,7 @@ class Comic extends Model
     /** Mới cập nhật nhất (dựa vào chapter mới nhất) */
     public function scopeLatestUpdated($query)
     {
-        return $query->withMax('chapters', 'published_at')
+        return $query->withMax(['chapters' => fn($q) => $q->published()], 'published_at')
                      ->orderByDesc('chapters_max_published_at');
     }
 

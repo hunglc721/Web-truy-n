@@ -54,15 +54,6 @@
           · ⭐ {{ number_format($comic->avg_rating,1) }} · 👁 {{ $comic->formatted_views }} · {{ ucfirst($comic->status) }}
         </p>
 
-        @php
-          $likeCount = $comic->likes()->count();
-          $isLiked = auth()->check() ? $comic->hasLikedBy(auth()->id()) : false;
-          $isSaved = auth()->check() ? auth()->user()->hasInLibrary($comic->id) : false;
-          $lastHistory = auth()->check() ? auth()->user()->readingHistoryForComic($comic->id) : null;
-          $lastChapter = $lastHistory?->chapter;
-          $firstChapter = $comic->chapters->last();
-          $latestChapter = $comic->chapters->first();
-        @endphp
 
         <div style="display:flex;gap:18px;flex-wrap:wrap;margin:10px 0 14px;color:var(--text-sub);font-size:13px;">
           <span>❤️ <strong id="like-count">{{ number_format($likeCount) }}</strong> lượt thích</span>
@@ -108,9 +99,6 @@
               </h3>
               <p class="browse-meta" style="margin:4px 0 0;">
                 {{ $chapter->time_ago }}
-                @if(!$chapter->is_free)
-                  · 🔒 Premium
-                @endif
               </p>
             </div>
           </a>
@@ -228,8 +216,38 @@
   document.getElementById('chap-sort-desc')?.addEventListener('click',function(){sortChapterRows(false);this.classList.add('active');document.getElementById('chap-sort-asc')?.classList.remove('active');});
   document.getElementById('chap-sort-asc')?.addEventListener('click',function(){sortChapterRows(true);this.classList.add('active');document.getElementById('chap-sort-desc')?.classList.remove('active');});
 
-  document.getElementById('btn-toggle-library')?.addEventListener('click', async function(){ this.disabled=true; try{ const data=await requestJson(`/api/comics/${COMIC_ID}/toggle-library`,{method:'POST'}); const saved=!!(data.in_library ?? data.is_followed); this.dataset.saved=saved?'1':'0'; document.getElementById('lib-label').textContent=saved?'✓ Đã Theo Dõi':'📚 Theo Dõi Truyện'; this.style.background=saved?'#16a34a':''; this.style.color=saved?'#fff':''; this.style.borderColor=saved?'#16a34a':''; showToast(data.message||'Đã cập nhật Tủ Truyện.'); }catch(e){showToast(e.message,'error')}finally{this.disabled=false;} });
-  document.getElementById('btn-toggle-like')?.addEventListener('click', async function(){ this.disabled=true; try{ const data=await requestJson(`/api/comics/${COMIC_ID}/toggle-like`,{method:'POST'}); this.dataset.liked=data.is_liked?'1':'0'; document.getElementById('like-label').textContent=data.is_liked?'❤️ Đã Thích':'🤍 Yêu Thích'; document.getElementById('like-count').textContent=Number(data.like_count||0).toLocaleString(); this.style.background=data.is_liked?'#ef4444':''; this.style.color=data.is_liked?'#fff':''; this.style.borderColor=data.is_liked?'#ef4444':''; showToast(data.message||'Đã cập nhật yêu thích.'); }catch(e){showToast(e.message,'error')}finally{this.disabled=false;} });
+  const withLoading = async (btn, fn) => {
+    if(btn) { btn.disabled=true; btn.style.opacity='0.6'; btn.style.cursor='wait'; }
+    try { await fn(); }
+    catch(e) { showToast(e.data?.message||e.message, 'error'); }
+    finally { if(btn) { btn.disabled=false; btn.style.opacity=''; btn.style.cursor=''; } }
+  };
+
+  document.getElementById('btn-toggle-library')?.addEventListener('click', function() {
+    withLoading(this, async () => {
+      const data = await requestJson(`/api/comics/${COMIC_ID}/toggle-library`, {method:'POST'});
+      const saved = !!(data.in_library ?? data.is_followed);
+      this.dataset.saved = saved ? '1' : '0';
+      document.getElementById('lib-label').textContent = saved ? '✓ Đã Theo Dõi' : '📚 Theo Dõi Truyện';
+      this.style.background = saved ? '#16a34a' : '';
+      this.style.color = saved ? '#fff' : '';
+      this.style.borderColor = saved ? '#16a34a' : '';
+      showToast(data.message || 'Đã cập nhật Tủ Truyện.');
+    });
+  });
+
+  document.getElementById('btn-toggle-like')?.addEventListener('click', function() {
+    withLoading(this, async () => {
+      const data = await requestJson(`/api/comics/${COMIC_ID}/toggle-like`, {method:'POST'});
+      this.dataset.liked = data.is_liked ? '1' : '0';
+      document.getElementById('like-label').textContent = data.is_liked ? '❤️ Đã Thích' : '🤍 Yêu Thích';
+      document.getElementById('like-count').textContent = Number(data.like_count||0).toLocaleString();
+      this.style.background = data.is_liked ? '#ef4444' : '';
+      this.style.color = data.is_liked ? '#fff' : '';
+      this.style.borderColor = data.is_liked ? '#ef4444' : '';
+      showToast(data.message || 'Đã cập nhật yêu thích.');
+    });
+  });
 
   function renderComment(c, reply=false){ const liked=!!c.liked_by_me; const canReply=LOGGED_IN&&!reply; const canDelete=LOGGED_IN&&Number(c.user_id)===Number(CURRENT_USER_ID); const replies=(c.replies||[]).map(r=>renderComment(r,true)).join(''); return `<div class="detail-comment ${reply?'reply':''}" id="comment-${c.id}"><div class="detail-avatar">${escapeHtml((c.user?.name||'U').slice(0,1).toUpperCase())}</div><div class="detail-comment-body"><div class="detail-comment-head"><strong>${escapeHtml(c.user?.name||'Độc giả')}</strong><span style="font-size:11px;color:var(--text-sub)">${formatTime(c.created_at)}</span></div><div class="detail-comment-text">${escapeHtml(c.content)}</div><div style="display:flex;gap:14px;align-items:center"><${LOGGED_IN?'button':'a'} ${LOGGED_IN?'type="button" data-like-comment="'+c.id+'"':'href="{{ route('login') }}"'} class="comment-action ${liked?'liked':''}">${liked?'❤️':'🤍'} <span data-comment-like-count="${c.id}">${Number(c.likes_count||0)}</span></${LOGGED_IN?'button':'a'}>${canReply?`<button type="button" class="comment-action" data-reply-toggle="${c.id}">💬 Trả lời</button>`:''}${canDelete?`<button type="button" class="comment-action" data-delete-comment="${c.id}" style="color:#ef4444">🗑️ Xóa</button>`:''}</div>${canReply?`<div class="reply-editor" id="reply-editor-${c.id}"><textarea rows="2" id="reply-text-${c.id}" placeholder="Trả lời ${escapeHtml(c.user?.name||'độc giả')}..."></textarea><button type="button" class="btn-spotlight-read" data-post-reply="${c.id}" style="padding:7px 12px;height:max-content">Gửi</button></div>`:''}${replies}</div></div>`; }
 
@@ -240,13 +258,51 @@
   document.getElementById('btn-post-detail-comment')?.addEventListener('click',()=>postComment(null));
   document.getElementById('detail-comment-input')?.addEventListener('keydown',e=>{if(e.ctrlKey&&e.key==='Enter'){e.preventDefault();postComment(null);}});
 
-  async function postComment(parentId){ const input=parentId?document.getElementById(`reply-text-${parentId}`):document.getElementById('detail-comment-input'); const content=input?.value.trim(); if(!content){showToast('Vui lòng nhập nội dung bình luận.','error');return;} try{ const data=await requestJson('/api/comments',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({comic_id:COMIC_ID,chapter_id:null,parent_id:parentId,content})}); input.value=''; showToast(data.message||'Đã đăng bình luận.',data.is_spam?'error':'success'); if(!data.is_spam)loadComments(true); }catch(e){showToast(e.data?.message||e.message,'error');} }
+  async function postComment(parentId) {
+    const input = parentId ? document.getElementById(`reply-text-${parentId}`) : document.getElementById('detail-comment-input');
+    const content = input?.value.trim();
+    if (!content) { showToast('Vui lòng nhập nội dung bình luận.', 'error'); return; }
+    const btn = parentId ? document.querySelector(`[data-post-reply="${parentId}"]`) : document.getElementById('btn-post-detail-comment');
+    
+    await withLoading(btn, async () => {
+      const data = await requestJson('/api/comments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ comic_id: COMIC_ID, chapter_id: null, parent_id: parentId, content })
+      });
+      input.value = '';
+      showToast(data.message || 'Đã đăng bình luận.', data.is_spam ? 'error' : 'success');
+      if (!data.is_spam) loadComments(true);
+    });
+  }
 
-  document.getElementById('detail-comments-list')?.addEventListener('click',async e=>{
-    const like=e.target.closest('[data-like-comment]'); if(like){like.disabled=true;try{const id=like.dataset.likeComment;const data=await requestJson(`/api/comments/${id}/toggle-like`,{method:'POST'});like.classList.toggle('liked',data.is_liked);like.firstChild.textContent=data.is_liked?'❤️ ':'🤍 ';document.querySelector(`[data-comment-like-count="${id}"]`).textContent=data.likes_count;}catch(err){showToast(err.message,'error')}finally{like.disabled=false;}return;}
-    const replyToggle=e.target.closest('[data-reply-toggle]'); if(replyToggle){document.getElementById(`reply-editor-${replyToggle.dataset.replyToggle}`)?.classList.toggle('open');return;}
-    const reply=e.target.closest('[data-post-reply]'); if(reply){await postComment(reply.dataset.postReply);return;}
-    const del=e.target.closest('[data-delete-comment]'); if(del&&confirm('Xóa bình luận này?')){try{await requestJson(`/api/comments/${del.dataset.deleteComment}`,{method:'DELETE'});showToast('Đã xóa bình luận.');loadComments(true);}catch(err){showToast(err.message,'error');}}
+  document.getElementById('detail-comments-list')?.addEventListener('click', async e => {
+    const like = e.target.closest('[data-like-comment]');
+    if (like) {
+      withLoading(like, async () => {
+        const id = like.dataset.likeComment;
+        const data = await requestJson(`/api/comments/${id}/toggle-like`, {method:'POST'});
+        like.classList.toggle('liked', data.is_liked);
+        like.firstChild.textContent = data.is_liked ? '❤️ ' : '🤍 ';
+        document.querySelector(`[data-comment-like-count="${id}"]`).textContent = data.likes_count;
+      });
+      return;
+    }
+    const replyToggle = e.target.closest('[data-reply-toggle]');
+    if (replyToggle) { document.getElementById(`reply-editor-${replyToggle.dataset.replyToggle}`)?.classList.toggle('open'); return; }
+    
+    const reply = e.target.closest('[data-post-reply]');
+    if (reply) { await postComment(reply.dataset.postReply); return; }
+    
+    const del = e.target.closest('[data-delete-comment]');
+    if (del && confirm('Xóa bình luận này?')) {
+      withLoading(del, async () => {
+        await requestJson(`/api/comments/${del.dataset.deleteComment}`, {method:'DELETE'});
+        showToast('Đã xóa bình luận.');
+        loadComments(true);
+      });
+      return;
+    }
   });
 
   const starBtns=[...document.querySelectorAll('.star-btn')], selected=document.getElementById('selected-score'), review=document.getElementById('rating-review-input'), deleteRating=document.getElementById('btn-delete-rating');
@@ -256,8 +312,34 @@
   async function loadRatingSummary(){try{const j=await requestJson(`/api/comics/${COMIC_ID}/ratings/summary`);const d=j.data;if(!d)return;document.getElementById('rating-avg-display').textContent=Number(d.avg_rating).toFixed(1);document.getElementById('rating-stars-icons').textContent=renderStars(d.avg_rating);document.getElementById('rating-total-display').textContent=d.total_ratings;for(let s=1;s<=5;s++){const info=d.stars?.[s]||{percentage:0};document.getElementById(`bar-fill-${s}`).style.width=`${info.percentage}%`;document.getElementById(`bar-percent-${s}`).textContent=`${info.percentage}%`;}}catch{}}
   async function loadReviews(){const box=document.getElementById('reviews-items');if(!box)return;try{const j=await requestJson(`/api/comics/${COMIC_ID}/ratings/reviews?per_page=5`);const rows=j.data?.data||[];box.innerHTML=rows.length?rows.map(r=>`<div class="review-item"><div class="review-item-header"><strong>${escapeHtml(r.user?.name||'Độc giả')}</strong><span class="review-badge">★ ${Number(r.score).toFixed(1)}</span></div>${r.review?`<p style="margin:8px 0 0;line-height:1.55">${escapeHtml(r.review)}</p>`:''}</div>`).join(''):'<p style="color:var(--text-sub)">Chưa có nhận xét nào.</p>';}catch{box.innerHTML='<p style="color:#f87171">Không tải được nhận xét.</p>';}}
   async function loadUserRating(){if(!LOGGED_IN||!selected)return;try{const j=await requestJson(`/api/comics/${COMIC_ID}/my-rating`);if(j.has_rated){setStars(Math.round(j.score));if(review)review.value=j.review||'';if(deleteRating)deleteRating.style.display='inline-flex';const b=document.getElementById('btn-submit-rating');if(b)b.textContent='Cập Nhật Đánh Giá';}}catch{}}
-  document.getElementById('btn-submit-rating')?.addEventListener('click',async function(){const score=Number(selected?.value||0);if(score<1){showToast('Vui lòng chọn số sao.','error');return;}this.disabled=true;try{const j=await requestJson(`/api/comics/${COMIC_ID}/ratings`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({score,review:review?.value.trim()||''})});showToast(j.message||'Đã gửi đánh giá.');if(deleteRating)deleteRating.style.display='inline-flex';this.textContent='Cập Nhật Đánh Giá';loadRatingSummary();loadReviews();}catch(e){showToast(e.data?.message||e.message,'error')}finally{this.disabled=false;}});
-  deleteRating?.addEventListener('click',async function(){if(!confirm('Xóa đánh giá này?'))return;this.disabled=true;try{const j=await requestJson(`/api/comics/${COMIC_ID}/ratings`,{method:'DELETE'});setStars(0);if(review)review.value='';this.style.display='none';document.getElementById('btn-submit-rating').textContent='Gửi Đánh Giá';showToast(j.message||'Đã xóa đánh giá.');loadRatingSummary();loadReviews();}catch(e){showToast(e.message,'error')}finally{this.disabled=false;}});
+  document.getElementById('btn-submit-rating')?.addEventListener('click', function() {
+    const score = Number(selected?.value || 0);
+    if (score < 1) { showToast('Vui lòng chọn số sao.', 'error'); return; }
+    withLoading(this, async () => {
+      const j = await requestJson(`/api/comics/${COMIC_ID}/ratings`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ score, review: review?.value.trim() || '' })
+      });
+      showToast(j.message || 'Đã gửi đánh giá.');
+      if (deleteRating) deleteRating.style.display = 'inline-flex';
+      this.textContent = 'Cập Nhật Đánh Giá';
+      loadRatingSummary(); loadReviews();
+    });
+  });
+
+  deleteRating?.addEventListener('click', function() {
+    if (!confirm('Xóa đánh giá này?')) return;
+    withLoading(this, async () => {
+      const j = await requestJson(`/api/comics/${COMIC_ID}/ratings`, { method: 'DELETE' });
+      setStars(0);
+      if (review) review.value = '';
+      this.style.display = 'none';
+      document.getElementById('btn-submit-rating').textContent = 'Gửi Đánh Giá';
+      showToast(j.message || 'Đã xóa đánh giá.');
+      loadRatingSummary(); loadReviews();
+    });
+  });
 
   loadComments(true); loadRatingSummary(); loadReviews(); loadUserRating();
 })();

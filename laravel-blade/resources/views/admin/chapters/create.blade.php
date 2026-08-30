@@ -57,14 +57,7 @@
         @error('title') <span class="invalid-feedback">{{ $message }}</span> @enderror
       </div>
 
-      {{-- Loại Chapter (Miễn phí / Trả phí) --}}
-      <div class="form-group">
-        <label class="form-label">Quyền truy cập</label>
-        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:13.5px; margin-top:6px">
-          <input type="checkbox" name="is_free" value="1" {{ old('is_free', '1') ? 'checked' : '' }} style="width:18px; height:18px; accent-color:var(--admin-primary)">
-          <span>✅ Miễn phí đọc (Free Chapter)</span>
-        </label>
-      </div>
+
 
       <div style="border-top:1px solid var(--admin-border); padding-top:16px; margin-top:20px">
         <button type="submit" class="btn-admin btn-admin-primary" style="width:100%; justify-content:center; padding:12px">

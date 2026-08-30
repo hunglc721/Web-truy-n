@@ -53,8 +53,9 @@ class RecommendationService
      */
     public function forUser(User $user, int $limit = 6, array $excludeComicIds = []): Collection
     {
-        $version  = $this->getUserVersion($user->id);
-        $cacheKey = "recommendations.user.{$user->id}.v{$version}.limit_{$limit}";
+        $version     = $this->getUserVersion($user->id);
+        $excludeHash = empty($excludeComicIds) ? 'all' : md5(implode(',', $excludeComicIds));
+        $cacheKey    = "recommendations.user.{$user->id}.v{$version}.limit_{$limit}.ex_{$excludeHash}";
 
         return Cache::remember($cacheKey, self::TTL_USER, function () use ($user, $limit, $excludeComicIds) {
             // 1. Lấy danh sách comic IDs đã đọc trong 30 ngày gần nhất
@@ -220,11 +221,17 @@ class RecommendationService
         });
     }
 
+    public static function invalidateGuestCache(): void
+    {
+        Cache::increment('recommendations.guest.version');
+    }
+
     /**
      * Gợi ý cho khách vãng lai (Guest) — Trending & Top Rated.
      *
      * Fix: cache key bao gồm hash của excludeComicIds để tránh
      * 2 request khác nhau (khác exclude) share cùng cache sai.
+     * Sử dụng cache versioning để invalidate toàn bộ guest cache khi cần.
      *
      * @param  int    $limit
      * @param  array  $excludeComicIds
@@ -233,8 +240,9 @@ class RecommendationService
     public function forGuest(int $limit = 6, array $excludeComicIds = []): Collection
     {
         // Nhúng hash của excludeComicIds vào key để tránh cache conflict
+        $version = Cache::get('recommendations.guest.version', 1);
         $excludeHash = empty($excludeComicIds) ? 'all' : md5(implode(',', $excludeComicIds));
-        $cacheKey    = "recommendations.guest.limit_{$limit}.ex_{$excludeHash}";
+        $cacheKey    = "recommendations.guest.v{$version}.limit_{$limit}.ex_{$excludeHash}";
 
         return Cache::remember($cacheKey, self::TTL_GUEST, function () use ($limit, $excludeComicIds) {
             $query = Comic::trending();

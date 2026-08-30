@@ -22,16 +22,27 @@
   @stack('styles')
 </head>
 <body class="admin-body">
-@php $adminUser=auth()->user(); @endphp
+@php 
+  $adminUser = auth()->user(); 
+  $pendingStoryReqCount = \App\Models\StoryPublishingRequest::pending()->count();
+@endphp
 <div class="admin-overlay" id="admin-overlay"></div>
 <aside class="admin-sidebar" id="admin-sidebar">
   <a href="{{ route('admin.dashboard') }}" class="sidebar-brand"><div class="sidebar-brand-icon">WC</div><div><div class="sidebar-brand-text">WebComics</div><div class="sidebar-brand-sub">Admin Panel</div></div></a>
   <nav class="sidebar-nav">
     @if($adminUser->hasPermission('dashboard.view'))<a href="{{ route('admin.dashboard') }}" class="sidebar-link {{ request()->routeIs('admin.dashboard')?'active':'' }}">📊 Tổng quan</a>@endif
     @if($adminUser->hasPermission('analytics.view'))<a href="{{ route('admin.analytics.index') }}" class="sidebar-link {{ request()->routeIs('admin.analytics.*')?'active':'' }}">📈 Thống kê</a>@endif
-    @if($adminUser->hasAnyPermission(['comics.view','chapters.view','genres.manage','tags.manage','authors.manage']))<div class="sidebar-section-label">NỘI DUNG</div>@endif
+    @if($adminUser->hasAnyPermission(['comics.view','chapters.view','genres.manage','tags.manage','authors.manage','story_requests.manage']))<div class="sidebar-section-label">NỘI DUNG</div>@endif
     @if($adminUser->hasPermission('comics.view'))<a href="{{ route('admin.comics.index') }}" class="sidebar-link {{ request()->routeIs('admin.comics.*') && !request()->routeIs('admin.comics.chapters.*') ? 'active' : '' }}">📚 Truyện</a>@endif
     @if($adminUser->hasPermission('chapters.view'))<a href="{{ route('admin.chapters.index') }}" class="sidebar-link {{ request()->routeIs('admin.chapters.*') || request()->routeIs('admin.comics.chapters.*') ? 'active' : '' }}">📖 Chương</a>@endif
+    @if($adminUser->hasPermission('story_requests.manage'))
+      <a href="{{ route('admin.storyRequests.index') }}" class="sidebar-link {{ request()->routeIs('admin.storyRequests.*') ? 'active' : '' }}" style="display:flex; justify-content:space-between; align-items:center;">
+        <span>📥 Đơn đăng truyện</span>
+        @if($pendingStoryReqCount > 0)
+          <span class="badge badge-warning" style="font-size:10px; padding:2px 6px; font-weight:800;">{{ $pendingStoryReqCount }}</span>
+        @endif
+      </a>
+    @endif
     @if($adminUser->hasPermission('genres.manage'))<a href="{{ route('admin.genres.index') }}" class="sidebar-link {{ request()->routeIs('admin.genres.*')?'active':'' }}">🏷️ Thể loại</a>@endif
     @if($adminUser->hasPermission('tags.manage'))<a href="{{ route('admin.tags.index') }}" class="sidebar-link {{ request()->routeIs('admin.tags.*')?'active':'' }}">🔖 Tags</a>@endif
     @if($adminUser->hasPermission('authors.manage'))<a href="{{ route('admin.authors.index') }}" class="sidebar-link {{ request()->routeIs('admin.authors.*')?'active':'' }}">✍️ Tác giả</a>@endif

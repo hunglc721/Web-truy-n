@@ -172,10 +172,30 @@
       {{ number_format($stats['pending_reports']) }}
     </div>
   </div>
+
+  <div class="stat-card">
+    <div class="stat-label">
+      <span>📥 Đơn Đăng Truyện Chờ Duyệt</span>
+      @if(($stats['pending_story_requests'] ?? 0) > 0)
+        <span style="background: rgba(255,94,54,0.2); color: #ff5e36; font-size: 10px; padding: 2px 6px; border-radius: 6px; font-weight: 800;">MỚI</span>
+      @endif
+    </div>
+    <div class="stat-value" style="color: {{ ($stats['pending_story_requests'] ?? 0) > 0 ? '#ff5e36' : '#94a3b8' }};">
+      {{ number_format($stats['pending_story_requests'] ?? 0) }}
+    </div>
+  </div>
 </div>
 
 {{-- 2. ĐIỀU HƯỚNG NHANH CÁC CHỨC NĂNG (QUICK ACTIONS) --}}
 <div class="quick-modules-grid">
+  <a href="{{ route('admin.storyRequests.index') }}" class="module-card">
+    <div class="module-icon" style="background: rgba(255,94,54,0.15); color: #ff5e36;">📥</div>
+    <div>
+      <div class="module-title">Duyệt Đơn Đăng Truyện</div>
+      <div class="module-desc">Thẩm định tác phẩm, thông tin tác giả & bản thảo</div>
+    </div>
+  </a>
+
   <a href="{{ route('admin.comics.index') }}" class="module-card">
     <div class="module-icon" style="background: rgba(99,102,241,0.15); color: #818cf8;">📚</div>
     <div>

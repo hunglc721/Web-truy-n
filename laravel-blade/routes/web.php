@@ -35,12 +35,18 @@ use App\Http\Controllers\Admin\AdminAuditLogController;
 use App\Http\Controllers\Admin\AdminPermissionController;
 use App\Http\Controllers\Admin\AdminSettingController;
 use App\Http\Controllers\Admin\AdminNotificationController;
+use App\Http\Controllers\StoryPublishingRequestController;
+use App\Http\Controllers\Admin\AdminStoryRequestController;
 use App\Http\Middleware\AdminMiddleware;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/genres', [GenreController::class, 'index'])->name('genres');
 Route::get('/schedule', [ScheduleController::class, 'index'])->name('schedule');
 Route::get('/originals', [OriginalsController::class, 'index'])->name('originals');
+Route::get('/dang-truyen', [StoryPublishingRequestController::class, 'create'])->name('publish.create');
+Route::get('/publish', [StoryPublishingRequestController::class, 'create']);
+Route::post('/dang-truyen', [StoryPublishingRequestController::class, 'store'])->name('publish.store');
+Route::post('/publish', [StoryPublishingRequestController::class, 'store']);
 Route::get('/authors/{slug}', [\App\Http\Controllers\AuthorController::class, 'show'])->name('authors.show');
 Route::get('/teams', [\App\Http\Controllers\TeamController::class, 'index'])->name('teams.index');
 Route::get('/teams/{slug}', [\App\Http\Controllers\TeamController::class, 'show'])->name('teams.show');
@@ -54,11 +60,11 @@ Route::get('/banners/{banner}/click', [BannerController::class, 'click'])->name(
 Route::get('/api/announcements/active', [AnnouncementController::class, 'active'])->name('announcements.active');
 Route::post('/api/announcements/{announcement}/dismiss', [AnnouncementController::class, 'dismiss'])->name('announcements.dismiss');
 
-Route::post('/api/lists', [\App\Http\Controllers\ReadingListController::class, 'store'])->middleware('auth')->name('api.lists.store');
-Route::post('/api/lists/{id}/toggle-like', [\App\Http\Controllers\ReadingListController::class, 'toggleLike'])->middleware('auth')->name('api.lists.toggleLike');
-Route::get('/api/wallet/balance', [\App\Http\Controllers\WalletController::class, 'balance'])->middleware('auth')->name('api.wallet.balance');
-Route::post('/api/wallet/deposit', [\App\Http\Controllers\WalletController::class, 'deposit'])->middleware('auth')->name('api.wallet.deposit');
-Route::post('/api/chapters/{chapterId}/unlock', [\App\Http\Controllers\WalletController::class, 'unlockChapter'])->middleware('auth')->name('api.chapters.unlock');
+Route::post('/api/lists', [\App\Http\Controllers\ReadingListController::class, 'store'])->middleware(['auth', '2fa'])->name('api.lists.store');
+Route::post('/api/lists/{id}/toggle-like', [\App\Http\Controllers\ReadingListController::class, 'toggleLike'])->middleware(['auth', '2fa'])->name('api.lists.toggleLike');
+Route::get('/api/wallet/balance', [\App\Http\Controllers\WalletController::class, 'balance'])->middleware(['auth', '2fa'])->name('api.wallet.balance');
+Route::post('/api/wallet/deposit', [\App\Http\Controllers\WalletController::class, 'deposit'])->middleware(['auth', '2fa'])->name('api.wallet.deposit');
+Route::post('/api/chapters/{chapterId}/unlock', [\App\Http\Controllers\WalletController::class, 'unlockChapter'])->middleware(['auth', '2fa'])->name('api.chapters.unlock');
 Route::post('/api/authors/{id}/follow', [\App\Http\Controllers\AuthorController::class, 'follow'])->name('api.authors.follow');
 Route::post('/api/teams/{id}/follow', [\App\Http\Controllers\TeamController::class, 'follow'])->name('api.teams.follow');
 Route::post('/api/push/subscribe', [\App\Http\Controllers\PushNotificationController::class, 'subscribe'])->name('api.push.subscribe');
@@ -82,7 +88,7 @@ Route::middleware('guest')->group(function () {
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->name('logout');
 
 // Email Verification Routes
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', '2fa'])->group(function () {
     Route::get('/email/verify', [\App\Http\Controllers\EmailVerificationController::class, 'notice'])->name('verification.notice');
     Route::get('/email/verify/{id}/{hash}', [\App\Http\Controllers\EmailVerificationController::class, 'verify'])->middleware(['signed', 'throttle:6,1'])->name('verification.verify');
     Route::post('/email/verification-notification', [\App\Http\Controllers\EmailVerificationController::class, 'send'])->middleware('throttle:6,1')->name('verification.send');
@@ -98,13 +104,14 @@ Route::middleware('auth')->group(function () {
     Route::post('/user/logout-other-devices', [AuthController::class, 'logoutOtherDevices'])->name('user.logoutOtherDevices');
 });
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', '2fa'])->group(function () {
     Route::get('/user', [UserDashboardController::class, 'dashboard'])->name('user.dashboard');
     Route::get('/user/history', [UserDashboardController::class, 'history'])->name('user.history');
     Route::get('/user/likes', [UserDashboardController::class, 'likes'])->name('user.likes');
     Route::get('/user/comments', [UserDashboardController::class, 'comments'])->name('user.comments');
     Route::get('/user/ratings', [UserDashboardController::class, 'ratings'])->name('user.ratings');
     Route::get('/user/library', [LibraryController::class, 'index'])->name('user.library');
+    Route::get('/user/publishing-requests', [StoryPublishingRequestController::class, 'myRequests'])->name('user.publishingRequests');
     Route::post('/user/library/toggle/{comic}', [LibraryController::class, 'toggle'])->name('library.toggle');
     Route::delete('/user/history/clear', [LibraryController::class, 'clearHistory'])->name('history.clear');
 
@@ -119,7 +126,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/api/comments/{comment}/toggle-like', [CommentController::class, 'toggleLike'])->middleware('throttle:like-toggle')->name('comments.toggleLike');
     Route::patch('/api/comments/{comment}', [CommentController::class, 'update'])->name('comments.update');
     Route::delete('/api/comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy');
-    Route::post('/api/comics/{comicId}/toggle-library', [ComicActionController::class, 'toggleLibrary'])->middleware('throttle:library-toggle')->name('comics.toggleLibrary');
+    Route::post('/api/comics/{comic}/toggle-library', [\App\Http\Controllers\LibraryController::class, 'toggle'])->middleware('throttle:library-toggle')->name('comics.toggleLibrary');
     Route::post('/api/comics/{comicId}/toggle-like', [ComicActionController::class, 'toggleLike'])->middleware('throttle:like-toggle')->name('comics.toggleLike');
     Route::post('/api/comics/{comicId}/ratings', [RatingController::class, 'store'])->middleware('throttle:like-toggle')->name('comics.ratings.store');
     Route::delete('/api/comics/{comicId}/ratings', [RatingController::class, 'destroy'])->middleware('throttle:like-toggle')->name('comics.ratings.destroy');
@@ -140,7 +147,7 @@ Route::get('/api/comments', [CommentController::class, 'index'])->middleware('th
 Route::get('/api/recommendations', [RecommendationController::class, 'index'])->middleware('throttle:api')->name('recommendations.index');
 Route::post('/api/reports', [\App\Http\Controllers\ReportController::class, 'store'])->middleware('throttle:api')->name('reports.store');
 
-Route::middleware(['auth', AdminMiddleware::class])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', '2fa', AdminMiddleware::class])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [AdminDashboardController::class, 'index'])->middleware('permission:dashboard.view')->name('dashboard');
     Route::get('/analytics', [AdminAnalyticsController::class, 'index'])->middleware('permission:analytics.view')->name('analytics.index');
 
@@ -208,6 +215,13 @@ Route::middleware(['auth', AdminMiddleware::class])->prefix('admin')->name('admi
     Route::get('/reports', [AdminReportController::class, 'index'])->middleware('permission:reports.view')->name('reports.index');
     Route::patch('/reports/{report}/status', [AdminReportController::class, 'updateStatus'])->middleware('permission:reports.manage')->name('reports.updateStatus');
     Route::delete('/reports/{report}', [AdminReportController::class, 'destroy'])->middleware('permission:reports.manage')->name('reports.destroy');
+
+    Route::middleware('permission:story_requests.manage')->group(function () {
+        Route::get('/story-requests', [AdminStoryRequestController::class, 'index'])->name('storyRequests.index');
+        Route::get('/story-requests/{storyRequest}', [AdminStoryRequestController::class, 'show'])->name('storyRequests.show');
+        Route::patch('/story-requests/{storyRequest}/status', [AdminStoryRequestController::class, 'updateStatus'])->name('storyRequests.updateStatus');
+        Route::delete('/story-requests/{storyRequest}', [AdminStoryRequestController::class, 'destroy'])->name('storyRequests.destroy');
+    });
 
     Route::middleware('permission:schedules.manage')->group(function () {
         Route::get('/schedules', [AdminScheduleController::class, 'index'])->name('schedules.index');

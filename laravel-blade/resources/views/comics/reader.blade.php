@@ -277,11 +277,7 @@
 
       {{-- Prev Chapter --}}
       @if($prevChapter)
-        @php
-          $prevSlug = $prevChapter->slug ?: ('chapter-' . ($prevChapter->chapter_number ?? 1));
-          $cSlug = $comic->slug ?: ('comic-' . $comic->id);
-        @endphp
-        <a href="{{ route('chapters.show', [$cSlug, $prevSlug]) }}" class="reader-controls-btn" id="btn-prev-chap" title="Chương trước (Phím ←)">
+        <a href="{{ route('chapters.show', [$comic->slug, $prevChapter->slug]) }}" class="reader-controls-btn" id="btn-prev-chap" title="Chương trước (Phím ←)">
           ← Chap trước
         </a>
       @else
@@ -291,11 +287,7 @@
       {{-- Select Chapter Dropdown --}}
       <select onchange="if(this.value) location.href = this.value;" class="reader-chapter-select">
         @foreach($allChapters as $item)
-          @php
-            $itemSlug = $item->slug ?: ('chapter-' . ($item->chapter_number ?? 1));
-            $cSlug = $comic->slug ?: ('comic-' . $comic->id);
-          @endphp
-          <option value="{{ route('chapters.show', [$cSlug, $itemSlug]) }}"
+          <option value="{{ route('chapters.show', [$comic->slug, $item->slug]) }}"
                   {{ $item->id == $chapter->id ? 'selected' : '' }}>
             Ch.{{ $item->chapter_number }} - {{ Str::limit($item->title, 22) }}
           </option>
@@ -304,11 +296,7 @@
 
       {{-- Next Chapter --}}
       @if($nextChapter)
-        @php
-          $nextSlug = $nextChapter->slug ?: ('chapter-' . ($nextChapter->chapter_number ?? 1));
-          $cSlug = $comic->slug ?: ('comic-' . $comic->id);
-        @endphp
-        <a href="{{ route('chapters.show', [$cSlug, $nextSlug]) }}" class="reader-controls-btn" id="btn-next-chap" title="Chương sau (Phím →)">
+        <a href="{{ route('chapters.show', [$comic->slug, $nextChapter->slug]) }}" class="reader-controls-btn" id="btn-next-chap" title="Chương sau (Phím →)">
           Chap sau →
         </a>
       @else
@@ -498,11 +486,7 @@
     gap: 12px;
   ">
     @if($prevChapter)
-      @php
-        $prevSlug = $prevChapter->slug ?: ('chapter-' . ($prevChapter->chapter_number ?? 1));
-        $cSlug = $comic->slug ?: ('comic-' . $comic->id);
-      @endphp
-      <a href="{{ route('chapters.show', [$cSlug, $prevSlug]) }}" class="reader-controls-btn" style="padding:10px 20px; background:var(--primary); border-color:var(--primary)">
+      <a href="{{ route('chapters.show', [$comic->slug, $prevChapter->slug]) }}" class="reader-controls-btn" style="padding:10px 20px; background:var(--primary); border-color:var(--primary)">
         ← Chapter Trước (Ch.{{ $prevChapter->chapter_number }})
       </a>
     @else
@@ -514,11 +498,7 @@
     </a>
 
     @if($nextChapter)
-      @php
-        $nextSlug = $nextChapter->slug ?: ('chapter-' . ($nextChapter->chapter_number ?? 1));
-        $cSlug = $comic->slug ?: ('comic-' . $comic->id);
-      @endphp
-      <a href="{{ route('chapters.show', [$cSlug, $nextSlug]) }}" class="reader-controls-btn" id="footer-btn-next-chap" style="padding:10px 20px; background:var(--primary); border-color:var(--primary)">
+      <a href="{{ route('chapters.show', [$comic->slug, $nextChapter->slug]) }}" class="reader-controls-btn" id="footer-btn-next-chap" style="padding:10px 20px; background:var(--primary); border-color:var(--primary)">
         Chapter Sau (Ch.{{ $nextChapter->chapter_number }}) →
       </a>
     @else
@@ -531,7 +511,7 @@
   <!-- ── STICKY BOTTOM DOCK (FE-04 & Navigation) ── -->
   <div class="reader-bottom-dock" id="reader-bottom-dock">
     @if($prevChapter)
-      <a href="{{ route('chapters.show', [$comic->slug, $prevSlug]) }}" class="reader-controls-btn" style="padding: 6px 12px; border-radius: 20px;" title="Chương trước">
+      <a href="{{ route('chapters.show', [$comic->slug, $prevChapter->slug]) }}" class="reader-controls-btn" style="padding: 6px 12px; border-radius: 20px;" title="Chương trước">
         ◀ Chap trước
       </a>
     @endif
@@ -544,18 +524,14 @@
 
     <select onchange="if(this.value) location.href = this.value;" class="reader-chapter-select" style="padding: 6px 12px; max-width: 170px; font-size: 12.5px;">
       @foreach($allChapters as $item)
-        @php
-          $itemSlug = $item->slug ?: ('chapter-' . ($item->chapter_number ?? 1));
-          $cSlug = $comic->slug ?: ('comic-' . $comic->id);
-        @endphp
-        <option value="{{ route('chapters.show', [$cSlug, $itemSlug]) }}" {{ $item->id == $chapter->id ? 'selected' : '' }}>
+        <option value="{{ route('chapters.show', [$comic->slug, $item->slug]) }}" {{ $item->id == $chapter->id ? 'selected' : '' }}>
           Ch.{{ $item->chapter_number }} - {{ Str::limit($item->title, 18) }}
         </option>
       @endforeach
     </select>
 
     @if($nextChapter)
-      <a href="{{ route('chapters.show', [$comic->slug, $nextSlug]) }}" class="reader-controls-btn" id="dock-btn-next-chap" style="padding: 6px 12px; border-radius: 20px;" title="Chương sau">
+      <a href="{{ route('chapters.show', [$comic->slug, $nextChapter->slug]) }}" class="reader-controls-btn" id="dock-btn-next-chap" style="padding: 6px 12px; border-radius: 20px;" title="Chương sau">
         Chap sau ▶
       </a>
     @endif
@@ -685,7 +661,17 @@
 @push('scripts')
 <script>
   // 0. Khôi phục vị trí đọc dở (Resume Scroll Position)
-  const initialScrollPercent = {{ (float) ($lastScrollPercent ?? 0) }};
+  let initialScrollPercent = {{ (float) ($lastScrollPercent ?? 0) }};
+
+  @guest
+  try {
+    const list = JSON.parse(localStorage.getItem('webcomics_guest_history') || '[]');
+    const item = list.find(i => i.comicId === {{ $comic->id }} && i.chapterNum === {{ $chapter->chapter_number }});
+    if (item && item.percent) {
+      initialScrollPercent = parseFloat(item.percent);
+    }
+  } catch(e) {}
+  @endguest
 
   function scrollToTopChapter() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -698,37 +684,66 @@
   }
 
   function calculateCurrentScrollPercent() {
-    const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-    if (maxScroll <= 0) return 0;
-    const percent = (window.scrollY / maxScroll) * 100;
-    return Math.min(Math.max(Math.round(percent * 100) / 100, 0), 100);
+    if (readerSettings.layout === 'single' || readerSettings.layout === 'double') {
+      if (totalPagesCount <= 1) return 100;
+      let currentIndex = currentSinglePageIndex;
+      if (readerSettings.layout === 'double') {
+        currentIndex = Math.min(currentIndex + 1, totalPagesCount - 1);
+      }
+      const percent = (currentIndex / (totalPagesCount - 1)) * 100;
+      return Math.min(Math.max(Math.round(percent * 100) / 100, 0), 100);
+    } else {
+      const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+      if (maxScroll <= 0) return 100;
+      const percent = (window.scrollY / maxScroll) * 100;
+      return Math.min(Math.max(Math.round(percent * 100) / 100, 0), 100);
+    }
   }
 
-  if (initialScrollPercent >= 3) {
-    const restorePosition = function() {
+  function updateProgress() {
+    const percent = calculateCurrentScrollPercent();
+    const progressBar = document.getElementById('reader-progress-bar');
+    if (progressBar) progressBar.style.width = percent + '%';
+    @guest
+    saveGuestReadingHistory(percent);
+    @endguest
+  }
+
+  const restorePosition = function() {
+    if (initialScrollPercent < 3) return;
+
+    if (readerSettings.layout === 'single' || readerSettings.layout === 'double') {
+      if (totalPagesCount > 1) {
+        let targetIndex = Math.round((initialScrollPercent / 100) * (totalPagesCount - 1));
+        showPage(targetIndex);
+        showResumeToast();
+      }
+    } else {
       const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
       if (maxScroll > 50) {
         const targetTop = (initialScrollPercent / 100) * maxScroll;
-        window.scrollTo({ top: targetTop, behavior: 'smooth' });
-
-        // Hiện Toast "Tiếp tục từ X%" kèm nút về đầu chương
-        const toast = document.getElementById('resume-scroll-toast');
-        const text  = document.getElementById('resume-text');
-        if (toast && text) {
-          text.textContent = `📖 Tiếp tục từ ${Math.round(initialScrollPercent)}%`;
-          toast.style.display = 'inline-flex';
-          setTimeout(dismissResumeToast, 8000);
-        }
+        window.scrollTo({ top: targetTop, behavior: 'instant' });
+        showResumeToast();
       }
-    };
-
-    if (document.readyState === 'complete') {
-      setTimeout(restorePosition, 100);
-    } else {
-      window.addEventListener('load', function() {
-        setTimeout(restorePosition, 150);
-      });
     }
+  };
+
+  function showResumeToast() {
+    const toast = document.getElementById('resume-scroll-toast');
+    const text  = document.getElementById('resume-text');
+    if (toast && text) {
+      text.textContent = `📖 Tiếp tục từ ${Math.round(initialScrollPercent)}%`;
+      toast.style.display = 'inline-flex';
+      setTimeout(dismissResumeToast, 8000);
+    }
+  }
+
+  if (document.readyState === 'complete') {
+    setTimeout(restorePosition, 100);
+  } else {
+    window.addEventListener('load', function() {
+      setTimeout(restorePosition, 150);
+    });
   }
 
   // ── FE-04: CÀI ĐẶT CHẾ ĐỘ ĐỌC & TÙY CHỈNH (localStorage Persistent) ──
@@ -868,6 +883,7 @@
     }
 
     window.scrollTo({ top: 0, behavior: 'instant' });
+    setTimeout(updateProgress, 50);
   }
 
   function nextPage() {
@@ -1122,12 +1138,7 @@
   });
 
   // Cập nhật thanh tiến độ đọc (Top Progress Bar) & Guest history
-  const progressBar = document.getElementById('reader-progress-bar');
-  window.addEventListener('scroll', function() {
-    const percent = calculateCurrentScrollPercent();
-    if (progressBar) progressBar.style.width = percent + '%';
-    saveGuestReadingHistory(percent);
-  }, { passive: true });
+  window.addEventListener('scroll', updateProgress, { passive: true });
 
   function saveGuestReadingHistory(scrollPercent) {
     try {
@@ -1294,6 +1305,12 @@
           contentInput.value = '';
         }
       })
+      .catch(err => {
+        console.debug("Lỗi khi gửi bình luận:", err);
+      });
+    });
+  }
+
   // 5. SMART IMAGE PREFETCH & PRELOAD ENGINE (Preload 3 ảnh kế tiếp & ảnh đầu chương sau)
   (function() {
     const pageUrls = @json(collect($pagesWithDim)->pluck('url'));

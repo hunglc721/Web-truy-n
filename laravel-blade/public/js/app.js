@@ -228,21 +228,33 @@
     }
   });
 
+  let searchAbortController = null;
+
   searchInput?.addEventListener('input', () => {
     const q = searchInput.value.trim();
     openSearch();
     clearTimeout(searchTimer);
 
-    if (!q) {
-      renderInitialSearchDropdown();
+    if (searchAbortController) {
+      searchAbortController.abort();
+    }
+
+    if (q.length < 2) {
+      if (!q) {
+        renderInitialSearchDropdown();
+      } else if (searchDropdown) {
+        searchDropdown.innerHTML = `<div style="padding:12px;text-align:center;color:var(--text-sub);font-size:13.5px;">Gõ thêm ký tự để tìm kiếm...</div>`;
+      }
       return;
     }
 
     searchTimer = setTimeout(async () => {
       try {
+        searchAbortController = new AbortController();
         const response = await fetch(`/api/search/live?q=${encodeURIComponent(q)}`, {
           headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
           credentials: 'same-origin',
+          signal: searchAbortController.signal
         });
         if (!response.ok) return;
 
@@ -292,8 +304,10 @@
           addSearchHistory(q);
         });
         searchDropdown.appendChild(viewAll);
-      } catch (_) {}
-    }, 180);
+      } catch (err) {
+        if (err.name !== 'AbortError') console.error('Live search error:', err);
+      }
+    }, 350);
   });
 
   document.addEventListener('click', (event) => {

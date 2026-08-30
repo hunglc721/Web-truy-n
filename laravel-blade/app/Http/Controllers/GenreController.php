@@ -36,8 +36,13 @@ class GenreController extends Controller
 
         // Loại trừ thể loại (Exclude Genres)
         $excludeGenres = [];
-        if ($request->has('exclude_genres') && is_array($request->input('exclude_genres'))) {
-            $excludeGenres = array_filter($request->input('exclude_genres'), fn($g) => !empty($g) && $g !== 'none');
+        if ($request->has('exclude_genres')) {
+            $input = $request->input('exclude_genres');
+            if (is_array($input)) {
+                $excludeGenres = array_filter($input, fn($g) => !empty($g) && $g !== 'none');
+            } else {
+                $excludeGenres = array_filter(explode(',', $input));
+            }
         }
 
         $country = strtolower((string) $request->input('country', 'all'));

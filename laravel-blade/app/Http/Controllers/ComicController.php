@@ -86,6 +86,28 @@ class ComicController extends Controller
             ? $this->recommendationService->forUser(auth()->user(), 4)
             : collect();
 
-        return view('comics.show', compact('comic', 'relatedComics', 'recommendations', 'isAdmin'));
+        // ── View Variables (Moved from Blade) ───────────────────────────────
+        $likeCount = $comic->likes_count;
+        $isLiked = false;
+        $isSaved = false;
+        $lastHistory = null;
+        $lastChapter = null;
+
+        if (auth()->check()) {
+            $user = auth()->user();
+            $isLiked = $comic->hasLikedBy($user->id);
+            $isSaved = $user->hasInLibrary($comic->id);
+            $lastHistory = $user->readingHistoryForComic($comic->id);
+            $lastChapter = $lastHistory?->chapter;
+        }
+
+        $firstChapter = $comic->chapters->last();
+        $latestChapter = $comic->chapters->first();
+
+        return view('comics.show', compact(
+            'comic', 'relatedComics', 'recommendations', 'isAdmin',
+            'likeCount', 'isLiked', 'isSaved', 'lastHistory', 'lastChapter',
+            'firstChapter', 'latestChapter'
+        ));
     }
 }

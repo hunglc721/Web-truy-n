@@ -7,6 +7,17 @@
   <meta name="description" content="Tìm kiếm và lọc truyện tranh theo nhiều thể loại, trạng thái ra tập và thứ tự sắp xếp hot nhất trên WebComics." />
 @endsection
 
+@push('styles')
+<style>
+  .chip.excluded {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    border-color: rgba(239, 68, 68, 0.3);
+    text-decoration: line-through;
+  }
+</style>
+@endpush
+
 @section('content')
 <main class="page-container">
   <div class="container">
@@ -61,27 +72,41 @@
           <span class="filter-label" style="font-weight: 700; color: var(--text-sub); min-width: 90px; padding-top: 6px;">Thể loại:</span>
           <div class="filter-chips" style="display: flex; flex-wrap: wrap; gap: 8px; flex: 1;">
 
-            <a href="{{ route('genres', request()->except(['page', 'genres', 'genre'])) }}"
-               class="chip {{ empty($selectedGenres) ? 'active' : '' }}">
+            <a href="{{ route('genres', request()->except(['page', 'genres', 'genre', 'exclude_genres'])) }}"
+               class="chip {{ empty($selectedGenres) && empty($excludeGenres) ? 'active' : '' }}">
               Tất cả Thể loại
             </a>
 
             @foreach($genres as $g)
               @php
-                $isCurrentlySelected = in_array($g->slug, $selectedGenres);
-                $newSelected = $isCurrentlySelected
-                    ? array_diff($selectedGenres, [$g->slug])
-                    : array_merge($selectedGenres, [$g->slug]);
+                $isIncluded = in_array($g->slug, $selectedGenres);
+                $isExcluded = in_array($g->slug, $excludeGenres ?? []);
+                
+                $newIncluded = $selectedGenres;
+                $newExcluded = $excludeGenres ?? [];
 
-                $urlParams = request()->except(['page', 'genres', 'genre']);
-                if (!empty($newSelected)) {
-                    $urlParams['genre'] = implode(',', $newSelected);
+                if ($isIncluded) {
+                    $newIncluded = array_diff($newIncluded, [$g->slug]);
+                    $newExcluded = array_merge($newExcluded, [$g->slug]);
+                } elseif ($isExcluded) {
+                    $newExcluded = array_diff($newExcluded, [$g->slug]);
+                } else {
+                    $newIncluded = array_merge($newIncluded, [$g->slug]);
+                }
+
+                $urlParams = request()->except(['page', 'genres', 'genre', 'exclude_genres']);
+                if (!empty($newIncluded)) {
+                    $urlParams['genre'] = implode(',', $newIncluded);
+                }
+                if (!empty($newExcluded)) {
+                    $urlParams['exclude_genres'] = implode(',', $newExcluded);
                 }
               @endphp
 
               <a href="{{ route('genres', $urlParams) }}"
-                 class="chip {{ $isCurrentlySelected ? 'active' : '' }}">
-                {{ $g->icon ?? '📁' }} {{ $g->name }}
+                 class="chip {{ $isIncluded ? 'active' : ($isExcluded ? 'excluded' : '') }}"
+                 title="{{ $isIncluded ? 'Đang chọn (Click để Loại trừ)' : ($isExcluded ? 'Đang loại trừ (Click để Bỏ chọn)' : 'Click để Chọn') }}">
+                {{ $g->icon ?? '📁' }} {{ $g->name }} {!! $isIncluded ? '✓' : ($isExcluded ? '✖' : '') !!}
               </a>
             @endforeach
           </div>

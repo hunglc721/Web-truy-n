@@ -37,7 +37,7 @@ class ComicObserver
         Cache::forget('home.latest');
 
         // Guest recommendation (trending-based)
-        Cache::forget('recommendations.guest');
+        \App\Services\RecommendationService::invalidateGuestCache();
     }
 
     /**
@@ -47,7 +47,7 @@ class ComicObserver
     {
         Cache::forget('home.latest');
         Cache::forget('home.trending');
-        Cache::forget('recommendations.guest');
+        \App\Services\RecommendationService::invalidateGuestCache();
     }
 
     /**

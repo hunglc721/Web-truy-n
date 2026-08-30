@@ -16,8 +16,11 @@ class ChapterObserver
     /**
      * Các cache keys cần xóa khi bất kỳ chapter của comic này thay đổi.
      */
-    protected function invalidateForComic(int $comicId): void
+    protected function invalidateForChapter(Chapter $chapter): void
     {
+        $comicId = $chapter->comic_id;
+        $comicSlug = $chapter->comic->slug ?? null;
+
         // Dropdown danh sách chương trong reader (reader cache)
         Cache::forget("comic.{$comicId}.chapters_list");
 
@@ -26,8 +29,11 @@ class ChapterObserver
 
         // Comic detail page cache (reader + admin tách riêng)
         // Xóa cả 2 vì có thể chapters count / list đã thay đổi
-        Cache::forget("comic.detail.{$comicId}");
-        Cache::forget("comic.detail.{$comicId}.admin");
+        // FIX: Xóa theo slug vì ComicController lưu cache theo slug
+        if ($comicSlug) {
+            Cache::forget("comic.detail.{$comicSlug}");
+            Cache::forget("comic.detail.{$comicSlug}.admin");
+        }
 
         // Home page: latest updates phụ thuộc vào chapter mới nhất
         Cache::forget('home.latest');
@@ -42,21 +48,21 @@ class ChapterObserver
 
     public function created(Chapter $chapter): void
     {
-        $this->invalidateForComic($chapter->comic_id);
+        $this->invalidateForChapter($chapter);
     }
 
     public function updated(Chapter $chapter): void
     {
-        $this->invalidateForComic($chapter->comic_id);
+        $this->invalidateForChapter($chapter);
     }
 
     public function deleted(Chapter $chapter): void
     {
-        $this->invalidateForComic($chapter->comic_id);
+        $this->invalidateForChapter($chapter);
     }
 
     public function restored(Chapter $chapter): void
     {
-        $this->invalidateForComic($chapter->comic_id);
+        $this->invalidateForChapter($chapter);
     }
 }

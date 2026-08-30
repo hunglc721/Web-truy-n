@@ -24,9 +24,6 @@ class Chapter extends Model
         'views',
         'published_at',
         'followers_notified_at',
-        'is_free',
-        'coin_price',
-        'early_access_until',
         'processing_status',
     ];
 
@@ -35,9 +32,6 @@ class Chapter extends Model
         'page_dimensions'         => 'array',
         'published_at'            => 'datetime',
         'followers_notified_at'   => 'datetime',
-        'is_free'                 => 'boolean',
-        'coin_price'              => 'integer',
-        'early_access_until'      => 'datetime',
     ];
 
     protected static function booted(): void
@@ -121,41 +115,5 @@ class Chapter extends Model
         }
 
         return $result;
-    }
-
-    public function unlocks(): \Illuminate\Database\Eloquent\Relations\HasMany
-    {
-        return $this->hasMany(ChapterUnlock::class);
-    }
-
-    public function isEarlyAccess(): bool
-    {
-        return $this->early_access_until !== null && $this->early_access_until->isFuture();
-    }
-
-    public function isUnlockedFor(?User $user): bool
-    {
-        // 1. Chương hoàn toàn miễn phí và không trong giai đoạn early access
-        if ($this->is_free && !$this->isEarlyAccess()) {
-            return true;
-        }
-
-        // 2. Chưa đăng nhập
-        if (!$user) {
-            return false;
-        }
-
-        // 3. Admin / Moderator có quyền đọc mọi chương
-        if ($user->canAccessAdmin() || $user->isAdmin()) {
-            return true;
-        }
-
-        // 4. Hội viên VIP đọc được mọi chương early access
-        if ($user->isVip()) {
-            return true;
-        }
-
-        // 5. Đã mua mở khóa bằng coin
-        return $this->unlocks()->where('user_id', $user->id)->exists();
     }
 }

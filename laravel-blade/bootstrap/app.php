@@ -30,6 +30,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'permission'  => \App\Http\Middleware\PermissionMiddleware::class,
             'not_banned'  => \App\Http\Middleware\EnsureUserNotBanned::class,
             'maintenance' => \App\Http\Middleware\MaintenanceModeMiddleware::class,
+            '2fa'         => \App\Http\Middleware\RequireTwoFactorAuth::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
