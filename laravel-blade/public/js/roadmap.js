@@ -45,6 +45,24 @@
 
     document.body.classList.add('is-reader-page');
 
+    const fitStorageKey = 'webcomics_reader_fit_mode';
+    const restoreFitMode = () => {
+      if (typeof window.setFitMode !== 'function') return;
+      try {
+        const savedFit = localStorage.getItem(fitStorageKey);
+        if (savedFit === 'fit-width' || savedFit === 'fit-height') {
+          window.setFitMode(savedFit, false);
+        }
+      } catch (_) {}
+    };
+
+    $('#btn-fit-width')?.addEventListener('click', () => {
+      try { localStorage.setItem(fitStorageKey, 'fit-width'); } catch (_) {}
+    });
+    $('#btn-fit-height')?.addEventListener('click', () => {
+      try { localStorage.setItem(fitStorageKey, 'fit-height'); } catch (_) {}
+    });
+
     const enforceMobileReaderMode = () => {
       if (window.innerWidth > 768) return;
       const isDouble = document.body.classList.contains('reader-layout-double');
@@ -53,8 +71,9 @@
       }
     };
 
+    setTimeout(restoreFitMode, 150);
     setTimeout(enforceMobileReaderMode, 0);
-    setTimeout(enforceMobileReaderMode, 120);
+    setTimeout(enforceMobileReaderMode, 180);
     window.addEventListener('resize', enforceMobileReaderMode, { passive: true });
   }
 
@@ -282,6 +301,8 @@
     const bar = $('.schedule-day-bar');
     if (!bar || window.location.pathname !== '/schedule') return;
     if (bar.querySelector('[data-completed-tab]')) return;
+
+    bar.classList.add('has-completed-tab');
 
     const link = document.createElement('a');
     link.href = '/schedule/completed';
