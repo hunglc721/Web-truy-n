@@ -2,6 +2,17 @@
 
 @section('title', 'Khu vực thành viên - WebComics')
 
+@push('styles')
+<style>
+  @media (max-width: 768px) {
+    .user-dashboard-two-col { grid-template-columns: 1fr !important; }
+    .user-dashboard-stats { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+    .user-dashboard-weekly { gap: 4px !important; }
+    .user-dashboard-weekly strong { font-size: 10px !important; }
+  }
+</style>
+@endpush
+
 @section('content')
 <main class="page-container">
     <div class="container" style="padding-top:32px;padding-bottom:56px;">
@@ -14,7 +25,7 @@
 
         @include('user._nav')
 
-        <section style="display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:12px;margin-bottom:24px;">
+        <section class="user-dashboard-stats" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:12px;margin-bottom:24px;">
             @foreach([
                 ['📚','Tủ truyện',$overview['total_library_comics']],
                 ['📖','Chương đã đọc',$overview['total_chapters_read']],
@@ -31,7 +42,7 @@
             @endforeach
         </section>
 
-        <section style="display:grid;grid-template-columns:minmax(0,1.3fr) minmax(280px,.7fr);gap:18px;margin-bottom:24px;">
+        <section class="user-dashboard-two-col" style="display:grid;grid-template-columns:minmax(0,1.3fr) minmax(280px,.7fr);gap:18px;margin-bottom:24px;">
             <div style="background:var(--card-bg);border:1px solid var(--border);border-radius:14px;padding:18px;">
                 <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;">
                     <div>
@@ -59,12 +70,12 @@
             </div>
         </section>
 
-        <section style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;margin-bottom:24px;">
+        <section class="user-dashboard-two-col" style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;margin-bottom:24px;">
             <div style="background:var(--card-bg);border:1px solid var(--border);border-radius:14px;padding:18px;">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;"><h2 style="font-size:17px;margin:0;">🕘 Đọc gần đây</h2><a href="{{ route('user.history') }}">Xem tất cả</a></div>
                 @forelse($recentHistory as $item)
                     @if($item->comic && $item->chapter)
-                        <a href="{{ route('chapters.show', [$item->comic->slug, $item->chapter->slug]) }}" style="display:flex;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);text-decoration:none;color:inherit;">
+                        <a href="{{ route('chapters.show', [$item->comic->slug, $item->chapter->slug ?: ('chapter-' . $item->chapter->chapter_number)]) }}" style="display:flex;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);text-decoration:none;color:inherit;">
                             <img src="{{ $item->comic->cover_image }}" alt="" style="width:42px;height:56px;object-fit:cover;border-radius:7px;">
                             <div style="min-width:0;flex:1;"><strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ $item->comic->title }}</strong><span style="font-size:12px;color:var(--text-sub);">Ch.{{ $item->chapter->chapter_number }} · {{ round($item->scroll_percent ?? 0) }}%</span></div>
                         </a>
@@ -91,10 +102,10 @@
 
         <section style="background:var(--card-bg);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:24px;">
             <h2 style="font-size:17px;margin:0 0 14px;">📈 Hoạt động 7 ngày</h2>
-            <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:8px;align-items:end;min-height:150px;">
+            <div class="user-dashboard-weekly" style="display:grid;grid-template-columns:repeat(7,1fr);gap:8px;align-items:end;min-height:150px;">
                 @php($maxWeekly = max(1, collect($weekly)->max('count')))
                 @foreach($weekly as $day)
-                    <div style="text-align:center;">
+                    <div style="text-align:center;min-width:0;">
                         <div title="{{ $day['count'] }} chương" style="height:{{ max(8, round(($day['count'] / $maxWeekly) * 105)) }}px;background:linear-gradient(180deg,#8b5cf6,#6c63ff);border-radius:8px 8px 3px 3px;margin-bottom:7px;"></div>
                         <strong style="font-size:11px;">{{ $day['day_name'] }}</strong>
                         <div style="font-size:10px;color:var(--text-sub);">{{ $day['count'] }}</div>
