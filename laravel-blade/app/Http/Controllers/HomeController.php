@@ -68,10 +68,12 @@ class HomeController extends Controller
         // Các thể loại có dữ liệu nhất, mỗi thể loại lấy 6 bộ hot để homepage không thành một bức tường 30 section rỗng.
         $hottestByGenre = Cache::remember('home.hottest_by_genre', 1800, function () {
             $topGenres = Genre::query()
+                ->whereHas('comics', fn ($query) => $query
+                    ->whereHas('chapters', fn ($chapterQuery) => $chapterQuery->published()))
                 ->withCount([
-                    'comics' => fn ($query) => $query->whereHas('chapters', fn ($chapterQuery) => $chapterQuery->published()),
+                    'comics' => fn ($query) => $query
+                        ->whereHas('chapters', fn ($chapterQuery) => $chapterQuery->published()),
                 ])
-                ->having('comics_count', '>', 0)
                 ->orderByDesc('comics_count')
                 ->orderBy('name')
                 ->take(4)
