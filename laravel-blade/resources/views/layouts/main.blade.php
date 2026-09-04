@@ -13,8 +13,12 @@
   @endif
   <link rel="canonical" href="{{ url()->current() }}" />
   <meta property="og:site_name" content="{{ $siteSettings['site_name'] ?? 'WebComics' }}" />
-  <meta property="og:type" content="website" />
-  <meta property="og:url" content="{{ url()->current() }}" />
+  @if(request()->routeIs('comics.show') && isset($comic))
+    @include('partials.comic-seo')
+  @else
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="{{ url()->current() }}" />
+  @endif
   <link rel="manifest" href="{{ asset('manifest.json') }}" />
   <meta name="theme-color" content="#ff5e36" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
