@@ -25,9 +25,9 @@
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
       </button>
       <div class="genre-tabs" id="orig-tabs">
-        <a href="{{ route('originals') }}" class="genre-tab active">Biên Tập Viên Chọn</a>
+        <a href="{{ route('originals') }}" class="genre-tab {{ empty($selectedGenre) ? 'active' : '' }}">Biên Tập Viên Chọn</a>
         @foreach($genres as $genre)
-          <a href="{{ route('genres', ['genre' => $genre->slug]) }}" class="genre-tab">{{ $genre->name }}</a>
+          <a href="{{ route('originals', ['genre' => $genre->slug]) }}" class="genre-tab {{ ($selectedGenre ?? '') === $genre->slug ? 'active' : '' }}">{{ $genre->name }}</a>
         @endforeach
       </div>
       <button type="button" class="genre-scroll-btn genre-scroll-right" aria-label="Cuộn phải" title="Xem thêm thể loại">
@@ -94,7 +94,7 @@
     <div class="comics-section" style="padding-top:36px;">
       <div class="section-header">
         <h2 class="section-title">✨ Tuyển Tập Được Đề Xuất</h2>
-        <span class="results-count">{{ $originals->count() }} bộ truyện độc quyền</span>
+        <span class="results-count">{{ $originals->count() }} bộ truyện độc quyền{{ !empty($selectedGenre) ? ' trong thể loại đã chọn' : '' }}</span>
       </div>
 
       <div class="originals-full-grid">
@@ -118,7 +118,7 @@
         @empty
           <div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--text-sub);">
             <p style="font-size:44px;margin-bottom:12px;">✨</p>
-            <p>Chưa có truyện độc quyền nào được xuất bản.</p>
+            <p>Chưa có truyện độc quyền nào phù hợp bộ lọc.</p>
           </div>
         @endforelse
       </div>
