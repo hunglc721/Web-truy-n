@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ContactMessage;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
 class PublicPageController extends Controller
@@ -38,10 +38,11 @@ class PublicPageController extends Controller
             'message' => ['required', 'string', 'min:10', 'max:5000'],
         ]);
 
-        Log::info('Public contact form submission', [
+        ContactMessage::create([
             ...$validated,
             'user_id' => $request->user()?->id,
-            'ip' => $request->ip(),
+            'status' => 'new',
+            'ip_address' => $request->ip(),
         ]);
 
         return back()->with('success', 'Tin nhắn đã được ghi nhận. Ban quản trị sẽ kiểm tra và phản hồi khi có thể.');
