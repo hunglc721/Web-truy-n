@@ -21,17 +21,14 @@ class ComicController extends Controller
      *   - Admin: thấy tất cả chương kể cả lên lịch tương lai (preview)
      *
      * Cache strategy:
-     *  - comic_detail (metadata, genres, authors, tags, chapters): TTL 30 phút
-     *    → Bị invalidate bởi ComicObserver (saved/deleted)
-     *  - related_comics: TTL 60 phút (ít thay đổi hơn)
-     *  - views được increment trực tiếp, không cache
+     *  - comic_detail (metadata, genres, authors, tags, teams, chapters): TTL 30 phút
+     *  - related_comics: TTL 60 phút
+     *  - views được increment qua buffer riêng
      */
     public function show(string $slug)
     {
         $isAdmin = auth()->check() && auth()->user()->isAdmin();
 
-        // ── Comic Detail Cache ─────────────────────────────────────────────
-        // Cache key tách riêng giữa admin và reader để tải đúng danh sách chương
         $cacheKey = $isAdmin
             ? "comic.detail.{$slug}.admin"
             : "comic.detail.{$slug}";
@@ -42,37 +39,38 @@ class ComicController extends Controller
                     'genres',
                     'authors',
                     'tags',
-                    // Admin: xem cả chương chưa phát hành (preview)
-                    // Guest/Member: chỉ lấy chương published_at <= now()
-                    'chapters' => fn($q) => $q
-                        ->when(!$isAdmin, fn($q) => $q->published())
+                    'teams',
+                    'chapters' => fn ($q) => $q
+                        ->when(!$isAdmin, fn ($q) => $q->published())
                         ->orderByDesc('chapter_number')
                         ->take(20),
                 ])
                 ->withCount([
-                    // withCount cũng chỉ đếm chương đã phát hành với reader
-                    'chapters' => fn($q) => $q->when(!$isAdmin, fn($q) => $q->published()),
+                    'chapters' => fn ($q) => $q->when(!$isAdmin, fn ($q) => $q->published()),
                 ])
                 ->firstOrFail();
         });
 
-        // ── View Counter — Đếm qua Cache buffer, chống F5 bằng TTL 15 phút ──
         if (!$isAdmin) {
-            $userOrIp  = auth()->id() ?? request()->ip();
+            $userOrIp = auth()->id() ?? request()->ip();
             $antiF5Key = "view_comic:{$comic->id}:{$userOrIp}";
             if (Cache::add($antiF5Key, true, 900)) {
                 \App\Jobs\FlushViewCounters::recordComicView($comic->id);
             }
         }
 
-        // ── Related Comics Cache ───────────────────────────────────────────
         $firstGenreSlug = $comic->genres->first()?->slug ?? '';
         $relatedComics = Cache::remember(
             "comic.related.{$comic->id}",
             3600,
             function () use ($comic, $firstGenreSlug) {
+                if ($firstGenreSlug === '') {
+                    return collect();
+                }
+
                 return Comic::with(['genres', 'latestChapter'])
                     ->byGenre($firstGenreSlug)
+                    ->whereHas('chapters', fn ($query) => $query->published())
                     ->where('id', '!=', $comic->id)
                     ->orderByDesc('avg_rating')
                     ->take(6)
@@ -80,13 +78,10 @@ class ComicController extends Controller
             }
         );
 
-        // ── Recommendations (đã cá nhân hóa) ────────────────────────────────
-        // Chỉ load nếu user đã đăng nhập; cache nằm trong RecommendationService
         $recommendations = auth()->check()
             ? $this->recommendationService->forUser(auth()->user(), 4)
             : collect();
 
-        // ── View Variables (Moved from Blade) ───────────────────────────────
         $likeCount = $comic->likes_count;
         $isLiked = false;
         $isSaved = false;

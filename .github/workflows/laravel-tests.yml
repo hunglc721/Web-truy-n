@@ -18,6 +18,14 @@ jobs:
     defaults:
       run:
         working-directory: laravel-blade
+    env:
+      APP_ENV: testing
+      DB_CONNECTION: sqlite
+      DB_DATABASE: ':memory:'
+      CACHE_STORE: array
+      SESSION_DRIVER: array
+      QUEUE_CONNECTION: sync
+      MAIL_MAILER: array
 
     steps:
       - name: Checkout
@@ -35,6 +43,7 @@ jobs:
 
       - name: Prepare environment
         run: |
+          mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views bootstrap/cache
           cp .env.example .env
           php artisan key:generate
           php artisan optimize:clear

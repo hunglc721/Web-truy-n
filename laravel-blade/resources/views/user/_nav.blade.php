@@ -4,6 +4,26 @@
     --card-bg: var(--bg-surface-1);
     --border: var(--border-color);
   }
+
+  @media (max-width: 768px) {
+    .user-hub-nav {
+      flex-wrap: nowrap !important;
+      overflow-x: auto;
+      padding-bottom: 6px;
+      scrollbar-width: none;
+      scroll-snap-type: x proximity;
+      -webkit-overflow-scrolling: touch;
+    }
+    .user-hub-nav::-webkit-scrollbar { display: none; }
+    .user-hub-nav > a {
+      flex: 0 0 auto;
+      min-height: 42px;
+      display: inline-flex;
+      align-items: center;
+      scroll-snap-align: start;
+    }
+    .user-hub-nav > a:last-child { margin-left: 0 !important; }
+  }
 </style>
 @endonce
 

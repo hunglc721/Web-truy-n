@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="csrf-token" content="{{ csrf_token() }}" />
   <title>@yield('title', ($siteSettings['site_name'] ?? 'WebComics') . ' - ' . ($siteSettings['tagline'] ?? 'Đọc Manhua, Manhwa & Manga Online'))</title>
   @hasSection('meta')
@@ -10,6 +10,14 @@
   @else
     <meta name="description" content="{{ $siteSettings['meta_description'] ?? 'Nền tảng đọc truyện tranh trực tuyến WebComics.' }}" />
     <meta name="keywords" content="{{ $siteSettings['seo_keywords'] ?? 'đọc truyện,manga,manhwa,manhua,webtoon' }}" />
+  @endif
+  <link rel="canonical" href="{{ url()->current() }}" />
+  <meta property="og:site_name" content="{{ $siteSettings['site_name'] ?? 'WebComics' }}" />
+  @if(request()->routeIs('comics.show') && isset($comic))
+    @include('partials.comic-seo')
+  @else
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="{{ url()->current() }}" />
   @endif
   <link rel="manifest" href="{{ asset('manifest.json') }}" />
   <meta name="theme-color" content="#ff5e36" />
@@ -19,6 +27,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="{{ asset('css/style.css') }}" />
+  <link rel="stylesheet" href="{{ asset('css/responsive.css') }}" />
   <style>:root{--card-bg:var(--bg-surface-1);--border:var(--border-color)}.footer-static-item{color:var(--text-muted);font-size:13px;display:block;padding:3px 0}</style>
   @stack('styles')
 </head>
@@ -44,7 +53,7 @@
         <nav class="main-nav" aria-label="Menu chính">
           <a href="{{ route('home') }}" class="nav-link {{ request()->routeIs('home') ? 'active' : '' }}">Trang Chủ</a>
           <a href="{{ route('genres') }}" class="nav-link {{ request()->routeIs('genres') ? 'active' : '' }}">Thể Loại</a>
-          <a href="{{ route('schedule') }}" class="nav-link {{ request()->routeIs('schedule') ? 'active' : '' }}">Lịch Ra Truyện</a>
+          <a href="{{ route('schedule') }}" class="nav-link {{ request()->routeIs('schedule*') ? 'active' : '' }}">Lịch Ra Truyện</a>
           <a href="{{ route('originals') }}" class="nav-link {{ request()->routeIs('originals') ? 'active' : '' }}">Độc Quyền</a>
         </nav>
       </div>
@@ -83,20 +92,53 @@
           <a href="{{ route('user.dashboard') }}" class="btn btn-login" style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="Khu vực thành viên của {{ auth()->user()->name }}">👤 {{ auth()->user()->name }}</a>
           <form action="{{ route('logout') }}" method="POST" style="margin:0">@csrf<button type="submit" class="btn btn-download">Đăng Xuất</button></form>
         @endguest
+        <button type="button" class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Mở menu" aria-expanded="false" aria-controls="mobile-menu">☰</button>
       </div>
     </div>
   </header>
+
+  <aside class="mobile-menu" id="mobile-menu" aria-hidden="true">
+    <form action="{{ route('genres') }}" method="GET" class="mobile-search">
+      <input type="search" name="q" placeholder="Tìm kiếm truyện..." aria-label="Tìm kiếm truyện trên mobile">
+      <button type="submit" aria-label="Tìm kiếm">🔍</button>
+    </form>
+    <nav aria-label="Menu mobile">
+      <a href="{{ route('home') }}">🏠 Trang Chủ</a>
+      <a href="{{ route('genres') }}">📚 Thể Loại</a>
+      <a href="{{ route('schedule') }}">📅 Lịch Ra Truyện</a>
+      <a href="{{ route('schedule.completed') }}">✅ Truyện Hoàn Thành</a>
+      <a href="{{ route('originals') }}">⭐ Độc Quyền</a>
+      <a href="{{ route('publish.create') }}">✍️ Đăng Truyện</a>
+      @auth
+        <a href="{{ route('user.library') }}">📖 Tủ Truyện</a>
+        <a href="{{ route('user.history') }}">🕘 Lịch Sử Đọc</a>
+        <a href="{{ route('user.dashboard') }}">👤 Tài Khoản</a>
+        @if(auth()->user()->canAccessAdmin())<a href="{{ route('admin.dashboard') }}">🛡️ Quản Trị</a>@endif
+        <form action="{{ route('logout') }}" method="POST">@csrf<button type="submit">🚪 Đăng Xuất</button></form>
+      @else
+        <a href="{{ route('login') }}">🔑 Đăng Nhập</a>
+        <a href="{{ route('register') }}">✍️ Đăng Ký</a>
+      @endauth
+    </nav>
+  </aside>
 
   @if(session('success'))<div class="container" style="padding-top:16px"><div style="padding:12px 16px;border-radius:10px;background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.25);color:#4ade80;font-weight:600">{{ session('success') }}</div></div>@endif
   @if(session('error'))<div class="container" style="padding-top:16px"><div style="padding:12px 16px;border-radius:10px;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.25);color:#f87171;font-weight:600">{{ session('error') }}</div></div>@endif
 
   @yield('content')
 
+  @if(request()->routeIs('home'))
+    @include('partials.home-discovery')
+  @endif
+  @if(request()->routeIs('originals'))
+    @include('partials.originals-discovery')
+  @endif
+
   <footer class="site-footer" id="site-footer"><div class="container">
     <div class="footer-newsletter-card"><div class="newsletter-info"><span class="newsletter-tag">🚀 CỘNG ĐỒNG {{ strtoupper($siteSettings['site_name'] ?? 'WEBCOMICS') }}</span><h3 class="newsletter-title">Theo dõi chương mới và truyện nổi bật</h3><p class="newsletter-sub">{{ $siteSettings['tagline'] ?? 'Khám phá truyện mới, lịch phát hành và các tác phẩm đang thịnh hành.' }}</p></div><div class="newsletter-form"><span style="font-size:13px;color:var(--text-sub)">Kênh email chưa được cấu hình, nên không hiện form đăng ký giả.</span></div></div>
     <div class="footer-main-grid">
       <div class="fgrid-brand-col"><a href="{{ route('home') }}" class="logo-link"><div class="logo-icon"><svg width="40" height="40" viewBox="0 0 44 44"><rect width="44" height="44" rx="12" fill="#FF5E36"/><text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle" font-family="Inter" font-weight="900" font-size="18" fill="white">WC</text></svg></div><span class="logo-text">{{ $siteSettings['site_name'] ?? 'WebComics' }}</span></a><p class="fbrand-desc">{{ $siteSettings['tagline'] ?? 'Nền tảng đọc Manga, Manhwa và Manhua trực tuyến.' }}</p></div>
-      <div class="fgrid-col"><h4 class="fcol-heading">Khám Phá</h4><ul class="fcol-list"><li><a href="{{ route('home') }}">Truyện Thịnh Hành</a></li><li><a href="{{ route('genres') }}">Tất Cả Thể Loại</a></li><li><a href="{{ route('schedule') }}">Lịch Ra Truyện</a></li><li><a href="{{ route('originals') }}">Truyện Độc Quyền</a></li></ul></div>
+      <div class="fgrid-col"><h4 class="fcol-heading">Khám Phá</h4><ul class="fcol-list"><li><a href="{{ route('home') }}">Truyện Thịnh Hành</a></li><li><a href="{{ route('genres') }}">Tất Cả Thể Loại</a></li><li><a href="{{ route('schedule') }}">Lịch Ra Truyện</a></li><li><a href="{{ route('schedule.completed') }}">Truyện Hoàn Thành</a></li><li><a href="{{ route('originals') }}">Truyện Độc Quyền</a></li></ul></div>
       <div class="fgrid-col"><h4 class="fcol-heading">Tài Khoản</h4>
         <ul class="fcol-list">
           @guest
@@ -107,19 +149,17 @@
             <li><a href="{{ route('user.library') }}">Tủ Truyện</a></li>
             <li><a href="{{ route('user.history') }}">Lịch Sử</a></li>
             <li><a href="{{ route('user.likes') }}">Yêu Thích</a></li>
-            @if(auth()->user()->canAccessAdmin())
-              <li><a href="{{ route('admin.dashboard') }}">Trang Quản Trị</a></li>
-            @endif
+            @if(auth()->user()->canAccessAdmin())<li><a href="{{ route('admin.dashboard') }}">Trang Quản Trị</a></li>@endif
           @endguest
         </ul>
       </div>
-      <div class="fgrid-col"><h4 class="fcol-heading">Hỗ Trợ</h4><span class="footer-static-item">Điều Khoản Sử Dụng</span><span class="footer-static-item">Chính Sách Riêng Tư</span><a href="{{ route('dmca.show') }}" style="color: var(--text-muted); text-decoration: none; display: block; margin-bottom: 8px;">⚖️ Bản Quyền & DMCA</a><a href="{{ route('teams.index') }}" style="color: var(--text-muted); text-decoration: none; display: block; margin-bottom: 8px;">👥 Danh Sách Nhóm Dịch</a></div>
+      <div class="fgrid-col"><h4 class="fcol-heading">Hỗ Trợ</h4><ul class="fcol-list"><li><a href="{{ route('pages.about') }}">Giới Thiệu</a></li><li><a href="{{ route('pages.terms') }}">Điều Khoản Sử Dụng</a></li><li><a href="{{ route('pages.privacy') }}">Chính Sách Riêng Tư</a></li><li><a href="{{ route('pages.contact') }}">Liên Hệ</a></li><li><a href="{{ route('dmca.show') }}">Bản Quyền & DMCA</a></li><li><a href="{{ route('teams.index') }}">Danh Sách Nhóm Dịch</a></li><li><a href="{{ route('sitemap') }}">Sitemap</a></li></ul></div>
     </div>
     <div class="footer-bottom-bar"><p class="fcopy-text">&copy; {{ date('Y') }} {{ $siteSettings['site_name'] ?? 'WebComics' }}. All rights reserved.</p><div class="lang-selector"><span class="lang-icon">🌐</span><select class="lang-select" aria-label="Ngôn ngữ"><option value="vi" selected>Tiếng Việt</option></select></div></div>
   </div></footer>
   <script src="{{ asset('js/app.js') }}"></script>
+  <script src="{{ asset('js/roadmap.js') }}"></script>
   <script>
-    // PWA Service Worker & Install Prompt Registration
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW registration failed:', err));
@@ -138,9 +178,7 @@
       if (deferredPrompt) {
         deferredPrompt.prompt();
         const { outcome } = await deferredPrompt.userChoice;
-        if (outcome === 'accepted') {
-          pwaInstallBtn.style.display = 'none';
-        }
+        if (outcome === 'accepted') pwaInstallBtn.style.display = 'none';
         deferredPrompt = null;
       }
     });
