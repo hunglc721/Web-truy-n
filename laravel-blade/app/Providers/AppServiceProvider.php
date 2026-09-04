@@ -26,6 +26,7 @@ use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -50,6 +51,12 @@ class AppServiceProvider extends ServiceProvider
         Banner::observe(BannerObserver::class);
         Schedule::observe(ScheduleObserver::class);
         Event::listen(CommentCreated::class, LogCommentCreated::class);
+
+        // Keep feature routes isolated from the already large web.php file.
+        $roadmapRoutes = base_path('routes/roadmap.php');
+        if (is_file($roadmapRoutes)) {
+            Route::middleware('web')->group($roadmapRoutes);
+        }
 
         // Public layout consumes the persistent settings created by the admin UI.
         // The fallback keeps fresh installs usable before the settings migration runs.
