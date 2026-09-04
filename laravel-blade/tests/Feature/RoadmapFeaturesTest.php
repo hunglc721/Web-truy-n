@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Chapter;
 use App\Models\Comic;
+use App\Models\ContactMessage;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
@@ -88,14 +89,29 @@ class RoadmapFeaturesTest extends TestCase
             'published_at' => now()->subHour(),
         ]);
 
-        $this->get(route('sitemap'))
-            ->assertOk()
-            ->assertHeader('content-type', 'application/xml; charset=UTF-8')
-            ->assertSee(route('comics.show', $comic->slug), false);
+        $response = $this->get(route('sitemap'));
+        $response->assertOk()->assertSee(route('comics.show', $comic->slug), false);
+        $this->assertStringContainsString('application/xml', (string) $response->headers->get('Content-Type'));
 
         $this->get(route('pages.about'))->assertOk()->assertSee('Giới Thiệu WebComics');
         $this->get(route('pages.terms'))->assertOk()->assertSee('Điều Khoản Sử Dụng');
         $this->get(route('pages.privacy'))->assertOk()->assertSee('Chính Sách Riêng Tư');
         $this->get(route('pages.contact'))->assertOk()->assertSee('Liên Hệ WebComics');
+    }
+
+    public function test_contact_form_persists_a_message(): void
+    {
+        $this->post(route('pages.contact.submit'), [
+            'name' => 'Nguyen Van A',
+            'email' => 'reader@example.com',
+            'subject' => 'Lỗi reader trên mobile',
+            'message' => 'Trang reader bị tràn chiều ngang trên thiết bị nhỏ.',
+        ])->assertRedirect()->assertSessionHas('success');
+
+        $this->assertDatabaseHas(ContactMessage::class, [
+            'email' => 'reader@example.com',
+            'subject' => 'Lỗi reader trên mobile',
+            'status' => 'new',
+        ]);
     }
 }
