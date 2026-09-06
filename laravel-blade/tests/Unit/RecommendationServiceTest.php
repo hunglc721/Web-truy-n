@@ -29,10 +29,11 @@ class RecommendationServiceTest extends TestCase
     {
         Comic::factory(6)->trending()->create();
 
+        $version = (int) Cache::get('recommendations.guest.version', 1);
         $result = $this->service->forGuest(4);
 
         $this->assertCount(4, $result);
-        $this->assertTrue(Cache::has('recommendations.guest.limit_4.ex_all'));
+        $this->assertTrue(Cache::has("recommendations.guest.v{$version}.limit_4.ex_all"));
     }
 
     public function test_for_comic_returns_similar_genre_comics(): void
@@ -63,7 +64,6 @@ class RecommendationServiceTest extends TestCase
         $genreA = Genre::create(['name' => 'Genre A', 'slug' => 'genre-a']);
         $genreB = Genre::create(['name' => 'Genre B', 'slug' => 'genre-b']);
 
-        // Comic in history has genreA
         $historyComic = Comic::factory()->create();
         $historyComic->genres()->attach($genreA);
         $historyChapter = \App\Models\Chapter::factory()->create(['comic_id' => $historyComic->id]);
@@ -74,7 +74,6 @@ class RecommendationServiceTest extends TestCase
             'last_read_at' => now(),
         ]);
 
-        // Comic in library has genreB
         $libComic = Comic::factory()->create();
         $libComic->genres()->attach($genreB);
         Library::create([
@@ -83,11 +82,9 @@ class RecommendationServiceTest extends TestCase
             'status'   => 'reading',
         ]);
 
-        // New candidate comic with genreA
         $candidateA = Comic::factory()->create(['avg_rating' => 9.5]);
         $candidateA->genres()->attach($genreA);
 
-        // New candidate comic with genreB
         $candidateB = Comic::factory()->create(['avg_rating' => 9.2]);
         $candidateB->genres()->attach($genreB);
 
@@ -113,8 +110,8 @@ class RecommendationServiceTest extends TestCase
         $this->service->forUser($user, 4);
         $this->service->forUser($user, 6);
 
-        $this->assertTrue(Cache::has("recommendations.user.{$user->id}.v0.limit_4"));
-        $this->assertTrue(Cache::has("recommendations.user.{$user->id}.v0.limit_6"));
+        $this->assertTrue(Cache::has("recommendations.user.{$user->id}.v0.limit_4.ex_all"));
+        $this->assertTrue(Cache::has("recommendations.user.{$user->id}.v0.limit_6.ex_all"));
 
         $this->service->invalidateForUser($user->id);
 

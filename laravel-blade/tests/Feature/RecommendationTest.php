@@ -12,16 +12,6 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
 
-/**
- * Feature tests cho Recommendation API & Engine
- *
- * Covers:
- *  - Guest: GET /api/recommendations -> source: trending
- *  - Authenticated: GET /api/recommendations -> source: personalized (genre-based)
- *  - Similar: GET /api/recommendations?comic_id=X -> source: similar
- *  - Limit param validation (min 1, max 24, default 6)
- *  - Cache invalidation on reading history save
- */
 class RecommendationTest extends TestCase
 {
     use RefreshDatabase;
@@ -34,8 +24,7 @@ class RecommendationTest extends TestCase
 
     public function test_guest_can_fetch_trending_recommendations(): void
     {
-        // Tạo 8 comics trending
-        $comics = Comic::factory(8)->trending()->create();
+        Comic::factory(8)->trending()->create();
 
         $response = $this->getJson(route('recommendations.index'));
 
@@ -59,17 +48,13 @@ class RecommendationTest extends TestCase
     public function test_authenticated_user_receives_personalized_recommendations(): void
     {
         $user = User::factory()->create();
-
-        // Tạo 2 genres: Action và Romance
         $actionGenre = Genre::create(['name' => 'Action', 'slug' => 'action']);
         $romanceGenre = Genre::create(['name' => 'Romance', 'slug' => 'romance']);
 
-        // Comic 1: Action (user đã đọc)
         $readComic = Comic::factory()->create(['title' => 'Read Action Comic']);
         $readComic->genres()->attach($actionGenre);
         $chapter = Chapter::factory()->create(['comic_id' => $readComic->id]);
 
-        // Tạo lịch sử đọc
         ReadingHistory::create([
             'user_id'      => $user->id,
             'comic_id'     => $readComic->id,
@@ -77,7 +62,6 @@ class RecommendationTest extends TestCase
             'last_read_at' => now(),
         ]);
 
-        // Comic 2: Action khác (chưa đọc, rating cao)
         $recommendedActionComic = Comic::factory()->create([
             'title'      => 'Recommended Action Comic',
             'avg_rating' => 9.5,
@@ -85,7 +69,6 @@ class RecommendationTest extends TestCase
         ]);
         $recommendedActionComic->genres()->attach($actionGenre);
 
-        // Comic 3: Romance (không liên quan)
         $romanceComic = Comic::factory()->create([
             'title'      => 'Romance Comic',
             'avg_rating' => 8.0,
@@ -100,10 +83,7 @@ class RecommendationTest extends TestCase
             ->assertJsonPath('source', 'personalized');
 
         $returnedComicIds = collect($response->json('comics'))->pluck('id')->toArray();
-
-        // Truyện cùng thể loại Action phải được ưu tiên gợi ý
         $this->assertContains($recommendedActionComic->id, $returnedComicIds);
-        // Truyện đã đọc không xuất hiện lại trong gợi ý
         $this->assertNotContains($readComic->id, $returnedComicIds);
     }
 
@@ -139,17 +119,14 @@ class RecommendationTest extends TestCase
 
         $service = app(RecommendationService::class);
 
-        // Prime cache
         $service->forUser($user, 6);
-        $this->assertTrue(Cache::has("recommendations.user.{$user->id}.v0.limit_6"));
+        $this->assertTrue(Cache::has("recommendations.user.{$user->id}.v0.limit_6.ex_all"));
 
-        // Gửi request save reading history
         $this->actingAs($user)->postJson(route('history.save'), [
             'comic_id'   => $comic->id,
             'chapter_id' => $chapter->id,
         ])->assertStatus(200);
 
-        // Version key cho user phải tăng lên 1
         $this->assertEquals(1, Cache::get("rec_ver.user.{$user->id}"));
     }
 }
