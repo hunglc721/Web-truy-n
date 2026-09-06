@@ -41,15 +41,15 @@ class SearchService
 
             return Comic::query()
                 ->where(function (Builder $query) use ($escapedOriginal, $escapedNormalized) {
-                    $query->where('title', 'like', "{$escapedOriginal}%")
-                        ->orWhere('title_normalized', 'like', "{$escapedNormalized}%")
+                    $query->where('title', 'like', "%{$escapedOriginal}%")
+                        ->orWhere('title_normalized', 'like', "%{$escapedNormalized}%")
                         ->orWhere('alt_titles', 'like', "%{$escapedOriginal}%")
                         ->orWhere('alt_titles_normalized', 'like', "%{$escapedNormalized}%")
                         ->orWhereHas('authors', function (Builder $a) use ($escapedOriginal) {
-                            $a->where('name', 'like', "{$escapedOriginal}%");
+                            $a->where('name', 'like', "%{$escapedOriginal}%");
                         })
                         ->orWhereHas('genres', function (Builder $g) use ($escapedOriginal) {
-                            $g->where('name', 'like', "{$escapedOriginal}%");
+                            $g->where('name', 'like', "%{$escapedOriginal}%");
                         });
                 })
                 ->with(['genres:id,name,slug', 'latestChapter'])
@@ -57,7 +57,6 @@ class SearchService
                 ->limit(min(20, max(1, $limit)))
                 ->get(['id', 'title', 'slug', 'cover_image', 'status', 'country', 'avg_rating', 'views', 'is_original']);
         });
-
 
         return $results;
     }
@@ -116,14 +115,14 @@ class SearchService
             $escapedNormalized = $this->escapeLikeString($normalized);
 
             $query->where(function (Builder $q) use ($escapedOriginal, $escapedNormalized) {
-                $q->where('title', 'like', "{$escapedOriginal}%")
-                    ->orWhere('title_normalized', 'like', "{$escapedNormalized}%")
+                $q->where('title', 'like', "%{$escapedOriginal}%")
+                    ->orWhere('title_normalized', 'like', "%{$escapedNormalized}%")
                     ->orWhere('alt_titles', 'like', "%{$escapedOriginal}%")
                     ->orWhere('alt_titles_normalized', 'like', "%{$escapedNormalized}%")
                     ->orWhere('description', 'like', "%{$escapedOriginal}%")
-                    ->orWhereHas('authors', fn($a) => $a->where('name', 'like', "{$escapedOriginal}%"))
-                    ->orWhereHas('genres', fn($g) => $g->where('name', 'like', "{$escapedOriginal}%"))
-                    ->orWhereHas('tags', fn($t) => $t->where('name', 'like', "{$escapedOriginal}%"));
+                    ->orWhereHas('authors', fn($a) => $a->where('name', 'like', "%{$escapedOriginal}%"))
+                    ->orWhereHas('genres', fn($g) => $g->where('name', 'like', "%{$escapedOriginal}%"))
+                    ->orWhereHas('tags', fn($t) => $t->where('name', 'like', "%{$escapedOriginal}%"));
             });
 
             // Ghi nhận lượt tìm kiếm
@@ -170,7 +169,6 @@ class SearchService
         // 6. Lọc theo Quốc gia / Xuất xứ (JP, KR, CN, VN, manga, manhwa, manhua)
         if (!empty($params['country']) && strtolower((string) $params['country']) !== 'all') {
             $country = strtoupper((string) $params['country']);
-            // Map alias: manga -> JP, manhwa -> KR, manhua -> CN, vietnam -> VN
             $countryMap = [
                 'MANGA'   => 'JP',
                 'MANHWA'  => 'KR',

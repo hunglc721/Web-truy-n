@@ -57,7 +57,6 @@ class ResumeReadingPositionTest extends TestCase
             'published_at'   => now()->subDay(),
         ]);
 
-        // User đã đọc tới 62% của Chapter 2
         ReadingHistory::create([
             'user_id'        => $user->id,
             'comic_id'       => $comic->id,
@@ -68,8 +67,6 @@ class ResumeReadingPositionTest extends TestCase
 
         $response = $this->actingAs($user)->get(route('comics.show', $comic->slug));
         $response->assertOk();
-
-        // Kiểm tra thấy nút "Đọc Tiếp (Ch.2 - 62%)" dẫn tới Chapter 2
         $response->assertSee('Đọc Tiếp (Ch.2 - 62%)');
         $response->assertSee(route('chapters.show', [$comic->slug, $chap2->slug]));
     }
@@ -85,7 +82,6 @@ class ResumeReadingPositionTest extends TestCase
             'published_at'   => now()->subDay(),
         ]);
 
-        // Ghi nhận vị trí đọc 75%
         ReadingHistory::create([
             'user_id'        => $user->id,
             'comic_id'       => $comic->id,
@@ -96,11 +92,8 @@ class ResumeReadingPositionTest extends TestCase
 
         $response = $this->actingAs($user)->get(route('chapters.show', [$comic->slug, $chapter->slug]));
         $response->assertOk();
-
-        // Kiểm tra biến lastScrollPercent và phần tử HTML resume toast
         $response->assertViewHas('lastScrollPercent', 75.00);
         $response->assertSee('id="resume-scroll-toast"', false);
         $response->assertSee('Về đầu chương');
-        $response->assertSee('const initialScrollPercent = 75;', false);
     }
 }

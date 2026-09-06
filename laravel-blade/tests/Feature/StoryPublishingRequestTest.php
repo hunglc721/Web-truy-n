@@ -7,14 +7,14 @@ use App\Models\Permission;
 use App\Models\Role;
 use App\Models\StoryPublishingRequest;
 use App\Models\User;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class StoryPublishingRequestTest extends TestCase
 {
-    use DatabaseTransactions;
+    use RefreshDatabase;
 
     protected User $adminUser;
     protected User $regularUser;
@@ -25,7 +25,6 @@ class StoryPublishingRequestTest extends TestCase
 
         Storage::fake('public');
 
-        // Tạo hoặc lấy role admin và gán full quyền
         $adminRole = Role::firstOrCreate(['slug' => 'admin'], ['name' => 'Quản trị viên']);
         $managePerm = Permission::firstOrCreate(
             ['slug' => 'story_requests.manage'],
@@ -200,7 +199,6 @@ class StoryPublishingRequestTest extends TestCase
         $this->assertEquals('Tác phẩm rất chất lượng! Ban Biên Tập đã duyệt và sẽ liên hệ qua Zalo.', $req->admin_note);
         $this->assertEquals($this->adminUser->id, $req->reviewed_by);
 
-        // Kiểm tra user nhận được Announcement / Notification
         $this->assertDatabaseHas('announcements', [
             'target_user_id' => $this->regularUser->id,
             'audience'       => 'user',
