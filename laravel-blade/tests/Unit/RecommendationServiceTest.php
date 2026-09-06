@@ -29,10 +29,11 @@ class RecommendationServiceTest extends TestCase
     {
         Comic::factory(6)->trending()->create();
 
+        $version = (int) Cache::get('recommendations.guest.version', 1);
         $result = $this->service->forGuest(4);
 
         $this->assertCount(4, $result);
-        $this->assertTrue(Cache::has('recommendations.guest.v1.limit_4.ex_all'));
+        $this->assertTrue(Cache::has("recommendations.guest.v{$version}.limit_4.ex_all"));
     }
 
     public function test_for_comic_returns_similar_genre_comics(): void
