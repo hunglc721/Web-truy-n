@@ -67,25 +67,48 @@ class LibraryService
             ]
         );
 
-        // Cập nhật last_read_chapter_id trong Library nếu truyện đã có trong tủ sách
-        Library::where('user_id', $user->id)
-            ->where('comic_id', $comic->id)
-            ->update(['last_read_chapter_id' => $chapter->id]);
-
+        $this->syncLastReadChapter($user, $comic, $chapter);
         $this->recommendationService->invalidateForUser($user->id);
 
         return $history;
     }
 
     /**
-     * Lấy danh sách truyện trong Tủ sách (phân trang).
+     * Đồng bộ chương đã đọc xa nhất trong Tủ truyện.
+     * Không cho con trỏ bị lùi nếu người dùng quay lại đọc một chapter cũ.
+     */
+    public function syncLastReadChapter(User $user, Comic $comic, Chapter $chapter): void
+    {
+        $libraryItem = Library::with('lastReadChapter')
+            ->where('user_id', $user->id)
+            ->where('comic_id', $comic->id)
+            ->first();
+
+        if (!$libraryItem) {
+            return;
+        }
+
+        $lastNumber = $libraryItem->lastReadChapter?->chapter_number;
+        if ($lastNumber === null || (float) $chapter->chapter_number >= (float) $lastNumber) {
+            $libraryItem->update(['last_read_chapter_id' => $chapter->id]);
+            $libraryItem->setRelation('lastReadChapter', $chapter);
+        }
+    }
+
+    /**
+     * Lấy danh sách truyện trong Tủ sách (phân trang) và tính trạng thái chương chưa đọc.
+     * Chỉ cần thêm một query batch cho toàn bộ card trên trang, tránh N+1.
      */
     public function getUserLibrary(User $user, int $perPage = 12): LengthAwarePaginator
     {
-        return Library::with(['comic.latestChapter', 'lastReadChapter'])
+        $paginator = Library::with(['comic.latestChapter', 'lastReadChapter'])
             ->where('user_id', $user->id)
             ->orderBy('created_at', 'desc')
             ->paginate($perPage, ['*'], 'library_page');
+
+        $this->decorateUnreadState($paginator->getCollection());
+
+        return $paginator;
     }
 
     /**
@@ -101,11 +124,15 @@ class LibraryService
     }
 
     /**
-     * Xóa toàn bộ lịch sử đọc của người dùng.
+     * Xóa toàn bộ lịch sử đọc và reset con trỏ đọc trong Tủ truyện.
      */
     public function clearUserHistory(User $user): bool
     {
-        ReadingHistory::where('user_id', $user->id)->delete();
+        DB::transaction(function () use ($user) {
+            ReadingHistory::where('user_id', $user->id)->delete();
+            Library::where('user_id', $user->id)->update(['last_read_chapter_id' => null]);
+        });
+
         $this->recommendationService->invalidateForUser($user->id);
         return true;
     }
@@ -118,7 +145,6 @@ class LibraryService
         $totalBookmarks = Library::where('user_id', $user->id)->count();
         $totalReadComics = ReadingHistory::where('user_id', $user->id)->count();
 
-        // Thống kê top 3 thể loại yêu thích dựa trên các truyện đã đọc
         $readComicIds = ReadingHistory::where('user_id', $user->id)->pluck('comic_id');
         $topGenres = DB::table('comic_genre')
             ->join('genres', 'comic_genre.genre_id', '=', 'genres.id')
@@ -135,5 +161,38 @@ class LibraryService
             'total_read_comics'  => $totalReadComics,
             'top_genres'         => $topGenres,
         ];
+    }
+
+    /**
+     * Gắn unread_chapters_count và nextUnreadChapter cho các Library item đang hiển thị.
+     */
+    private function decorateUnreadState(Collection $items): void
+    {
+        if ($items->isEmpty()) {
+            return;
+        }
+
+        $comicIds = $items->pluck('comic_id')->filter()->unique()->values();
+        $chaptersByComic = Chapter::query()
+            ->published()
+            ->whereIn('comic_id', $comicIds)
+            ->orderBy('comic_id')
+            ->orderBy('chapter_number')
+            ->get(['id', 'comic_id', 'chapter_number', 'slug', 'title'])
+            ->groupBy('comic_id');
+
+        foreach ($items as $item) {
+            $publishedChapters = $chaptersByComic->get($item->comic_id, collect());
+            $lastNumber = $item->lastReadChapter?->chapter_number;
+
+            $unreadChapters = $lastNumber === null
+                ? $publishedChapters
+                : $publishedChapters->filter(
+                    fn (Chapter $chapter) => (float) $chapter->chapter_number > (float) $lastNumber
+                )->values();
+
+            $item->setAttribute('unread_chapters_count', $unreadChapters->count());
+            $item->setRelation('nextUnreadChapter', $unreadChapters->first());
+        }
     }
 }
