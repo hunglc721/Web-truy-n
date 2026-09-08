@@ -3,7 +3,7 @@
 
 @section('content')
 <main class="page-container"><div class="container" style="padding-top:32px;padding-bottom:56px;">
-  <div style="display:flex;justify-content:space-between;gap:16px;align-items:center;flex-wrap:wrap;margin-bottom:18px"><div><h1 style="margin:0 0 6px">📚 Tủ Truyện</h1><p style="margin:0;color:var(--text-sub)">Những bộ m đang theo dõi, lưu bằng tài khoản thật chứ không còn nằm trong localStorage của một chiếc trình duyệt cô đơn.</p></div><span id="library-total-label" data-total="{{ $libraries->total() }}" style="font-size:13px;color:var(--text-sub)">{{ $libraries->total() }} bộ truyện</span></div>
+  <div style="display:flex;justify-content:space-between;gap:16px;align-items:center;flex-wrap:wrap;margin-bottom:18px"><div><h1 style="margin:0 0 6px">📚 Tủ Truyện</h1><p style="margin:0;color:var(--text-sub)">Theo dõi truyện, nhớ chương đã đọc và tự báo chính xác phần nội dung còn chưa đọc.</p></div><span id="library-total-label" data-total="{{ $libraries->total() }}" style="font-size:13px;color:var(--text-sub)">{{ $libraries->total() }} bộ truyện</span></div>
   @include('user._nav')
 
   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:22px"><div style="padding:14px;background:var(--bg-surface-1);border:1px solid var(--border-color);border-radius:12px"><strong id="library-total-stat" style="font-size:22px;display:block">{{ number_format($stats['total_bookmarks'] ?? $libraries->total()) }}</strong><span style="font-size:11px;color:var(--text-sub)">Truyện đang theo dõi</span></div><div style="padding:14px;background:var(--bg-surface-1);border:1px solid var(--border-color);border-radius:12px"><strong style="font-size:22px;display:block">{{ number_format($stats['total_read_comics'] ?? 0) }}</strong><span style="font-size:11px;color:var(--text-sub)">Truyện từng đọc</span></div><div style="padding:14px;background:var(--bg-surface-1);border:1px solid var(--border-color);border-radius:12px"><strong style="font-size:15px;display:block;line-height:1.5">{{ collect($stats['top_genres'] ?? [])->join(' · ') ?: 'Chưa đủ dữ liệu' }}</strong><span style="font-size:11px;color:var(--text-sub)">Thể loại hay đọc</span></div></div>
@@ -13,12 +13,25 @@
   @else
     <div class="comics-grid" id="library-grid">
       @foreach($libraries as $item)
-        @php($comic=$item->comic)
+        @php
+          $comic = $item->comic;
+          $unreadCount = (int) ($item->unread_chapters_count ?? 0);
+          $nextUnread = $item->nextUnreadChapter;
+        @endphp
         @if($comic)
         <article class="comic-card-sm" id="library-item-{{ $comic->id }}" style="position:relative;transition:.25s">
-          <a href="{{ route('comics.show',$comic->slug) }}" style="display:block;text-decoration:none;color:inherit"><div class="sm-cover"><img src="{{ $comic->cover_image }}" alt="{{ $comic->title }}" class="cover-img" loading="lazy"><span class="sm-badge">★ {{ number_format($comic->avg_rating,1) }}</span></div><div class="sm-info"><h3 class="sm-title">{{ $comic->title }}</h3><div class="sm-meta"><span>{{ ucfirst($comic->status) }}</span><span>{{ $comic->latestChapter?->label ?? 'Đang cập nhật' }}</span></div></div></a>
+          <a href="{{ route('comics.show',$comic->slug) }}" style="display:block;text-decoration:none;color:inherit"><div class="sm-cover"><img src="{{ $comic->cover_image }}" alt="{{ $comic->title }}" class="cover-img" loading="lazy"><span class="sm-badge">★ {{ number_format($comic->avg_rating,1) }}</span>@if($unreadCount > 0)<span style="position:absolute;left:8px;bottom:8px;z-index:3;padding:5px 8px;border-radius:999px;background:rgba(255,42,109,.92);color:#fff;font-size:10px;font-weight:800;box-shadow:0 3px 12px rgba(0,0,0,.35)">+{{ $unreadCount }} chưa đọc</span>@else<span style="position:absolute;left:8px;bottom:8px;z-index:3;padding:5px 8px;border-radius:999px;background:rgba(34,197,94,.9);color:#fff;font-size:10px;font-weight:800;box-shadow:0 3px 12px rgba(0,0,0,.35)">✓ Đã đọc hết</span>@endif</div><div class="sm-info"><h3 class="sm-title">{{ $comic->title }}</h3><div class="sm-meta"><span>{{ ucfirst($comic->status) }}</span><span>{{ $comic->latestChapter?->label ?? 'Đang cập nhật' }}</span></div></div></a>
           <button type="button" class="library-remove" data-comic="{{ $comic->id }}" data-title="{{ $comic->title }}" style="position:absolute;top:8px;right:8px;z-index:4;width:36px;height:36px;border-radius:50%;border:1px solid rgba(239,68,68,.4);background:rgba(11,14,20,.82);color:#f87171;cursor:pointer" aria-label="Bỏ theo dõi {{ $comic->title }}">✕</button>
-          <div style="padding:0 12px 12px">@if($item->lastReadChapter)<a href="{{ route('chapters.show',[$comic->slug,$item->lastReadChapter->slug ?: ('chapter-' . $item->lastReadChapter->chapter_number)]) }}" class="btn-spotlight-read" style="display:block;text-align:center;text-decoration:none;padding:8px 10px;font-size:12px">📖 Đọc tiếp Ch.{{ $item->lastReadChapter->chapter_number }}</a>@else<a href="{{ route('comics.show',$comic->slug) }}" class="btn-spotlight-sub" style="display:block;text-align:center;text-decoration:none;padding:8px 10px;font-size:12px">Xem chi tiết</a>@endif</div>
+          <div style="padding:0 12px 12px;display:grid;gap:7px">
+            @if($nextUnread)
+              <a href="{{ route('chapters.show',[$comic->slug,$nextUnread->slug ?: ('chapter-' . $nextUnread->chapter_number)]) }}" class="btn-spotlight-read" style="display:block;text-align:center;text-decoration:none;padding:8px 10px;font-size:12px">▶ Đọc tiếp Ch.{{ $nextUnread->chapter_number }}</a>
+              @if($item->lastReadChapter)<span style="font-size:10.5px;color:var(--text-sub);text-align:center">Đã đọc tới Ch.{{ $item->lastReadChapter->chapter_number }}</span>@endif
+            @elseif($item->lastReadChapter)
+              <a href="{{ route('chapters.show',[$comic->slug,$item->lastReadChapter->slug ?: ('chapter-' . $item->lastReadChapter->chapter_number)]) }}" class="btn-spotlight-sub" style="display:block;text-align:center;text-decoration:none;padding:8px 10px;font-size:12px">↩ Đọc lại Ch.{{ $item->lastReadChapter->chapter_number }}</a>
+            @else
+              <a href="{{ route('comics.show',$comic->slug) }}" class="btn-spotlight-sub" style="display:block;text-align:center;text-decoration:none;padding:8px 10px;font-size:12px">Xem chi tiết</a>
+            @endif
+          </div>
         </article>
         @endif
       @endforeach
