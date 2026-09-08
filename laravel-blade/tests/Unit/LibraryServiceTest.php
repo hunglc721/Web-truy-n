@@ -46,7 +46,6 @@ class LibraryServiceTest extends TestCase
         $user = User::factory()->create();
         $comic = Comic::factory()->create(['title' => 'Test Tower of God']);
 
-        // Ban đầu đã thêm vào thư viện
         Library::create([
             'user_id'  => $user->id,
             'comic_id' => $comic->id,
@@ -70,7 +69,6 @@ class LibraryServiceTest extends TestCase
         $chapter1 = Chapter::factory()->create(['comic_id' => $comic->id, 'chapter_number' => 1]);
         $chapter2 = Chapter::factory()->create(['comic_id' => $comic->id, 'chapter_number' => 2]);
 
-        // Đọc chapter 1
         $this->libraryService->recordReading($user, $comic, $chapter1);
         $this->assertDatabaseHas('reading_histories', [
             'user_id'    => $user->id,
@@ -78,7 +76,6 @@ class LibraryServiceTest extends TestCase
             'chapter_id' => $chapter1->id,
         ]);
 
-        // Đọc tiếp chapter 2 -> updateOrCreate không tạo duplicate record
         $this->libraryService->recordReading($user, $comic, $chapter2);
         $this->assertEquals(1, ReadingHistory::where('user_id', $user->id)->where('comic_id', $comic->id)->count());
         $this->assertDatabaseHas('reading_histories', [
@@ -94,7 +91,6 @@ class LibraryServiceTest extends TestCase
         $comic = Comic::factory()->create();
         $chapter = Chapter::factory()->create(['comic_id' => $comic->id, 'chapter_number' => 10]);
 
-        // Thêm vào tủ sách trước
         $library = Library::create([
             'user_id'  => $user->id,
             'comic_id' => $comic->id,
@@ -105,6 +101,65 @@ class LibraryServiceTest extends TestCase
 
         $library->refresh();
         $this->assertEquals($chapter->id, $library->last_read_chapter_id);
+    }
+
+    public function test_last_read_chapter_does_not_regress_when_user_reopens_old_chapter(): void
+    {
+        $user = User::factory()->create();
+        $comic = Comic::factory()->create();
+        $older = Chapter::factory()->create(['comic_id' => $comic->id, 'chapter_number' => 3]);
+        $newer = Chapter::factory()->create(['comic_id' => $comic->id, 'chapter_number' => 8]);
+
+        $library = Library::create([
+            'user_id' => $user->id,
+            'comic_id' => $comic->id,
+            'last_read_chapter_id' => $newer->id,
+            'status' => 'reading',
+        ]);
+
+        $this->libraryService->recordReading($user, $comic, $older);
+
+        $this->assertEquals($newer->id, $library->fresh()->last_read_chapter_id);
+    }
+
+    public function test_user_library_counts_only_published_unread_chapters_and_exposes_next_unread(): void
+    {
+        $user = User::factory()->create();
+        $comic = Comic::factory()->create();
+        $chapter1 = Chapter::factory()->create([
+            'comic_id' => $comic->id,
+            'chapter_number' => 1,
+            'published_at' => now()->subDays(3),
+        ]);
+        $chapter2 = Chapter::factory()->create([
+            'comic_id' => $comic->id,
+            'chapter_number' => 2,
+            'published_at' => now()->subDays(2),
+        ]);
+        $chapter3 = Chapter::factory()->create([
+            'comic_id' => $comic->id,
+            'chapter_number' => 3,
+            'published_at' => now()->subDay(),
+        ]);
+        Chapter::factory()->create([
+            'comic_id' => $comic->id,
+            'chapter_number' => 4,
+            'published_at' => now()->addDay(),
+        ]);
+
+        Library::create([
+            'user_id' => $user->id,
+            'comic_id' => $comic->id,
+            'last_read_chapter_id' => $chapter1->id,
+            'status' => 'reading',
+        ]);
+
+        $item = $this->libraryService->getUserLibrary($user, 12)->first();
+
+        $this->assertSame(2, (int) $item->unread_chapters_count);
+        $this->assertNotNull($item->nextUnreadChapter);
+        $this->assertEquals($chapter2->id, $item->nextUnreadChapter->id);
+        $this->assertNotEquals($chapter3->id, $item->nextUnreadChapter->id);
     }
 
     public function test_get_user_reading_stats_calculates_top_genres_and_counts(): void
@@ -119,10 +174,8 @@ class LibraryServiceTest extends TestCase
         $comic2 = Comic::factory()->create();
         $comic2->genres()->attach([$action->id]);
 
-        // Bookmark comic1
         Library::create(['user_id' => $user->id, 'comic_id' => $comic1->id, 'status' => 'reading']);
 
-        // Record reading comic1 and comic2
         $chap1 = Chapter::factory()->create(['comic_id' => $comic1->id]);
         $chap2 = Chapter::factory()->create(['comic_id' => $comic2->id]);
         $this->libraryService->recordReading($user, $comic1, $chap1);
@@ -135,16 +188,24 @@ class LibraryServiceTest extends TestCase
         $this->assertContains('Action', $stats['top_genres']);
     }
 
-    public function test_clear_user_history_removes_all_reading_records(): void
+    public function test_clear_user_history_removes_records_and_resets_library_progress(): void
     {
         $user = User::factory()->create();
         $comic = Comic::factory()->create();
-        $chap = Chapter::factory()->create(['comic_id' => $comic->id]);
+        $chapter = Chapter::factory()->create(['comic_id' => $comic->id]);
+        $library = Library::create([
+            'user_id' => $user->id,
+            'comic_id' => $comic->id,
+            'last_read_chapter_id' => $chapter->id,
+            'status' => 'reading',
+        ]);
 
-        $this->libraryService->recordReading($user, $comic, $chap);
+        $this->libraryService->recordReading($user, $comic, $chapter);
         $this->assertEquals(1, ReadingHistory::where('user_id', $user->id)->count());
 
         $this->libraryService->clearUserHistory($user);
+
         $this->assertEquals(0, ReadingHistory::where('user_id', $user->id)->count());
+        $this->assertNull($library->fresh()->last_read_chapter_id);
     }
 }
