@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Comic;
 use App\Models\Chapter;
+use App\Models\Library;
 use App\Models\ReadingHistory;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -38,6 +39,30 @@ class ResumeReadingPositionTest extends TestCase
         $this->assertNotNull($history);
         $this->assertEquals(62.50, $history->scroll_percent);
         $this->assertEquals($chapter->id, $history->chapter_id);
+    }
+
+    public function test_save_history_syncs_last_read_chapter_for_followed_comic(): void
+    {
+        $user = User::factory()->create();
+        $comic = Comic::factory()->create();
+        $chapter = Chapter::factory()->create([
+            'comic_id' => $comic->id,
+            'chapter_number' => 7,
+            'published_at' => now()->subMinute(),
+        ]);
+        $library = Library::create([
+            'user_id' => $user->id,
+            'comic_id' => $comic->id,
+            'status' => 'reading',
+        ]);
+
+        $this->actingAs($user)->postJson(route('history.save'), [
+            'comic_id' => $comic->id,
+            'chapter_id' => $chapter->id,
+            'scroll_percent' => 25,
+        ])->assertOk();
+
+        $this->assertEquals($chapter->id, $library->fresh()->last_read_chapter_id);
     }
 
     public function test_comic_detail_shows_continue_reading_button_with_percentage(): void
