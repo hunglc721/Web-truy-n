@@ -12,9 +12,14 @@ on:
       - '.github/workflows/laravel-tests.yml'
   workflow_dispatch:
 
+concurrency:
+  group: laravel-tests-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: laravel-blade
@@ -51,5 +56,8 @@ jobs:
       - name: Validate routes
         run: php artisan route:list
 
-      - name: Run test suite
+      - name: Critical functional smoke tests
+        run: php artisan test tests/Feature/CriticalUserJourneyTest.php --stop-on-failure
+
+      - name: Full regression suite
         run: php artisan test
