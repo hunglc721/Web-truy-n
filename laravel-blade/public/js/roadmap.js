@@ -9,6 +9,7 @@
   setupChapterCatalogue();
   setupComicReleaseMeta();
   setupCompletedScheduleLink();
+  setupRealtimeNotifications();
 
   function setupMobileMenu() {
     const button = $('#mobile-menu-btn');
@@ -311,5 +312,182 @@
     link.style.textDecoration = 'none';
     link.innerHTML = '<span class="day-name">✓</span><span class="day-count">COMPLETED</span>';
     bar.appendChild(link);
+  }
+
+  function setupRealtimeNotifications() {
+    if (document.body?.dataset.authState === 'guest') return;
+    if (typeof window.EventSource === 'undefined') return;
+
+    let source = null;
+    let fallbackTimer = null;
+    let failures = 0;
+    let initialized = false;
+    let latestNotificationId = null;
+
+    const setState = (state) => {
+      if (document.body) document.body.dataset.realtimeState = state;
+    };
+
+    const setSeen = () => {
+      if (document.body) document.body.dataset.realtimeSeen = '1';
+    };
+
+    const updateBadge = (count) => {
+      const badge = $('.wc-notification-badge');
+      if (!badge) return;
+      const value = Number(count || 0);
+      badge.textContent = value > 99 ? '99+' : String(value);
+      badge.hidden = value < 1;
+    };
+
+    const renderDropdown = (payload) => {
+      const dropdown = $('.wc-notification-dropdown');
+      if (!dropdown?.classList.contains('open')) return;
+
+      dropdown.innerHTML = '';
+      const head = document.createElement('div');
+      head.className = 'wc-notification-head';
+      const strong = document.createElement('strong');
+      strong.textContent = 'Thông báo';
+      head.appendChild(strong);
+      dropdown.appendChild(head);
+
+      const items = Array.isArray(payload.notifications) ? payload.notifications : [];
+      if (!items.length) {
+        const empty = document.createElement('div');
+        empty.className = 'wc-notification-empty';
+        empty.textContent = 'Chưa có thông báo.';
+        dropdown.appendChild(empty);
+      } else {
+        items.forEach((item) => {
+          const note = document.createElement('a');
+          note.href = item.open_url || '/user/notifications';
+          note.className = `wc-notification-item${item.read_at ? '' : ' unread'}`;
+
+          const icon = document.createElement('span');
+          icon.className = 'wc-notification-item-icon';
+          icon.textContent = item.data?.icon || '🔔';
+
+          const copy = document.createElement('span');
+          const title = document.createElement('strong');
+          title.textContent = item.data?.title || 'Thông báo';
+          const message = document.createElement('small');
+          message.textContent = item.data?.message || '';
+          const time = document.createElement('em');
+          time.textContent = item.created_at || '';
+          copy.append(title, message, time);
+          note.append(icon, copy);
+          dropdown.appendChild(note);
+        });
+      }
+
+      const all = document.createElement('a');
+      all.href = payload.all_url || '/user/notifications';
+      all.className = 'wc-notification-all';
+      all.textContent = 'Xem tất cả thông báo';
+      dropdown.appendChild(all);
+    };
+
+    const showToast = (item) => {
+      if (!item || item.read_at) return;
+      $('#wc-realtime-toast')?.remove();
+
+      const toast = document.createElement('a');
+      toast.id = 'wc-realtime-toast';
+      toast.className = 'wc-realtime-toast';
+      toast.href = item.open_url || '/user/notifications';
+      toast.setAttribute('role', 'status');
+      toast.style.cssText = 'position:fixed;right:18px;top:82px;z-index:10000;width:min(360px,calc(100vw - 36px));display:flex;gap:11px;align-items:flex-start;padding:13px 14px;border-radius:14px;background:#151a24;border:1px solid rgba(255,94,54,.42);box-shadow:0 18px 55px rgba(0,0,0,.5);color:#fff;text-decoration:none;animation:wcRealtimeIn .2s ease-out;';
+
+      const icon = document.createElement('span');
+      icon.textContent = item.data?.icon || '🔔';
+      icon.style.fontSize = '20px';
+
+      const copy = document.createElement('span');
+      copy.style.cssText = 'display:flex;flex-direction:column;gap:3px;min-width:0';
+      const title = document.createElement('strong');
+      title.textContent = item.data?.title || 'Thông báo mới';
+      title.style.fontSize = '12.5px';
+      const message = document.createElement('small');
+      message.textContent = item.data?.message || '';
+      message.style.cssText = 'font-size:11.5px;line-height:1.45;color:#b9c0cf';
+      copy.append(title, message);
+      toast.append(icon, copy);
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 6500);
+    };
+
+    const applySnapshot = (payload) => {
+      if (!payload || typeof payload !== 'object') return;
+      const items = Array.isArray(payload.notifications) ? payload.notifications : [];
+      const newest = items[0] || null;
+      updateBadge(payload.unread_count);
+      renderDropdown(payload);
+      setSeen();
+
+      if (!initialized) {
+        latestNotificationId = newest?.id || null;
+        initialized = true;
+        return;
+      }
+
+      if (newest?.id && newest.id !== latestNotificationId) {
+        latestNotificationId = newest.id;
+        showToast(newest);
+      }
+    };
+
+    const pollOnce = async () => {
+      try {
+        const response = await fetch('/user/notifications/header', {
+          headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+          credentials: 'same-origin',
+          cache: 'no-store',
+        });
+        if (!response.ok) return;
+        applySnapshot(await response.json());
+      } catch (_) {}
+    };
+
+    const startFallback = () => {
+      if (fallbackTimer) return;
+      setState('fallback');
+      pollOnce();
+      fallbackTimer = window.setInterval(pollOnce, 15000);
+    };
+
+    const connect = () => {
+      setState('connecting');
+      source = new EventSource('/user/notifications/header?stream=1');
+
+      source.onopen = () => {
+        failures = 0;
+        setState('connected');
+      };
+
+      source.addEventListener('snapshot', (event) => {
+        try {
+          applySnapshot(JSON.parse(event.data));
+          setState('connected');
+        } catch (_) {}
+      });
+
+      source.onerror = () => {
+        failures += 1;
+        setState('reconnecting');
+        if (failures >= 4) {
+          source?.close();
+          source = null;
+          startFallback();
+        }
+      };
+    };
+
+    connect();
+
+    window.addEventListener('pagehide', () => {
+      source?.close();
+      if (fallbackTimer) window.clearInterval(fallbackTimer);
+    });
   }
 })();
