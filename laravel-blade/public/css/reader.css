@@ -1,0 +1,43 @@
+.reader-toolbar .comic-info { min-width: 0; flex: 1; }
+.reader-toolbar .comic-info a { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.reader-toolbar .comic-info strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.reader-toolbar .reader-controls { flex-shrink: 0; }
+.reader-controls-btn, .reader-chapter-select { box-sizing: border-box; min-height: 40px; }
+button.reader-chapter-select { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; border-radius: 8px; text-align: center; }
+#single-page-nav { display: none !important; } /* The bottom dock owns page navigation in every mode. */
+.reader-bottom-dock { max-width: calc(100vw - 16px); box-sizing: border-box; }
+.reader-bottom-dock > * { flex-shrink: 0; }
+.reader-bottom-dock .reader-chapter-select { flex: 1 1 160px; min-width: 0; }
+.comic-page-wrapper picture { display: block; width: 100%; }
+#reader-chapter-picker { color-scheme: dark; color: #f3f4f6; background: #13161e; border: 1px solid #495266; border-radius: 18px; width: min(520px, calc(100vw - 24px)); max-height: 72dvh; padding: 18px; box-sizing: border-box; }
+#reader-chapter-picker::backdrop { background: #000a; }
+.reader-picker-heading { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+#reader-chapter-picker label { display: block; font-size: 13px; margin-bottom: 8px; }
+#reader-chapter-search { box-sizing: border-box; width: 100%; height: 44px; background: #0d0f14; color: #fff; border: 1px solid #667085; border-radius: 8px; padding: 10px; }
+.reader-picker-list { display: block; overflow-y: auto; overscroll-behavior: contain; max-height: 45dvh; margin-top: 12px; }
+.reader-picker-list a { display: block; color: #f3f4f6; padding: 12px; border-radius: 8px; overflow-wrap: anywhere; }
+.reader-picker-list a[aria-current] { background: #83301c; color: #fff; border: 1px solid #ff8f70; font-weight: 700; }
+.reader-picker-list a[hidden] { display: none; }
+.reader-picker-list a:focus-visible, #reader-chapter-search:focus-visible { outline: 2px solid #ff8f70; outline-offset: -2px; }
+@media (max-width: 768px) {
+  body.is-reader-page .reader-toolbar .comic-info { justify-content: flex-start; width: 100%; }
+  body.is-reader-page .reader-toolbar .comic-info a { display: block; max-width: 100%; }
+  body.is-reader-page .reader-controls { grid-template-columns: 42px minmax(0, 1fr) 42px 42px; }
+  body.is-reader-page .reader-controls > .reader-controls-btn { height: 40px; overflow: hidden; }
+  body.is-reader-page .reader-bottom-dock { display: grid; grid-template-columns: 40px minmax(0, 1fr) 40px 40px; overflow: visible; border-radius: 14px; }
+  body.is-reader-page .reader-bottom-dock > .reader-controls-btn { font-size: 0 !important; width: 40px; height: 40px; min-width: 0; }
+  #dock-btn-prev-chap::after { content: '◀'; font-size: 16px; }
+  #dock-btn-next-chap::after { content: '▶'; font-size: 16px; }
+  .reader-bottom-dock button[title*="Cài đặt"]::after { content: '⚙'; font-size: 18px; }
+  body.is-reader-page .reader-bottom-dock button[title*="Toàn màn hình"],
+  body.is-reader-page .reader-bottom-dock button[title="Lên đầu trang"] { display: none; }
+  body.is-reader-page .reader-bottom-dock .reader-chapter-select { grid-column: 2; grid-row: 1; height: 40px; }
+  #dock-btn-prev-chap { grid-column: 1; grid-row: 1; }
+  #dock-btn-next-chap { grid-column: 3; grid-row: 1; }
+  .reader-bottom-dock button[title*="Cài đặt"] { grid-column: 4; grid-row: 1; }
+  #dock-page-nav { grid-column: 1 / -1; grid-row: 2; justify-content: center; }
+  body.is-reader-page #btn-mode-double { display: block !important; }
+  body.is-reader-page .reader-settings-panel { top: 96px !important; max-height: calc(100dvh - 220px); }
+  #reader-chapter-picker { margin: auto auto max(12px, env(safe-area-inset-bottom)); }
+  #resume-scroll-toast { bottom: 116px !important; width: calc(100% - 24px); box-sizing: border-box; flex-wrap: wrap; justify-content: center; border-radius: 16px !important; }
+}

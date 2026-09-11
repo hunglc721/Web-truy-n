@@ -2,7 +2,7 @@ name: Laravel Tests
 
 on:
   push:
-    branches: [main]
+    branches: [main, 'perf/**']
     paths:
       - 'laravel-blade/**'
       - 'e2e/**'
@@ -42,7 +42,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.3'
-          extensions: mbstring, pdo_sqlite, sqlite3
+          extensions: mbstring, pdo_sqlite, sqlite3, gd, zip
           coverage: none
 
       - name: Install Composer dependencies
@@ -87,7 +87,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.3'
-          extensions: mbstring, pdo_sqlite, sqlite3
+          extensions: mbstring, pdo_sqlite, sqlite3, gd, zip
           coverage: none
 
       - name: Install Composer dependencies
@@ -103,6 +103,8 @@ jobs:
           php artisan key:generate
           php artisan optimize:clear
           php artisan migrate:fresh --seed --force
+          php artisan db:seed --class=ReaderE2ESeeder --force
+          php artisan storage:link
 
       - name: Setup Node
         uses: actions/setup-node@v4

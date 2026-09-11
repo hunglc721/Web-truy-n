@@ -34,7 +34,14 @@ class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        //
+        config(['queue.connections.reader-images' => [
+            'driver' => 'database',
+            'connection' => null,
+            'table' => 'reader_image_jobs',
+            'queue' => 'reader-images',
+            'retry_after' => 660,
+            'after_commit' => true,
+        ]]);
     }
 
     public function boot(): void

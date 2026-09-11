@@ -18,6 +18,7 @@ class ZipChapterUploadTest extends TestCase
 
     public function test_process_zip_chapter_upload_job_extracts_and_sorts_pages_naturally(): void
     {
+        \Illuminate\Support\Facades\Bus::fake([\App\Jobs\GenerateChapterReaderVariants::class]);
         Storage::fake('public');
 
         $comic = Comic::factory()->create();
@@ -46,6 +47,9 @@ class ZipChapterUploadTest extends TestCase
         $chapter->refresh();
 
         $this->assertSame('ready', $chapter->processing_status);
+        \Illuminate\Support\Facades\Bus::assertDispatched(\App\Jobs\GenerateChapterReaderVariants::class,
+            fn ($job) => $job->chapterId === $chapter->id);
+        $this->assertSame(hash('sha256', $fakeImg), hash('sha256', Storage::disk('public')->get("chapters/{$comic->id}/{$chapter->id}/001.jpg")));
         $this->assertCount(3, $chapter->pages);
         $this->assertCount(3, $chapter->page_dimensions);
         $this->assertStringContainsString('001.jpg', $chapter->pages[0]);

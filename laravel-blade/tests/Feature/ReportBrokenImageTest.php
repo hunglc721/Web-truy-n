@@ -100,7 +100,9 @@ class ReportBrokenImageTest extends TestCase
         $response = $this->get(route('chapters.show', [$comic->slug, $chapter->slug]));
         $response->assertOk();
 
-        $response->assertSee('onerror="handleImageError(this)"', false);
+        $response->assertSee('if(window.handleImageError) { handleImageError(this); }', false);
+        $response->assertSee("this.dataset.earlyError = '1'", false);
+        $response->assertSee('.comic-page-img[data-early-error]', false);
         $response->assertSee('data-retries="0"', false);
         $response->assertSee('function handleImageError');
         $response->assertSee('function reportBrokenImage');

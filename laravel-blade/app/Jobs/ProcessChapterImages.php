@@ -76,6 +76,7 @@ class ProcessChapterImages implements ShouldQueue
                 'processing_status' => 'ready',
             ]);
 
+            app(\App\Services\ReaderImageService::class)->enqueue($this->chapter->id);
             $notificationService?->dispatchIfEligible($this->chapter);
         } catch (\Throwable $e) {
             $this->chapter->update(['processing_status' => 'failed']);

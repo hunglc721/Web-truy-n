@@ -160,6 +160,7 @@ class ProcessZipChapterUploadJob implements ShouldQueue
             'processing_status' => 'ready',
         ]);
 
+        app(\App\Services\ReaderImageService::class)->enqueue($chapter->id);
         $notificationService->dispatchIfEligible($chapter);
     }
 

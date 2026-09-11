@@ -285,6 +285,8 @@ Hệ thống recommendation sử dụng dữ liệu như:
 
 ## Performance
 
+Reader image variants, queue/backfill setup and production cache guidance: [docs/READER_IMAGES.md](docs/READER_IMAGES.md).
+
 Một số kỹ thuật đã áp dụng:
 
 1. **Counter Cache**  

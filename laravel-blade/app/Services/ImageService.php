@@ -71,7 +71,7 @@ class ImageService
     }
 
     /**
-     * Upload 1 file ảnh, kiểm tra MIME thật, strip EXIF metadata và lưu vào storage.
+     * Upload 1 file ảnh, kiểm tra MIME thật và giữ nguyên byte gốc.
      *
      * @param  UploadedFile $file
      * @param  string       $folder
@@ -89,29 +89,25 @@ class ImageService
         $filename   = "page_{$pageNumber}_" . Str::random(6) . ".{$extension}";
         $targetPath = "{$folder}/{$filename}";
 
-        // Tự động Strip EXIF Metadata nếu là JPEG/PNG và có GD extension
-        if (function_exists('imagecreatefromstring') && in_array($extension, ['jpg', 'jpeg', 'png'], true)) {
-            $content = file_get_contents($file->getRealPath());
-            $gdImg = @imagecreatefromstring($content);
-
-            if ($gdImg !== false) {
-                ob_start();
-                if ($extension === 'png') {
-                    imagealphablending($gdImg, false);
-                    imagesavealpha($gdImg, true);
-                    imagepng($gdImg);
-                } else {
-                    imagejpeg($gdImg, null, 90);
-                }
-                $cleanData = ob_get_clean();
-                imagedestroy($gdImg);
-
-                Storage::disk($this->disk)->put($targetPath, $cleanData);
-                return $targetPath;
+        $sourceHash = hash_file('sha256', $file->getRealPath());
+        $stored = $file->storeAs($folder, $filename, $this->disk);
+        $stream = $stored ? Storage::disk($this->disk)->readStream($stored) : false;
+        try {
+            if (!$stream) {
+                throw new \RuntimeException('Không thể đọc lại ảnh đã lưu.');
             }
+            $hash = hash_init('sha256');
+            hash_update_stream($hash, $stream);
+            if (!hash_equals($sourceHash, hash_final($hash))) {
+                throw new \RuntimeException('Checksum ảnh đích không khớp ảnh gốc.');
+            }
+        } catch (\Throwable $e) {
+            Storage::disk($this->disk)->delete($targetPath);
+            throw $e;
+        } finally {
+            if (is_resource($stream)) fclose($stream);
         }
-
-        return $file->storeAs($folder, $filename, $this->disk);
+        return $stored;
     }
 
     /**

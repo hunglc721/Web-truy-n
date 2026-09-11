@@ -419,6 +419,8 @@ class BulkChapterUploadService
 
                 File::deleteDirectory($this->chapterDir($session, $chapterKey));
 
+                app(ReaderImageService::class)->enqueue($chapter->id);
+
                 try {
                     $this->notificationService->dispatchIfEligible($chapter);
                 } catch (Throwable $e) {
