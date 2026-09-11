@@ -8,9 +8,11 @@ use App\Http\Requests\Admin\UpdateChapterRequest;
 use App\Jobs\ProcessChapterImages;
 use App\Models\Comic;
 use App\Models\Chapter;
+use App\Services\BulkChapterUploadService;
 use App\Services\ChapterNotificationService;
 use App\Services\ChapterService;
 use App\Services\ImageService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class AdminChapterController extends Controller
@@ -19,6 +21,7 @@ class AdminChapterController extends Controller
         protected ChapterService $chapterService,
         protected ImageService $imageService,
         protected ChapterNotificationService $notificationService,
+        protected BulkChapterUploadService $bulkChapterUploadService,
     ) {}
 
     public function all(Request $request)
@@ -74,6 +77,10 @@ class AdminChapterController extends Controller
 
     public function store(StoreChapterRequest $request, Comic $comic)
     {
+        if ($request->filled('bulk_action')) {
+            return $this->storeBulkFolder($request, $comic);
+        }
+
         if (!$request->hasContent()) {
             return back()->withInput()->withErrors([
                 'images' => 'Bạn phải chọn ít nhất 1 file ảnh hoặc dán danh sách đường dẫn URL ảnh.',
@@ -137,6 +144,44 @@ class AdminChapterController extends Controller
         return redirect()
             ->route('admin.comics.chapters.index', $comic->id)
             ->with('success', "Chapter {$chapter->chapter_number} đã được tạo và đang xử lý ảnh (" . count($tmpPaths) . " file). Refresh sau vài giây để xem kết quả.");
+    }
+
+    private function storeBulkFolder(StoreChapterRequest $request, Comic $comic): JsonResponse
+    {
+        $user = $request->user();
+        $action = (string) $request->input('bulk_action');
+
+        $result = match ($action) {
+            'start' => $this->bulkChapterUploadService->start($comic, $user),
+            'chunk' => $this->bulkChapterUploadService->storeChunk(
+                $comic,
+                $user,
+                (string) $request->input('session'),
+                (string) $request->input('chapter_key'),
+                $request->file('files', []),
+                array_values((array) $request->input('page_indexes', [])),
+                array_values((array) $request->input('checksums', [])),
+            ),
+            'finalize' => $this->bulkChapterUploadService->finalizeChapter(
+                $comic,
+                $user,
+                (string) $request->input('session'),
+                (string) $request->input('chapter_key'),
+                (int) $request->input('chapter_number'),
+                $request->filled('title') ? (string) $request->input('title') : null,
+                (int) $request->input('page_count'),
+            ),
+            'complete' => $this->bulkChapterUploadService->complete(
+                $comic,
+                $user,
+                (string) $request->input('session'),
+            ),
+        };
+
+        return response()->json([
+            'status' => 'ok',
+            ...$result,
+        ]);
     }
 
     public function edit(Comic $comic, Chapter $chapter)
