@@ -40,7 +40,7 @@ class BulkChapterFolderUploadTest extends TestCase
     {
         Storage::fake('public');
 
-        $session = $this->startSession();
+        $session = $this->startBulkUploadSession();
         $hash = hash('sha256', $this->gifBytes);
 
         $chunkResponse = $this->actingAs($this->admin)
@@ -114,7 +114,7 @@ class BulkChapterFolderUploadTest extends TestCase
     public function test_bulk_upload_rejects_checksum_mismatch_before_storing_file(): void
     {
         Storage::fake('public');
-        $session = $this->startSession();
+        $session = $this->startBulkUploadSession();
 
         $response = $this->actingAs($this->admin)
             ->withHeader('Accept', 'application/json')
@@ -138,7 +138,7 @@ class BulkChapterFolderUploadTest extends TestCase
 
     public function test_bulk_upload_session_cannot_be_reused_by_another_admin(): void
     {
-        $session = $this->startSession();
+        $session = $this->startBulkUploadSession();
         $otherAdmin = User::factory()->create(['is_admin' => true]);
         $hash = hash('sha256', $this->gifBytes);
 
@@ -158,7 +158,7 @@ class BulkChapterFolderUploadTest extends TestCase
             ->assertJsonValidationErrors(['session']);
     }
 
-    private function startSession(): string
+    private function startBulkUploadSession(): string
     {
         $response = $this->actingAs($this->admin)
             ->withHeader('Accept', 'application/json')
