@@ -72,14 +72,25 @@ for (const width of [360, 390, 400, 430]) {
   });
 }
 
-test('desktop responsive reader loads and falls back if a variant disappears', async ({ page }) => {
+test('desktop responsive reader loads and falls back if a variant disappears', async ({ page, browser }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto(readerUrl, { waitUntil: 'domcontentloaded' });
   const first = page.locator('.comic-page-img').first();
   await expect.poll(() => first.evaluate(img => img.complete && img.naturalWidth > 0)).toBe(true);
   expect(await first.evaluate(img => img.currentSrc)).toMatch(/\/reader\//);
-  await page.route('**/reader/**/*.webp', route => route.abort());
-  await page.reload({ waitUntil: 'domcontentloaded' });
-  await expect.poll(() => first.evaluate(img => img.complete && img.naturalWidth > 0)).toBe(true);
-  expect(await first.evaluate(img => img.currentSrc)).toMatch(/\/1\.png$/);
+  // A warm service-worker cache can legitimately serve a deleted variant. Use a
+  // fresh uncached visit so this test really exercises the network-error path.
+  const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, serviceWorkers: 'block' });
+  try {
+    const fallbackPage = await context.newPage();
+    let blocked = 0;
+    await fallbackPage.route('**/reader/**/*.webp', route => { blocked++; return route.abort(); });
+    await fallbackPage.goto(readerUrl, { waitUntil: 'domcontentloaded' });
+    const fallback = fallbackPage.locator('.comic-page-img').first();
+    await expect.poll(() => fallback.evaluate(img => img.complete && img.naturalWidth > 0 && /\/1\.png$/.test(img.currentSrc))).toBe(true);
+    expect(blocked).toBeGreaterThan(0);
+    await expect(fallback).not.toHaveAttribute('srcset');
+  } finally {
+    await context.close();
+  }
 });
