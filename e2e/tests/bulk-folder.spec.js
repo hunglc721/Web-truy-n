@@ -55,7 +55,9 @@ test('admin multi-chapter folder uploader parses chapter folders without loading
 
   const rows = page.locator('[data-testid="bulk-chapter-row"]');
   await expect(rows).toHaveCount(2);
-  await expect(page.locator('[data-testid="bulk-chapter-number"]')).toHaveValue(['140', '141']);
+  await expect.poll(async () => {
+    return page.locator('[data-testid="bulk-chapter-number"]').evaluateAll((nodes) => nodes.map((node) => node.value));
+  }).toEqual(['140', '141']);
   await expect(page.locator('[data-testid="bulk-chapter-title"]').first()).toHaveValue('Opening the Decisive Battle');
   await expect(page.locator('#bulk-summary-chapters')).toHaveText('2');
   await expect(page.locator('#bulk-summary-pages')).toHaveText('3');
