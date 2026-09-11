@@ -26,8 +26,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="{{ asset('css/style.css') }}?v=4" />
-  <link rel="stylesheet" href="{{ asset('css/responsive.css') }}?v=4" />
+  <link rel="stylesheet" href="{{ asset('css/style.css') }}?v=5" />
+  <link rel="stylesheet" href="{{ asset('css/responsive.css') }}?v=5" />
   <style>
     :root{--card-bg:var(--bg-surface-1);--border:var(--border-color)}.footer-static-item{color:var(--text-muted);font-size:13px;display:block;padding:3px 0}
     /* Mobile Footer Accordion & Layout Critical Styles */
@@ -123,7 +123,7 @@
       /* Open State */
       .site-footer .footer-accordion-item.open .fcol-accordion-icon {
         color: var(--primary) !important;
-        transform: rotate(90deg) !important;
+        transform: none !important;
       }
       .site-footer .footer-accordion-item.open .fcol-accordion-icon .icon-plus {
         display: none !important;
@@ -135,9 +135,17 @@
       /* Expand / Collapse */
       .site-footer .footer-accordion-item:not(.open) .fcol-collapse {
         display: none !important;
+        max-height: 0 !important;
+        opacity: 0 !important;
+        visibility: hidden !important;
+        overflow: hidden !important;
       }
       .site-footer .footer-accordion-item.open .fcol-collapse {
         display: block !important;
+        max-height: 500px !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        overflow: visible !important;
         animation: fcolSlideDown 0.25s ease forwards !important;
       }
       @keyframes fcolSlideDown {
@@ -455,41 +463,36 @@
       </div>
     </div>
   </footer>
-  <script src="{{ asset('js/app.js') }}?v=4"></script>
-  <script src="{{ asset('js/roadmap.js') }}?v=4"></script>
+  <script src="{{ asset('js/app.js') }}?v=5"></script>
+  <script src="{{ asset('js/roadmap.js') }}?v=5"></script>
   <script>
-    // Inline Mobile Footer Accordion Handler
+    // Inline Mobile Footer Accordion Handler (Guarded against double execution)
     (function() {
-      function initFooterAccordion() {
-        document.querySelectorAll('.footer-accordion-item').forEach(function(item) {
-          var btn = item.querySelector('.fcol-accordion-btn');
-          if (!btn) return;
-          btn.onclick = function(e) {
-            if (window.innerWidth >= 768) return;
-            e.preventDefault();
-            var isOpen = item.classList.contains('open');
-            document.querySelectorAll('.footer-accordion-item.open').forEach(function(other) {
-              if (other !== item) {
-                other.classList.remove('open');
-                var otherBtn = other.querySelector('.fcol-accordion-btn');
-                if (otherBtn) otherBtn.setAttribute('aria-expanded', 'false');
-              }
-            });
-            if (isOpen) {
-              item.classList.remove('open');
-              btn.setAttribute('aria-expanded', 'false');
-            } else {
-              item.classList.add('open');
-              btn.setAttribute('aria-expanded', 'true');
-            }
-          };
+      document.addEventListener('click', function(e) {
+        var btn = e.target.closest('.fcol-accordion-btn');
+        if (!btn) return;
+        if (e.__footerAccordionHandled) return;
+        e.__footerAccordionHandled = true;
+
+        if (window.matchMedia && window.matchMedia('(min-width: 768px)').matches) return;
+        e.preventDefault();
+
+        var item = btn.closest('.footer-accordion-item');
+        if (!item) return;
+
+        var willOpen = !item.classList.contains('open');
+
+        document.querySelectorAll('.footer-accordion-item').forEach(function(other) {
+          other.classList.remove('open');
+          var otherBtn = other.querySelector('.fcol-accordion-btn');
+          if (otherBtn) otherBtn.setAttribute('aria-expanded', 'false');
         });
-      }
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initFooterAccordion);
-      } else {
-        initFooterAccordion();
-      }
+
+        if (willOpen) {
+          item.classList.add('open');
+          btn.setAttribute('aria-expanded', 'true');
+        }
+      });
     })();
 
     if ('serviceWorker' in navigator) {
