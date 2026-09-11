@@ -598,6 +598,50 @@
     return escapeHtml(value).replace(/`/g, '&#96;');
   }
 
+  function setupMobileFooterAccordion() {
+    // Delegated click handler on document to avoid multiple listeners or stale element bindings
+    document.addEventListener('click', (e) => {
+      const btn = e.target.closest('.fcol-accordion-btn');
+      if (!btn) return;
+
+      // Guard against double handling if multiple listeners exist (e.g. inline script or legacy cache)
+      if (e.__footerAccordionHandled) return;
+      e.__footerAccordionHandled = true;
+
+      if (window.matchMedia && window.matchMedia('(min-width: 768px)').matches) return;
+
+      e.preventDefault();
+
+      const item = btn.closest('.footer-accordion-item');
+      if (!item) return;
+
+      const willOpen = !item.classList.contains('open');
+
+      // Close other accordion items for clean mobile accordion behavior
+      document.querySelectorAll('.footer-accordion-item').forEach((other) => {
+        other.classList.remove('open');
+        const otherBtn = other.querySelector('.fcol-accordion-btn');
+        if (otherBtn) otherBtn.setAttribute('aria-expanded', 'false');
+      });
+
+      if (willOpen) {
+        item.classList.add('open');
+        btn.setAttribute('aria-expanded', 'true');
+      }
+    });
+
+    window.addEventListener('resize', () => {
+      if (window.innerWidth >= 768) {
+        document.querySelectorAll('.footer-accordion-item').forEach((item) => {
+          item.classList.remove('open');
+          const btn = item.querySelector('.fcol-accordion-btn');
+          if (btn) btn.setAttribute('aria-expanded', 'false');
+        });
+      }
+    }, { passive: true });
+  }
+
   // Khởi chạy
   setupGuestContinueReading();
+  setupMobileFooterAccordion();
 })();

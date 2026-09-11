@@ -26,9 +26,218 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="{{ asset('css/style.css') }}" />
-  <link rel="stylesheet" href="{{ asset('css/responsive.css') }}" />
-  <style>:root{--card-bg:var(--bg-surface-1);--border:var(--border-color)}.footer-static-item{color:var(--text-muted);font-size:13px;display:block;padding:3px 0}</style>
+  <link rel="stylesheet" href="{{ asset('css/style.css') }}?v=5" />
+  <link rel="stylesheet" href="{{ asset('css/responsive.css') }}?v=5" />
+  <style>
+    :root{--card-bg:var(--bg-surface-1);--border:var(--border-color)}.footer-static-item{color:var(--text-muted);font-size:13px;display:block;padding:3px 0}
+    /* Mobile Footer Accordion & Layout Critical Styles */
+    @media (max-width: 767.98px) {
+      .site-footer {
+        padding: 28px 0 20px !important;
+        background: #07090e !important;
+      }
+      .site-footer .container {
+        padding-left: 16px !important;
+        padding-right: 16px !important;
+      }
+      .site-footer .footer-newsletter-card {
+        display: none !important;
+      }
+      .site-footer .footer-main-grid {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 0 !important;
+        padding-bottom: 0 !important;
+        border-bottom: none !important;
+      }
+      .site-footer .fgrid-brand-col {
+        margin-bottom: 20px !important;
+        padding-bottom: 0 !important;
+      }
+      .site-footer .fgrid-brand-col .logo-link {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 10px !important;
+        text-decoration: none !important;
+      }
+      .site-footer .fgrid-brand-col .logo-icon svg {
+        width: 36px !important;
+        height: 36px !important;
+      }
+      .site-footer .fgrid-brand-col .logo-text {
+        font-size: 19px !important;
+        font-weight: 800 !important;
+        color: var(--text-main) !important;
+      }
+      .site-footer .fbrand-desc {
+        font-size: 13px !important;
+        color: var(--text-sub) !important;
+        margin-top: 6px !important;
+        line-height: 1.45 !important;
+        max-width: none !important;
+      }
+
+      /* Accordion Item */
+      .site-footer .footer-accordion-item {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+      }
+      .site-footer .fcol-accordion-btn {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        width: 100% !important;
+        padding: 14px 0 !important;
+        margin: 0 !important;
+        background: transparent !important;
+        border: none !important;
+        outline: none !important;
+        box-shadow: none !important;
+        cursor: pointer !important;
+        pointer-events: auto !important;
+        text-align: left !important;
+        -webkit-tap-highlight-color: transparent !important;
+      }
+      .site-footer .fcol-heading-text {
+        font-size: 15px !important;
+        font-weight: 700 !important;
+        color: #FFFFFF !important;
+        letter-spacing: -0.1px !important;
+      }
+      .site-footer .fcol-accordion-icon {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 24px !important;
+        height: 24px !important;
+        color: var(--text-muted) !important;
+        transition: transform 0.25s ease, color 0.2s ease !important;
+        flex-shrink: 0 !important;
+      }
+      .site-footer .fcol-accordion-icon .icon-plus {
+        display: block !important;
+      }
+      .site-footer .fcol-accordion-icon .icon-minus {
+        display: none !important;
+      }
+
+      /* Open State */
+      .site-footer .footer-accordion-item.open .fcol-accordion-icon {
+        color: var(--primary) !important;
+        transform: none !important;
+      }
+      .site-footer .footer-accordion-item.open .fcol-accordion-icon .icon-plus {
+        display: none !important;
+      }
+      .site-footer .footer-accordion-item.open .fcol-accordion-icon .icon-minus {
+        display: block !important;
+      }
+
+      /* Expand / Collapse */
+      .site-footer .footer-accordion-item:not(.open) .fcol-collapse {
+        display: none !important;
+        max-height: 0 !important;
+        opacity: 0 !important;
+        visibility: hidden !important;
+        overflow: hidden !important;
+      }
+      .site-footer .footer-accordion-item.open .fcol-collapse {
+        display: block !important;
+        max-height: 500px !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        overflow: visible !important;
+        animation: fcolSlideDown 0.25s ease forwards !important;
+      }
+      @keyframes fcolSlideDown {
+        from { opacity: 0; transform: translateY(-6px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      .site-footer .fcol-list {
+        list-style: none !important;
+        padding: 2px 0 16px 2px !important;
+        margin: 0 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 11px !important;
+      }
+      .site-footer .fcol-list li {
+        margin: 0 !important;
+      }
+      .site-footer .fcol-list a {
+        font-size: 14px !important;
+        color: var(--text-sub) !important;
+        text-decoration: none !important;
+        display: inline-block !important;
+        padding: 2px 0 !important;
+      }
+      .site-footer .fcol-list a:hover,
+      .site-footer .fcol-list a:active {
+        color: var(--primary) !important;
+      }
+
+      /* Bottom Bar */
+      .site-footer .footer-bottom-bar {
+        display: none !important;
+      }
+      .site-footer .footer-bottom-mobile {
+        display: block !important;
+        margin-top: 24px !important;
+        padding-top: 16px !important;
+        border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+        text-align: center !important;
+      }
+      .site-footer .fcopy-text-mobile {
+        font-size: 12.5px !important;
+        color: var(--text-muted) !important;
+        margin: 0 0 6px !important;
+      }
+      .site-footer .footer-legal-links-mobile {
+        font-size: 12.5px !important;
+        color: var(--text-muted) !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 8px !important;
+      }
+      .site-footer .footer-legal-links-mobile a {
+        color: var(--text-muted) !important;
+        text-decoration: none !important;
+      }
+      .site-footer .footer-legal-links-mobile .legal-sep {
+        color: rgba(255, 255, 255, 0.2) !important;
+      }
+    }
+
+    @media (min-width: 768px) {
+      .site-footer .footer-accordion-item:not(.open) .fcol-collapse,
+      .site-footer .footer-accordion-item.open .fcol-collapse {
+        display: block !important;
+      }
+      .site-footer .fcol-accordion-btn {
+        all: unset !important;
+        display: block !important;
+        cursor: default !important;
+        pointer-events: none !important;
+        margin-bottom: 20px !important;
+      }
+      .site-footer .fcol-heading-text {
+        font-size: 14.5px !important;
+        font-weight: 800 !important;
+        color: var(--text-main) !important;
+        letter-spacing: -0.2px !important;
+      }
+      .site-footer .fcol-accordion-icon {
+        display: none !important;
+      }
+      .site-footer .footer-bottom-mobile {
+        display: none !important;
+      }
+      .site-footer .footer-bottom-bar {
+        display: flex !important;
+      }
+    }
+  </style>
   @stack('styles')
 </head>
 <body class="dark-theme" data-auth-state="{{ auth()->check() ? (auth()->user()->canAccessAdmin() ? 'admin' : 'member') : 'guest' }}">
@@ -134,32 +343,158 @@
     @include('partials.originals-discovery')
   @endif
 
-  <footer class="site-footer" id="site-footer"><div class="container">
-    <div class="footer-newsletter-card"><div class="newsletter-info"><span class="newsletter-tag">🚀 CỘNG ĐỒNG {{ strtoupper($siteSettings['site_name'] ?? 'WEBCOMICS') }}</span><h3 class="newsletter-title">Theo dõi chương mới và truyện nổi bật</h3><p class="newsletter-sub">{{ $siteSettings['tagline'] ?? 'Khám phá truyện mới, lịch phát hành và các tác phẩm đang thịnh hành.' }}</p></div><div class="newsletter-form"><span style="font-size:13px;color:var(--text-sub)">Kênh email chưa được cấu hình, nên không hiện form đăng ký giả.</span></div></div>
-    <div class="footer-main-grid">
-      <div class="fgrid-brand-col"><a href="{{ route('home') }}" class="logo-link"><div class="logo-icon"><svg width="40" height="40" viewBox="0 0 44 44"><rect width="44" height="44" rx="12" fill="#FF5E36"/><text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle" font-family="Inter" font-weight="900" font-size="18" fill="white">WC</text></svg></div><span class="logo-text">{{ $siteSettings['site_name'] ?? 'WebComics' }}</span></a><p class="fbrand-desc">{{ $siteSettings['tagline'] ?? 'Nền tảng đọc Manga, Manhwa và Manhua trực tuyến.' }}</p></div>
-      <div class="fgrid-col"><h4 class="fcol-heading">Khám Phá</h4><ul class="fcol-list"><li><a href="{{ route('home') }}">Truyện Thịnh Hành</a></li><li><a href="{{ route('genres') }}">Tất Cả Thể Loại</a></li><li><a href="{{ route('schedule') }}">Lịch Ra Truyện</a></li><li><a href="{{ route('schedule.completed') }}">Truyện Hoàn Thành</a></li><li><a href="{{ route('originals') }}">Truyện Độc Quyền</a></li></ul></div>
-      <div class="fgrid-col"><h4 class="fcol-heading">Tài Khoản</h4>
-        <ul class="fcol-list">
-          @guest
-            <li><a href="{{ route('login') }}">Đăng Nhập</a></li>
-            <li><a href="{{ route('register') }}">Đăng Ký</a></li>
-          @else
-            <li><a href="{{ route('user.dashboard') }}">Tổng Quan</a></li>
-            <li><a href="{{ route('user.library') }}">Tủ Truyện</a></li>
-            <li><a href="{{ route('user.history') }}">Lịch Sử</a></li>
-            <li><a href="{{ route('user.likes') }}">Yêu Thích</a></li>
-            @if(auth()->user()->canAccessAdmin())<li><a href="{{ route('admin.dashboard') }}">Trang Quản Trị</a></li>@endif
-          @endguest
-        </ul>
+  <footer class="site-footer" id="site-footer">
+    <div class="container">
+      {{-- Newsletter Card (Desktop only) --}}
+      <div class="footer-newsletter-card">
+        <div class="newsletter-info">
+          <span class="newsletter-tag">🚀 CỘNG ĐỒNG {{ strtoupper($siteSettings['site_name'] ?? 'WEBCOMICS') }}</span>
+          <h3 class="newsletter-title">Theo dõi chương mới và truyện nổi bật</h3>
+          <p class="newsletter-sub">{{ $siteSettings['tagline'] ?? 'Khám phá truyện mới, lịch phát hành và các tác phẩm đang thịnh hành.' }}</p>
+        </div>
+        <div class="newsletter-form">
+          <span style="font-size:13px;color:var(--text-sub)">Kênh email chưa được cấu hình, nên không hiện form đăng ký giả.</span>
+        </div>
       </div>
-      <div class="fgrid-col"><h4 class="fcol-heading">Hỗ Trợ</h4><ul class="fcol-list"><li><a href="{{ route('pages.about') }}">Giới Thiệu</a></li><li><a href="{{ route('pages.terms') }}">Điều Khoản Sử Dụng</a></li><li><a href="{{ route('pages.privacy') }}">Chính Sách Riêng Tư</a></li><li><a href="{{ route('pages.contact') }}">Liên Hệ</a></li><li><a href="{{ route('dmca.show') }}">Bản Quyền & DMCA</a></li><li><a href="{{ route('teams.index') }}">Danh Sách Nhóm Dịch</a></li><li><a href="{{ route('sitemap') }}">Sitemap</a></li></ul></div>
+
+      {{-- Main Footer Columns / Accordion --}}
+      <div class="footer-main-grid">
+        {{-- Brand Column --}}
+        <div class="fgrid-brand-col">
+          <a href="{{ route('home') }}" class="logo-link" aria-label="{{ $siteSettings['site_name'] ?? 'WebComics' }}">
+            <div class="logo-icon">
+              <svg width="40" height="40" viewBox="0 0 44 44">
+                <rect width="44" height="44" rx="12" fill="#FF5E36"/>
+                <text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle" font-family="Inter" font-weight="900" font-size="18" fill="white">WC</text>
+              </svg>
+            </div>
+            <span class="logo-text">{{ $siteSettings['site_name'] ?? 'WebComics' }}</span>
+          </a>
+          <p class="fbrand-desc">{{ $siteSettings['tagline'] ?? 'Đọc Manga, Manhwa & Manhua Online' }}</p>
+        </div>
+
+        {{-- Column 1: Khám Phá --}}
+        <div class="fgrid-col footer-accordion-item">
+          <button type="button" class="fcol-accordion-btn" aria-expanded="false" aria-controls="fcol-collapse-explore" id="fcol-btn-explore">
+            <span class="fcol-heading-text">Khám Phá</span>
+            <span class="fcol-accordion-icon" aria-hidden="true">
+              <svg class="icon-plus" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+              <svg class="icon-minus" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            </span>
+          </button>
+          <div class="fcol-collapse" id="fcol-collapse-explore" role="region" aria-labelledby="fcol-btn-explore">
+            <ul class="fcol-list">
+              <li><a href="{{ route('home') }}">Truyện Thịnh Hành</a></li>
+              <li><a href="{{ route('genres') }}">Tất Cả Thể Loại</a></li>
+              <li><a href="{{ route('schedule') }}">Lịch Ra Truyện</a></li>
+              <li><a href="{{ route('schedule.completed') }}">Truyện Hoàn Thành</a></li>
+              <li><a href="{{ route('originals') }}">Truyện Độc Quyền</a></li>
+            </ul>
+          </div>
+        </div>
+
+        {{-- Column 2: Tài Khoản --}}
+        <div class="fgrid-col footer-accordion-item">
+          <button type="button" class="fcol-accordion-btn" aria-expanded="false" aria-controls="fcol-collapse-account" id="fcol-btn-account">
+            <span class="fcol-heading-text">Tài Khoản</span>
+            <span class="fcol-accordion-icon" aria-hidden="true">
+              <svg class="icon-plus" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+              <svg class="icon-minus" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            </span>
+          </button>
+          <div class="fcol-collapse" id="fcol-collapse-account" role="region" aria-labelledby="fcol-btn-account">
+            <ul class="fcol-list">
+              @guest
+                <li><a href="{{ route('login') }}">Đăng Nhập</a></li>
+                <li><a href="{{ route('register') }}">Đăng Ký</a></li>
+              @else
+                <li><a href="{{ route('user.dashboard') }}">Tổng Quan</a></li>
+                <li><a href="{{ route('user.library') }}">Tủ Truyện</a></li>
+                <li><a href="{{ route('user.history') }}">Lịch Sử</a></li>
+                <li><a href="{{ route('user.likes') }}">Yêu Thích</a></li>
+                @if(auth()->user()->canAccessAdmin())<li><a href="{{ route('admin.dashboard') }}">Trang Quản Trị</a></li>@endif
+              @endguest
+            </ul>
+          </div>
+        </div>
+
+        {{-- Column 3: Hỗ Trợ --}}
+        <div class="fgrid-col footer-accordion-item">
+          <button type="button" class="fcol-accordion-btn" aria-expanded="false" aria-controls="fcol-collapse-support" id="fcol-btn-support">
+            <span class="fcol-heading-text">Hỗ Trợ</span>
+            <span class="fcol-accordion-icon" aria-hidden="true">
+              <svg class="icon-plus" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+              <svg class="icon-minus" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            </span>
+          </button>
+          <div class="fcol-collapse" id="fcol-collapse-support" role="region" aria-labelledby="fcol-btn-support">
+            <ul class="fcol-list">
+              <li><a href="{{ route('pages.about') }}">Giới Thiệu</a></li>
+              <li><a href="{{ route('pages.terms') }}">Điều Khoản Sử Dụng</a></li>
+              <li><a href="{{ route('pages.privacy') }}">Chính Sách Riêng Tư</a></li>
+              <li><a href="{{ route('pages.contact') }}">Liên Hệ</a></li>
+              <li><a href="{{ route('dmca.show') }}">Bản Quyền & DMCA</a></li>
+              <li><a href="{{ route('teams.index') }}">Danh Sách Nhóm Dịch</a></li>
+              <li><a href="{{ route('sitemap') }}">Sitemap</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      {{-- Desktop Bottom Bar (>= 768px) --}}
+      <div class="footer-bottom-bar">
+        <p class="fcopy-text">&copy; {{ date('Y') }} {{ $siteSettings['site_name'] ?? 'WebComics' }}. All rights reserved.</p>
+        <div class="lang-selector">
+          <span class="lang-icon">🌐</span>
+          <select class="lang-select" aria-label="Ngôn ngữ">
+            <option value="vi" selected>Tiếng Việt</option>
+          </select>
+        </div>
+      </div>
+
+      {{-- Mobile Bottom Bar (< 768px) --}}
+      <div class="footer-bottom-mobile">
+        <p class="fcopy-text-mobile">&copy; {{ date('Y') }} {{ $siteSettings['site_name'] ?? 'WebComics' }}</p>
+        <div class="footer-legal-links-mobile">
+          <a href="{{ route('pages.terms') }}">Điều Khoản</a>
+          <span class="legal-sep">·</span>
+          <a href="{{ route('pages.privacy') }}">Chính Sách Bảo Mật</a>
+        </div>
+      </div>
     </div>
-    <div class="footer-bottom-bar"><p class="fcopy-text">&copy; {{ date('Y') }} {{ $siteSettings['site_name'] ?? 'WebComics' }}. All rights reserved.</p><div class="lang-selector"><span class="lang-icon">🌐</span><select class="lang-select" aria-label="Ngôn ngữ"><option value="vi" selected>Tiếng Việt</option></select></div></div>
-  </div></footer>
-  <script src="{{ asset('js/app.js') }}"></script>
-  <script src="{{ asset('js/roadmap.js') }}"></script>
+  </footer>
+  <script src="{{ asset('js/app.js') }}?v=5"></script>
+  <script src="{{ asset('js/roadmap.js') }}?v=5"></script>
   <script>
+    // Inline Mobile Footer Accordion Handler (Guarded against double execution)
+    (function() {
+      document.addEventListener('click', function(e) {
+        var btn = e.target.closest('.fcol-accordion-btn');
+        if (!btn) return;
+        if (e.__footerAccordionHandled) return;
+        e.__footerAccordionHandled = true;
+
+        if (window.matchMedia && window.matchMedia('(min-width: 768px)').matches) return;
+        e.preventDefault();
+
+        var item = btn.closest('.footer-accordion-item');
+        if (!item) return;
+
+        var willOpen = !item.classList.contains('open');
+
+        document.querySelectorAll('.footer-accordion-item').forEach(function(other) {
+          other.classList.remove('open');
+          var otherBtn = other.querySelector('.fcol-accordion-btn');
+          if (otherBtn) otherBtn.setAttribute('aria-expanded', 'false');
+        });
+
+        if (willOpen) {
+          item.classList.add('open');
+          btn.setAttribute('aria-expanded', 'true');
+        }
+      });
+    })();
+
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW registration failed:', err));

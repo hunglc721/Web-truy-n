@@ -2224,6 +2224,42 @@ img.cover-img {
   letter-spacing: -0.2px;
 }
 
+/* Accordion button defaults to static heading on desktop */
+.fcol-accordion-btn {
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0 0 20px;
+  display: block;
+  cursor: default;
+  pointer-events: none;
+  text-align: left;
+  width: auto;
+  font-family: inherit;
+}
+
+.fcol-heading-text {
+  font-size: 14.5px;
+  font-weight: 800;
+  color: var(--text-main);
+  letter-spacing: -0.2px;
+  display: block;
+}
+
+.fcol-accordion-icon {
+  display: none;
+}
+
+.fcol-collapse {
+  max-height: none;
+  overflow: visible;
+  opacity: 1;
+}
+
+.footer-bottom-mobile {
+  display: none;
+}
+
 .fcol-list {
   list-style: none;
   padding: 0;

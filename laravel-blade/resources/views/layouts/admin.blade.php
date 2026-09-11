@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="{{ asset('css/style.css') }}" />
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}:root{--admin-sidebar-w:240px;--admin-topbar-h:60px;--admin-bg:#0d0f14;--admin-sidebar-bg:#13161e;--admin-card:#1a1d27;--admin-border:rgba(255,255,255,.07);--admin-text:#e4e6f0;--admin-text-muted:#7b7f9e;--admin-primary:#6c63ff;--admin-primary-hover:#574fd6;--admin-success:#22c55e;--admin-danger:#ef4444;--admin-warning:#f59e0b;--admin-info:#3b82f6;--admin-radius:10px}
-    body.admin-body{font-family:'Inter',sans-serif;background:var(--admin-bg);color:var(--admin-text);min-height:100vh}.admin-sidebar{width:var(--admin-sidebar-w);background:var(--admin-sidebar-bg);border-right:1px solid var(--admin-border);display:flex;flex-direction:column;position:fixed;inset:0 auto 0 0;z-index:120;overflow-y:auto;transition:transform .2s ease}.sidebar-brand{display:flex;align-items:center;gap:10px;padding:20px 18px 16px;border-bottom:1px solid var(--admin-border);text-decoration:none}.sidebar-brand-icon{width:36px;height:36px;background:linear-gradient(135deg,#6c63ff,#ff2a6d);border-radius:9px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px;color:#fff}.sidebar-brand-text{font-weight:800;font-size:15px;color:var(--admin-text)}.sidebar-brand-sub{font-size:10px;color:var(--admin-text-muted)}.sidebar-nav{padding:12px 10px;flex:1}.sidebar-section-label{font-size:9.5px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--admin-text-muted);padding:12px 8px 6px}.sidebar-link{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;color:var(--admin-text-muted);text-decoration:none;font-size:13.5px;font-weight:500;transition:.15s;margin-bottom:2px}.sidebar-link:hover{background:rgba(108,99,255,.12);color:var(--admin-text)}.sidebar-link.active{background:rgba(108,99,255,.18);color:var(--admin-primary);font-weight:600}.sidebar-footer{padding:12px 10px;border-top:1px solid var(--admin-border)}.sidebar-user{display:flex;align-items:center;gap:10px;padding:10px;border-radius:8px;background:rgba(255,255,255,.04)}.sidebar-user-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#6c63ff,#ff2a6d);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0}.sidebar-user-name{font-size:12.5px;font-weight:600;color:var(--admin-text)}.sidebar-user-role{font-size:10.5px;color:var(--admin-primary);text-transform:capitalize}
+    body.admin-body{font-family:'Inter',sans-serif;background:var(--admin-bg);color:var(--admin-text);min-height:100vh}.admin-sidebar{width:var(--admin-sidebar-w);background:var(--admin-sidebar-bg);border-right:1px solid var(--admin-border);display:flex;flex-direction:column;position:fixed;inset:0 auto 0 0;z-index:120;overflow-y:auto;transition:transform .2s ease}.sidebar-brand{display:flex;align-items:center;gap:10px;padding:20px 18px 16px;border-bottom:1px solid var(--admin-border);text-decoration:none}.sidebar-brand-icon{width:36px;height:36px;background:linear-gradient(135deg,#6c63ff,#ff2a6d);border-radius:9px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px;color:#fff}.sidebar-brand-text{font-weight:800;font-size:15px;color:var(--admin-text)}.sidebar-brand-sub{font-size:10px;color:var(--admin-text-muted)}.sidebar-nav{padding:12px 10px;flex:1}.sidebar-section-label{font-size:9.5px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--admin-text-muted);padding:10px 8px 4px}.sidebar-link{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;color:var(--admin-text-muted);text-decoration:none;font-size:13.5px;font-weight:500;transition:.15s;margin-bottom:2px}.sidebar-link:hover{background:rgba(108,99,255,.12);color:var(--admin-text)}.sidebar-link.active{background:rgba(108,99,255,.18);color:var(--admin-primary);font-weight:600}.sidebar-dropdown{margin-bottom:2px}.sidebar-dropdown-btn{display:flex;align-items:center;justify-content:space-between;width:100%;padding:9px 10px;border-radius:8px;color:var(--admin-text-muted);background:transparent;border:none;font-family:inherit;font-size:13.5px;font-weight:500;cursor:pointer;transition:.15s;text-align:left}.sidebar-dropdown-btn:hover{background:rgba(108,99,255,.12);color:var(--admin-text)}.sidebar-dropdown.has-active > .sidebar-dropdown-btn{color:var(--admin-primary);background:rgba(108,99,255,.08);font-weight:600}.sidebar-dropdown.open > .sidebar-dropdown-btn{color:var(--admin-text)}.sidebar-dropdown.open.has-active > .sidebar-dropdown-btn{color:var(--admin-primary)}.sidebar-dropdown-title{display:flex;align-items:center;gap:10px}.sidebar-dropdown-indicators{display:flex;align-items:center;gap:6px}.sidebar-arrow{display:inline-block;width:5px;height:5px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(-45deg);transition:transform .2s ease;opacity:.7;margin-right:2px}.sidebar-dropdown.open .sidebar-arrow{transform:rotate(45deg)}.sidebar-submenu{max-height:0;overflow:hidden;transition:max-height .25s ease,opacity .2s ease;opacity:0;margin:2px 0 4px 10px;padding-left:10px;border-left:1.5px solid rgba(255,255,255,.08)}.sidebar-dropdown.open .sidebar-submenu{max-height:300px;opacity:1}.sidebar-sublink{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 10px;border-radius:6px;color:var(--admin-text-muted);text-decoration:none;font-size:13px;font-weight:500;transition:.15s;margin-bottom:2px}.sidebar-sublink:hover{background:rgba(108,99,255,.10);color:var(--admin-text)}.sidebar-sublink.active{background:rgba(108,99,255,.18);color:var(--admin-primary);font-weight:600}.sidebar-footer{padding:12px 10px;border-top:1px solid var(--admin-border)}.sidebar-user{display:flex;align-items:center;gap:10px;padding:10px;border-radius:8px;background:rgba(255,255,255,.04)}.sidebar-user-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#6c63ff,#ff2a6d);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0}.sidebar-user-name{font-size:12.5px;font-weight:600;color:var(--admin-text)}.sidebar-user-role{font-size:10.5px;color:var(--admin-primary);text-transform:capitalize}
     .admin-topbar{position:fixed;top:0;left:var(--admin-sidebar-w);right:0;height:var(--admin-topbar-h);background:var(--admin-sidebar-bg);border-bottom:1px solid var(--admin-border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;z-index:100;gap:10px}.topbar-breadcrumb{display:flex;align-items:center;gap:6px;font-size:13.5px;color:var(--admin-text-muted);min-width:0}.topbar-breadcrumb span{color:var(--admin-text);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.topbar-actions{display:flex;align-items:center;gap:8px}.topbar-btn{display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:8px;font-size:12.5px;font-weight:600;cursor:pointer;text-decoration:none;border:none;transition:.15s;white-space:nowrap}.topbar-btn-primary{background:var(--admin-primary);color:#fff}.topbar-btn-primary:hover{background:var(--admin-primary-hover)}.topbar-btn-ghost{background:rgba(255,255,255,.06);color:var(--admin-text)}.topbar-btn-danger{background:rgba(239,68,68,.12);color:var(--admin-danger)}.mobile-menu-btn{display:none;width:38px;height:38px;border-radius:8px;border:1px solid var(--admin-border);background:rgba(255,255,255,.05);color:var(--admin-text);font-size:18px;cursor:pointer;flex-shrink:0}.admin-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:110}.admin-overlay.show{display:block}
     .admin-main{margin-left:var(--admin-sidebar-w);margin-top:var(--admin-topbar-h);padding:28px 28px 40px;min-height:calc(100vh - var(--admin-topbar-h));overflow-x:hidden}.ph,.admin-page-header{margin-bottom:24px}.ph h1,.admin-page-title{font-size:22px;font-weight:800;color:var(--admin-text)}.ph p,.admin-page-sub{font-size:13px;color:var(--admin-text-muted);margin-top:4px}.admin-card{background:var(--admin-card);border:1px solid var(--admin-border);border-radius:var(--admin-radius);padding:24px}.admin-card-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--admin-border)}.admin-card-title{font-size:16px;font-weight:700;color:var(--admin-text)}.admin-table{width:100%;border-collapse:collapse}.admin-table th{background:rgba(255,255,255,.04);padding:10px 14px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--admin-text-muted);text-align:left;border-bottom:1px solid var(--admin-border)}.admin-table td{padding:12px 14px;font-size:13.5px;color:var(--admin-text);border-bottom:1px solid var(--admin-border);vertical-align:middle}.admin-table tr:hover td{background:rgba(255,255,255,.025)}
     .badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600}.badge-success{background:rgba(34,197,94,.14);color:var(--admin-success)}.badge-danger{background:rgba(239,68,68,.14);color:var(--admin-danger)}.badge-primary{background:rgba(108,99,255,.14);color:#9d98ff}.badge-warning{background:rgba(245,158,11,.14);color:var(--admin-warning)}.badge-info{background:rgba(59,130,246,.14);color:var(--admin-info)}.badge-muted{background:rgba(255,255,255,.06);color:var(--admin-text-muted)}.dashboard-grid{display:grid;grid-template-columns:1fr;gap:20px}.widget-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid var(--admin-border)}.rank-badge{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;flex-shrink:0}.rank-1{background:rgba(245,158,11,.2);color:#f59e0b}.rank-2{background:rgba(108,99,255,.2);color:#6c63ff}.rank-3{background:rgba(59,130,246,.2);color:#3b82f6}.rank-other{background:rgba(255,255,255,.08);color:var(--admin-text-muted)}
@@ -32,34 +32,181 @@
   <nav class="sidebar-nav">
     @if($adminUser->hasPermission('dashboard.view'))<a href="{{ route('admin.dashboard') }}" class="sidebar-link {{ request()->routeIs('admin.dashboard')?'active':'' }}">📊 Tổng quan</a>@endif
     @if($adminUser->hasPermission('analytics.view'))<a href="{{ route('admin.analytics.index') }}" class="sidebar-link {{ request()->routeIs('admin.analytics.*')?'active':'' }}">📈 Thống kê</a>@endif
-    @if($adminUser->hasAnyPermission(['comics.view','chapters.view','genres.manage','tags.manage','authors.manage','story_requests.manage']))<div class="sidebar-section-label">NỘI DUNG</div>@endif
-    @if($adminUser->hasPermission('comics.view'))<a href="{{ route('admin.comics.index') }}" class="sidebar-link {{ request()->routeIs('admin.comics.*') && !request()->routeIs('admin.comics.chapters.*') ? 'active' : '' }}">📚 Truyện</a>@endif
-    @if($adminUser->hasPermission('chapters.view'))<a href="{{ route('admin.chapters.index') }}" class="sidebar-link {{ request()->routeIs('admin.chapters.*') || request()->routeIs('admin.comics.chapters.*') ? 'active' : '' }}">📖 Chương</a>@endif
-    @if($adminUser->hasPermission('story_requests.manage'))
-      <a href="{{ route('admin.storyRequests.index') }}" class="sidebar-link {{ request()->routeIs('admin.storyRequests.*') ? 'active' : '' }}" style="display:flex; justify-content:space-between; align-items:center;">
-        <span>📥 Đơn đăng truyện</span>
-        @if($pendingStoryReqCount > 0)
-          <span class="badge badge-warning" style="font-size:10px; padding:2px 6px; font-weight:800;">{{ $pendingStoryReqCount }}</span>
-        @endif
-      </a>
+
+    {{-- Nhóm 1: Quản lý Truyện & Xuất bản --}}
+    @php
+      $isComicGroupActive = request()->routeIs('admin.comics.*') || request()->routeIs('admin.chapters.*') || request()->routeIs('admin.storyRequests.*');
+    @endphp
+    @if($adminUser->hasAnyPermission(['comics.view','chapters.view','story_requests.manage']))
+      <div class="sidebar-dropdown {{ $isComicGroupActive ? 'open has-active' : '' }}">
+        <button type="button" class="sidebar-dropdown-btn" aria-expanded="{{ $isComicGroupActive ? 'true' : 'false' }}">
+          <span class="sidebar-dropdown-title">📚 Quản lý Truyện</span>
+          <span class="sidebar-dropdown-indicators">
+            @if($pendingStoryReqCount > 0)
+              <span class="badge badge-warning" style="font-size:10px; padding:1px 5px; font-weight:800;">{{ $pendingStoryReqCount }}</span>
+            @endif
+            <i class="sidebar-arrow"></i>
+          </span>
+        </button>
+        <div class="sidebar-submenu">
+          @if($adminUser->hasPermission('comics.view'))
+            <a href="{{ route('admin.comics.index') }}" class="sidebar-sublink {{ request()->routeIs('admin.comics.*') && !request()->routeIs('admin.comics.chapters.*') ? 'active' : '' }}">
+              <span>📚 Truyện</span>
+            </a>
+          @endif
+          @if($adminUser->hasPermission('chapters.view'))
+            <a href="{{ route('admin.chapters.index') }}" class="sidebar-sublink {{ request()->routeIs('admin.chapters.*') || request()->routeIs('admin.comics.chapters.*') ? 'active' : '' }}">
+              <span>📖 Chương</span>
+            </a>
+          @endif
+          @if($adminUser->hasPermission('story_requests.manage'))
+            <a href="{{ route('admin.storyRequests.index') }}" class="sidebar-sublink {{ request()->routeIs('admin.storyRequests.*') ? 'active' : '' }}">
+              <span>📥 Đơn đăng truyện</span>
+              @if($pendingStoryReqCount > 0)
+                <span class="badge badge-warning" style="font-size:10px; padding:1px 5px; font-weight:800;">{{ $pendingStoryReqCount }}</span>
+              @endif
+            </a>
+          @endif
+        </div>
+      </div>
     @endif
-    @if($adminUser->hasPermission('genres.manage'))<a href="{{ route('admin.genres.index') }}" class="sidebar-link {{ request()->routeIs('admin.genres.*')?'active':'' }}">🏷️ Thể loại</a>@endif
-    @if($adminUser->hasPermission('tags.manage'))<a href="{{ route('admin.tags.index') }}" class="sidebar-link {{ request()->routeIs('admin.tags.*')?'active':'' }}">🔖 Tags</a>@endif
-    @if($adminUser->hasPermission('authors.manage'))<a href="{{ route('admin.authors.index') }}" class="sidebar-link {{ request()->routeIs('admin.authors.*')?'active':'' }}">✍️ Tác giả</a>@endif
-    @if($adminUser->hasAnyPermission(['comments.view','reports.view']))<div class="sidebar-section-label">TƯƠNG TÁC</div>@endif
-    @if($adminUser->hasPermission('comments.view'))<a href="{{ route('admin.comments.index') }}" class="sidebar-link {{ request()->routeIs('admin.comments.*')?'active':'' }}">💬 Bình luận</a>@endif
-    @if($adminUser->hasPermission('reports.view'))<a href="{{ route('admin.reports.index') }}" class="sidebar-link {{ request()->routeIs('admin.reports.*')?'active':'' }}">⚠️ Báo cáo lỗi</a>@endif
-    @if($adminUser->hasAnyPermission(['schedules.manage','banners.manage']))<div class="sidebar-section-label">VẬN HÀNH</div>@endif
-    @if($adminUser->hasPermission('schedules.manage'))<a href="{{ route('admin.schedules.index') }}" class="sidebar-link {{ request()->routeIs('admin.schedules.*')?'active':'' }}">📅 Lịch ra truyện</a>@endif
-    @if($adminUser->hasPermission('banners.manage'))<a href="{{ route('admin.banners.index') }}" class="sidebar-link {{ request()->routeIs('admin.banners.*')?'active':'' }}">🖼️ Banner</a>@endif
-    @if($adminUser->hasAnyPermission(['users.view','permissions.manage']))<div class="sidebar-section-label">NGƯỜI DÙNG</div>@endif
-    @if($adminUser->hasPermission('users.view'))<a href="{{ route('admin.users.index') }}" class="sidebar-link {{ request()->routeIs('admin.users.*')?'active':'' }}">👥 Thành viên</a>@endif
-    @if($adminUser->hasPermission('permissions.manage'))<a href="{{ route('admin.permissions.index') }}" class="sidebar-link {{ request()->routeIs('admin.permissions.*')?'active':'' }}">🔒 Phân quyền</a>@endif
-    @if($adminUser->hasAnyPermission(['notifications.manage','audit.view','settings.manage']))<div class="sidebar-section-label">HỆ THỐNG</div>@endif
-    @if($adminUser->hasPermission('notifications.manage'))<a href="{{ route('admin.notifications.index') }}" class="sidebar-link {{ request()->routeIs('admin.notifications.*')?'active':'' }}">🔔 Thông báo</a>@endif
-    @if($adminUser->hasPermission('audit.view'))<a href="{{ route('admin.logs.index') }}" class="sidebar-link {{ request()->routeIs('admin.logs.*')?'active':'' }}">📜 Nhật ký</a>@endif
-    @if($adminUser->hasPermission('settings.manage'))<a href="{{ route('admin.settings.index') }}" class="sidebar-link {{ request()->routeIs('admin.settings.*')?'active':'' }}">⚙️ Cài đặt Website</a>@endif
-    <a href="{{ route('home') }}" target="_blank" rel="noopener" class="sidebar-link">↗ Xem trang web</a>
+
+    {{-- Nhóm 2: Phân loại & Tác giả --}}
+    @php
+      $isTaxonomyGroupActive = request()->routeIs('admin.genres.*') || request()->routeIs('admin.tags.*') || request()->routeIs('admin.authors.*');
+    @endphp
+    @if($adminUser->hasAnyPermission(['genres.manage','tags.manage','authors.manage']))
+      <div class="sidebar-dropdown {{ $isTaxonomyGroupActive ? 'open has-active' : '' }}">
+        <button type="button" class="sidebar-dropdown-btn" aria-expanded="{{ $isTaxonomyGroupActive ? 'true' : 'false' }}">
+          <span class="sidebar-dropdown-title">🏷️ Phân loại & Tác giả</span>
+          <span class="sidebar-dropdown-indicators"><i class="sidebar-arrow"></i></span>
+        </button>
+        <div class="sidebar-submenu">
+          @if($adminUser->hasPermission('genres.manage'))
+            <a href="{{ route('admin.genres.index') }}" class="sidebar-sublink {{ request()->routeIs('admin.genres.*')?'active':'' }}">
+              <span>🏷️ Thể loại</span>
+            </a>
+          @endif
+          @if($adminUser->hasPermission('tags.manage'))
+            <a href="{{ route('admin.tags.index') }}" class="sidebar-sublink {{ request()->routeIs('admin.tags.*')?'active':'' }}">
+              <span>🔖 Tags</span>
+            </a>
+          @endif
+          @if($adminUser->hasPermission('authors.manage'))
+            <a href="{{ route('admin.authors.index') }}" class="sidebar-sublink {{ request()->routeIs('admin.authors.*')?'active':'' }}">
+              <span>✍️ Tác giả</span>
+            </a>
+          @endif
+        </div>
+      </div>
+    @endif
+
+    {{-- Nhóm 3: Tương tác & Báo cáo --}}
+    @php
+      $isCommunityGroupActive = request()->routeIs('admin.comments.*') || request()->routeIs('admin.reports.*');
+    @endphp
+    @if($adminUser->hasAnyPermission(['comments.view','reports.view']))
+      <div class="sidebar-dropdown {{ $isCommunityGroupActive ? 'open has-active' : '' }}">
+        <button type="button" class="sidebar-dropdown-btn" aria-expanded="{{ $isCommunityGroupActive ? 'true' : 'false' }}">
+          <span class="sidebar-dropdown-title">💬 Tương tác & Báo cáo</span>
+          <span class="sidebar-dropdown-indicators"><i class="sidebar-arrow"></i></span>
+        </button>
+        <div class="sidebar-submenu">
+          @if($adminUser->hasPermission('comments.view'))
+            <a href="{{ route('admin.comments.index') }}" class="sidebar-sublink {{ request()->routeIs('admin.comments.*')?'active':'' }}">
+              <span>💬 Bình luận</span>
+            </a>
+          @endif
+          @if($adminUser->hasPermission('reports.view'))
+            <a href="{{ route('admin.reports.index') }}" class="sidebar-sublink {{ request()->routeIs('admin.reports.*')?'active':'' }}">
+              <span>⚠️ Báo cáo lỗi</span>
+            </a>
+          @endif
+        </div>
+      </div>
+    @endif
+
+    {{-- Nhóm 4: Vận hành --}}
+    @php
+      $isOpsGroupActive = request()->routeIs('admin.schedules.*') || request()->routeIs('admin.banners.*');
+    @endphp
+    @if($adminUser->hasAnyPermission(['schedules.manage','banners.manage']))
+      <div class="sidebar-dropdown {{ $isOpsGroupActive ? 'open has-active' : '' }}">
+        <button type="button" class="sidebar-dropdown-btn" aria-expanded="{{ $isOpsGroupActive ? 'true' : 'false' }}">
+          <span class="sidebar-dropdown-title">📅 Vận hành</span>
+          <span class="sidebar-dropdown-indicators"><i class="sidebar-arrow"></i></span>
+        </button>
+        <div class="sidebar-submenu">
+          @if($adminUser->hasPermission('schedules.manage'))
+            <a href="{{ route('admin.schedules.index') }}" class="sidebar-sublink {{ request()->routeIs('admin.schedules.*')?'active':'' }}">
+              <span>📅 Lịch ra truyện</span>
+            </a>
+          @endif
+          @if($adminUser->hasPermission('banners.manage'))
+            <a href="{{ route('admin.banners.index') }}" class="sidebar-sublink {{ request()->routeIs('admin.banners.*')?'active':'' }}">
+              <span>🖼️ Banner</span>
+            </a>
+          @endif
+        </div>
+      </div>
+    @endif
+
+    {{-- Nhóm 5: Người dùng & Quyền --}}
+    @php
+      $isUsersGroupActive = request()->routeIs('admin.users.*') || request()->routeIs('admin.permissions.*');
+    @endphp
+    @if($adminUser->hasAnyPermission(['users.view','permissions.manage']))
+      <div class="sidebar-dropdown {{ $isUsersGroupActive ? 'open has-active' : '' }}">
+        <button type="button" class="sidebar-dropdown-btn" aria-expanded="{{ $isUsersGroupActive ? 'true' : 'false' }}">
+          <span class="sidebar-dropdown-title">👥 Người dùng</span>
+          <span class="sidebar-dropdown-indicators"><i class="sidebar-arrow"></i></span>
+        </button>
+        <div class="sidebar-submenu">
+          @if($adminUser->hasPermission('users.view'))
+            <a href="{{ route('admin.users.index') }}" class="sidebar-sublink {{ request()->routeIs('admin.users.*')?'active':'' }}">
+              <span>👥 Thành viên</span>
+            </a>
+          @endif
+          @if($adminUser->hasPermission('permissions.manage'))
+            <a href="{{ route('admin.permissions.index') }}" class="sidebar-sublink {{ request()->routeIs('admin.permissions.*')?'active':'' }}">
+              <span>🔒 Phân quyền</span>
+            </a>
+          @endif
+        </div>
+      </div>
+    @endif
+
+    {{-- Nhóm 6: Hệ thống --}}
+    @php
+      $isSystemGroupActive = request()->routeIs('admin.notifications.*') || request()->routeIs('admin.logs.*') || request()->routeIs('admin.settings.*');
+    @endphp
+    @if($adminUser->hasAnyPermission(['notifications.manage','audit.view','settings.manage']))
+      <div class="sidebar-dropdown {{ $isSystemGroupActive ? 'open has-active' : '' }}">
+        <button type="button" class="sidebar-dropdown-btn" aria-expanded="{{ $isSystemGroupActive ? 'true' : 'false' }}">
+          <span class="sidebar-dropdown-title">⚙️ Hệ thống</span>
+          <span class="sidebar-dropdown-indicators"><i class="sidebar-arrow"></i></span>
+        </button>
+        <div class="sidebar-submenu">
+          @if($adminUser->hasPermission('notifications.manage'))
+            <a href="{{ route('admin.notifications.index') }}" class="sidebar-sublink {{ request()->routeIs('admin.notifications.*')?'active':'' }}">
+              <span>🔔 Thông báo</span>
+            </a>
+          @endif
+          @if($adminUser->hasPermission('audit.view'))
+            <a href="{{ route('admin.logs.index') }}" class="sidebar-sublink {{ request()->routeIs('admin.logs.*')?'active':'' }}">
+              <span>📜 Nhật ký</span>
+            </a>
+          @endif
+          @if($adminUser->hasPermission('settings.manage'))
+            <a href="{{ route('admin.settings.index') }}" class="sidebar-sublink {{ request()->routeIs('admin.settings.*')?'active':'' }}">
+              <span>⚙️ Cài đặt Website</span>
+            </a>
+          @endif
+        </div>
+      </div>
+    @endif
+
+    <a href="{{ route('home') }}" target="_blank" rel="noopener" class="sidebar-link" style="margin-top:8px">↗ Xem trang web</a>
   </nav>
   <div class="sidebar-footer"><div class="sidebar-user"><div class="sidebar-user-avatar">{{ strtoupper(substr($adminUser->name ?? 'A',0,1)) }}</div><div style="min-width:0"><div class="sidebar-user-name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ $adminUser->name }}</div><div class="sidebar-user-role">⚡ {{ $adminUser->roleSlug() }}</div></div></div></div>
 </aside>
@@ -72,6 +219,17 @@
   function openDeleteModal(action,itemName){confirmDelete(action,itemName)} function closeDeleteModal(){document.getElementById('delete-modal').classList.remove('show')}
   document.getElementById('delete-modal')?.addEventListener('click',e=>{if(e.target===e.currentTarget)closeDeleteModal()});
   const sidebar=document.getElementById('admin-sidebar'),overlay=document.getElementById('admin-overlay');function closeSidebar(){sidebar?.classList.remove('open');overlay?.classList.remove('show')}document.getElementById('mobile-menu-btn')?.addEventListener('click',()=>{sidebar?.classList.toggle('open');overlay?.classList.toggle('show')});overlay?.addEventListener('click',closeSidebar);window.addEventListener('resize',()=>{if(window.innerWidth>860)closeSidebar()});
+  document.querySelectorAll('.sidebar-dropdown-btn').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+      e.preventDefault();
+      const parent = this.closest('.sidebar-dropdown');
+      if (parent) {
+        const willOpen = !parent.classList.contains('open');
+        parent.classList.toggle('open', willOpen);
+        this.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+      }
+    });
+  });
 </script>
 @stack('scripts')
 </body>

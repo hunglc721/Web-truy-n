@@ -11,6 +11,7 @@ use App\Models\Comic;
 use App\Models\Genre;
 use App\Models\Tag;
 use App\Services\ImageService;
+use Illuminate\Http\Request;
 
 class AdminComicController extends Controller
 {
@@ -19,15 +20,57 @@ class AdminComicController extends Controller
     ) {}
 
     /**
-     * Danh sách tất cả bộ truyện (Admin Dashboard)
+     * Danh sách tất cả bộ truyện (Admin Dashboard) kèm bộ lọc & tìm kiếm
      */
-    public function index()
+    public function index(Request $request)
     {
-        $comics = Comic::withCount('chapters')
-            ->orderBy('id', 'desc')
-            ->paginate(15);
+        $query = Comic::withCount('chapters');
 
-        return view('admin.comics.index', compact('comics'));
+        // 1. Tìm kiếm theo từ khóa (tên hoặc slug)
+        if ($request->filled('q')) {
+            $q = trim($request->q);
+            $query->where(function ($sub) use ($q) {
+                $sub->where('title', 'like', "%{$q}%")
+                    ->orWhere('slug', 'like', "%{$q}%");
+            });
+        }
+
+        // 2. Lọc theo thể loại
+        if ($request->filled('genre_id') && $request->genre_id !== 'all') {
+            $genreId = (int) $request->genre_id;
+            $query->whereHas('genres', function ($g) use ($genreId) {
+                $g->where('genres.id', $genreId);
+            });
+        }
+
+        // 3. Lọc theo tác giả
+        if ($request->filled('author_id') && $request->author_id !== 'all') {
+            $authorId = (int) $request->author_id;
+            $query->whereHas('authors', function ($a) use ($authorId) {
+                $a->where('authors.id', $authorId);
+            });
+        }
+
+        // 4. Lọc theo trạng thái
+        if ($request->filled('status') && $request->status !== 'all') {
+            $query->where('status', $request->status);
+        }
+
+        // 5. Sắp xếp
+        match ($request->input('sort', 'latest')) {
+            'oldest'   => $query->orderBy('id', 'asc'),
+            'views'    => $query->orderByDesc('views'),
+            'chapters' => $query->orderByDesc('chapters_count'),
+            'title'    => $query->orderBy('title', 'asc'),
+            default    => $query->orderByDesc('id'),
+        };
+
+        $comics = $query->paginate(15)->withQueryString();
+
+        $genres  = Genre::orderBy('name')->get(['id', 'name']);
+        $authors = Author::orderBy('name')->get(['id', 'name']);
+
+        return view('admin.comics.index', compact('comics', 'genres', 'authors'));
     }
 
     /**
@@ -53,6 +96,8 @@ class AdminComicController extends Controller
         // Xử lý upload ảnh bìa (nếu có)
         if ($request->hasFile('cover_image')) {
             $data['cover_image'] = $this->imageService->uploadCover($request->file('cover_image'));
+        } else {
+            $data['cover_image'] = '';
         }
 
         $comic = Comic::create($data);
