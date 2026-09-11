@@ -129,4 +129,23 @@ class AdminComicFilterTest extends TestCase
         $response->assertSee('Không tìm thấy bộ truyện nào phù hợp.');
         $response->assertSee('Xóa bộ lọc');
     }
+
+    public function test_searchable_dropdowns_rendered_for_genre_and_author(): void
+    {
+        $genre = Genre::create(['name' => 'Võ Thuật', 'slug' => 'vo-thuat']);
+        $author = Author::factory()->create(['name' => 'Kim Dung']);
+
+        $response = $this->actingAs($this->admin)->get(route('admin.comics.index'));
+        $response->assertOk();
+
+        // Kiểm tra component dropdown tìm kiếm thể loại
+        $response->assertSee('genre-searchable-dropdown');
+        $response->assertSee('Tìm thể loại...');
+        $response->assertSee('Võ Thuật');
+
+        // Kiểm tra component dropdown tìm kiếm tác giả
+        $response->assertSee('author-searchable-dropdown');
+        $response->assertSee('Tìm tác giả...');
+        $response->assertSee('Kim Dung');
+    }
 }
