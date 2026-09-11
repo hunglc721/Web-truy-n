@@ -9,6 +9,7 @@ use App\Models\Chapter;
 use App\Models\Comic;
 use App\Models\Library;
 use App\Models\User;
+use App\Notifications\AdminBroadcastNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
 use Tests\TestCase;
@@ -51,6 +52,40 @@ class NotificationSystemTest extends TestCase
         $this->getJson('/api/announcements/active')
             ->assertOk()
             ->assertJsonCount(0, 'announcements');
+    }
+
+    public function test_guest_cannot_open_realtime_notification_stream(): void
+    {
+        $this->get('/user/notifications/header?stream=1', ['Accept' => 'text/event-stream'])
+            ->assertRedirect(route('login'));
+    }
+
+    public function test_authenticated_user_realtime_stream_emits_notification_snapshot(): void
+    {
+        $user = User::factory()->create();
+        $announcement = Announcement::create([
+            'title' => 'Realtime inbox',
+            'message' => 'Thông báo này phải xuất hiện qua SSE.',
+            'severity' => 'info',
+            'audience' => 'authenticated',
+            'show_banner' => false,
+            'send_to_inbox' => true,
+            'is_active' => true,
+            'starts_at' => now()->subMinute(),
+        ]);
+
+        $user->notify(new AdminBroadcastNotification($announcement));
+
+        $response = $this->actingAs($user)
+            ->get('/user/notifications/header?stream=1', ['Accept' => 'text/event-stream']);
+
+        $response->assertOk();
+        $this->assertStringStartsWith('text/event-stream', (string) $response->headers->get('Content-Type'));
+
+        $content = $response->streamedContent();
+        $this->assertStringContainsString('event: snapshot', $content);
+        $this->assertStringContainsString('Realtime inbox', $content);
+        $this->assertStringContainsString('"unread_count":1', $content);
     }
 
     public function test_dismissible_announcement_stays_hidden_in_session(): void
