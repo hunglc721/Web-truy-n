@@ -4,6 +4,17 @@ Nền tảng đọc **Manga / Manhwa / Manhua** được xây dựng bằng **La
 
 > Dự án cá nhân của `hunglc721`, được phát triển theo hướng một sản phẩm thực tế thay vì chỉ dừng ở CRUD cơ bản.
 
+## Tài khoản seed
+
+| Vai trò | Email | Mật khẩu |
+|---|---|---|
+| Admin | `admin@webcomics.com` | `12345678` |
+| Member | `user@webcomics.com` | `12345678` |
+
+Seeder còn tạo thêm Editor, Moderator và một số Member mẫu phục vụ phát triển / kiểm thử.
+
+---
+
 ## Mục tiêu dự án
 
 Comicx được xây dựng để áp dụng các kiến thức Backend vào một hệ thống hoàn chỉnh, bao gồm:
@@ -312,8 +323,8 @@ php artisan test
 Trạng thái CI gần nhất:
 
 ```text
-249 tests passed
-1089 assertions
+250 tests passed
+1097 assertions
 0 failed
 ```
 
@@ -382,8 +393,8 @@ Browser tests kiểm tra trực tiếp:
 Trạng thái CI gần nhất:
 
 ```text
-8 browser tests passed
-2 skipped có chủ đích theo viewport
+9 browser tests passed
+3 skipped có chủ đích theo viewport
 0 failed
 ```
 
@@ -482,17 +493,6 @@ php artisan schedule:work
 ```
 
 Scheduler được dùng cho các tác vụ định kỳ như auto publish chapter và flush view counters.
-
----
-
-## Tài khoản seed
-
-| Vai trò | Email | Mật khẩu |
-|---|---|---|
-| Admin | `admin@webcomics.com` | `12345678` |
-| Member | `user@webcomics.com` | `12345678` |
-
-Seeder còn tạo thêm Editor, Moderator và một số Member mẫu phục vụ phát triển / kiểm thử.
 
 ---
 
