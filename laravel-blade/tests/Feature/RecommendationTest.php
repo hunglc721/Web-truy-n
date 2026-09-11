@@ -141,7 +141,7 @@ class RecommendationTest extends TestCase
 
         // Prime cache
         $service->forUser($user, 6);
-        $this->assertTrue(Cache::has("recommendations.user.{$user->id}.v0.limit_6"));
+        $this->assertTrue(Cache::has("recommendations.user.{$user->id}.v0.limit_6.ex_all"));
 
         // Gửi request save reading history
         $this->actingAs($user)->postJson(route('history.save'), [

@@ -32,7 +32,8 @@ class RecommendationServiceTest extends TestCase
         $result = $this->service->forGuest(4);
 
         $this->assertCount(4, $result);
-        $this->assertTrue(Cache::has('recommendations.guest.limit_4.ex_all'));
+        $version = Cache::get('recommendations.guest.version', 1);
+        $this->assertTrue(Cache::has("recommendations.guest.v{$version}.limit_4.ex_all"));
     }
 
     public function test_for_comic_returns_similar_genre_comics(): void
@@ -113,8 +114,8 @@ class RecommendationServiceTest extends TestCase
         $this->service->forUser($user, 4);
         $this->service->forUser($user, 6);
 
-        $this->assertTrue(Cache::has("recommendations.user.{$user->id}.v0.limit_4"));
-        $this->assertTrue(Cache::has("recommendations.user.{$user->id}.v0.limit_6"));
+        $this->assertTrue(Cache::has("recommendations.user.{$user->id}.v0.limit_4.ex_all"));
+        $this->assertTrue(Cache::has("recommendations.user.{$user->id}.v0.limit_6.ex_all"));
 
         $this->service->invalidateForUser($user->id);
 

@@ -117,13 +117,13 @@ class RateLimitingTest extends TestCase
         // Gửi 30 request toggle library
         foreach ($comics as $comic) {
             $this->actingAs($this->user)
-                ->postJson(route('comics.toggleLibrary', ['comicId' => $comic->id]));
+                ->postJson(route('comics.toggleLibrary', ['comic' => $comic->id]));
         }
 
         // Request thứ 31 → 429
         $extraComic = Comic::factory()->create();
         $response = $this->actingAs($this->user)
-            ->postJson(route('comics.toggleLibrary', ['comicId' => $extraComic->id]));
+            ->postJson(route('comics.toggleLibrary', ['comic' => $extraComic->id]));
 
         $response->assertStatus(429);
     }

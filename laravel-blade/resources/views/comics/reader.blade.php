@@ -661,14 +661,15 @@
 @push('scripts')
 <script>
   // 0. Khôi phục vị trí đọc dở (Resume Scroll Position)
-  let initialScrollPercent = {{ (float) ($lastScrollPercent ?? 0) }};
+  const initialScrollPercent = {{ (float) ($lastScrollPercent ?? 0) }};
+  let resumeScrollPercent = initialScrollPercent;
 
   @guest
   try {
     const list = JSON.parse(localStorage.getItem('webcomics_guest_history') || '[]');
     const item = list.find(i => i.comicId === {{ $comic->id }} && i.chapterNum === {{ $chapter->chapter_number }});
     if (item && item.percent) {
-      initialScrollPercent = parseFloat(item.percent);
+      resumeScrollPercent = parseFloat(item.percent);
     }
   } catch(e) {}
   @endguest
@@ -710,18 +711,18 @@
   }
 
   const restorePosition = function() {
-    if (initialScrollPercent < 3) return;
+    if (resumeScrollPercent < 3) return;
 
     if (readerSettings.layout === 'single' || readerSettings.layout === 'double') {
       if (totalPagesCount > 1) {
-        let targetIndex = Math.round((initialScrollPercent / 100) * (totalPagesCount - 1));
+        let targetIndex = Math.round((resumeScrollPercent / 100) * (totalPagesCount - 1));
         showPage(targetIndex);
         showResumeToast();
       }
     } else {
       const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
       if (maxScroll > 50) {
-        const targetTop = (initialScrollPercent / 100) * maxScroll;
+        const targetTop = (resumeScrollPercent / 100) * maxScroll;
         window.scrollTo({ top: targetTop, behavior: 'instant' });
         showResumeToast();
       }
@@ -732,7 +733,7 @@
     const toast = document.getElementById('resume-scroll-toast');
     const text  = document.getElementById('resume-text');
     if (toast && text) {
-      text.textContent = `📖 Tiếp tục từ ${Math.round(initialScrollPercent)}%`;
+      text.textContent = `📖 Tiếp tục từ ${Math.round(resumeScrollPercent)}%`;
       toast.style.display = 'inline-flex';
       setTimeout(dismissResumeToast, 8000);
     }

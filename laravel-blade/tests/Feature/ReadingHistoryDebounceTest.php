@@ -34,7 +34,7 @@ class ReadingHistoryDebounceTest extends TestCase
 
         // 1. Initial recommendation fetch (caches version 0)
         $service->forUser($user, 6);
-        $this->assertTrue(Cache::has("recommendations.user.{$user->id}.v0.limit_6"));
+        $this->assertTrue(Cache::has("recommendations.user.{$user->id}.v0.limit_6.ex_all"));
         $this->assertEquals(0, Cache::get("rec_ver.user.{$user->id}", 0));
 
         // 2. Request save history lần 1 → Version tăng lên 1
@@ -58,7 +58,7 @@ class ReadingHistoryDebounceTest extends TestCase
 
         // 4. Lấy recommendation lại sau khi version = 1 → Cache key v1 được tạo
         $service->forUser($user, 6);
-        $this->assertTrue(Cache::has("recommendations.user.{$user->id}.v1.limit_6"));
+        $this->assertTrue(Cache::has("recommendations.user.{$user->id}.v1.limit_6.ex_all"));
 
         // Các request đọc tiếp theo trong debounce window không làm mất cache key v1
         $this->actingAs($user)->postJson(route('history.save'), [
@@ -66,6 +66,6 @@ class ReadingHistoryDebounceTest extends TestCase
             'chapter_id' => $chapter->id,
         ])->assertOk();
 
-        $this->assertTrue(Cache::has("recommendations.user.{$user->id}.v1.limit_6"), 'Cache v1 vẫn còn tồn tại và cho tỉ lệ Cache Hit > 0');
+        $this->assertTrue(Cache::has("recommendations.user.{$user->id}.v1.limit_6.ex_all"), 'Cache v1 vẫn còn tồn tại và cho tỉ lệ Cache Hit > 0');
     }
 }
