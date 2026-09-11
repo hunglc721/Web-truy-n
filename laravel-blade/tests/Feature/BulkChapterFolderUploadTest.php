@@ -38,6 +38,7 @@ class BulkChapterFolderUploadTest extends TestCase
 
     public function test_admin_can_upload_large_folder_flow_in_chunks_and_preserve_original_bytes(): void
     {
+        \Illuminate\Support\Facades\Bus::fake([\App\Jobs\GenerateChapterReaderVariants::class]);
         Storage::fake('public');
 
         $session = $this->startBulkUploadSession();
@@ -94,6 +95,8 @@ class BulkChapterFolderUploadTest extends TestCase
             ->firstOrFail();
 
         $this->assertSame('ready', $chapter->processing_status);
+        \Illuminate\Support\Facades\Bus::assertDispatched(\App\Jobs\GenerateChapterReaderVariants::class,
+            fn ($job) => $job->chapterId === $chapter->id);
         $this->assertSame('Opening the Decisive Battle', $chapter->title);
         $this->assertCount(2, $chapter->pages);
         $this->assertCount(2, $chapter->page_dimensions);

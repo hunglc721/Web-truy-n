@@ -104,7 +104,8 @@ class Chapter extends Model
                 ? (int) $page['height']
                 : (int) ($dimensions[$index]['height'] ?? 1200);
 
-            $url = str_starts_with($path, 'http') ? $path : asset('storage/' . $path);
+            $url = preg_match('~^(https?:)?//~i', $path) ? $path
+                : (str_starts_with($path, '/storage/') ? asset(ltrim($path, '/')) : asset('storage/' . $path));
 
             $result[] = [
                 'path'   => $path,
@@ -115,5 +116,10 @@ class Chapter extends Model
         }
 
         return $result;
+    }
+
+    public function getReaderPagesAttribute(): array
+    {
+        return app(\App\Services\ReaderImageService::class)->pages($this);
     }
 }

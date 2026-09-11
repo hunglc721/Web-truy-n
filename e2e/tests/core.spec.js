@@ -69,7 +69,9 @@ test.describe('WebComics browser journeys', () => {
     await gotoApp(page, '/truyen/solo-leveling/chapter-1');
     await expect(page.locator('#reader-container')).toBeVisible();
     await expect(page.locator('#reader-top-bar')).toBeVisible();
-    await expect(page.locator('#reader-top-bar .reader-chapter-select')).toHaveValue(/chapter-1$/);
+    await page.locator('#reader-top-bar [data-open-chapter-picker]').click();
+    await expect(page.locator('#reader-chapter-picker [aria-current="page"]')).toHaveAttribute('href', /chapter-1$/);
+    await page.locator('#reader-picker-close').click();
 
     await page.locator('#btn-open-settings').click();
     await expect(page.locator('#reader-settings-panel')).toBeVisible();

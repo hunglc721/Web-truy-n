@@ -225,6 +225,7 @@ class AdminChapterController extends Controller
             'is_free'        => $request->boolean('is_free', true),
         ], $finalPages);
 
+        app(\App\Services\ReaderImageService::class)->enqueue($updatedChapter->id);
         $this->notificationService->dispatchIfEligible($updatedChapter);
 
         return redirect()

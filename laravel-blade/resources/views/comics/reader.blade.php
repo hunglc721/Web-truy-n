@@ -255,6 +255,7 @@
     transform: translateY(100%);
   }
 </style>
+<link rel="stylesheet" href="{{ asset('css/reader.css') }}">
 @endpush
 
 @section('content')
@@ -267,7 +268,7 @@
   <div class="reader-toolbar" id="reader-top-bar">
     <div class="comic-info" style="display: flex; align-items: center; gap: 12px;">
       <a href="{{ route('comics.show', $comic->slug) }}" style="color: var(--primary); text-decoration: none; font-weight: 800; font-size: 15px;">
-        ← {{ Str::limit($comic->title, 26) }}
+        ← {{ $comic->title }}
       </a>
       <span style="color: rgba(255,255,255,0.2);">|</span>
       <strong style="color: #fff; font-size: 14px;">{{ $chapter->title ?: 'Chapter ' . $chapter->chapter_number }}</strong>
@@ -281,18 +282,15 @@
           ← Chap trước
         </a>
       @else
-        <button class="reader-controls-btn" disabled style="opacity:0.4; cursor:not-allowed">← Chap trước</button>
+        <button class="reader-controls-btn" id="btn-prev-chap" disabled aria-label="Chương trước" style="opacity:0.4; cursor:not-allowed">← Chap trước</button>
       @endif
 
       {{-- Select Chapter Dropdown --}}
-      <select onchange="if(this.value) location.href = this.value;" class="reader-chapter-select">
-        @foreach($allChapters as $item)
-          <option value="{{ route('chapters.show', [$comic->slug, $item->slug]) }}"
-                  {{ $item->id == $chapter->id ? 'selected' : '' }}>
-            Ch.{{ $item->chapter_number }} - {{ Str::limit($item->title, 22) }}
-          </option>
-        @endforeach
-      </select>
+      <button type="button" class="reader-chapter-select" data-open-chapter-picker
+              aria-haspopup="dialog" aria-controls="reader-chapter-picker" aria-expanded="false"
+              title="Ch.{{ $chapter->chapter_number }} — {{ $chapter->title }}">
+        Ch.{{ $chapter->chapter_number }} — {{ $chapter->title }} ▾
+      </button>
 
       {{-- Next Chapter --}}
       @if($nextChapter)
@@ -300,7 +298,7 @@
           Chap sau →
         </a>
       @else
-        <button class="reader-controls-btn" disabled style="opacity:0.4; cursor:not-allowed">Chap sau →</button>
+        <button class="reader-controls-btn" id="btn-next-chap" disabled aria-label="Chương sau" style="opacity:0.4; cursor:not-allowed">Chap sau →</button>
       @endif
 
       {{-- Settings Button --}}
@@ -428,7 +426,7 @@
     box-shadow: 0 10px 40px rgba(0,0,0,0.8);
   ">
     @php
-      $pagesWithDim = $chapter->pages_with_dimensions;
+      $pagesWithDim = $chapter->reader_pages;
     @endphp
 
     @if(!empty($pagesWithDim))
@@ -440,12 +438,23 @@
           aspect-ratio: {{ $page['width'] }} / {{ $page['height'] }};
           contain: layout;
         ">
+          <picture>
+          @if(count($page['variants']))
+            {{-- Cap small-screen downloads at the smallest reader variant even on high-DPR phones. --}}
+            <source media="(max-width: 480px)" type="image/webp" sizes="100vw"
+                    {{ $index < 2 ? 'srcset' : 'data-srcset' }}="{{ $page['variants'][0]['url'] }} {{ $page['variants'][0]['width'] }}w">
+          @endif
           <img
-            src="{{ $page['url'] }}"
+            {{ $index < 2 ? 'src' : 'data-src' }}="{{ $page['variants'][0]['url'] ?? $page['url'] }}"
+            @if($page['srcset'])
+            {{ $index < 2 ? 'srcset' : 'data-srcset' }}="{{ $page['srcset'] }}"
+            sizes="(max-width: 800px) 100vw, 800px"
+            @endif
             width="{{ $page['width'] }}"
             height="{{ $page['height'] }}"
             alt="{{ $comic->title }} - Chapter {{ $chapter->chapter_number }} - Trang {{ $index + 1 }}"
             loading="{{ $index < 2 ? 'eager' : 'lazy' }}"
+            fetchpriority="{{ $index === 0 ? 'high' : 'auto' }}"
             decoding="async"
             data-page-index="{{ $index }}"
             data-original-src="{{ $page['url'] }}"
@@ -458,8 +467,12 @@
               margin: 0 auto;
               aspect-ratio: {{ $page['width'] }} / {{ $page['height'] }};
             "
-            onerror="handleImageError(this)"
+            onerror="if(window.handleImageError) { handleImageError(this); } else { this.dataset.earlyError = '1'; }"
           />
+          </picture>
+          @if($index >= 2)
+            <noscript><img src="{{ $page['url'] }}" loading="lazy" width="{{ $page['width'] }}" height="{{ $page['height'] }}" alt="Trang {{ $index + 1 }}" style="width:100%;height:auto"></noscript>
+          @endif
           <div style="position: absolute; bottom: 6px; right: 10px; background: rgba(0,0,0,0.6); color: rgba(255,255,255,0.6); font-size: 10px; padding: 2px 6px; border-radius: 4px; pointer-events: none;">
             {{ $index + 1 }} / {{ count($pagesWithDim) }}
           </div>
@@ -522,13 +535,10 @@
       <button type="button" onclick="nextPage()" class="reader-controls-btn" style="padding: 5px 10px; border-radius: 20px;">▶</button>
     </div>
 
-    <select onchange="if(this.value) location.href = this.value;" class="reader-chapter-select" style="padding: 6px 12px; max-width: 170px; font-size: 12.5px;">
-      @foreach($allChapters as $item)
-        <option value="{{ route('chapters.show', [$comic->slug, $item->slug]) }}" {{ $item->id == $chapter->id ? 'selected' : '' }}>
-          Ch.{{ $item->chapter_number }} - {{ Str::limit($item->title, 18) }}
-        </option>
-      @endforeach
-    </select>
+    <button type="button" class="reader-chapter-select" data-open-chapter-picker
+            aria-haspopup="dialog" aria-controls="reader-chapter-picker" aria-expanded="false">
+      Ch.{{ $chapter->chapter_number }} ▾
+    </button>
 
     @if($nextChapter)
       <a href="{{ route('chapters.show', [$comic->slug, $nextChapter->slug]) }}" class="reader-controls-btn" id="dock-btn-next-chap" style="padding: 6px 12px; border-radius: 20px;" title="Chương sau">
@@ -540,6 +550,8 @@
     <button type="button" onclick="toggleFullscreen()" class="reader-controls-btn" style="padding: 6px 10px; border-radius: 20px;" title="Toàn màn hình (F)">⛶</button>
     <button type="button" onclick="window.scrollTo({ top: 0, behavior: 'smooth' })" class="reader-controls-btn" style="padding: 6px 10px; border-radius: 20px;" title="Lên đầu trang">⬆️</button>
   </div>
+
+  @include('comics.partials.chapter-picker')
 
   <!-- ── 4. COMMENT SECTION VỚI AJAX ── -->
   <div class="comments-section" style="
@@ -659,6 +671,8 @@
 @endsection
 
 @push('scripts')
+<script src="{{ asset('js/reader-images.js') }}"></script>
+<script src="{{ asset('js/reader-picker.js') }}"></script>
 <script>
   // 0. Khôi phục vị trí đọc dở (Resume Scroll Position)
   let initialScrollPercent = {{ (float) ($lastScrollPercent ?? 0) }};
@@ -844,6 +858,7 @@
       pageWrappers.forEach(w => w.classList.remove('active-page'));
     }
 
+    window.readerImages?.show(currentSinglePageIndex, mode);
     if (persist) saveReaderSettings();
   }
 
@@ -882,6 +897,7 @@
       if (dockCounter) dockCounter.textContent = text;
     }
 
+    window.readerImages?.show(currentSinglePageIndex, readerSettings.layout);
     window.scrollTo({ top: 0, behavior: 'instant' });
     setTimeout(updateProgress, 50);
   }
@@ -1311,72 +1327,17 @@
     });
   }
 
-  // 5. SMART IMAGE PREFETCH & PRELOAD ENGINE (Preload 3 ảnh kế tiếp & ảnh đầu chương sau)
-  (function() {
-    const pageUrls = @json(collect($pagesWithDim)->pluck('url'));
-    const nextChapFirstUrl = @json($nextChapter ? ($nextChapter->pages_with_dimensions[0]['url'] ?? null) : null);
-    const prefetchedUrls = new Set();
-
-    function preloadImage(url) {
-      if (!url || prefetchedUrls.has(url)) return;
-      prefetchedUrls.add(url);
-
-      // 1. Thêm link prefetch tag
-      const link = document.createElement('link');
-      link.rel = 'prefetch';
-      link.as = 'image';
-      link.href = url;
-      document.head.appendChild(link);
-
-      // 2. Preload ngầm qua Image object
-      const img = new Image();
-      img.src = url;
-    }
-
-    // A. Ngay khi load: Preload 3 ảnh kế tiếp đầu tiên (trang 1, 2, 3)
-    const initialPreloadCount = Math.min(4, pageUrls.length);
-    for (let i = 0; i < initialPreloadCount; i++) {
-      preloadImage(pageUrls[i]);
-    }
-
-    // B. Preload ảnh đầu tiên của chương sau (sau khi trang đã ổn định)
-    if (nextChapFirstUrl) {
-      setTimeout(function() {
-        preloadImage(nextChapFirstUrl);
-      }, 1500);
-    }
-
-    // C. Khi cuộn tới ảnh thứ N: Preload 3 ảnh kế tiếp (N+1, N+2, N+3)
-    if ('IntersectionObserver' in window) {
-      const observer = new IntersectionObserver(function(entries) {
-        entries.forEach(function(entry) {
-          if (entry.isIntersecting) {
-            const index = parseInt(entry.target.getAttribute('data-page-index') || '0', 10);
-            for (let offset = 1; offset <= 3; offset++) {
-              if (index + offset < pageUrls.length) {
-                preloadImage(pageUrls[index + offset]);
-              }
-            }
-
-            // Khi đọc tới gần cuối chương (còn 3 trang), đảm bảo đã prefetch ảnh đầu chương sau
-            if (index >= pageUrls.length - 3 && nextChapFirstUrl) {
-              preloadImage(nextChapFirstUrl);
-            }
-          }
-        });
-      }, {
-        rootMargin: '600px 0px', // Đón đầu trước 600px
-        threshold: 0.01
-      });
-
-      document.querySelectorAll('.comic-page-img').forEach(function(img) {
-        observer.observe(img);
-      });
-    }
-  })();
+  // SMART IMAGE PREFETCH is handled by reader-images.js on the actual responsive images.
 
   // 6. XỬ LÝ ẢNH LỖI (Retry 2 lần + Báo lỗi tại chỗ cho Admin)
   function handleImageError(img) {
+    if (img.hasAttribute('srcset') || img.closest('picture')?.querySelector('source[srcset]')) {
+      img.removeAttribute('srcset');
+      img.removeAttribute('data-srcset');
+      img.closest('picture')?.querySelectorAll('source').forEach(source => source.remove());
+      img.src = img.dataset.originalSrc;
+      return;
+    }
     let retries = parseInt(img.getAttribute('data-retries') || '0', 10);
     const originalSrc = img.getAttribute('data-original-src') || img.src;
 
@@ -1507,5 +1468,10 @@
       alert('Lỗi kết nối khi gửi báo cáo!');
     });
   }
+  // Parser-started images may fail before the reader script has been evaluated.
+  document.querySelectorAll('.comic-page-img[data-early-error]').forEach(img => {
+    delete img.dataset.earlyError;
+    handleImageError(img);
+  });
 </script>
 @endpush

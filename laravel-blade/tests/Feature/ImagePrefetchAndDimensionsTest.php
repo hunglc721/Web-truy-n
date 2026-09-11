@@ -72,7 +72,9 @@ class ImagePrefetchAndDimensionsTest extends TestCase
 
         // 2. Kiểm tra prefetch engine script
         $response->assertSee('SMART IMAGE PREFETCH', false);
-        $response->assertSee('link.rel = \'prefetch\'', false);
+        $response->assertSee('js/reader-images.js', false);
+        $response->assertDontSee('link.rel = \'prefetch\'', false);
+        $response->assertSee('fetchpriority="high"', false);
     }
 
     public function test_process_chapter_images_job_saves_page_dimensions(): void
