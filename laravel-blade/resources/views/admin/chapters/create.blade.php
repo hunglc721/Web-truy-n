@@ -16,7 +16,7 @@
     @endif
     <div>
       <h1 class="admin-page-title">➕ Đăng Chapter Mới: {{ $comic->title }}</h1>
-      <p class="admin-page-sub">Upload ZIP để hệ thống tự giải nén + sắp xếp trang, hoặc dùng ảnh rời / URL.</p>
+      <p class="admin-page-sub">Upload 1 chapter bằng ZIP / ảnh rời / URL, hoặc chọn nguyên thư mục nhiều chapter dung lượng lớn.</p>
     </div>
   </div>
 </div>
@@ -38,7 +38,7 @@
           value="{{ old('chapter_number', $nextChapterNumber) }}"
           required autofocus
         />
-        <p class="form-hint">Ví dụ: 1, 2, 2.5, 100...</p>
+        <p class="form-hint">Dùng cho chế độ upload 1 chapter. Folder nhiều chapter sẽ tự nhận diện số chương.</p>
         @error('chapter_number') <span class="invalid-feedback">{{ $message }}</span> @enderror
       </div>
 
@@ -54,9 +54,11 @@
       </div>
 
       <div style="border-top:1px solid var(--admin-border); padding-top:16px; margin-top:20px">
-        <button type="submit" class="btn-admin btn-admin-primary" style="width:100%; justify-content:center; padding:12px">
-          🚀 Đăng Chapter Ngay
-        </button>
+        <div id="single-submit-actions">
+          <button type="submit" class="btn-admin btn-admin-primary" style="width:100%; justify-content:center; padding:12px">
+            🚀 Đăng Chapter Ngay
+          </button>
+        </div>
         <a href="{{ route('admin.comics.chapters.index', $comic->id) }}" class="btn-admin btn-admin-ghost" style="width:100%; justify-content:center; margin-top:8px">
           Hủy bỏ
         </a>
@@ -75,6 +77,9 @@
             </button>
             <button type="button" class="btn-admin btn-admin-ghost btn-sm tab-btn" data-target="tab-urls">
               🔗 URL ảnh
+            </button>
+            <button type="button" class="btn-admin btn-admin-ghost btn-sm tab-btn" data-target="tab-bulk-folder">
+              📚 Folder nhiều Chapter <span style="font-size:9px; font-weight:800; margin-left:3px">NEW</span>
             </button>
           </div>
           <span style="font-size:12px; color:var(--admin-text-muted)" id="page-counter-badge">
@@ -182,6 +187,88 @@
             <p class="form-hint" style="margin-top:8px">Thứ tự dòng URL chính là thứ tự trang truyện.</p>
           </div>
         </div>
+
+        {{-- TAB 4: MULTI CHAPTER DIRECTORY --}}
+        <div
+          id="tab-bulk-folder"
+          class="tab-content-panel"
+          style="display:none"
+          data-endpoint="{{ route('admin.comics.chapters.store', $comic->id) }}"
+          data-csrf="{{ csrf_token() }}"
+          data-chapters-url="{{ route('admin.comics.chapters.index', $comic->id) }}"
+        >
+          <div class="bulk-folder-hero">
+            <div class="bulk-folder-icon">📚</div>
+            <div>
+              <h3>Upload nguyên thư mục chứa nhiều Chapter</h3>
+              <p>
+                Dành cho folder lớn vài GB như <code>Vol.16 Ch.0140 - ...</code>, <code>Vol.17 Ch.0141 - ...</code>.
+                Trình duyệt chỉ đọc metadata trước, <strong>không dựng preview hàng nghìn ảnh vào RAM</strong>.
+              </p>
+            </div>
+          </div>
+
+          <label class="bulk-folder-picker" for="bulk-folder-input">
+            <span class="bulk-folder-picker-icon">🗂️</span>
+            <span>
+              <strong>Chọn thư mục gốc</strong>
+              <small>Ví dụ thư mục 2.8GB đang chứa hàng chục folder chapter</small>
+            </span>
+            <input
+              type="file"
+              id="bulk-folder-input"
+              multiple
+              webkitdirectory
+              directory
+              accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
+            />
+          </label>
+
+          <div class="bulk-safety-note">
+            <strong>🛡️ Chế độ an toàn cho file lớn:</strong>
+            upload theo batch nhỏ thay vì gửi 2.8GB trong một request; mỗi ảnh được kiểm tra Magic Bytes + kích thước + SHA-256, lưu nguyên byte gốc, không nén lại và kiểm tra checksum lần nữa sau khi ghi vào storage.
+          </div>
+
+          <div class="bulk-summary-grid">
+            <div><span>Chapter</span><strong id="bulk-summary-chapters">0</strong></div>
+            <div><span>Tổng trang</span><strong id="bulk-summary-pages">0</strong></div>
+            <div><span>Dung lượng</span><strong id="bulk-summary-size">0 B</strong></div>
+            <div><span>Cần sửa</span><strong id="bulk-summary-issues">0</strong></div>
+          </div>
+
+          <div id="bulk-validation-message" class="bulk-validation bulk-validation-neutral">
+            Chọn thư mục gốc chứa nhiều folder chapter để hệ thống phân tích trước khi upload.
+          </div>
+
+          <div id="bulk-chapter-table-wrap" class="bulk-table-wrap" style="display:none">
+            <table class="bulk-chapter-table">
+              <thead>
+                <tr>
+                  <th>Folder nhận diện</th>
+                  <th style="width:120px">Chapter</th>
+                  <th>Tên chapter</th>
+                  <th style="width:100px">Trang</th>
+                  <th style="width:155px">Trạng thái</th>
+                </tr>
+              </thead>
+              <tbody id="bulk-chapter-table-body"></tbody>
+            </table>
+          </div>
+
+          <div id="bulk-progress-wrap" class="bulk-progress-wrap" style="display:none">
+            <div class="bulk-progress-track">
+              <div id="bulk-progress-bar" class="bulk-progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
+            </div>
+            <div id="bulk-progress-text" class="bulk-progress-text">0%</div>
+          </div>
+
+          <div class="bulk-actions">
+            <button type="button" id="bulk-start-upload" class="btn-admin btn-admin-primary" disabled>
+              🚀 Upload toàn bộ Chapter
+            </button>
+            <span>Không đóng tab trong lúc upload. Nếu mạng chập chờn, batch lỗi có thể thử lại ngay trên trang này.</span>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -190,8 +277,49 @@
 
 @push('styles')
 <style>
+  .bulk-folder-hero { display:flex; gap:14px; align-items:flex-start; padding:16px; border:1px solid rgba(108,99,255,.28); border-radius:12px; background:rgba(108,99,255,.06); }
+  .bulk-folder-icon { font-size:38px; line-height:1; }
+  .bulk-folder-hero h3 { font-size:17px; margin:0 0 6px; }
+  .bulk-folder-hero p { margin:0; font-size:13px; line-height:1.65; color:var(--admin-text-muted); }
+  .bulk-folder-picker { margin-top:14px; display:flex; align-items:center; gap:12px; padding:18px; border:2px dashed rgba(108,99,255,.45); border-radius:12px; cursor:pointer; background:rgba(108,99,255,.035); position:relative; }
+  .bulk-folder-picker:hover { border-color:var(--admin-primary); background:rgba(108,99,255,.08); }
+  .bulk-folder-picker input { position:absolute; inset:0; width:100%; height:100%; opacity:0; cursor:pointer; }
+  .bulk-folder-picker-icon { font-size:30px; }
+  .bulk-folder-picker strong, .bulk-folder-picker small { display:block; }
+  .bulk-folder-picker small { color:var(--admin-text-muted); margin-top:3px; }
+  .bulk-safety-note { margin-top:12px; padding:12px 14px; border-radius:10px; background:rgba(16,185,129,.07); border:1px solid rgba(16,185,129,.22); font-size:12.5px; line-height:1.65; color:var(--admin-text-muted); }
+  .bulk-safety-note strong { color:var(--admin-text); }
+  .bulk-summary-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; margin-top:14px; }
+  .bulk-summary-grid > div { padding:12px; border:1px solid var(--admin-border); border-radius:10px; background:rgba(255,255,255,.03); }
+  .bulk-summary-grid span { display:block; font-size:11px; color:var(--admin-text-muted); margin-bottom:4px; }
+  .bulk-summary-grid strong { font-size:17px; }
+  .bulk-validation { margin-top:12px; padding:10px 12px; border-radius:9px; font-size:12.5px; line-height:1.5; }
+  .bulk-validation-neutral { background:rgba(255,255,255,.04); border:1px solid var(--admin-border); color:var(--admin-text-muted); }
+  .bulk-validation-ok { background:rgba(16,185,129,.09); border:1px solid rgba(16,185,129,.28); color:#b7f7dc; }
+  .bulk-validation-error { background:rgba(239,68,68,.09); border:1px solid rgba(239,68,68,.28); color:#fecaca; }
+  .bulk-validation a { color:inherit; font-weight:700; text-decoration:underline; }
+  .bulk-table-wrap { margin-top:14px; border:1px solid var(--admin-border); border-radius:10px; overflow:auto; max-height:480px; }
+  .bulk-chapter-table { width:100%; min-width:820px; border-collapse:collapse; }
+  .bulk-chapter-table th, .bulk-chapter-table td { padding:10px; text-align:left; border-bottom:1px solid var(--admin-border); vertical-align:middle; }
+  .bulk-chapter-table th { position:sticky; top:0; z-index:2; background:var(--admin-surface, #171722); font-size:11px; color:var(--admin-text-muted); text-transform:uppercase; letter-spacing:.04em; }
+  .bulk-folder-name { max-width:310px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12.5px; font-weight:700; }
+  .bulk-folder-meta { font-size:10.5px; color:var(--admin-text-muted); margin-top:3px; }
+  .bulk-chapter-number, .bulk-chapter-title { min-width:0; }
+  .bulk-status { display:inline-flex; align-items:center; padding:5px 8px; border-radius:999px; font-size:10.5px; font-weight:700; white-space:nowrap; }
+  .bulk-status-pending { background:rgba(148,163,184,.12); color:#cbd5e1; }
+  .bulk-status-uploading { background:rgba(59,130,246,.14); color:#bfdbfe; }
+  .bulk-status-done { background:rgba(16,185,129,.14); color:#a7f3d0; }
+  .bulk-status-failed { background:rgba(239,68,68,.14); color:#fecaca; }
+  .bulk-progress-wrap { margin-top:16px; }
+  .bulk-progress-track { height:10px; border-radius:999px; background:rgba(255,255,255,.08); overflow:hidden; }
+  .bulk-progress-bar { width:0; height:100%; border-radius:inherit; background:linear-gradient(90deg,#6c63ff,#22c55e); transition:width .25s ease; }
+  .bulk-progress-text { font-size:11.5px; color:var(--admin-text-muted); margin-top:6px; }
+  .bulk-actions { display:flex; align-items:center; gap:12px; margin-top:16px; flex-wrap:wrap; }
+  .bulk-actions span { font-size:11.5px; color:var(--admin-text-muted); }
+
   @media (max-width: 900px) {
-    .chapter-create-grid { grid-template-columns: 1fr !important; }
+    .chapter-create-grid { grid-template-columns:1fr !important; }
+    .bulk-summary-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
   }
 </style>
 @endpush
@@ -378,4 +506,5 @@
     dragSrcEl = null;
   }
 </script>
+<script src="{{ asset('js/admin-bulk-chapter-upload.js') }}"></script>
 @endpush
