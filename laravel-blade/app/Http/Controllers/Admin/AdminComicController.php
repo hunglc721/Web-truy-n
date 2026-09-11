@@ -96,6 +96,8 @@ class AdminComicController extends Controller
         // Xử lý upload ảnh bìa (nếu có)
         if ($request->hasFile('cover_image')) {
             $data['cover_image'] = $this->imageService->uploadCover($request->file('cover_image'));
+        } else {
+            $data['cover_image'] = '';
         }
 
         $comic = Comic::create($data);
