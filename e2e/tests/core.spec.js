@@ -62,7 +62,7 @@ test.describe('WebComics browser journeys', () => {
     await gotoApp(page, '/truyen/solo-leveling/chapter-1');
     await expect(page.locator('#reader-container')).toBeVisible();
     await expect(page.locator('#reader-top-bar')).toBeVisible();
-    await expect(page.locator('.reader-chapter-select')).toHaveValue(/chapter-1$/);
+    await expect(page.locator('#reader-top-bar .reader-chapter-select')).toHaveValue(/chapter-1$/);
 
     await page.locator('#btn-open-settings').click();
     await expect(page.locator('#reader-settings-panel')).toBeVisible();
@@ -83,7 +83,8 @@ test.describe('WebComics browser journeys', () => {
 
     await page.waitForURL(/\/user\/library(?:\?|$)/);
     await expect(page.locator('body')).toHaveAttribute('data-auth-state', 'member');
-    await expect(page.getByText('Tủ Truyện', { exact: false }).first()).toBeVisible();
+    await expect(page.locator('h1.library-title')).toHaveText('Tủ Truyện');
+    await expect(page.locator('.library-shell')).toBeVisible();
     await expectNoDocumentOverflow(page);
 
     expect(pageErrors).toEqual([]);
