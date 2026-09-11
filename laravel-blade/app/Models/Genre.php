@@ -39,8 +39,9 @@ class Genre extends Model
      */
     public function comics(): BelongsToMany
     {
+        // Pivot comic_genre chỉ có comic_id, genre_id và is_primary.
+        // Không gọi withTimestamps() vì bảng này không có created_at/updated_at.
         return $this->belongsToMany(Comic::class, 'comic_genre')
-                    ->withPivot('is_primary')
-                    ->withTimestamps();
+                    ->withPivot('is_primary');
     }
 }
