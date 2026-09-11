@@ -146,6 +146,39 @@ test.describe('WebComics browser journeys', () => {
     expect(pageErrors).toEqual([]);
   });
 
+  test('admin chapter uploader exposes ZIP mode and naturally sorts loose image files', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name.includes('mobile'), 'Admin bulk upload workflow is covered on desktop Chromium.');
+
+    const pageErrors = watchPageErrors(page);
+    await login(page, 'admin@webcomics.com');
+    await page.waitForURL(/\/admin(?:\/|$)/);
+    await gotoApp(page, '/admin/comics/1/chapters/create');
+
+    const zipInput = page.locator('#zip-file-input');
+    await expect(zipInput).toBeVisible();
+    await expect(zipInput).toHaveAttribute('name', 'zip_file');
+    await expect(page.locator('#tab-zip')).toContainText('1, 2, 10');
+
+    await page.getByRole('button', { name: /Ảnh rời/i }).click();
+    const imageInput = page.locator('#images-input');
+    await imageInput.setInputFiles([
+      { name: '10.jpg', mimeType: 'image/jpeg', buffer: Buffer.from('page-10') },
+      { name: '2.jpg', mimeType: 'image/jpeg', buffer: Buffer.from('page-2') },
+      { name: '1.jpg', mimeType: 'image/jpeg', buffer: Buffer.from('page-1') },
+    ]);
+
+    const fileNames = page.locator('[data-testid="preview-file-name"]');
+    await expect(fileNames).toHaveCount(3);
+    await expect.poll(async () => fileNames.allTextContents()).toEqual(['1.jpg', '2.jpg', '10.jpg']);
+    await expect(page.locator('[data-testid="preview-page-label"]')).toHaveText(['Trang 1', 'Trang 2', 'Trang 3']);
+
+    await page.locator('#btn-auto-sort').click();
+    await expect.poll(async () => fileNames.allTextContents()).toEqual(['1.jpg', '2.jpg', '10.jpg']);
+    await expectNoDocumentOverflow(page);
+
+    expect(pageErrors).toEqual([]);
+  });
+
   test('desktop live search supports Vietnamese without accents', async ({ page }, testInfo) => {
     test.skip(testInfo.project.name.includes('mobile'), 'Desktop live-search UI is intentionally hidden on mobile.');
 
