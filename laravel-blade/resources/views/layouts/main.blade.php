@@ -134,29 +134,126 @@
     @include('partials.originals-discovery')
   @endif
 
-  <footer class="site-footer" id="site-footer"><div class="container">
-    <div class="footer-newsletter-card"><div class="newsletter-info"><span class="newsletter-tag">🚀 CỘNG ĐỒNG {{ strtoupper($siteSettings['site_name'] ?? 'WEBCOMICS') }}</span><h3 class="newsletter-title">Theo dõi chương mới và truyện nổi bật</h3><p class="newsletter-sub">{{ $siteSettings['tagline'] ?? 'Khám phá truyện mới, lịch phát hành và các tác phẩm đang thịnh hành.' }}</p></div><div class="newsletter-form"><span style="font-size:13px;color:var(--text-sub)">Kênh email chưa được cấu hình, nên không hiện form đăng ký giả.</span></div></div>
-    <div class="footer-main-grid">
-      <div class="fgrid-brand-col"><a href="{{ route('home') }}" class="logo-link"><div class="logo-icon"><svg width="40" height="40" viewBox="0 0 44 44"><rect width="44" height="44" rx="12" fill="#FF5E36"/><text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle" font-family="Inter" font-weight="900" font-size="18" fill="white">WC</text></svg></div><span class="logo-text">{{ $siteSettings['site_name'] ?? 'WebComics' }}</span></a><p class="fbrand-desc">{{ $siteSettings['tagline'] ?? 'Nền tảng đọc Manga, Manhwa và Manhua trực tuyến.' }}</p></div>
-      <div class="fgrid-col"><h4 class="fcol-heading">Khám Phá</h4><ul class="fcol-list"><li><a href="{{ route('home') }}">Truyện Thịnh Hành</a></li><li><a href="{{ route('genres') }}">Tất Cả Thể Loại</a></li><li><a href="{{ route('schedule') }}">Lịch Ra Truyện</a></li><li><a href="{{ route('schedule.completed') }}">Truyện Hoàn Thành</a></li><li><a href="{{ route('originals') }}">Truyện Độc Quyền</a></li></ul></div>
-      <div class="fgrid-col"><h4 class="fcol-heading">Tài Khoản</h4>
-        <ul class="fcol-list">
-          @guest
-            <li><a href="{{ route('login') }}">Đăng Nhập</a></li>
-            <li><a href="{{ route('register') }}">Đăng Ký</a></li>
-          @else
-            <li><a href="{{ route('user.dashboard') }}">Tổng Quan</a></li>
-            <li><a href="{{ route('user.library') }}">Tủ Truyện</a></li>
-            <li><a href="{{ route('user.history') }}">Lịch Sử</a></li>
-            <li><a href="{{ route('user.likes') }}">Yêu Thích</a></li>
-            @if(auth()->user()->canAccessAdmin())<li><a href="{{ route('admin.dashboard') }}">Trang Quản Trị</a></li>@endif
-          @endguest
-        </ul>
+  <footer class="site-footer" id="site-footer">
+    <div class="container">
+      {{-- Newsletter Card (Desktop only) --}}
+      <div class="footer-newsletter-card">
+        <div class="newsletter-info">
+          <span class="newsletter-tag">🚀 CỘNG ĐỒNG {{ strtoupper($siteSettings['site_name'] ?? 'WEBCOMICS') }}</span>
+          <h3 class="newsletter-title">Theo dõi chương mới và truyện nổi bật</h3>
+          <p class="newsletter-sub">{{ $siteSettings['tagline'] ?? 'Khám phá truyện mới, lịch phát hành và các tác phẩm đang thịnh hành.' }}</p>
+        </div>
+        <div class="newsletter-form">
+          <span style="font-size:13px;color:var(--text-sub)">Kênh email chưa được cấu hình, nên không hiện form đăng ký giả.</span>
+        </div>
       </div>
-      <div class="fgrid-col"><h4 class="fcol-heading">Hỗ Trợ</h4><ul class="fcol-list"><li><a href="{{ route('pages.about') }}">Giới Thiệu</a></li><li><a href="{{ route('pages.terms') }}">Điều Khoản Sử Dụng</a></li><li><a href="{{ route('pages.privacy') }}">Chính Sách Riêng Tư</a></li><li><a href="{{ route('pages.contact') }}">Liên Hệ</a></li><li><a href="{{ route('dmca.show') }}">Bản Quyền & DMCA</a></li><li><a href="{{ route('teams.index') }}">Danh Sách Nhóm Dịch</a></li><li><a href="{{ route('sitemap') }}">Sitemap</a></li></ul></div>
+
+      {{-- Main Footer Columns / Accordion --}}
+      <div class="footer-main-grid">
+        {{-- Brand Column --}}
+        <div class="fgrid-brand-col">
+          <a href="{{ route('home') }}" class="logo-link" aria-label="{{ $siteSettings['site_name'] ?? 'WebComics' }}">
+            <div class="logo-icon">
+              <svg width="40" height="40" viewBox="0 0 44 44">
+                <rect width="44" height="44" rx="12" fill="#FF5E36"/>
+                <text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle" font-family="Inter" font-weight="900" font-size="18" fill="white">WC</text>
+              </svg>
+            </div>
+            <span class="logo-text">{{ $siteSettings['site_name'] ?? 'WebComics' }}</span>
+          </a>
+          <p class="fbrand-desc">{{ $siteSettings['tagline'] ?? 'Đọc Manga, Manhwa & Manhua Online' }}</p>
+        </div>
+
+        {{-- Column 1: Khám Phá --}}
+        <div class="fgrid-col footer-accordion-item">
+          <button type="button" class="fcol-accordion-btn" aria-expanded="false" aria-controls="fcol-collapse-explore" id="fcol-btn-explore">
+            <span class="fcol-heading-text">Khám Phá</span>
+            <span class="fcol-accordion-icon" aria-hidden="true">
+              <svg class="icon-plus" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+              <svg class="icon-minus" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            </span>
+          </button>
+          <div class="fcol-collapse" id="fcol-collapse-explore" role="region" aria-labelledby="fcol-btn-explore">
+            <ul class="fcol-list">
+              <li><a href="{{ route('home') }}">Truyện Thịnh Hành</a></li>
+              <li><a href="{{ route('genres') }}">Tất Cả Thể Loại</a></li>
+              <li><a href="{{ route('schedule') }}">Lịch Ra Truyện</a></li>
+              <li><a href="{{ route('schedule.completed') }}">Truyện Hoàn Thành</a></li>
+              <li><a href="{{ route('originals') }}">Truyện Độc Quyền</a></li>
+            </ul>
+          </div>
+        </div>
+
+        {{-- Column 2: Tài Khoản --}}
+        <div class="fgrid-col footer-accordion-item">
+          <button type="button" class="fcol-accordion-btn" aria-expanded="false" aria-controls="fcol-collapse-account" id="fcol-btn-account">
+            <span class="fcol-heading-text">Tài Khoản</span>
+            <span class="fcol-accordion-icon" aria-hidden="true">
+              <svg class="icon-plus" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+              <svg class="icon-minus" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            </span>
+          </button>
+          <div class="fcol-collapse" id="fcol-collapse-account" role="region" aria-labelledby="fcol-btn-account">
+            <ul class="fcol-list">
+              @guest
+                <li><a href="{{ route('login') }}">Đăng Nhập</a></li>
+                <li><a href="{{ route('register') }}">Đăng Ký</a></li>
+              @else
+                <li><a href="{{ route('user.dashboard') }}">Tổng Quan</a></li>
+                <li><a href="{{ route('user.library') }}">Tủ Truyện</a></li>
+                <li><a href="{{ route('user.history') }}">Lịch Sử</a></li>
+                <li><a href="{{ route('user.likes') }}">Yêu Thích</a></li>
+                @if(auth()->user()->canAccessAdmin())<li><a href="{{ route('admin.dashboard') }}">Trang Quản Trị</a></li>@endif
+              @endguest
+            </ul>
+          </div>
+        </div>
+
+        {{-- Column 3: Hỗ Trợ --}}
+        <div class="fgrid-col footer-accordion-item">
+          <button type="button" class="fcol-accordion-btn" aria-expanded="false" aria-controls="fcol-collapse-support" id="fcol-btn-support">
+            <span class="fcol-heading-text">Hỗ Trợ</span>
+            <span class="fcol-accordion-icon" aria-hidden="true">
+              <svg class="icon-plus" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+              <svg class="icon-minus" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            </span>
+          </button>
+          <div class="fcol-collapse" id="fcol-collapse-support" role="region" aria-labelledby="fcol-btn-support">
+            <ul class="fcol-list">
+              <li><a href="{{ route('pages.about') }}">Giới Thiệu</a></li>
+              <li><a href="{{ route('pages.terms') }}">Điều Khoản Sử Dụng</a></li>
+              <li><a href="{{ route('pages.privacy') }}">Chính Sách Riêng Tư</a></li>
+              <li><a href="{{ route('pages.contact') }}">Liên Hệ</a></li>
+              <li><a href="{{ route('dmca.show') }}">Bản Quyền & DMCA</a></li>
+              <li><a href="{{ route('teams.index') }}">Danh Sách Nhóm Dịch</a></li>
+              <li><a href="{{ route('sitemap') }}">Sitemap</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      {{-- Desktop Bottom Bar (>= 768px) --}}
+      <div class="footer-bottom-bar">
+        <p class="fcopy-text">&copy; {{ date('Y') }} {{ $siteSettings['site_name'] ?? 'WebComics' }}. All rights reserved.</p>
+        <div class="lang-selector">
+          <span class="lang-icon">🌐</span>
+          <select class="lang-select" aria-label="Ngôn ngữ">
+            <option value="vi" selected>Tiếng Việt</option>
+          </select>
+        </div>
+      </div>
+
+      {{-- Mobile Bottom Bar (< 768px) --}}
+      <div class="footer-bottom-mobile">
+        <p class="fcopy-text-mobile">&copy; {{ date('Y') }} {{ $siteSettings['site_name'] ?? 'WebComics' }}</p>
+        <div class="footer-legal-links-mobile">
+          <a href="{{ route('pages.terms') }}">Điều Khoản</a>
+          <span class="legal-sep">·</span>
+          <a href="{{ route('pages.privacy') }}">Chính Sách Bảo Mật</a>
+        </div>
+      </div>
     </div>
-    <div class="footer-bottom-bar"><p class="fcopy-text">&copy; {{ date('Y') }} {{ $siteSettings['site_name'] ?? 'WebComics' }}. All rights reserved.</p><div class="lang-selector"><span class="lang-icon">🌐</span><select class="lang-select" aria-label="Ngôn ngữ"><option value="vi" selected>Tiếng Việt</option></select></div></div>
-  </div></footer>
+  </footer>
   <script src="{{ asset('js/app.js') }}"></script>
   <script src="{{ asset('js/roadmap.js') }}"></script>
   <script>

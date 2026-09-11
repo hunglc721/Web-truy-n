@@ -504,17 +504,6 @@ svg {
     margin-bottom: 32px;
   }
 
-  .footer-main-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 24px;
-  }
-
-  .footer-bottom-bar {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 14px;
-  }
-
   .roadmap-form-grid {
     grid-template-columns: 1fr;
   }
@@ -654,10 +643,6 @@ svg {
     flex-basis: auto;
   }
 
-  .footer-main-grid {
-    grid-template-columns: 1fr;
-  }
-
   .page-title {
     font-size: 23px;
   }
@@ -688,6 +673,218 @@ svg {
   body.is-reader-page #btn-open-settings::after {
     content: '⚙';
     font-size: 17px;
+  }
+}
+
+/* ==========================================================================
+   MOBILE FOOTER ACCORDION (< 768px)
+   ========================================================================== */
+@media (max-width: 767.98px) {
+  .site-footer {
+    padding: 28px 0 20px;
+    background: #07090e;
+  }
+
+  .site-footer .container {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .footer-newsletter-card {
+    display: none !important;
+  }
+
+  .site-footer .footer-main-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+  }
+
+  .fgrid-brand-col {
+    margin-bottom: 20px;
+    padding-bottom: 0;
+  }
+
+  .fgrid-brand-col .logo-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+  }
+
+  .fgrid-brand-col .logo-icon svg {
+    width: 36px;
+    height: 36px;
+  }
+
+  .fgrid-brand-col .logo-text {
+    font-size: 19px;
+    font-weight: 800;
+    color: var(--text-main);
+  }
+
+  .fbrand-desc {
+    font-size: 13px;
+    color: var(--text-sub);
+    margin-top: 6px;
+    line-height: 1.45;
+    max-width: none;
+  }
+
+  /* Accordion Item */
+  .footer-accordion-item {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .fcol-accordion-btn {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 14px 0;
+    margin: 0;
+    background: transparent;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    pointer-events: auto;
+    text-align: left;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .fcol-heading-text {
+    font-size: 15px;
+    font-weight: 700;
+    color: #FFFFFF;
+    letter-spacing: -0.1px;
+    transition: color 0.15s ease;
+  }
+
+  .fcol-accordion-btn:active .fcol-heading-text {
+    color: var(--primary);
+  }
+
+  /* Icon Plus / Minus */
+  .fcol-accordion-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    color: var(--text-muted);
+    transition: color 0.2s ease, transform 0.25s ease;
+    flex-shrink: 0;
+  }
+
+  .fcol-accordion-icon .icon-minus {
+    display: none;
+  }
+
+  .fcol-accordion-icon .icon-plus {
+    display: block;
+  }
+
+  .footer-accordion-item.open .fcol-accordion-icon {
+    color: var(--primary);
+    transform: rotate(90deg);
+  }
+
+  .footer-accordion-item.open .fcol-accordion-icon .icon-plus {
+    display: none;
+  }
+
+  .footer-accordion-item.open .fcol-accordion-icon .icon-minus {
+    display: block;
+  }
+
+  /* Expand / Collapse Animation (200-300ms) */
+  .fcol-collapse {
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    visibility: hidden;
+    transition: max-height 0.28s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.22s ease, visibility 0.28s;
+  }
+
+  .footer-accordion-item.open .fcol-collapse {
+    max-height: 380px;
+    opacity: 1;
+    visibility: visible;
+  }
+
+  /* Links list inside accordion */
+  .fcol-list {
+    list-style: none;
+    padding: 2px 0 16px 2px;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 11px;
+  }
+
+  .fcol-list li {
+    margin: 0;
+  }
+
+  .fcol-list a {
+    font-size: 14px;
+    color: var(--text-sub);
+    text-decoration: none;
+    display: inline-block;
+    padding: 2px 0;
+    transition: color 0.15s ease, transform 0.15s ease;
+  }
+
+  .fcol-list a:hover,
+  .fcol-list a:active {
+    color: var(--primary);
+    transform: translateX(3px);
+  }
+
+  /* Bottom Bar switch */
+  .footer-bottom-bar {
+    display: none !important;
+  }
+
+  .footer-bottom-mobile {
+    display: block;
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    text-align: center;
+  }
+
+  .fcopy-text-mobile {
+    font-size: 12.5px;
+    color: var(--text-muted);
+    margin: 0 0 6px;
+  }
+
+  .footer-legal-links-mobile {
+    font-size: 12.5px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .footer-legal-links-mobile a {
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: color 0.15s ease;
+  }
+
+  .footer-legal-links-mobile a:hover,
+  .footer-legal-links-mobile a:active {
+    color: var(--text-main);
+  }
+
+  .footer-legal-links-mobile .legal-sep {
+    color: rgba(255, 255, 255, 0.2);
+    user-select: none;
   }
 }
 

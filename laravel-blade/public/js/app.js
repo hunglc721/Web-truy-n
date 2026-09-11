@@ -598,6 +598,51 @@
     return escapeHtml(value).replace(/`/g, '&#96;');
   }
 
+  function setupMobileFooterAccordion() {
+    const items = $$('.footer-accordion-item');
+    if (!items.length) return;
+
+    items.forEach((item) => {
+      const btn = $('.fcol-accordion-btn', item);
+      if (!btn) return;
+
+      btn.addEventListener('click', (e) => {
+        if (window.innerWidth >= 768) return;
+        e.preventDefault();
+
+        const isOpen = item.classList.contains('open');
+
+        // Close other accordion items for clean mobile accordion behavior
+        items.forEach((other) => {
+          if (other !== item) {
+            other.classList.remove('open');
+            const otherBtn = $('.fcol-accordion-btn', other);
+            otherBtn?.setAttribute('aria-expanded', 'false');
+          }
+        });
+
+        if (isOpen) {
+          item.classList.remove('open');
+          btn.setAttribute('aria-expanded', 'false');
+        } else {
+          item.classList.add('open');
+          btn.setAttribute('aria-expanded', 'true');
+        }
+      });
+    });
+
+    window.addEventListener('resize', () => {
+      if (window.innerWidth >= 768) {
+        items.forEach((item) => {
+          item.classList.remove('open');
+          const btn = $('.fcol-accordion-btn', item);
+          btn?.setAttribute('aria-expanded', 'false');
+        });
+      }
+    }, { passive: true });
+  }
+
   // Khởi chạy
   setupGuestContinueReading();
+  setupMobileFooterAccordion();
 })();
