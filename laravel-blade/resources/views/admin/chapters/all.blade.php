@@ -9,6 +9,7 @@
 @endsection
 
 @push('styles')
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css"/>
 <style>
   .admin-stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:20px}
   .filter-bar{display:grid;grid-template-columns:2fr 1.5fr 1fr 1fr auto;gap:10px;align-items:end}
@@ -17,6 +18,18 @@
   .comic-modal-select{width:100%;padding:11px 14px;background:rgba(255,255,255,.06);border:1px solid var(--admin-border);border-radius:9px;color:var(--admin-text);font-size:14px;outline:none}
   @media(max-width:1000px){.filter-bar{grid-template-columns:1fr 1fr}}
   @media(max-width:600px){.filter-bar{grid-template-columns:1fr}}
+
+  /* Choices.js dark theme override */
+  .choices{width:100%}
+  .choices__inner{background:rgba(255,255,255,.06)!important;border:1px solid var(--admin-border)!important;border-radius:9px!important;padding:6px 10px!important;min-height:40px!important;color:var(--admin-text)!important;font-size:14px!important}
+  .choices__list--dropdown,.choices[data-type*=select-one] .choices__list--dropdown{background:var(--admin-bg-card,#1e2435)!important;border:1px solid var(--admin-border)!important;border-radius:9px!important;z-index:9999}
+  .choices__list--dropdown .choices__item--selectable{color:var(--admin-text,#e2e8f0)!important;padding:9px 14px!important;font-size:13.5px!important}
+  .choices__list--dropdown .choices__item--selectable.is-highlighted{background:rgba(99,102,241,.18)!important;color:#fff!important}
+  .choices__input--cloned{background:transparent!important;color:var(--admin-text,#e2e8f0)!important;font-size:14px!important}
+  .choices[data-type*=select-one]::after{border-color:var(--admin-text-muted,#94a3b8) transparent transparent!important;right:14px}
+  .choices__list--single .choices__item{color:var(--admin-text,#e2e8f0)!important}
+  .choices__placeholder{color:var(--admin-text-muted,#94a3b8)!important}
+  .choices__list--dropdown .choices__input{background:rgba(255,255,255,.06)!important;border-bottom:1px solid var(--admin-border)!important;color:var(--admin-text,#e2e8f0)!important;padding:8px 12px!important;font-size:13px!important;width:100%!important}
 </style>
 @endpush
 
@@ -51,7 +64,7 @@
   <form method="GET" action="{{ route('admin.chapters.index') }}" class="filter-bar">
     <div>
       <label class="form-label" style="font-size:12px">Bộ truyện</label>
-      <select name="comic_id" class="form-control">
+      <select name="comic_id" id="filter-comic-select">
         <option value="">— Tất cả bộ truyện —</option>
         @foreach($comics as $c)
           <option value="{{ $c->id }}" {{ request('comic_id') == $c->id ? 'selected' : '' }}>
@@ -202,7 +215,7 @@
 
 {{-- Modal Chọn Truyện để Đăng Chapter --}}
 <div class="modal-overlay" id="new-chapter-modal">
-  <div class="modal-box" style="text-align:left;max-width:440px">
+  <div class="modal-box" style="text-align:left;max-width:480px">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
       <h3 class="modal-title" style="margin:0">➕ Chọn Bộ Truyện</h3>
       <button type="button" class="btn-admin btn-admin-ghost btn-sm" onclick="closeNewChapterModal()">✕</button>
@@ -210,37 +223,146 @@
     <p class="modal-desc" style="margin-bottom:18px;text-align:left">
       Chọn bộ truyện bạn muốn đăng tải chương mới:
     </p>
-    <div class="form-group" style="margin-bottom:20px">
-      <label class="form-label">Bộ truyện <span>*</span></label>
-      <select id="modal-comic-select" class="comic-modal-select">
-        @foreach($comics as $c)
-          <option value="{{ $c->id }}">{{ $c->title }}</option>
-        @endforeach
-      </select>
+
+    {{-- Search input for modal --}}
+    <div style="margin-bottom:12px;position:relative">
+      <input
+        type="text"
+        id="modal-comic-search"
+        placeholder="🔍 Tìm tên truyện..."
+        autocomplete="off"
+        style="width:100%;padding:10px 14px;background:rgba(255,255,255,.06);border:1px solid var(--admin-border);border-radius:9px;color:var(--admin-text);font-size:14px;outline:none;box-sizing:border-box;transition:border-color .2s"
+        onfocus="this.style.borderColor='var(--admin-primary,#6366f1)'"
+        onblur="this.style.borderColor='var(--admin-border)'"
+      />
     </div>
-    <div class="modal-actions" style="justify-content:flex-end">
+
+    <div class="form-group" style="margin-bottom:4px">
+      <label class="form-label">Bộ truyện <span>*</span></label>
+    </div>
+
+    {{-- Scrollable comic list --}}
+    <div
+      id="modal-comic-list"
+      style="max-height:280px;overflow-y:auto;border:1px solid var(--admin-border);border-radius:9px;background:rgba(255,255,255,.03);"
+    >
+      @foreach($comics as $c)
+        <div
+          class="modal-comic-item"
+          data-id="{{ $c->id }}"
+          data-title="{{ strtolower($c->title) }}"
+          onclick="selectModalComic(this)"
+          style="padding:10px 14px;cursor:pointer;font-size:14px;color:var(--admin-text);border-bottom:1px solid rgba(255,255,255,.05);transition:background .15s;display:flex;align-items:center;gap:10px"
+          onmouseover="this.style.background=this.classList.contains('selected')?'rgba(99,102,241,.2)':'rgba(99,102,241,.1)'"
+          onmouseout="this.style.background=this.classList.contains('selected')?'rgba(99,102,241,.2)':''"
+        >
+          <span style="font-size:11px;background:rgba(99,102,241,.2);color:#a5b4fc;border-radius:4px;padding:2px 6px;flex-shrink:0">#{{ $c->id }}</span>
+          <span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ $c->title }}</span>
+          <span class="modal-check" style="display:none;color:#6366f1;font-weight:700">✓</span>
+        </div>
+      @endforeach
+    </div>
+
+    <div id="modal-no-result" style="display:none;padding:20px;text-align:center;color:var(--admin-text-muted);font-size:13px">
+      Không tìm thấy truyện nào.
+    </div>
+
+    <div style="margin-top:8px;font-size:12px;color:var(--admin-text-muted)" id="modal-selected-label">
+      Chưa chọn truyện nào
+    </div>
+
+    <div class="modal-actions" style="justify-content:flex-end;margin-top:18px">
       <button type="button" class="btn-admin btn-admin-ghost" onclick="closeNewChapterModal()">Hủy</button>
-      <button type="button" class="btn-admin btn-admin-primary" onclick="proceedToCreateChapter()">Tiếp tục →</button>
+      <button type="button" class="btn-admin btn-admin-primary" id="modal-proceed-btn" disabled onclick="proceedToCreateChapter()">Tiếp tục →</button>
     </div>
   </div>
 </div>
 @endsection
 
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
 <script>
-  const chapterModal = document.getElementById('new-chapter-modal');
+  // ── Choices.js cho filter bộ lọc ──────────────────────────────────────────
+  const filterComicEl = document.getElementById('filter-comic-select');
+  if (filterComicEl) {
+    new Choices(filterComicEl, {
+      searchEnabled: true,
+      searchPlaceholderValue: 'Gõ để tìm truyện...',
+      itemSelectText: '',
+      noResultsText: 'Không tìm thấy truyện nào',
+      noChoicesText: 'Không có lựa chọn',
+      placeholder: true,
+      placeholderValue: '— Tất cả bộ truyện —',
+      shouldSort: false,
+      classNames: { containerOuter: 'choices' },
+    });
+  }
+
+  // ── Modal Đăng Chapter Mới ────────────────────────────────────────────────
+  const chapterModal  = document.getElementById('new-chapter-modal');
+  const searchInput   = document.getElementById('modal-comic-search');
+  const comicItems    = document.querySelectorAll('.modal-comic-item');
+  const noResult      = document.getElementById('modal-no-result');
+  const comicList     = document.getElementById('modal-comic-list');
+  const selectedLabel = document.getElementById('modal-selected-label');
+  const proceedBtn    = document.getElementById('modal-proceed-btn');
+  let selectedComicId = null;
+
   function openNewChapterModal() {
     chapterModal?.classList.add('show');
+    setTimeout(() => searchInput?.focus(), 100);
   }
   function closeNewChapterModal() {
     chapterModal?.classList.remove('show');
+    searchInput.value = '';
+    filterModalComics('');
+    deselectAll();
   }
   function proceedToCreateChapter() {
-    const comicId = document.getElementById('modal-comic-select')?.value;
-    if (comicId) {
-      window.location.href = `/admin/comics/${comicId}/chapters/create`;
+    if (selectedComicId) {
+      window.location.href = `/admin/comics/${selectedComicId}/chapters/create`;
     }
   }
+
+  function deselectAll() {
+    comicItems.forEach(item => {
+      item.classList.remove('selected');
+      item.style.background = '';
+      item.querySelector('.modal-check').style.display = 'none';
+    });
+    selectedComicId = null;
+    selectedLabel.textContent = 'Chưa chọn truyện nào';
+    proceedBtn.disabled = true;
+  }
+
+  function selectModalComic(el) {
+    deselectAll();
+    el.classList.add('selected');
+    el.style.background = 'rgba(99,102,241,.2)';
+    el.querySelector('.modal-check').style.display = 'inline';
+    selectedComicId = el.dataset.id;
+    const titleEl = el.querySelectorAll('span')[1];
+    selectedLabel.innerHTML = `Đã chọn: <strong style="color:var(--admin-text)">${titleEl.textContent.trim()}</strong>`;
+    proceedBtn.disabled = false;
+  }
+
+  function filterModalComics(keyword) {
+    const kw = keyword.toLowerCase().trim();
+    let visibleCount = 0;
+    comicItems.forEach(item => {
+      const title = item.dataset.title;
+      const show  = !kw || title.includes(kw);
+      item.style.display = show ? '' : 'none';
+      if (show) visibleCount++;
+    });
+    const empty = visibleCount === 0;
+    noResult.style.display  = empty ? 'block' : 'none';
+    comicList.style.display = empty ? 'none'  : '';
+  }
+
+  searchInput?.addEventListener('input', e => filterModalComics(e.target.value));
+
+  // Close on backdrop click
   chapterModal?.addEventListener('click', e => {
     if (e.target === chapterModal) closeNewChapterModal();
   });
