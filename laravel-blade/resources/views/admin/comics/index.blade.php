@@ -20,7 +20,10 @@
   .admin-module-icon{width:42px;height:42px;display:flex;align-items:center;justify-content:center;border-radius:10px;font-size:20px;flex-shrink:0}
   .admin-module-info{min-width:0;flex:1}.admin-module-info h3{font-size:13.5px;color:var(--admin-text);margin-bottom:3px}.admin-module-info p{font-size:11.5px;color:var(--admin-text-muted);line-height:1.4}
   .admin-module-arrow{color:var(--admin-text-muted);font-size:18px}
+  .comic-filter-bar{display:grid;grid-template-columns:2fr 1.3fr 1.3fr 1.1fr 1.1fr auto;gap:10px;align-items:end}
+  @media(max-width:1150px){.comic-filter-bar{grid-template-columns:1fr 1fr}}
   @media(max-width:720px){.admin-modules-grid{grid-template-columns:1fr}}
+  @media(max-width:600px){.comic-filter-bar{grid-template-columns:1fr}}
 </style>
 @endpush
 
@@ -54,6 +57,69 @@
       </div>
     </div>
 
+    {{-- Filter Card --}}
+    <div class="admin-card" style="padding:18px 20px;">
+      <form method="GET" action="{{ route('admin.comics.index') }}" class="comic-filter-bar">
+        <div>
+          <label class="form-label" style="font-size:12px;margin-bottom:5px">🔍 Tìm kiếm</label>
+          <input type="text" name="q" class="form-control" placeholder="Tên hoặc slug truyện..." value="{{ request('q') }}">
+        </div>
+
+        <div>
+          <label class="form-label" style="font-size:12px;margin-bottom:5px">🏷️ Thể loại</label>
+          <select name="genre_id" class="form-control">
+            <option value="all">— Tất cả thể loại —</option>
+            @foreach($genres as $g)
+              <option value="{{ $g->id }}" {{ request('genre_id') == $g->id ? 'selected' : '' }}>
+                {{ $g->name }}
+              </option>
+            @endforeach
+          </select>
+        </div>
+
+        <div>
+          <label class="form-label" style="font-size:12px;margin-bottom:5px">✍️ Tác giả</label>
+          <select name="author_id" class="form-control">
+            <option value="all">— Tất cả tác giả —</option>
+            @foreach($authors as $a)
+              <option value="{{ $a->id }}" {{ request('author_id') == $a->id ? 'selected' : '' }}>
+                {{ $a->name }}
+              </option>
+            @endforeach
+          </select>
+        </div>
+
+        <div>
+          <label class="form-label" style="font-size:12px;margin-bottom:5px">🚦 Trạng thái</label>
+          <select name="status" class="form-control">
+            <option value="all">— Tất cả —</option>
+            <option value="ongoing" {{ request('status') === 'ongoing' ? 'selected' : '' }}>🟢 Đang ra</option>
+            <option value="completed" {{ request('status') === 'completed' ? 'selected' : '' }}>🔵 Hoàn thành</option>
+            <option value="hiatus" {{ request('status') === 'hiatus' ? 'selected' : '' }}>🟡 Tạm ngưng</option>
+            <option value="cancelled" {{ request('status') === 'cancelled' ? 'selected' : '' }}>🔴 Đã hủy</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="form-label" style="font-size:12px;margin-bottom:5px">⚡ Sắp xếp</label>
+          <select name="sort" class="form-control">
+            <option value="latest" {{ request('sort', 'latest') === 'latest' ? 'selected' : '' }}>Mới nhất</option>
+            <option value="oldest" {{ request('sort') === 'oldest' ? 'selected' : '' }}>Cũ nhất</option>
+            <option value="views" {{ request('sort') === 'views' ? 'selected' : '' }}>Lượt xem cao</option>
+            <option value="chapters" {{ request('sort') === 'chapters' ? 'selected' : '' }}>Nhiều chapter</option>
+            <option value="title" {{ request('sort') === 'title' ? 'selected' : '' }}>Tên A-Z</option>
+          </select>
+        </div>
+
+        <div style="display:flex;gap:6px">
+          <button type="submit" class="btn-admin btn-admin-primary" style="white-space:nowrap">🔍 Lọc</button>
+          @if(request()->hasAny(['q', 'genre_id', 'author_id', 'status', 'sort']))
+            <a href="{{ route('admin.comics.index') }}" class="btn-admin btn-admin-ghost" title="Xóa toàn bộ bộ lọc">✕</a>
+          @endif
+        </div>
+      </form>
+    </div>
+
     <div class="admin-card">
       <div class="admin-card-header">
         <span class="admin-card-title">📖 Danh sách Bộ Truyện</span>
@@ -61,7 +127,16 @@
       </div>
 
       @if($comics->isEmpty())
-        <div style="text-align:center;padding:48px;color:var(--admin-text-muted)"><div style="font-size:48px;margin-bottom:12px">📭</div><p>Chưa có bộ truyện nào trên hệ thống.</p></div>
+        <div style="text-align:center;padding:48px;color:var(--admin-text-muted)">
+          <div style="font-size:48px;margin-bottom:12px">🔍</div>
+          <p style="font-size:15px;font-weight:600;color:var(--admin-text);margin-bottom:6px">Không tìm thấy bộ truyện nào phù hợp.</p>
+          <p style="font-size:13px">Thử thay đổi từ khóa tìm kiếm hoặc điều chỉnh lại bộ lọc.</p>
+          @if(request()->hasAny(['q', 'genre_id', 'author_id', 'status', 'sort']))
+            <div style="margin-top:14px">
+              <a href="{{ route('admin.comics.index') }}" class="btn-admin btn-admin-ghost btn-sm">✕ Xóa bộ lọc</a>
+            </div>
+          @endif
+        </div>
       @else
         <div style="overflow-x:auto">
           <table class="admin-table">
