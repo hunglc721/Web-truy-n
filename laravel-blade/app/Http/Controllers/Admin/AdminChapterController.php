@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreChapterRequest;
 use App\Http\Requests\Admin\UpdateChapterRequest;
 use App\Jobs\ProcessChapterImages;
+use App\Jobs\ProcessZipChapterUploadJob;
 use App\Models\Comic;
 use App\Models\Chapter;
 use App\Services\BulkChapterUploadService;
@@ -14,6 +15,7 @@ use App\Services\ChapterService;
 use App\Services\ImageService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\File;
 
 class AdminChapterController extends Controller
 {
@@ -99,12 +101,17 @@ class AdminChapterController extends Controller
         if ($request->hasFile('zip_file')) {
             $zipFile = $request->file('zip_file');
             $tmpZipName = 'upload_' . $chapter->id . '_' . time() . '.zip';
-            $storedZipPath = $zipFile->storeAs('tmp/zip_uploads', $tmpZipName);
-            $zipAbsolutePath = storage_path('app/' . $storedZipPath);
+            $targetDirectory = storage_path('app/tmp/zip_uploads');
+            File::ensureDirectoryExists($targetDirectory);
+
+            // PHP đã ghi multipart upload ra file tạm. Move trực tiếp file đó vào staging
+            // thay vì storeAs/writeStream thêm một vòng copy toàn bộ ZIP vài chục MB.
+            $movedZip = $zipFile->move($targetDirectory, $tmpZipName);
+            $zipAbsolutePath = $movedZip->getPathname();
 
             $chapter->update(['processing_status' => 'pending']);
 
-            \App\Jobs\ProcessZipChapterUploadJob::dispatch($comic, $chapter, $zipAbsolutePath)
+            ProcessZipChapterUploadJob::dispatch($comic, $chapter, $zipAbsolutePath)
                 ->onQueue('chapter-images');
 
             return redirect()

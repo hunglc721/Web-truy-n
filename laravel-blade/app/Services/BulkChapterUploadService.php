@@ -71,6 +71,14 @@ class BulkChapterUploadService
     }
 
     /**
+     * Store one upload batch without repeatedly copying and re-hashing the same bytes.
+     *
+     * PHP has already written each multipart file to a temporary path before this method
+     * runs. We move that temporary file into private session staging, hash the staged file
+     * once, validate the image there, then atomically rename it to its final staging name.
+     * This preserves the same SHA-256 integrity guarantee while removing a full source hash,
+     * a full PHP-level copy and another full staging hash from the old hot path.
+     *
      * @param UploadedFile[] $files
      * @param int[] $pageIndexes
      * @param string[] $checksums
@@ -84,6 +92,7 @@ class BulkChapterUploadService
         array $pageIndexes,
         array $checksums,
     ): array {
+        $startedAt = microtime(true);
         $this->assertChapterKey($chapterKey);
 
         if (count($files) !== count($pageIndexes) || count($files) !== count($checksums)) {
@@ -98,149 +107,183 @@ class BulkChapterUploadService
             ]);
         }
 
-        return $this->withSessionLock($session, function () use ($comic, $user, $session, $chapterKey, $files, $pageIndexes, $checksums) {
+        return $this->withSessionLock($session, function () use (
+            $comic,
+            $user,
+            $session,
+            $chapterKey,
+            $files,
+            $pageIndexes,
+            $checksums,
+            $startedAt,
+        ) {
             $state = $this->loadAuthorizedSession($session, $comic, $user);
             $manifestPath = $this->chapterManifestPath($session, $chapterKey);
             $manifest = is_file($manifestPath)
                 ? $this->readJson($manifestPath)
                 : ['pages' => []];
 
-            $validated = [];
+            $incomingDir = $this->sessionDir($session) . '/incoming';
+            File::ensureDirectoryExists($incomingDir);
+
+            $prepared = [];
+            $pendingIncomingPaths = [];
             $deltaBytes = 0;
             $deltaFiles = 0;
 
-            foreach ($files as $offset => $file) {
-                if (!$file instanceof UploadedFile || !$file->isValid()) {
+            try {
+                foreach ($files as $offset => $file) {
+                    if (!$file instanceof UploadedFile || !$file->isValid()) {
+                        throw ValidationException::withMessages([
+                            'files' => 'Có file upload không hợp lệ hoặc upload chưa hoàn tất.',
+                        ]);
+                    }
+
+                    $index = (int) $pageIndexes[$offset];
+                    if ($index < 0 || $index >= self::MAX_PAGES_PER_CHAPTER) {
+                        throw ValidationException::withMessages([
+                            'page_indexes' => 'Vị trí trang vượt giới hạn cho phép.',
+                        ]);
+                    }
+
+                    $size = (int) ($file->getSize() ?: 0);
+                    if ($size <= 0 || $size > self::MAX_IMAGE_BYTES) {
+                        throw ValidationException::withMessages([
+                            'files' => 'Mỗi ảnh phải lớn hơn 0 byte và không vượt quá 20MB.',
+                        ]);
+                    }
+
+                    $expectedHash = strtolower((string) $checksums[$offset]);
+                    if (preg_match('/^[a-f0-9]{64}$/', $expectedHash) !== 1) {
+                        throw ValidationException::withMessages([
+                            'checksums' => 'Checksum SHA-256 không hợp lệ.',
+                        ]);
+                    }
+
+                    $incomingName = sprintf(
+                        '%s-%06d-%s.upload',
+                        $chapterKey,
+                        $index,
+                        Str::random(12),
+                    );
+
+                    try {
+                        $moved = $file->move($incomingDir, $incomingName);
+                    } catch (Throwable $e) {
+                        throw new RuntimeException('Không thể chuyển file upload vào vùng staging an toàn.', 0, $e);
+                    }
+
+                    $incomingPath = $moved->getPathname();
+                    $pendingIncomingPaths[$incomingPath] = true;
+
+                    // One full-file SHA pass after the multipart temp file has been moved.
+                    $actualHash = hash_file('sha256', $incomingPath);
+                    if (!is_string($actualHash) || !hash_equals($expectedHash, $actualHash)) {
+                        throw ValidationException::withMessages([
+                            'checksums' => 'Checksum không khớp. File có thể đã bị lỗi trong lúc truyền, hệ thống không lưu file này.',
+                        ]);
+                    }
+
+                    [$extension, $width, $height] = $this->inspectImage($incomingPath);
+                    $existing = $manifest['pages'][(string) $index] ?? null;
+                    $existingSize = is_array($existing) ? (int) ($existing['size'] ?? 0) : 0;
+
+                    $deltaBytes += $size - $existingSize;
+                    if ($existing === null) {
+                        $deltaFiles++;
+                    }
+
+                    $prepared[] = [
+                        'index' => $index,
+                        'size' => $size,
+                        'sha256' => $actualHash,
+                        'incoming_path' => $incomingPath,
+                        'extension' => $extension,
+                        'width' => $width,
+                        'height' => $height,
+                        'original_name' => mb_substr(basename($file->getClientOriginalName()), 0, 255),
+                        'existing' => $existing,
+                    ];
+                }
+
+                $newTotalBytes = max(0, (int) ($state['bytes_received'] ?? 0) + $deltaBytes);
+                $newTotalFiles = max(0, (int) ($state['files_received'] ?? 0) + $deltaFiles);
+
+                if ($newTotalBytes > self::MAX_SESSION_BYTES) {
                     throw ValidationException::withMessages([
-                        'files' => 'Có file upload không hợp lệ hoặc upload chưa hoàn tất.',
+                        'files' => 'Phiên upload vượt quá giới hạn an toàn 20GB.',
                     ]);
                 }
 
-                $index = (int) $pageIndexes[$offset];
-                if ($index < 0 || $index >= self::MAX_PAGES_PER_CHAPTER) {
+                if ($newTotalFiles > self::MAX_SESSION_FILES) {
                     throw ValidationException::withMessages([
-                        'page_indexes' => 'Vị trí trang vượt giới hạn cho phép.',
+                        'files' => 'Phiên upload vượt quá giới hạn 20.000 ảnh.',
                     ]);
                 }
 
-                $size = (int) ($file->getSize() ?: 0);
-                if ($size <= 0 || $size > self::MAX_IMAGE_BYTES) {
-                    throw ValidationException::withMessages([
-                        'files' => 'Mỗi ảnh phải lớn hơn 0 byte và không vượt quá 20MB.',
-                    ]);
+                $pagesDir = $this->chapterPagesDir($session, $chapterKey);
+                File::ensureDirectoryExists($pagesDir);
+
+                foreach ($prepared as $page) {
+                    $destination = $pagesDir . '/' . sprintf('%06d', $page['index']) . '.' . $page['extension'];
+                    $replacement = $destination . '.replace-' . Str::random(8);
+
+                    // Metadata-only rename on the same filesystem. No second full byte copy.
+                    if (!@rename($page['incoming_path'], $replacement)) {
+                        throw new RuntimeException('Không thể chuyển file đã xác minh vào staging của chapter.');
+                    }
+                    unset($pendingIncomingPaths[$page['incoming_path']]);
+
+                    $oldPath = is_array($page['existing']) ? ($page['existing']['path'] ?? null) : null;
+                    if (is_string($oldPath) && $oldPath !== $destination && is_file($oldPath)) {
+                        @unlink($oldPath);
+                    }
+
+                    if (is_file($destination) && !@unlink($destination)) {
+                        @unlink($replacement);
+                        throw new RuntimeException('Không thể thay thế trang staging cũ.');
+                    }
+
+                    if (!@rename($replacement, $destination)) {
+                        @unlink($replacement);
+                        throw new RuntimeException('Không thể chốt file ảnh đã upload.');
+                    }
+
+                    $manifest['pages'][(string) $page['index']] = [
+                        'index' => $page['index'],
+                        'path' => $destination,
+                        'sha256' => $page['sha256'],
+                        'size' => $page['size'],
+                        'extension' => $page['extension'],
+                        'width' => $page['width'],
+                        'height' => $page['height'],
+                        'original_name' => $page['original_name'],
+                    ];
                 }
 
-                $expectedHash = strtolower((string) $checksums[$offset]);
-                if (preg_match('/^[a-f0-9]{64}$/', $expectedHash) !== 1) {
-                    throw ValidationException::withMessages([
-                        'checksums' => 'Checksum SHA-256 không hợp lệ.',
-                    ]);
-                }
+                $this->writeJson($manifestPath, $manifest);
 
-                $sourcePath = $file->getRealPath();
-                $actualHash = hash_file('sha256', $sourcePath);
-                if (!is_string($actualHash) || !hash_equals($expectedHash, $actualHash)) {
-                    throw ValidationException::withMessages([
-                        'checksums' => 'Checksum không khớp. File có thể đã bị lỗi trong lúc truyền, hệ thống không lưu file này.',
-                    ]);
-                }
+                $state['bytes_received'] = $newTotalBytes;
+                $state['files_received'] = $newTotalFiles;
+                $state['updated_at'] = now()->toIso8601String();
+                $this->writeJson($this->sessionStatePath($session), $state);
 
-                [$extension, $width, $height] = $this->inspectImage($sourcePath);
-                $existing = $manifest['pages'][(string) $index] ?? null;
-                $existingSize = is_array($existing) ? (int) ($existing['size'] ?? 0) : 0;
-
-                $deltaBytes += $size - $existingSize;
-                if ($existing === null) {
-                    $deltaFiles++;
-                }
-
-                $validated[] = [
-                    'index' => $index,
-                    'size' => $size,
-                    'sha256' => $actualHash,
-                    'source_path' => $sourcePath,
-                    'extension' => $extension,
-                    'width' => $width,
-                    'height' => $height,
-                    'original_name' => mb_substr(basename($file->getClientOriginalName()), 0, 255),
-                    'existing' => $existing,
+                return [
+                    'accepted' => count($prepared),
+                    'chapter_uploaded_pages' => count($manifest['pages']),
+                    'session_bytes_received' => $newTotalBytes,
+                    'session_files_received' => $newTotalFiles,
+                    'server_processing_ms' => (int) round((microtime(true) - $startedAt) * 1000),
                 ];
+            } finally {
+                foreach (array_keys($pendingIncomingPaths) as $path) {
+                    if (is_file($path)) {
+                        @unlink($path);
+                    }
+                }
+
+                $this->deleteDirectoryIfEmpty($incomingDir);
             }
-
-            $newTotalBytes = max(0, (int) ($state['bytes_received'] ?? 0) + $deltaBytes);
-            $newTotalFiles = max(0, (int) ($state['files_received'] ?? 0) + $deltaFiles);
-
-            if ($newTotalBytes > self::MAX_SESSION_BYTES) {
-                throw ValidationException::withMessages([
-                    'files' => 'Phiên upload vượt quá giới hạn an toàn 20GB.',
-                ]);
-            }
-
-            if ($newTotalFiles > self::MAX_SESSION_FILES) {
-                throw ValidationException::withMessages([
-                    'files' => 'Phiên upload vượt quá giới hạn 20.000 ảnh.',
-                ]);
-            }
-
-            $pagesDir = $this->chapterPagesDir($session, $chapterKey);
-            File::ensureDirectoryExists($pagesDir);
-
-            foreach ($validated as $page) {
-                $destination = $pagesDir . '/' . sprintf('%06d', $page['index']) . '.' . $page['extension'];
-                $temporary = $destination . '.uploading-' . Str::random(8);
-
-                if (!@copy($page['source_path'], $temporary)) {
-                    @unlink($temporary);
-                    throw new RuntimeException('Không thể ghi file ảnh tạm lên máy chủ.');
-                }
-
-                $storedHash = hash_file('sha256', $temporary);
-                if (!is_string($storedHash) || !hash_equals($page['sha256'], $storedHash)) {
-                    @unlink($temporary);
-                    throw ValidationException::withMessages([
-                        'files' => 'Checksum sau khi ghi file không khớp. File đã bị loại bỏ để tránh ảnh hỏng.',
-                    ]);
-                }
-
-                $oldPath = is_array($page['existing']) ? ($page['existing']['path'] ?? null) : null;
-                if (is_string($oldPath) && $oldPath !== $destination && is_file($oldPath)) {
-                    @unlink($oldPath);
-                }
-
-                if (is_file($destination)) {
-                    @unlink($destination);
-                }
-
-                if (!@rename($temporary, $destination)) {
-                    @unlink($temporary);
-                    throw new RuntimeException('Không thể chốt file ảnh đã upload.');
-                }
-
-                $manifest['pages'][(string) $page['index']] = [
-                    'index' => $page['index'],
-                    'path' => $destination,
-                    'sha256' => $page['sha256'],
-                    'size' => $page['size'],
-                    'extension' => $page['extension'],
-                    'width' => $page['width'],
-                    'height' => $page['height'],
-                    'original_name' => $page['original_name'],
-                ];
-            }
-
-            $this->writeJson($manifestPath, $manifest);
-
-            $state['bytes_received'] = $newTotalBytes;
-            $state['files_received'] = $newTotalFiles;
-            $state['updated_at'] = now()->toIso8601String();
-            $this->writeJson($this->sessionStatePath($session), $state);
-
-            return [
-                'accepted' => count($validated),
-                'chapter_uploaded_pages' => count($manifest['pages']),
-                'session_bytes_received' => $newTotalBytes,
-                'session_files_received' => $newTotalFiles,
-            ];
         });
     }
 
@@ -253,6 +296,7 @@ class BulkChapterUploadService
         ?string $title,
         int $pageCount,
     ): array {
+        $startedAt = microtime(true);
         $this->assertChapterKey($chapterKey);
 
         if ($pageCount < 1 || $pageCount > self::MAX_PAGES_PER_CHAPTER) {
@@ -261,7 +305,16 @@ class BulkChapterUploadService
             ]);
         }
 
-        return $this->withSessionLock($session, function () use ($comic, $user, $session, $chapterKey, $chapterNumber, $title, $pageCount) {
+        return $this->withSessionLock($session, function () use (
+            $comic,
+            $user,
+            $session,
+            $chapterKey,
+            $chapterNumber,
+            $title,
+            $pageCount,
+            $startedAt,
+        ) {
             $state = $this->loadAuthorizedSession($session, $comic, $user);
 
             $finalizedId = $state['finalized'][$chapterKey] ?? null;
@@ -273,6 +326,8 @@ class BulkChapterUploadService
                         'chapter_number' => $existing->chapter_number,
                         'pages' => count($existing->pages ?? []),
                         'already_finalized' => true,
+                        'storage_mode' => 'already_finalized',
+                        'server_processing_ms' => (int) round((microtime(true) - $startedAt) * 1000),
                     ];
                 }
             }
@@ -289,7 +344,7 @@ class BulkChapterUploadService
 
             if (count($pages) !== $pageCount) {
                 throw ValidationException::withMessages([
-                    'page_count' => "Server đã nhận " . count($pages) . " / {$pageCount} trang. Không finalize để tránh thiếu ảnh.",
+                    'page_count' => 'Server đã nhận ' . count($pages) . " / {$pageCount} trang. Không finalize để tránh thiếu ảnh.",
                 ]);
             }
 
@@ -302,6 +357,7 @@ class BulkChapterUploadService
                     ]);
                 }
 
+                // Validate each staged file once immediately before it leaves private staging.
                 $stageHash = hash_file('sha256', $page['path']);
                 if (!is_string($stageHash) || !hash_equals((string) $page['sha256'], $stageHash)) {
                     throw ValidationException::withMessages([
@@ -331,29 +387,18 @@ class BulkChapterUploadService
             $targetFolder = "comics/{$comic->id}/chapters/{$chapter->id}";
             $finalPages = [];
             $dimensions = [];
+            $usedStreamFallback = false;
 
             try {
                 foreach ($orderedPages as $index => $page) {
                     $targetPath = $targetFolder . '/' . sprintf('%03d', $index + 1) . '.' . $page['extension'];
-                    $source = @fopen($page['path'], 'rb');
-                    if ($source === false) {
-                        throw new RuntimeException('Không thể mở file staging để finalize.');
-                    }
 
-                    try {
-                        $written = Storage::disk('public')->put($targetPath, $source);
-                    } finally {
-                        fclose($source);
-                    }
-
-                    if ($written === false) {
-                        throw new RuntimeException('Không thể lưu ảnh vào public storage.');
-                    }
-
-                    $finalHash = $this->hashPublicFile($targetPath);
-                    if (!hash_equals((string) $page['sha256'], $finalHash)) {
-                        throw new RuntimeException('Checksum file đích không khớp với file gốc.');
-                    }
+                    $mode = $this->moveVerifiedStageFileToPublic(
+                        (string) $page['path'],
+                        $targetPath,
+                        (string) $page['sha256'],
+                    );
+                    $usedStreamFallback = $usedStreamFallback || $mode !== 'atomic_move';
 
                     $finalPages[] = $targetPath;
                     $dimensions[] = [
@@ -393,6 +438,8 @@ class BulkChapterUploadService
                 'chapter_number' => $chapter->chapter_number,
                 'pages' => count($finalPages),
                 'already_finalized' => false,
+                'storage_mode' => $usedStreamFallback ? 'stream_copy_fallback' : 'atomic_move',
+                'server_processing_ms' => (int) round((microtime(true) - $startedAt) * 1000),
             ];
         });
     }
@@ -443,6 +490,69 @@ class BulkChapterUploadService
             (int) $dimensions[0],
             (int) $dimensions[1],
         ];
+    }
+
+    /**
+     * Fast path for local public storage: after the staging SHA-256 was just verified,
+     * rename the file into public storage. A same-filesystem rename does not touch the
+     * payload bytes, so hashing the destination again would only re-read the same data.
+     *
+     * If the disk cannot expose a local path or rename crosses filesystems, fall back to
+     * a streamed copy and keep the destination SHA-256 verification used previously.
+     */
+    private function moveVerifiedStageFileToPublic(
+        string $sourcePath,
+        string $targetPath,
+        string $expectedHash,
+    ): string {
+        $disk = Storage::disk('public');
+        $absoluteTarget = null;
+
+        try {
+            $candidate = $disk->path($targetPath);
+            if (is_string($candidate) && $candidate !== '') {
+                $absoluteTarget = $candidate;
+            }
+        } catch (Throwable) {
+            // Non-local disks do not necessarily provide an absolute filesystem path.
+        }
+
+        if ($absoluteTarget !== null) {
+            File::ensureDirectoryExists(dirname($absoluteTarget));
+
+            if (is_file($absoluteTarget) && !@unlink($absoluteTarget)) {
+                throw new RuntimeException('Không thể thay thế file ảnh đích hiện có.');
+            }
+
+            if (@rename($sourcePath, $absoluteTarget)) {
+                return 'atomic_move';
+            }
+        }
+
+        $source = @fopen($sourcePath, 'rb');
+        if ($source === false) {
+            throw new RuntimeException('Không thể mở file staging để finalize.');
+        }
+
+        try {
+            $written = $disk->put($targetPath, $source);
+        } finally {
+            fclose($source);
+        }
+
+        if ($written === false) {
+            throw new RuntimeException('Không thể lưu ảnh vào public storage.');
+        }
+
+        $finalHash = $this->hashPublicFile($targetPath);
+        if (!hash_equals($expectedHash, $finalHash)) {
+            $disk->delete($targetPath);
+            throw new RuntimeException('Checksum file đích không khớp với file gốc.');
+        }
+
+        @unlink($sourcePath);
+
+        return 'stream_copy_fallback';
     }
 
     private function hashPublicFile(string $path): string
@@ -566,6 +676,18 @@ class BulkChapterUploadService
         $encoded = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         if (!is_string($encoded) || file_put_contents($path, $encoded, LOCK_EX) === false) {
             throw new RuntimeException('Không thể ghi metadata phiên upload.');
+        }
+    }
+
+    private function deleteDirectoryIfEmpty(string $directory): void
+    {
+        if (!is_dir($directory)) {
+            return;
+        }
+
+        $entries = array_diff(scandir($directory) ?: [], ['.', '..']);
+        if ($entries === []) {
+            @rmdir($directory);
         }
     }
 
