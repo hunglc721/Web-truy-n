@@ -1,4 +1,4 @@
-const VERSION = 'v3';
+const VERSION = 'v4';
 const CACHE_STATIC_NAME = `webcomics-static-${VERSION}`;
 const CACHE_READER_NAME = `webcomics-reader-images-${VERSION}`;
 

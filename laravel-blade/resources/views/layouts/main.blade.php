@@ -26,9 +26,210 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="{{ asset('css/style.css') }}" />
-  <link rel="stylesheet" href="{{ asset('css/responsive.css') }}" />
-  <style>:root{--card-bg:var(--bg-surface-1);--border:var(--border-color)}.footer-static-item{color:var(--text-muted);font-size:13px;display:block;padding:3px 0}</style>
+  <link rel="stylesheet" href="{{ asset('css/style.css') }}?v=4" />
+  <link rel="stylesheet" href="{{ asset('css/responsive.css') }}?v=4" />
+  <style>
+    :root{--card-bg:var(--bg-surface-1);--border:var(--border-color)}.footer-static-item{color:var(--text-muted);font-size:13px;display:block;padding:3px 0}
+    /* Mobile Footer Accordion & Layout Critical Styles */
+    @media (max-width: 767.98px) {
+      .site-footer {
+        padding: 28px 0 20px !important;
+        background: #07090e !important;
+      }
+      .site-footer .container {
+        padding-left: 16px !important;
+        padding-right: 16px !important;
+      }
+      .site-footer .footer-newsletter-card {
+        display: none !important;
+      }
+      .site-footer .footer-main-grid {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 0 !important;
+        padding-bottom: 0 !important;
+        border-bottom: none !important;
+      }
+      .site-footer .fgrid-brand-col {
+        margin-bottom: 20px !important;
+        padding-bottom: 0 !important;
+      }
+      .site-footer .fgrid-brand-col .logo-link {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 10px !important;
+        text-decoration: none !important;
+      }
+      .site-footer .fgrid-brand-col .logo-icon svg {
+        width: 36px !important;
+        height: 36px !important;
+      }
+      .site-footer .fgrid-brand-col .logo-text {
+        font-size: 19px !important;
+        font-weight: 800 !important;
+        color: var(--text-main) !important;
+      }
+      .site-footer .fbrand-desc {
+        font-size: 13px !important;
+        color: var(--text-sub) !important;
+        margin-top: 6px !important;
+        line-height: 1.45 !important;
+        max-width: none !important;
+      }
+
+      /* Accordion Item */
+      .site-footer .footer-accordion-item {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+      }
+      .site-footer .fcol-accordion-btn {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        width: 100% !important;
+        padding: 14px 0 !important;
+        margin: 0 !important;
+        background: transparent !important;
+        border: none !important;
+        outline: none !important;
+        box-shadow: none !important;
+        cursor: pointer !important;
+        pointer-events: auto !important;
+        text-align: left !important;
+        -webkit-tap-highlight-color: transparent !important;
+      }
+      .site-footer .fcol-heading-text {
+        font-size: 15px !important;
+        font-weight: 700 !important;
+        color: #FFFFFF !important;
+        letter-spacing: -0.1px !important;
+      }
+      .site-footer .fcol-accordion-icon {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 24px !important;
+        height: 24px !important;
+        color: var(--text-muted) !important;
+        transition: transform 0.25s ease, color 0.2s ease !important;
+        flex-shrink: 0 !important;
+      }
+      .site-footer .fcol-accordion-icon .icon-plus {
+        display: block !important;
+      }
+      .site-footer .fcol-accordion-icon .icon-minus {
+        display: none !important;
+      }
+
+      /* Open State */
+      .site-footer .footer-accordion-item.open .fcol-accordion-icon {
+        color: var(--primary) !important;
+        transform: rotate(90deg) !important;
+      }
+      .site-footer .footer-accordion-item.open .fcol-accordion-icon .icon-plus {
+        display: none !important;
+      }
+      .site-footer .footer-accordion-item.open .fcol-accordion-icon .icon-minus {
+        display: block !important;
+      }
+
+      /* Expand / Collapse */
+      .site-footer .footer-accordion-item:not(.open) .fcol-collapse {
+        display: none !important;
+      }
+      .site-footer .footer-accordion-item.open .fcol-collapse {
+        display: block !important;
+        animation: fcolSlideDown 0.25s ease forwards !important;
+      }
+      @keyframes fcolSlideDown {
+        from { opacity: 0; transform: translateY(-6px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      .site-footer .fcol-list {
+        list-style: none !important;
+        padding: 2px 0 16px 2px !important;
+        margin: 0 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 11px !important;
+      }
+      .site-footer .fcol-list li {
+        margin: 0 !important;
+      }
+      .site-footer .fcol-list a {
+        font-size: 14px !important;
+        color: var(--text-sub) !important;
+        text-decoration: none !important;
+        display: inline-block !important;
+        padding: 2px 0 !important;
+      }
+      .site-footer .fcol-list a:hover,
+      .site-footer .fcol-list a:active {
+        color: var(--primary) !important;
+      }
+
+      /* Bottom Bar */
+      .site-footer .footer-bottom-bar {
+        display: none !important;
+      }
+      .site-footer .footer-bottom-mobile {
+        display: block !important;
+        margin-top: 24px !important;
+        padding-top: 16px !important;
+        border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+        text-align: center !important;
+      }
+      .site-footer .fcopy-text-mobile {
+        font-size: 12.5px !important;
+        color: var(--text-muted) !important;
+        margin: 0 0 6px !important;
+      }
+      .site-footer .footer-legal-links-mobile {
+        font-size: 12.5px !important;
+        color: var(--text-muted) !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 8px !important;
+      }
+      .site-footer .footer-legal-links-mobile a {
+        color: var(--text-muted) !important;
+        text-decoration: none !important;
+      }
+      .site-footer .footer-legal-links-mobile .legal-sep {
+        color: rgba(255, 255, 255, 0.2) !important;
+      }
+    }
+
+    @media (min-width: 768px) {
+      .site-footer .footer-accordion-item:not(.open) .fcol-collapse,
+      .site-footer .footer-accordion-item.open .fcol-collapse {
+        display: block !important;
+      }
+      .site-footer .fcol-accordion-btn {
+        all: unset !important;
+        display: block !important;
+        cursor: default !important;
+        pointer-events: none !important;
+        margin-bottom: 20px !important;
+      }
+      .site-footer .fcol-heading-text {
+        font-size: 14.5px !important;
+        font-weight: 800 !important;
+        color: var(--text-main) !important;
+        letter-spacing: -0.2px !important;
+      }
+      .site-footer .fcol-accordion-icon {
+        display: none !important;
+      }
+      .site-footer .footer-bottom-mobile {
+        display: none !important;
+      }
+      .site-footer .footer-bottom-bar {
+        display: flex !important;
+      }
+    }
+  </style>
   @stack('styles')
 </head>
 <body class="dark-theme" data-auth-state="{{ auth()->check() ? (auth()->user()->canAccessAdmin() ? 'admin' : 'member') : 'guest' }}">
@@ -254,9 +455,43 @@
       </div>
     </div>
   </footer>
-  <script src="{{ asset('js/app.js') }}"></script>
-  <script src="{{ asset('js/roadmap.js') }}"></script>
+  <script src="{{ asset('js/app.js') }}?v=4"></script>
+  <script src="{{ asset('js/roadmap.js') }}?v=4"></script>
   <script>
+    // Inline Mobile Footer Accordion Handler
+    (function() {
+      function initFooterAccordion() {
+        document.querySelectorAll('.footer-accordion-item').forEach(function(item) {
+          var btn = item.querySelector('.fcol-accordion-btn');
+          if (!btn) return;
+          btn.onclick = function(e) {
+            if (window.innerWidth >= 768) return;
+            e.preventDefault();
+            var isOpen = item.classList.contains('open');
+            document.querySelectorAll('.footer-accordion-item.open').forEach(function(other) {
+              if (other !== item) {
+                other.classList.remove('open');
+                var otherBtn = other.querySelector('.fcol-accordion-btn');
+                if (otherBtn) otherBtn.setAttribute('aria-expanded', 'false');
+              }
+            });
+            if (isOpen) {
+              item.classList.remove('open');
+              btn.setAttribute('aria-expanded', 'false');
+            } else {
+              item.classList.add('open');
+              btn.setAttribute('aria-expanded', 'true');
+            }
+          };
+        });
+      }
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initFooterAccordion);
+      } else {
+        initFooterAccordion();
+      }
+    })();
+
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW registration failed:', err));
