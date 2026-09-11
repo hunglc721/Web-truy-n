@@ -5,10 +5,12 @@ on:
     branches: [main]
     paths:
       - 'laravel-blade/**'
+      - 'e2e/**'
       - '.github/workflows/laravel-tests.yml'
   pull_request:
     paths:
       - 'laravel-blade/**'
+      - 'e2e/**'
       - '.github/workflows/laravel-tests.yml'
   workflow_dispatch:
 
@@ -61,3 +63,84 @@ jobs:
 
       - name: Full regression suite
         run: php artisan test
+
+  browser-e2e:
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      APP_ENV: testing
+      APP_URL: http://127.0.0.1:8000
+      DB_CONNECTION: sqlite
+      DB_DATABASE: ${{ github.workspace }}/laravel-blade/database/e2e.sqlite
+      CACHE_STORE: array
+      SESSION_DRIVER: file
+      QUEUE_CONNECTION: sync
+      MAIL_MAILER: array
+      E2E_BASE_URL: http://127.0.0.1:8000
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, pdo_sqlite, sqlite3
+          coverage: none
+
+      - name: Install Composer dependencies
+        working-directory: laravel-blade
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Prepare browser-test database
+        working-directory: laravel-blade
+        run: |
+          mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views bootstrap/cache
+          cp .env.example .env
+          touch database/e2e.sqlite
+          php artisan key:generate
+          php artisan optimize:clear
+          php artisan migrate:fresh --seed --force
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install Playwright
+        working-directory: e2e
+        run: |
+          npm install --no-audit --no-fund
+          npx playwright install --with-deps chromium
+
+      - name: Start Laravel server
+        working-directory: laravel-blade
+        run: |
+          php artisan serve --host=127.0.0.1 --port=8000 > /tmp/webcomics-e2e.log 2>&1 &
+          echo $! > /tmp/webcomics-e2e.pid
+          for i in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:8000/up > /dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/webcomics-e2e.log
+          exit 1
+
+      - name: Browser E2E on desktop and mobile
+        working-directory: e2e
+        run: npm test
+
+      - name: Upload Playwright failure artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-failure-${{ github.run_id }}
+          path: |
+            e2e/playwright-report
+            e2e/test-results
+            /tmp/webcomics-e2e.log
+          if-no-files-found: ignore
+          retention-days: 7
