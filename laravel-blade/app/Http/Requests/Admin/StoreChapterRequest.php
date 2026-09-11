@@ -8,7 +8,7 @@ class StoreChapterRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        // Đã bảo vệ bởi AdminMiddleware ở route level
+        // Đã bảo vệ bởi AdminMiddleware + permission:chapters.create ở route level.
         return true;
     }
 
@@ -17,6 +17,10 @@ class StoreChapterRequest extends FormRequest
      */
     public function rules(): array
     {
+        if ($this->filled('bulk_action')) {
+            return $this->bulkRules((string) $this->input('bulk_action'));
+        }
+
         return [
             'chapter_number' => 'required|numeric|min:0',
             'title'          => 'nullable|string|max:255',
@@ -29,6 +33,41 @@ class StoreChapterRequest extends FormRequest
     }
 
     /**
+     * @return array<string, mixed>
+     */
+    private function bulkRules(string $action): array
+    {
+        $base = [
+            'bulk_action' => 'required|string|in:start,chunk,finalize,complete',
+        ];
+
+        return match ($action) {
+            'start' => $base,
+            'chunk' => $base + [
+                'session' => 'required|uuid',
+                'chapter_key' => ['required', 'string', 'max:80', 'regex:/^[A-Za-z0-9_-]+$/'],
+                'files' => 'required|array|min:1|max:20',
+                'files.*' => 'required|file|max:20480',
+                'page_indexes' => 'required|array|min:1|max:20',
+                'page_indexes.*' => 'required|integer|min:0|max:1999',
+                'checksums' => 'required|array|min:1|max:20',
+                'checksums.*' => ['required', 'string', 'regex:/^[a-fA-F0-9]{64}$/'],
+            ],
+            'finalize' => $base + [
+                'session' => 'required|uuid',
+                'chapter_key' => ['required', 'string', 'max:80', 'regex:/^[A-Za-z0-9_-]+$/'],
+                'chapter_number' => 'required|integer|min:0',
+                'title' => 'nullable|string|max:255',
+                'page_count' => 'required|integer|min:1|max:2000',
+            ],
+            'complete' => $base + [
+                'session' => 'required|uuid',
+            ],
+            default => $base,
+        };
+    }
+
+    /**
      * @return array<string, string>
      */
     public function messages(): array
@@ -36,12 +75,17 @@ class StoreChapterRequest extends FormRequest
         return [
             'chapter_number.required' => 'Vui lòng nhập số chương.',
             'chapter_number.numeric'  => 'Số chương phải là dạng số.',
+            'chapter_number.integer'  => 'Upload nhiều chapter hiện hỗ trợ số chương nguyên như 140, 141, 142...',
             'chapter_number.min'      => 'Số chương phải >= 0.',
             'images.*.image'          => 'File tải lên phải là hình ảnh hợp lệ.',
             'images.*.mimes'          => 'Chấp nhận các định dạng: JPEG, PNG, JPG, WEBP, GIF.',
             'images.*.max'            => 'Kích thước mỗi ảnh tối đa là 5MB.',
             'zip_file.mimes'          => 'File nén phải có định dạng .ZIP.',
             'zip_file.max'            => 'Kích thước file ZIP tối đa là 100MB.',
+            'files.*.max'             => 'Mỗi ảnh trong folder upload tối đa 20MB.',
+            'files.max'               => 'Mỗi batch chỉ gửi tối đa 20 ảnh để tránh vượt giới hạn request.',
+            'page_count.max'          => 'Mỗi chapter tối đa 2.000 trang.',
+            'checksums.*.regex'       => 'Checksum SHA-256 không hợp lệ.',
         ];
     }
 
