@@ -4,7 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="csrf-token" content="{{ csrf_token() }}" />
-  <title>@yield('title', 'Admin Panel') — WebComics</title>
+  <title>@yield('title', 'Admin Panel') — {{ $siteSettings['site_name'] }}</title>
+  <link rel="icon" href="{{ $siteSettings['favicon_url'] }}" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="{{ asset('css/style.css') }}" />
@@ -28,7 +29,14 @@
 @endphp
 <div class="admin-overlay" id="admin-overlay"></div>
 <aside class="admin-sidebar" id="admin-sidebar">
-  <a href="{{ route('admin.dashboard') }}" class="sidebar-brand"><div class="sidebar-brand-icon">WC</div><div><div class="sidebar-brand-text">WebComics</div><div class="sidebar-brand-sub">Admin Panel</div></div></a>
+  <a href="{{ route('admin.dashboard') }}" class="sidebar-brand">
+    @if($siteSettings['site_logo_url'])
+      <img src="{{ $siteSettings['site_logo_url'] }}" alt="{{ $siteSettings['site_name'] }}" width="36" height="36" style="object-fit:contain;flex-shrink:0" />
+    @else
+      <div class="sidebar-brand-icon" style="flex-shrink:0">WC</div>
+    @endif
+    <div style="min-width:0;overflow-wrap:anywhere"><div class="sidebar-brand-text">{{ $siteSettings['site_name'] }}</div><div class="sidebar-brand-sub">Admin Panel</div></div>
+  </a>
   <nav class="sidebar-nav">
     @if($adminUser->hasPermission('dashboard.view'))<a href="{{ route('admin.dashboard') }}" class="sidebar-link {{ request()->routeIs('admin.dashboard')?'active':'' }}">📊 Tổng quan</a>@endif
     @if($adminUser->hasPermission('analytics.view'))<a href="{{ route('admin.analytics.index') }}" class="sidebar-link {{ request()->routeIs('admin.analytics.*')?'active':'' }}">📈 Thống kê</a>@endif
