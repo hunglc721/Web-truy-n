@@ -1,6 +1,6 @@
 @php
   $seoDescription = Str::limit(trim(strip_tags((string) $comic->description)), 160);
-  $seoImage = $comic->cover_image;
+  $seoImage = $comic->cover_url;
   $authorsForSeo = $comic->authors->pluck('name')->filter()->values()->all();
   $genresForSeo = $comic->genres->pluck('name')->filter()->values()->all();
 

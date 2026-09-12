@@ -65,7 +65,20 @@ class UpdateComicRequest extends FormRequest
             'published_at' => 'sometimes|nullable|date',
 
             // Ảnh bìa — nullable khi update (không bắt buộc upload lại)
-            'cover_image' => 'sometimes|nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'cover_image' => [
+                'sometimes',
+                'nullable',
+                'file',
+                'mimes:jpeg,jpg,png,webp,avif',
+                'max:5120',
+                function ($attribute, $value, $fail) {
+                    if ($value instanceof \Illuminate\Http\UploadedFile) {
+                        if (!app(\App\Services\ImageService::class)->validateRealMime($value)) {
+                            $fail('File ảnh bìa không hợp lệ (MIME thực tế không được hỗ trợ).');
+                        }
+                    }
+                },
+            ],
 
             // Quan hệ nhiều-nhiều — validate từng phần tử riêng lẻ
             // Dùng 'sometimes' để admin chỉ update genre/tag/author khi cần
@@ -94,9 +107,10 @@ class UpdateComicRequest extends FormRequest
             'description.max'      => 'Mô tả không được vượt quá 5000 ký tự.',
             'status.in'            => 'Trạng thái không hợp lệ. Chọn một trong: ongoing, completed, hiatus, cancelled.',
             'published_at.date'    => 'Ngày phát hành không đúng định dạng.',
+            'cover_image.file'     => 'File ảnh bìa không hợp lệ.',
             'cover_image.image'    => 'File ảnh bìa không hợp lệ.',
-            'cover_image.mimes'    => 'Ảnh bìa chỉ chấp nhận định dạng: JPEG, PNG, JPG, WEBP.',
-            'cover_image.max'      => 'Ảnh bìa không được lớn hơn 2MB.',
+            'cover_image.mimes'    => 'Ảnh bìa chỉ chấp nhận định dạng: JPEG, JPG, PNG, WEBP, AVIF.',
+            'cover_image.max'      => 'Ảnh bìa không được lớn hơn 5MB.',
             'genre_ids.required'   => 'Vui lòng chọn ít nhất một thể loại.',
             'genre_ids.min'        => 'Vui lòng chọn ít nhất một thể loại.',
             'genre_ids.*.integer'  => 'ID thể loại không hợp lệ.',

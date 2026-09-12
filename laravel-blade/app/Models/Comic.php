@@ -8,11 +8,16 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class Comic extends Model
 {
     use HasFactory, SoftDeletes;
+
+    protected $appends = [
+        'cover_url',
+    ];
 
     protected $fillable = [
         'title',
@@ -289,6 +294,35 @@ class Comic extends Model
             return round($views / 1_000, 1) . 'K';
         }
         return (string) $views;
+    }
+
+    /**
+     * URL chuẩn của ảnh bìa truyện.
+     * Xử lý: null/empty -> null, URL ngoài (http/https/protocol-relative) -> giữ nguyên,
+     * đã bắt đầu bằng /storage/ hoặc storage/ -> không bị lặp /storage/,
+     * đường dẫn tương đối (comics/covers/...) -> Storage::disk('public')->url(...).
+     */
+    public function getCoverUrlAttribute(): ?string
+    {
+        $cover = trim((string) $this->cover_image);
+
+        if ($cover === '') {
+            return null;
+        }
+
+        if (str_starts_with($cover, 'http://') || str_starts_with($cover, 'https://') || str_starts_with($cover, '//')) {
+            return $cover;
+        }
+
+        if (str_starts_with($cover, '/storage/')) {
+            return $cover;
+        }
+
+        if (str_starts_with($cover, 'storage/')) {
+            return '/' . $cover;
+        }
+
+        return Storage::disk('public')->url($cover);
     }
 
     /** Cập nhật avg_rating và rating_count sau khi có rating mới — gọi từ RatingObserver */

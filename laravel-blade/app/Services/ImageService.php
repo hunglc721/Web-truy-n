@@ -162,7 +162,11 @@ class ImageService
      */
     public function uploadCover(UploadedFile $file): string
     {
-        $extension = $file->getClientOriginalExtension() ?: 'jpg';
+        if (!$this->validateRealMime($file)) {
+            throw new \InvalidArgumentException('Tệp tải lên không phải là hình ảnh hợp lệ (Phát hiện MIME không an toàn).');
+        }
+
+        $extension = strtolower($file->getClientOriginalExtension() ?: 'jpg');
         $filename  = Str::random(16) . '.' . $extension;
 
         return $file->storeAs('comics/covers', $filename, $this->disk);

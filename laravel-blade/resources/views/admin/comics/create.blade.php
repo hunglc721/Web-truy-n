@@ -326,12 +326,12 @@
           type="file"
           id="cover_image"
           name="cover_image"
-          accept="image/jpeg,image/png,image/jpg,image/webp"
+          accept="image/jpeg,image/png,image/jpg,image/webp,image/avif"
           style="display:none"
           onchange="previewCoverImage(this)"
         />
         <span class="form-hint" style="text-align:center; display:block; margin-top:8px">
-          Định dạng: JPG, PNG, WEBP (Tối đa 2MB).
+          Định dạng: JPG, PNG, WEBP, AVIF (Tối đa 5MB).
         </span>
         @error('cover_image') <span class="invalid-feedback" style="display:block; text-align:center">{{ $message }}</span> @enderror
       </div>

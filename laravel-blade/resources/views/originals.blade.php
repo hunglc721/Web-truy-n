@@ -50,7 +50,7 @@
       <div class="orig-spotlight-card">
         <div class="spotlight-cover">
           <a href="{{ route('comics.show', $spotlight->slug) }}">
-            <img src="{{ $spotlight->cover_image }}" alt="{{ $spotlight->title }}" class="cover-img" />
+            <img src="{{ $spotlight->cover_url }}" alt="{{ $spotlight->title }}" class="cover-img" />
           </a>
           <span class="spotlight-badge">{{ $spotlight->is_featured ? '⭐ LỰA CHỌN NỔI BẬT' : '⭐ ORIGINAL NỔI BẬT' }}</span>
         </div>
@@ -103,7 +103,7 @@
           <article class="orig-full-card">
             <div class="of-cover">
               <a href="{{ route('comics.show', $comic->slug) }}" aria-label="Xem {{ $comic->title }}">
-                <img src="{{ $comic->cover_image }}" alt="{{ $comic->title }}" class="cover-img" loading="lazy" />
+                <img src="{{ $comic->cover_url }}" alt="{{ $comic->title }}" class="cover-img" loading="lazy" />
               </a>
               <span class="of-badge">ĐỘC QUYỀN</span>
               <span class="of-rating">★ {{ number_format($comic->avg_rating, 1) }}</span>

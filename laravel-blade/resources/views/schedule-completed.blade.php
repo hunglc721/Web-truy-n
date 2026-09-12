@@ -26,7 +26,7 @@
           @php($chapter = $comic->latestChapter)
           <a href="{{ route('comics.show', $comic->slug) }}" class="comic-card-sm">
             <div class="sm-cover">
-              <img src="{{ $comic->cover_image }}" alt="{{ $comic->title }}" class="cover-img" loading="lazy">
+              <img src="{{ $comic->cover_url }}" alt="{{ $comic->title }}" class="cover-img" loading="lazy">
               <span class="sm-badge new-badge">ĐÃ FULL</span>
               <span class="sm-rating">★ {{ number_format($comic->avg_rating, 1) }}</span>
             </div>

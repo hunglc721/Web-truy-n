@@ -66,7 +66,7 @@
               @if($comic && $chapter)
                 <div style="background: var(--bg-surface-1); border: 1px solid var(--border-color); border-radius: 12px; padding: 12px; display: flex; gap: 12px; align-items: center; position: relative; overflow: hidden;">
                   <a href="{{ route('chapters.show', [$comic->slug, $chapter->slug ?: 'chapter-' . $chapter->chapter_number]) }}" style="flex-shrink: 0;">
-                    <img src="{{ $comic->cover_image }}" alt="{{ $comic->title }}" style="width: 58px; height: 78px; object-fit: cover; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.4);" loading="lazy" />
+                    <img src="{{ $comic->cover_url }}" alt="{{ $comic->title }}" style="width: 58px; height: 78px; object-fit: cover; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.4);" loading="lazy" />
                   </a>
                   <div style="flex: 1; min-width: 0;">
                     <h3 style="font-size: 14px; font-weight: 700; color: #fff; margin: 0 0 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
@@ -110,7 +110,7 @@
         <div class="trending-list" id="trending-list">
           @forelse($trendingComics as $comic)
           <a href="{{ route('comics.show',$comic->slug) }}" class="trending-card" aria-label="{{ $comic->title }}">
-            <div class="tcard-cover"><img src="{{ $comic->cover_image }}" alt="Bìa {{ $comic->title }}" class="cover-img" loading="lazy"><div class="rank-num {{ $loop->iteration<=3?'r'.$loop->iteration:'' }}">{{ $comic->trending_rank ?? $loop->iteration }}</div></div>
+            <div class="tcard-cover"><img src="{{ $comic->cover_url }}" alt="Bìa {{ $comic->title }}" class="cover-img" loading="lazy"><div class="rank-num {{ $loop->iteration<=3?'r'.$loop->iteration:'' }}">{{ $comic->trending_rank ?? $loop->iteration }}</div></div>
             <p class="tcard-title">{{ $comic->title }}</p><p class="tcard-genre">{{ $comic->genres->pluck('name')->join(' · ') }}</p>
           </a>
           @empty<p style="color:var(--text-sub);padding:20px">Chưa có dữ liệu thịnh hành.</p>@endforelse
@@ -144,7 +144,7 @@
     @forelse($latestUpdates as $comic)
       @php($chapter=$comic->latestChapter)
       @php($primaryTag=$comic->tags->first())
-      <a href="{{ route('comics.show',$comic->slug) }}" class="comic-card-sm" data-genre="{{ $comic->genres->first()?->slug }}"><div class="sm-cover"><img src="{{ $comic->cover_image }}" alt="{{ $comic->title }}" class="cover-img" loading="lazy">@if($chapter)<span class="sm-badge {{ $primaryTag?->slug==='hot'?'hot-badge':($primaryTag?->slug==='new'?'new-badge':'') }}">{{ $chapter->label }}</span>@endif<span class="sm-rating">★ {{ number_format($comic->avg_rating,1) }}</span></div><div class="sm-info"><h3 class="sm-title">{{ $comic->title }}</h3><div class="sm-meta"><span>{{ $comic->genres->first()?->name ?? 'Truyện' }}</span><span>{{ $chapter?->time_ago ?? 'Mới cập nhật' }}</span></div></div></a>
+      <a href="{{ route('comics.show',$comic->slug) }}" class="comic-card-sm" data-genre="{{ $comic->genres->first()?->slug }}"><div class="sm-cover"><img src="{{ $comic->cover_url }}" alt="{{ $comic->title }}" class="cover-img" loading="lazy">@if($chapter)<span class="sm-badge {{ $primaryTag?->slug==='hot'?'hot-badge':($primaryTag?->slug==='new'?'new-badge':'') }}">{{ $chapter->label }}</span>@endif<span class="sm-rating">★ {{ number_format($comic->avg_rating,1) }}</span></div><div class="sm-info"><h3 class="sm-title">{{ $comic->title }}</h3><div class="sm-meta"><span>{{ $comic->genres->first()?->name ?? 'Truyện' }}</span><span>{{ $chapter?->time_ago ?? 'Mới cập nhật' }}</span></div></div></a>
     @empty<div style="grid-column:1/-1;color:var(--text-sub);padding:30px;text-align:center">Chưa có chương mới.</div>@endforelse
   </div></div></section>
 

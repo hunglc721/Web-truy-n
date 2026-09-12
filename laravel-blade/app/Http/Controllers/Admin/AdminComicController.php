@@ -12,6 +12,8 @@ use App\Models\Genre;
 use App\Models\Tag;
 use App\Services\ImageService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class AdminComicController extends Controller
 {
@@ -92,22 +94,35 @@ class AdminComicController extends Controller
     public function store(StoreComicRequest $request)
     {
         $data = $request->safe()->except(['genre_ids', 'tag_ids', 'author_ids', 'cover_image']);
+        $coverPath = null;
 
         // Xử lý upload ảnh bìa (nếu có)
         if ($request->hasFile('cover_image')) {
-            $data['cover_image'] = $this->imageService->uploadCover($request->file('cover_image'));
+            $coverPath = $this->imageService->uploadCover($request->file('cover_image'));
+            $data['cover_image'] = $coverPath;
         } else {
             $data['cover_image'] = '';
         }
 
-        $comic = Comic::create($data);
+        try {
+            $comic = DB::transaction(function () use ($data, $request) {
+                $comic = Comic::create($data);
 
-        // Sync quan hệ nhiều-nhiều
-        $comic->genres()->sync($request->input('genre_ids', []));
-        $comic->tags()->sync($request->input('tag_ids', []));
+                // Sync quan hệ nhiều-nhiều
+                $comic->genres()->sync($request->input('genre_ids', []));
+                $comic->tags()->sync($request->input('tag_ids', []));
 
-        if (!empty($request->input('author_ids'))) {
-            $comic->authors()->sync($request->input('author_ids'));
+                if (!empty($request->input('author_ids'))) {
+                    $comic->authors()->sync($request->input('author_ids'));
+                }
+
+                return $comic;
+            });
+        } catch (\Throwable $e) {
+            if ($coverPath && Storage::disk('public')->exists($coverPath)) {
+                Storage::disk('public')->delete($coverPath);
+            }
+            throw $e;
         }
 
         // Ghi activity log
@@ -144,23 +159,56 @@ class AdminComicController extends Controller
         $comic = Comic::findOrFail($id);
 
         $data = $request->safe()->except(['genre_ids', 'tag_ids', 'author_ids', 'cover_image']);
+        $newCoverPath = null;
+        $oldCoverPath = $comic->cover_image;
 
         // Xử lý upload ảnh bìa mới (nếu có)
         if ($request->hasFile('cover_image')) {
-            $data['cover_image'] = $this->imageService->uploadCover($request->file('cover_image'));
+            $newCoverPath = $this->imageService->uploadCover($request->file('cover_image'));
+            $data['cover_image'] = $newCoverPath;
         }
 
-        $comic->update($data);
+        try {
+            DB::transaction(function () use ($comic, $data, $request) {
+                $comic->update($data);
 
-        // Sync quan hệ nhiều-nhiều (chỉ khi field được gửi lên)
-        if ($request->has('genre_ids')) {
-            $comic->genres()->sync($request->input('genre_ids', []));
+                // Sync quan hệ nhiều-nhiều (chỉ khi field được gửi lên)
+                if ($request->has('genre_ids')) {
+                    $comic->genres()->sync($request->input('genre_ids', []));
+                }
+                if ($request->has('tag_ids')) {
+                    $comic->tags()->sync($request->input('tag_ids', []));
+                }
+                if ($request->has('author_ids')) {
+                    $comic->authors()->sync($request->input('author_ids', []));
+                }
+            });
+        } catch (\Throwable $e) {
+            // Nếu update DB thất bại sau khi đã upload file mới, xóa file mới để tránh orphan file
+            if ($newCoverPath && Storage::disk('public')->exists($newCoverPath)) {
+                Storage::disk('public')->delete($newCoverPath);
+            }
+            throw $e;
         }
-        if ($request->has('tag_ids')) {
-            $comic->tags()->sync($request->input('tag_ids', []));
-        }
-        if ($request->has('author_ids')) {
-            $comic->authors()->sync($request->input('author_ids', []));
+
+        // Chỉ sau khi DB update thành công mới xóa cover local cũ
+        // Điều kiện xóa an toàn:
+        // - Đã upload cover mới
+        // - Cover cũ không rỗng
+        // - Không xóa nếu là URL ngoài (http://, https://, //)
+        // - Chỉ xóa khi chắc chắn path thuộc comics/covers/
+        // - File cũ tồn tại trên disk
+        if (
+            $newCoverPath !== null &&
+            !empty($oldCoverPath) &&
+            !str_starts_with($oldCoverPath, 'http://') &&
+            !str_starts_with($oldCoverPath, 'https://') &&
+            !str_starts_with($oldCoverPath, '//') &&
+            str_starts_with($oldCoverPath, 'comics/covers/') &&
+            $oldCoverPath !== $newCoverPath &&
+            Storage::disk('public')->exists($oldCoverPath)
+        ) {
+            Storage::disk('public')->delete($oldCoverPath);
         }
 
         // Ghi activity log

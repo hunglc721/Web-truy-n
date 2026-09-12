@@ -76,7 +76,7 @@
                 @forelse($recentHistory as $item)
                     @if($item->comic && $item->chapter)
                         <a href="{{ route('chapters.show', [$item->comic->slug, $item->chapter->slug ?: ('chapter-' . $item->chapter->chapter_number)]) }}" style="display:flex;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);text-decoration:none;color:inherit;">
-                            <img src="{{ $item->comic->cover_image }}" alt="" style="width:42px;height:56px;object-fit:cover;border-radius:7px;">
+                            <img src="{{ $item->comic->cover_url }}" alt="" style="width:42px;height:56px;object-fit:cover;border-radius:7px;">
                             <div style="min-width:0;flex:1;"><strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ $item->comic->title }}</strong><span style="font-size:12px;color:var(--text-sub);">Ch.{{ $item->chapter->chapter_number }} · {{ round($item->scroll_percent ?? 0) }}%</span></div>
                         </a>
                     @endif
@@ -90,7 +90,7 @@
                 @forelse($recentLikes as $item)
                     @if($item->comic)
                         <a href="{{ route('comics.show', $item->comic->slug) }}" style="display:flex;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);text-decoration:none;color:inherit;">
-                            <img src="{{ $item->comic->cover_image }}" alt="" style="width:42px;height:56px;object-fit:cover;border-radius:7px;">
+                            <img src="{{ $item->comic->cover_url }}" alt="" style="width:42px;height:56px;object-fit:cover;border-radius:7px;">
                             <div style="min-width:0;flex:1;"><strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ $item->comic->title }}</strong><span style="font-size:12px;color:var(--text-sub);">★ {{ number_format($item->comic->avg_rating,1) }} · {{ ucfirst($item->comic->status) }}</span></div>
                         </a>
                     @endif

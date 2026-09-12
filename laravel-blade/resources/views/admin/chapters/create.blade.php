@@ -11,8 +11,8 @@
 @section('content')
 <div class="admin-page-header">
   <div style="display:flex; align-items:center; gap:12px">
-    @if($comic->cover_image)
-      <img src="{{ $comic->cover_image }}" alt="{{ $comic->title }}" style="width:42px; height:56px; border-radius:6px; object-fit:cover; border:1px solid var(--admin-border)" />
+    @if($comic->cover_url)
+      <img src="{{ $comic->cover_url }}" alt="{{ $comic->title }}" style="width:42px; height:56px; border-radius:6px; object-fit:cover; border:1px solid var(--admin-border)" />
     @endif
     <div>
       <h1 class="admin-page-title">➕ Đăng Chapter Mới: {{ $comic->title }}</h1>

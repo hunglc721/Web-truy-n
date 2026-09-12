@@ -8,7 +8,7 @@
         @forelse($likes as $item)
             @if($item->comic)
             <a href="{{ route('comics.show',$item->comic->slug) }}" class="comic-card-sm" style="position:relative;">
-                <div class="sm-cover"><img src="{{ $item->comic->cover_image }}" alt="{{ $item->comic->title }}" class="cover-img"><span class="sm-badge">★ {{ number_format($item->comic->avg_rating,1) }}</span></div>
+                <div class="sm-cover"><img src="{{ $item->comic->cover_url }}" alt="{{ $item->comic->title }}" class="cover-img"><span class="sm-badge">★ {{ number_format($item->comic->avg_rating,1) }}</span></div>
                 <p class="sm-title">{{ $item->comic->title }}</p><p class="sm-meta">{{ ucfirst($item->comic->status) }} · {{ $item->liked_at?->diffForHumans() }}</p>
             </a>
             @endif
