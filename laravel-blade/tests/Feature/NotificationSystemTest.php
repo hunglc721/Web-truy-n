@@ -18,6 +18,29 @@ class NotificationSystemTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_layout_selects_local_polling_and_production_sse(): void
+    {
+        foreach (['local' => 'polling', 'production' => 'sse'] as $environment => $transport) {
+            $this->app->instance('env', $environment);
+            $this->get('/')->assertOk()
+                ->assertSee('data-notification-transport="' . $transport . '"', false);
+        }
+    }
+
+    public function test_local_notification_header_supports_json_and_short_legacy_stream(): void
+    {
+        $this->app->instance('env', 'local');
+        $this->actingAs(User::factory()->create());
+        $this->getJson('/user/notifications/header')->assertOk()
+            ->assertJsonPath('unread_count', 0)->assertJsonCount(0, 'notifications');
+
+        $started = microtime(true);
+        $response = $this->get('/user/notifications/header?stream=1');
+        $response->assertOk();
+        $this->assertSame(1, substr_count($response->streamedContent(), 'event: snapshot'));
+        $this->assertLessThan(2, microtime(true) - $started, 'Local SSE must not enter the sleeping loop.');
+    }
+
     public function test_guest_can_receive_emergency_broadcast(): void
     {
         Announcement::create([

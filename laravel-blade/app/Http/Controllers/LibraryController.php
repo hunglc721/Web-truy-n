@@ -17,7 +17,7 @@ class LibraryController extends Controller
     {
         $user = Auth::user();
         $libraries = $this->libraryService->getUserLibrary($user, 12);
-        $stats = $this->libraryService->getUserReadingStats($user);
+        $stats = $this->libraryService->getUserReadingStats($user, $libraries->total());
 
         return view('user.library', compact('libraries', 'stats'));
     }

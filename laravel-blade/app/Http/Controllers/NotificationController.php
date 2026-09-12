@@ -62,10 +62,11 @@ class NotificationController extends Controller
 
     private function stream(User $user): StreamedResponse
     {
-        $testing = app()->environment('testing');
-        $maxSeconds = $testing ? 0.0 : 25.0;
+        // Old cached clients may still request SSE on the single-worker local server.
+        $singleSnapshot = app()->environment('testing', 'local');
+        $maxSeconds = $singleSnapshot ? 0.0 : 25.0;
 
-        return response()->stream(function () use ($user, $testing, $maxSeconds) {
+        return response()->stream(function () use ($user, $singleSnapshot, $maxSeconds) {
             $startedAt = microtime(true);
             $lastSignature = null;
 
@@ -87,7 +88,7 @@ class NotificationController extends Controller
                 }
                 flush();
 
-                if ($testing || connection_aborted()) {
+                if ($singleSnapshot || connection_aborted()) {
                     break;
                 }
 

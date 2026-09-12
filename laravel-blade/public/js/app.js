@@ -496,7 +496,10 @@
       }
     });
 
-    await refreshNotifications(true);
+    // Local polling in roadmap.js already fetches the initial badge snapshot.
+    if (document.body?.dataset.notificationTransport !== 'polling') {
+      await refreshNotifications(true);
+    }
 
     async function refreshNotifications(badgeOnly = false) {
       try {

@@ -240,7 +240,7 @@
   </style>
   @stack('styles')
 </head>
-<body class="dark-theme" data-auth-state="{{ auth()->check() ? (auth()->user()->canAccessAdmin() ? 'admin' : 'member') : 'guest' }}">
+<body class="dark-theme" data-auth-state="{{ auth()->check() ? (auth()->user()->canAccessAdmin() ? 'admin' : 'member') : 'guest' }}" data-notification-transport="{{ app()->environment('local') ? 'polling' : 'sse' }}">
   <header class="site-header" id="site-header">
     <div class="header-inner">
       <div class="header-left">
@@ -463,8 +463,8 @@
       </div>
     </div>
   </footer>
-  <script src="{{ asset('js/app.js') }}?v=5"></script>
-  <script src="{{ asset('js/roadmap.js') }}?v=5"></script>
+  <script src="{{ asset('js/app.js') }}?v=6"></script>
+  <script src="{{ asset('js/roadmap.js') }}?v=6"></script>
   <script>
     // Inline Mobile Footer Accordion Handler (Guarded against double execution)
     (function() {
