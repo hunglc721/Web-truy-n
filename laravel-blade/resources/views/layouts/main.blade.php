@@ -463,7 +463,7 @@
       </div>
     </div>
   </footer>
-  <script src="{{ asset('js/app.js') }}?v=5"></script>
+  <script src="{{ asset('js/app.js') }}?v=6"></script>
   <script src="{{ asset('js/roadmap.js') }}?v=6"></script>
   <script>
     // Inline Mobile Footer Accordion Handler (Guarded against double execution)

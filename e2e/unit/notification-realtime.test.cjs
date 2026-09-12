@@ -31,6 +31,29 @@ function setup({ auth = 'member', transport = 'polling', hidden = false, pending
 }
 const flush = () => new Promise(resolve => setImmediate(resolve));
 
+test('notification bell defers initial local fetch but still loads dropdown on demand', async () => {
+  const appSource = fs.readFileSync(path.join(__dirname, '../../laravel-blade/public/js/app.js'), 'utf8');
+  const bellCode = appSource.slice(appSource.indexOf('  async function setupNotificationBell()'), appSource.indexOf('  function setupGuestContinueReading()'));
+  for (const transport of ['polling', 'sse']) {
+    let requests = 0, click;
+    const badge = {};
+    const dropdown = { classList: { toggle() {}, contains: () => true }, appendChild() {} };
+    const group = { prepend() {} };
+    const bell = { addEventListener: (_, fn) => { click = fn; } };
+    const elements = { '.nav-icon-group': group, '.wc-notification-bell': bell, '.wc-notification-dropdown': dropdown, '.wc-notification-badge': badge };
+    const context = vm.createContext({
+      document: { body: { dataset: { authState: 'member', notificationTransport: transport } }, createElement: () => ({}) },
+      $: selector => elements[selector],
+      fetch: async () => { requests++; return { ok: true, json: async () => ({ unread_count: 2, notifications: [] }) }; },
+    });
+    await vm.runInContext(bellCode + '\nsetupNotificationBell();', context);
+    assert.equal(requests, transport === 'polling' ? 0 : 1);
+    await click({ stopPropagation() {} });
+    assert.equal(requests, transport === 'polling' ? 1 : 2);
+    assert.equal(badge.textContent, '2');
+  }
+});
+
 test('local polls once every 15 seconds without EventSource or duplicate initialization', async () => {
   const app = setup();
   app.initialize();
