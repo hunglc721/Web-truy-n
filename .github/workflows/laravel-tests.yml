@@ -131,6 +131,14 @@ jobs:
           cat /tmp/webcomics-e2e.log
           exit 1
 
+      - name: Notification lifecycle unit tests
+        working-directory: e2e
+        run: node --test unit/notification-realtime.test.cjs
+
+      - name: Navigation and notification browser tests
+        working-directory: e2e
+        run: npx playwright test tests/core.spec.js --grep 'homepage|comic detail|member can login|notification in realtime'
+
       - name: Browser E2E on desktop and mobile
         working-directory: e2e
         run: npm test

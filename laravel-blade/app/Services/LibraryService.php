@@ -140,9 +140,10 @@ class LibraryService
     /**
      * Thống kê hoạt động đọc của người dùng.
      */
-    public function getUserReadingStats(User $user): array
+    public function getUserReadingStats(User $user, ?int $totalBookmarks = null): array
     {
-        $totalBookmarks = Library::where('user_id', $user->id)->count();
+        // Reuse the paginator's total when available, including an empty library.
+        $totalBookmarks ??= Library::where('user_id', $user->id)->count();
         $totalReadComics = ReadingHistory::where('user_id', $user->id)->count();
 
         $readComicIds = ReadingHistory::where('user_id', $user->id)->pluck('comic_id');

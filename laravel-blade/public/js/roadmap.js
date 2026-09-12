@@ -315,14 +315,19 @@
   }
 
   function setupRealtimeNotifications() {
-    if (document.body?.dataset.authState === 'guest') return;
-    if (typeof window.EventSource === 'undefined') return;
+    if (!['member', 'admin'].includes(document.body?.dataset.authState)) return;
+    if (document.body.dataset.notificationsInitialized === '1') return;
+    document.body.dataset.notificationsInitialized = '1';
+    const pollingOnly = document.body.dataset.notificationTransport === 'polling';
 
     let source = null;
     let fallbackTimer = null;
     let failures = 0;
     let initialized = false;
     let latestNotificationId = null;
+    let polling = false;
+    let stopped = false;
+    let pollController = null;
 
     const setState = (state) => {
       if (document.body) document.body.dataset.realtimeState = state;
@@ -438,22 +443,30 @@
     };
 
     const pollOnce = async () => {
+      if (stopped || document.hidden || pollController) return;
+      pollController = new AbortController();
       try {
         const response = await fetch('/user/notifications/header', {
           headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
           credentials: 'same-origin',
           cache: 'no-store',
+          signal: pollController.signal,
         });
         if (!response.ok) return;
         applySnapshot(await response.json());
-      } catch (_) {}
+      } catch (_) {} finally {
+        pollController = null;
+        if (polling && !stopped && !document.hidden) {
+          fallbackTimer = window.setTimeout(pollOnce, 15000);
+        }
+      }
     };
 
     const startFallback = () => {
-      if (fallbackTimer) return;
-      setState('fallback');
+      if (polling) return;
+      polling = true;
+      setState(pollingOnly ? 'polling' : 'fallback');
       pollOnce();
-      fallbackTimer = window.setInterval(pollOnce, 15000);
     };
 
     const connect = () => {
@@ -483,11 +496,28 @@
       };
     };
 
-    connect();
+    if (pollingOnly || typeof window.EventSource === 'undefined') startFallback();
+    else connect();
+
+    document.addEventListener('visibilitychange', () => {
+      if (!polling || stopped) return;
+      window.clearTimeout(fallbackTimer);
+      fallbackTimer = null;
+      if (!document.hidden) pollOnce();
+    });
 
     window.addEventListener('pagehide', () => {
+      stopped = true;
       source?.close();
-      if (fallbackTimer) window.clearInterval(fallbackTimer);
+      source = null;
+      window.clearTimeout(fallbackTimer);
+      pollController?.abort();
+    });
+    window.addEventListener('pageshow', (event) => {
+      if (!event.persisted || !stopped) return;
+      stopped = false;
+      if (polling) pollOnce();
+      else connect();
     });
   }
 })();

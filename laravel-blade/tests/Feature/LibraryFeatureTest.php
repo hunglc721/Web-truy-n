@@ -6,11 +6,41 @@ use App\Models\Comic;
 use App\Models\Library;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class LibraryFeatureTest extends TestCase
 {
     use RefreshDatabase;
+
+    public function test_library_stats_reuse_pagination_total_including_empty_library(): void
+    {
+        foreach ([13, 0] as $total) {
+            $user = User::factory()->create();
+            foreach (Comic::factory()->count($total)->create() as $comic) {
+                Library::create(['user_id' => $user->id, 'comic_id' => $comic->id, 'status' => 'reading']);
+            }
+
+            DB::flushQueryLog();
+            DB::enableQueryLog();
+            try {
+                $response = $this->actingAs($user)->get('/user/library?library_page=2');
+                $queries = DB::getQueryLog();
+            } finally {
+                DB::disableQueryLog();
+                DB::flushQueryLog();
+            }
+
+            $response->assertOk()->assertViewHas('stats', fn ($stats) => $stats['total_bookmarks'] === $total);
+            $response->assertViewHas('libraries', fn ($libraries) =>
+                $libraries->total() === $total && $libraries->count() === ($total ? 1 : 0));
+            $counts = array_filter($queries, fn ($query) => str_contains(
+                str_replace(['"', '`'], '', $query['query']),
+                'select count(*) as aggregate from libraries where user_id = ?'
+            ));
+            $this->assertCount(1, $counts, 'Library total should be counted only by the paginator.');
+        }
+    }
 
     public function test_guest_cannot_access_library_page(): void
     {
