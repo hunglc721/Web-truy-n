@@ -8,6 +8,10 @@ class StoreChapterRequest extends FormRequest
 {
     public function authorize(): bool
     {
+        $task = $this->route('task');
+        if ($task instanceof \App\Models\UploadTask) {
+            return $this->user()?->isAdmin() && $task->user_id === $this->user()->id;
+        }
         // Đã bảo vệ bởi AdminMiddleware + permission:chapters.create ở route level.
         return true;
     }
@@ -22,7 +26,7 @@ class StoreChapterRequest extends FormRequest
         }
 
         return [
-            'chapter_number' => 'required|numeric|min:0',
+            'chapter_number' => ['required', 'numeric', 'min:0', 'max:9999999999', 'regex:/^\d+(?:\.\d+)?$/'],
             'title'          => 'nullable|string|max:255',
             'is_free'        => 'nullable|boolean',
             'images'         => 'nullable|array',
@@ -38,11 +42,15 @@ class StoreChapterRequest extends FormRequest
     private function bulkRules(string $action): array
     {
         $base = [
-            'bulk_action' => 'required|string|in:start,chunk,finalize,complete',
+            'bulk_action' => 'required|string|in:start,chunk,finalize,complete,check_existing',
         ];
 
         return match ($action) {
             'start' => $base,
+            'check_existing' => $base + [
+                'chapter_numbers'   => 'required|array|min:1|max:500',
+                'chapter_numbers.*' => ['required', 'string', 'max:32', 'regex:/^\d+(?:\.\d+)?$/'],
+            ],
             'chunk' => $base + [
                 'session' => 'required|uuid',
                 'chapter_key' => ['required', 'string', 'max:80', 'regex:/^[A-Za-z0-9_-]+$/'],
@@ -56,7 +64,7 @@ class StoreChapterRequest extends FormRequest
             'finalize' => $base + [
                 'session' => 'required|uuid',
                 'chapter_key' => ['required', 'string', 'max:80', 'regex:/^[A-Za-z0-9_-]+$/'],
-                'chapter_number' => 'required|integer|min:0',
+                'chapter_number' => ['required', 'numeric', 'min:0', 'max:9999999999', 'regex:/^\d+(?:\.\d+)?$/'],
                 'title' => 'nullable|string|max:255',
                 'page_count' => 'required|integer|min:1|max:2000',
             ],
@@ -75,8 +83,9 @@ class StoreChapterRequest extends FormRequest
         return [
             'chapter_number.required' => 'Vui lòng nhập số chương.',
             'chapter_number.numeric'  => 'Số chương phải là dạng số.',
-            'chapter_number.integer'  => 'Upload nhiều chapter hiện hỗ trợ số chương nguyên như 140, 141, 142...',
+            'chapter_number.regex'    => 'Số chương chỉ chấp nhận định dạng số nguyên hoặc số thập phân hợp lệ (ví dụ: 140 hoặc 187.5).',
             'chapter_number.min'      => 'Số chương phải >= 0.',
+            'chapter_number.max'      => 'Số chương không được vượt quá 9999999999.',
             'images.*.image'          => 'File tải lên phải là hình ảnh hợp lệ.',
             'images.*.mimes'          => 'Chấp nhận các định dạng: JPEG, PNG, JPG, WEBP, GIF.',
             'images.*.max'            => 'Kích thước mỗi ảnh tối đa là 5MB.',

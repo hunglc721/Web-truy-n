@@ -158,37 +158,54 @@ class AdminChapterController extends Controller
         $user = $request->user();
         $action = (string) $request->input('bulk_action');
 
-        $result = match ($action) {
-            'start' => $this->bulkChapterUploadService->start($comic, $user),
-            'chunk' => $this->bulkChapterUploadService->storeChunk(
-                $comic,
-                $user,
-                (string) $request->input('session'),
-                (string) $request->input('chapter_key'),
-                $request->file('files', []),
-                array_values((array) $request->input('page_indexes', [])),
-                array_values((array) $request->input('checksums', [])),
-            ),
-            'finalize' => $this->bulkChapterUploadService->finalizeChapter(
-                $comic,
-                $user,
-                (string) $request->input('session'),
-                (string) $request->input('chapter_key'),
-                (int) $request->input('chapter_number'),
-                $request->filled('title') ? (string) $request->input('title') : null,
-                (int) $request->input('page_count'),
-            ),
-            'complete' => $this->bulkChapterUploadService->complete(
-                $comic,
-                $user,
-                (string) $request->input('session'),
-            ),
-        };
+        // Task-owned sessions must pass through the worker lease/cancellation checks.
+        abort_if($request->filled('session') && \App\Models\UploadTask::where('upload_session_id', $request->input('session'))->exists(), 409, 'Phiên này thuộc trình upload nền.');
 
-        return response()->json([
-            'status' => 'ok',
-            ...$result,
-        ]);
+        try {
+            $result = match ($action) {
+                'start' => $this->bulkChapterUploadService->start($comic, $user),
+                'check_existing' => ['conflicts' => $this->bulkChapterUploadService->checkExistingChapters(
+                    $comic,
+                    array_values((array) $request->input('chapter_numbers', [])),
+                )],
+                'chunk' => $this->bulkChapterUploadService->storeChunk(
+                    $comic,
+                    $user,
+                    (string) $request->input('session'),
+                    (string) $request->input('chapter_key'),
+                    $request->file('files', []),
+                    array_values((array) $request->input('page_indexes', [])),
+                    array_values((array) $request->input('checksums', [])),
+                ),
+                'finalize' => $this->bulkChapterUploadService->finalizeChapter(
+                    $comic,
+                    $user,
+                    (string) $request->input('session'),
+                    (string) $request->input('chapter_key'),
+                    (string) $request->input('chapter_number'),
+                    $request->filled('title') ? (string) $request->input('title') : null,
+                    (int) $request->input('page_count'),
+                ),
+                'complete' => $this->bulkChapterUploadService->complete(
+                    $comic,
+                    $user,
+                    (string) $request->input('session'),
+                ),
+            };
+
+            return response()->json([
+                'status' => 'ok',
+                ...$result,
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            report($e);
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage() ?: 'Lỗi hệ thống khi xử lý upload.',
+            ], 500);
+        }
     }
 
     public function edit(Comic $comic, Chapter $chapter)

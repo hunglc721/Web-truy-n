@@ -71,6 +71,48 @@ class BulkChapterUploadService
     }
 
     /**
+     * Batch check which chapter_numbers already exist (active or soft-deleted) for a comic.
+     *
+     * Returns a map keyed by chapter_number string:
+     *   'existing'  → active chapter already published (or pending)
+     *   'deleted'   → soft-deleted chapter (can still be seen by Admin)
+     *
+     * Numbers not present in the map are "new" (safe to upload).
+     *
+     * @param  string[] $chapterNumbers  Normalised decimal strings, e.g. ["1","1.5","187"]
+     * @return array<string, string>
+     */
+    public function checkExistingChapters(Comic $comic, array $chapterNumbers): array
+    {
+        if (empty($chapterNumbers)) {
+            return [];
+        }
+
+        // Cast to float for DB comparison (chapter_number is stored as DECIMAL/DOUBLE).
+        $floats = array_map('floatval', $chapterNumbers);
+
+        $rows = Chapter::withTrashed()
+            ->where('comic_id', $comic->id)
+            ->whereIn('chapter_number', $floats)
+            ->get(['chapter_number', 'deleted_at']);
+
+        $result = [];
+        foreach ($rows as $row) {
+            // Normalise back to the canonical string form the frontend uses.
+            $num = (float) $row->chapter_number;
+            // Format: remove trailing zeros after decimal, but keep integer form exact.
+            if ($num == floor($num)) {
+                $key = (string) (int) $num;
+            } else {
+                $key = rtrim(rtrim(sprintf('%.10f', $num), '0'), '.');
+            }
+            $result[$key] = $row->deleted_at ? 'deleted' : 'existing';
+        }
+
+        return $result;
+    }
+
+    /**
      * Store one upload batch without repeatedly copying and re-hashing the same bytes.
      *
      * PHP has already written each multipart file to a temporary path before this method
@@ -292,7 +334,7 @@ class BulkChapterUploadService
         User $user,
         string $session,
         string $chapterKey,
-        int $chapterNumber,
+        float|int|string $chapterNumber,
         ?string $title,
         int $pageCount,
     ): array {
@@ -368,17 +410,25 @@ class BulkChapterUploadService
                 $orderedPages[] = $page;
             }
 
+            $normalizedChapterNumber = Chapter::formatNumber($chapterNumber);
+
+            if (!Chapter::isValidNumber($normalizedChapterNumber)) {
+                throw ValidationException::withMessages([
+                    'chapter_number' => 'Số chapter không hợp lệ.',
+                ]);
+            }
+
             if (Chapter::withTrashed()
                 ->where('comic_id', $comic->id)
-                ->where('chapter_number', $chapterNumber)
+                ->where('chapter_number', $normalizedChapterNumber)
                 ->exists()) {
                 throw ValidationException::withMessages([
-                    'chapter_number' => "Chapter {$chapterNumber} đã tồn tại trong truyện này.",
+                    'chapter_number' => "Chapter {$normalizedChapterNumber} đã tồn tại trong truyện này.",
                 ]);
             }
 
             $chapter = $this->chapterService->createWithPages($comic, [
-                'chapter_number' => $chapterNumber,
+                'chapter_number' => $normalizedChapterNumber,
                 'title' => $title,
                 'is_free' => true,
             ], []);
@@ -443,6 +493,21 @@ class BulkChapterUploadService
                 'storage_mode' => $usedStreamFallback ? 'stream_copy_fallback' : 'atomic_move',
                 'server_processing_ms' => (int) round((microtime(true) - $startedAt) * 1000),
             ];
+        });
+    }
+
+    public function snapshot(Comic $comic, User $user, string $session, bool $includePages = false): array
+    {
+        return $this->withSessionLock($session, function () use ($comic, $user, $session, $includePages) {
+            $state = $this->loadAuthorizedSession($session, $comic, $user);
+            $pages = [];
+            foreach ($includePages ? (glob($this->sessionDir($session) . '/chapters/*/manifest.json') ?: []) : [] as $path) {
+                $pages[basename(dirname($path))] = array_map(
+                    fn ($page) => ['sha256' => $page['sha256'], 'size' => $page['size']],
+                    $this->readJson($path)['pages'] ?? [],
+                );
+            }
+            return $state + ['pages' => $pages];
         });
     }
 

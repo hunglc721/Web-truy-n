@@ -147,3 +147,337 @@ test('pre-upload chapter check blocks upload when one image is corrupted', async
   await expect(page.locator('#bulk-start-upload')).toBeDisabled();
   await expect(page.locator('#bulk-validation-message')).toContainText('Không thể giải mã ảnh');
 });
+
+test('bulk uploader detects decimal chapter numbers and sorts them correctly', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name.includes('mobile'), 'Large directory picking is a desktop admin workflow.');
+
+  await openBulkUploader(page);
+
+  await setDirectoryFiles(page, [
+    {
+      name: '1.gif',
+      relativePath: 'Eleceed/Ch.187/1.gif',
+    },
+    {
+      name: '1.gif',
+      relativePath: 'Eleceed/Vol.16 Ch.187.5 - Bonus Chapter/1.gif',
+    },
+    {
+      name: '1.gif',
+      relativePath: 'Eleceed/Ch.187.25/1.gif',
+    },
+    {
+      name: '1.gif',
+      relativePath: 'Eleceed/Ch.188/1.gif',
+    },
+  ]);
+
+  const rows = page.locator('[data-testid="bulk-chapter-row"]');
+  await expect(rows).toHaveCount(4);
+
+  await expect.poll(async () => {
+    return page.locator('[data-testid="bulk-chapter-number"]').evaluateAll((nodes) => nodes.map((node) => node.value));
+  }).toEqual(['187', '187.25', '187.5', '188']);
+
+  const titles = await page.locator('[data-testid="bulk-chapter-title"]').evaluateAll((nodes) => nodes.map((node) => node.value));
+  expect(titles[2]).toBe('Bonus Chapter');
+});
+
+test('bulk uploader detects generic high-precision decimal chapters: 90, 90.001, 90.01, 90.1, 90.12345, 91', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name.includes('mobile'), 'Large directory picking is a desktop admin workflow.');
+
+  await openBulkUploader(page);
+
+  await setDirectoryFiles(page, [
+    { name: '1.gif', relativePath: 'Series/Ch.91/1.gif' },
+    { name: '1.gif', relativePath: 'Series/Ch.90.12345/1.gif' },
+    { name: '1.gif', relativePath: 'Series/Ch.90.01/1.gif' },
+    { name: '1.gif', relativePath: 'Series/Ch.90/1.gif' },
+    { name: '1.gif', relativePath: 'Series/Ch.90.1/1.gif' },
+    { name: '1.gif', relativePath: 'Series/Ch.90.001/1.gif' },
+  ]);
+
+  const rows = page.locator('[data-testid="bulk-chapter-row"]');
+  await expect(rows).toHaveCount(6);
+
+  await expect.poll(async () => {
+    return page.locator('[data-testid="bulk-chapter-number"]').evaluateAll((nodes) => nodes.map((node) => node.value));
+  }).toEqual(['90', '90.001', '90.01', '90.1', '90.12345', '91']);
+
+  // Verify no validation issues (no false duplicates)
+  const validationBox = page.locator('#bulk-validation-message');
+  await expect(validationBox).not.toContainText('xuất hiện');
+});
+
+test('admin can delete a page in inspector, which invalidates preflight until re-checked', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name.includes('mobile'), 'Large directory picking is a desktop admin workflow.');
+
+  await openBulkUploader(page);
+
+  await setDirectoryFiles(page, [
+    { name: '10.gif', relativePath: 'Kimetsu/Vol.16 Ch.0140 - Battle/10.gif' },
+    { name: '2.gif', relativePath: 'Kimetsu/Vol.16 Ch.0140 - Battle/2.gif' },
+  ]);
+
+  // Inspect Chapter 140
+  await page.locator('[data-testid="bulk-chapter-inspect"]').click();
+  await expect(page.locator('[data-testid="bulk-preflight-state"]')).toHaveText('✓ Đạt');
+  await expect(page.locator('[data-testid="bulk-preview-page"]')).toHaveCount(2);
+
+  // Delete first page
+  await page.locator('.bulk-btn-delete').first().click();
+
+  // Page count decreases
+  await expect(page.locator('[data-testid="bulk-preview-page"]')).toHaveCount(1);
+  await expect(page.locator('#bulk-inspector-pages')).toHaveText('1');
+
+  // Preflight status becomes unchecked and upload is disabled
+  await expect(page.locator('[data-testid="bulk-preflight-state"]')).toHaveText('Chưa kiểm tra');
+  await expect(page.locator('#bulk-inspector-status')).toHaveText('Chưa kiểm tra');
+  await expect(page.locator('#bulk-start-upload')).toBeDisabled();
+
+  // Re-inspect to pass
+  await page.locator('#bulk-inspector-run').click();
+  await expect(page.locator('[data-testid="bulk-preflight-state"]')).toHaveText('✓ Đạt');
+  await expect(page.locator('#bulk-inspector-status')).toHaveText('✓ Đạt');
+  await expect(page.locator('#bulk-start-upload')).toBeEnabled();
+});
+
+test('admin can open lightbox preview, navigate pages and close with Escape', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name.includes('mobile'), 'Large directory picking is a desktop admin workflow.');
+
+  await openBulkUploader(page);
+
+  await setDirectoryFiles(page, [
+    { name: '1.gif', relativePath: 'Series/Ch.01/1.gif' },
+    { name: '2.gif', relativePath: 'Series/Ch.01/2.gif' },
+  ]);
+
+  await page.locator('[data-testid="bulk-chapter-inspect"]').click();
+
+  // Click view icon on first page
+  await page.locator('.bulk-btn-view').first().click();
+
+  const lightbox = page.locator('#bulk-preflight-lightbox');
+  await expect(lightbox).toBeVisible();
+  await expect(page.locator('#bulk-lightbox-pos')).toHaveText('1 / 2');
+  await expect(page.locator('#bulk-lightbox-title')).toHaveText('1.gif');
+
+  // Next page via ArrowRight
+  await page.keyboard.press('ArrowRight');
+  await expect(page.locator('#bulk-lightbox-pos')).toHaveText('2 / 2');
+  await expect(page.locator('#bulk-lightbox-title')).toHaveText('2.gif');
+
+  // Close via Escape
+  await page.keyboard.press('Escape');
+  await expect(lightbox).toBeHidden();
+});
+
+test('admin can replace page, add new pages, reorder and reset back to original', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name.includes('mobile'), 'Large directory picking is a desktop admin workflow.');
+
+  await openBulkUploader(page);
+
+  await setDirectoryFiles(page, [
+    { name: '1.gif', relativePath: 'Manga/Ch.10/1.gif' },
+    { name: '2.gif', relativePath: 'Manga/Ch.10/2.gif' },
+  ]);
+
+  await page.locator('[data-testid="bulk-chapter-inspect"]').click();
+  await expect(page.locator('[data-testid="bulk-preflight-state"]')).toHaveText('✓ Đạt');
+
+  // Test REORDER via down button on first page
+  await page.locator('.bulk-btn-down').first().click();
+  await expect(page.locator('.bulk-preview-page-meta strong').first()).toContainText('2.gif');
+  await expect(page.locator('[data-testid="bulk-preflight-state"]')).toHaveText('Chưa kiểm tra');
+
+  // Test ADD pages
+  const validGifBase64 = 'R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+  await page.locator('#bulk-inspector-add-input').setInputFiles([
+    {
+      name: '3.gif',
+      mimeType: 'image/gif',
+      buffer: Buffer.from(validGifBase64, 'base64'),
+    },
+  ]);
+  await expect(page.locator('[data-testid="bulk-preview-page"]')).toHaveCount(3);
+  await expect(page.locator('#bulk-inspector-pages')).toHaveText('3');
+  await expect(page.locator('[data-testid="bulk-preflight-state"]')).toHaveText('Chưa kiểm tra');
+
+  // Test REPLACE
+  await page.locator('.bulk-btn-replace').first().click();
+  await page.locator('#bulk-inspector-replace-input').setInputFiles({
+    name: 'replaced.gif',
+    mimeType: 'image/gif',
+    buffer: Buffer.from(validGifBase64, 'base64'),
+  });
+  await expect(page.locator('.bulk-preview-page-meta strong').first()).toContainText('replaced.gif');
+  await expect(page.locator('[data-testid="bulk-preflight-state"]')).toHaveText('Chưa kiểm tra');
+
+  // Test RESET
+  await page.locator('#bulk-inspector-reset').click();
+  await expect(page.locator('[data-testid="bulk-preview-page"]')).toHaveCount(2);
+  await expect(page.locator('.bulk-preview-page-meta strong').first()).toContainText('1.gif');
+  await expect(page.locator('.bulk-preview-page-meta strong').nth(1)).toContainText('2.gif');
+  await expect(page.locator('[data-testid="bulk-preflight-state"]')).toHaveText('Chưa kiểm tra');
+});
+
+test('upload failure shows detailed error panel with chapter, batch, HTTP 422 and retry button', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name.includes('mobile'), 'Large directory picking is a desktop admin workflow.');
+
+  await openBulkUploader(page);
+
+  await setDirectoryFiles(page, [
+    { name: '1.gif', relativePath: 'Series/Ch.901/1.gif' },
+  ]);
+
+  // Inspect to enable upload
+  await page.locator('[data-testid="bulk-chapter-inspect"]').click();
+  await expect(page.locator('#bulk-start-upload')).toBeEnabled();
+
+  // Intercept backend bulk upload endpoint to return 422 on chunk
+  await page.context().route('**/admin/upload-tasks/*/upload', async (route) => {
+    const postData = route.request().postData() || '';
+    if (route.request().method() === 'POST' && postData.includes('chunk')) {
+      await route.fulfill({
+        status: 422,
+        contentType: 'application/json',
+        body: JSON.stringify({ message: 'Checksum không khớp' }),
+      });
+    } else {
+      await route.continue();
+    }
+  });
+
+  await page.locator('#bulk-start-upload').click();
+
+  // Assert error diagnostics panel is shown
+  const errorPanel = page.locator('#bulk-error-panel');
+  await expect(errorPanel).toBeVisible();
+  await expect(page.locator('#bulk-error-chapter')).toContainText('901');
+  await expect(page.locator('#bulk-error-batch')).toContainText('1 / 1');
+  await expect(page.locator('#bulk-error-http')).toHaveText('422');
+  await expect(page.locator('#bulk-error-message-text')).toContainText('Checksum không khớp');
+  await expect(page.locator('#bulk-error-retry-btn')).toBeVisible();
+
+  // The main page releases File objects; persisted task replaces page-owned rows.
+  await expect(page.locator('#upload-task-widget')).toHaveAttribute('data-status', 'failed');
+
+  // Assert upload button offers retry with context
+  await expect(page.locator('#bulk-start-upload')).toContainText('↻ Thử lại');
+});
+
+test('upload handles HTTP 500 and network disconnection cleanly without JS crash', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name.includes('mobile'), 'Large directory picking is a desktop admin workflow.');
+
+  const pageErrors = [];
+  page.on('pageerror', (err) => pageErrors.push(err.message));
+
+  await openBulkUploader(page);
+
+  await setDirectoryFiles(page, [
+    { name: '1.gif', relativePath: 'Series/Ch.902/1.gif' },
+  ]);
+
+  await page.locator('[data-testid="bulk-chapter-inspect"]').click();
+
+  // Mock 500 error on chunk
+  await page.context().route('**/admin/upload-tasks/*/upload', async (route) => {
+    const postData = route.request().postData() || '';
+    if (route.request().method() === 'POST' && postData.includes('chunk')) {
+      await route.fulfill({
+        status: 500,
+        contentType: 'application/json',
+        body: JSON.stringify({ message: 'Lỗi server khi ghi storage' }),
+      });
+    } else {
+      await route.continue();
+    }
+  });
+
+  await page.locator('#bulk-start-upload').click();
+
+  const errorPanel = page.locator('#bulk-error-panel');
+  await expect(errorPanel).toBeVisible();
+  await expect(page.locator('#bulk-error-http')).toHaveText('500');
+  await expect(page.locator('#bulk-error-message-text')).toContainText('Lỗi server khi ghi storage');
+
+  // Test network failure
+  await page.context().unroute('**/admin/upload-tasks/*/upload');
+  await page.context().route('**/admin/upload-tasks/*/upload', async (route) => {
+    const postData = route.request().postData() || '';
+    if (route.request().method() === 'POST' && postData.includes('chunk')) {
+      await route.abort('failed');
+    } else {
+      await route.continue();
+    }
+  });
+
+  await page.locator('#bulk-error-retry-btn').click();
+  await expect(page.locator('#bulk-error-message-text')).toContainText('Mất kết nối hoặc server không phản hồi');
+
+  expect(pageErrors).toEqual([]);
+});
+
+test('retry continues from failed chapter without resetting already completed chapters', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name.includes('mobile'), 'Large directory picking is a desktop admin workflow.');
+
+  await openBulkUploader(page);
+
+  await setDirectoryFiles(page, [
+    { name: '1.gif', relativePath: 'Series/Ch.920/1.gif' },
+    { name: '1.gif', relativePath: 'Series/Ch.921/1.gif' },
+  ]);
+
+  await page.locator('#bulk-check-all').click();
+  await expect(page.locator('#bulk-start-upload')).toBeEnabled();
+
+  let ch2ChunkFailedOnce = true;
+
+  await page.context().route('**/admin/upload-tasks/*/upload', async (route) => {
+    const postData = route.request().postData() || '';
+    if (route.request().method() === 'POST' && postData.includes('chapter-0001') && postData.includes('chunk') && ch2ChunkFailedOnce) {
+      ch2ChunkFailedOnce = false;
+      await route.fulfill({
+        status: 422,
+        contentType: 'application/json',
+        body: JSON.stringify({ message: 'Lỗi upload Ch.921 lần đầu' }),
+      });
+      return;
+    }
+    await route.continue();
+  });
+
+  await page.locator('#bulk-start-upload').click();
+
+  await expect(page.locator('#upload-task-widget')).toHaveAttribute('data-status', 'failed');
+  const taskId = await page.locator('#upload-task-widget').getAttribute('data-task-id');
+  const paused = (await (await page.request.get('/admin/upload-tasks/' + taskId)).json()).task;
+  expect(paused.completed_chapters).toBe(1);
+  const completedBytes = paused.uploaded_bytes;
+
+  // Error panel displays Chapter 921
+  await expect(page.locator('#bulk-error-panel')).toBeVisible();
+  await expect(page.locator('#bulk-error-chapter')).toContainText('921');
+  await expect(page.locator('#bulk-start-upload')).toContainText('↻ Thử lại từ Chapter 921');
+
+  // Retry upload
+  await page.locator('#bulk-error-retry-btn').click();
+
+  // Now both chapters are done! Chapter 1 was not re-done or reset to pending
+  await expect(page.locator('#bulk-start-upload')).toHaveText('✅ Upload hoàn tất');
+  const done = (await (await page.request.get('/admin/upload-tasks/' + taskId)).json()).task;
+  expect(done.completed_chapters).toBe(2);
+  expect(done.uploaded_bytes).toBe(completedBytes * 2);
+  expect(done.uploaded_files).toBe(2);
+});
+
+
+
+
+test.afterEach(async ({ page }) => {
+  await page.evaluate(async () => {
+    const bridge = window.ComicxUploads;
+    if (bridge?.task && !['completed', 'cancelled'].includes(bridge.task.status)) await bridge.api('/admin/upload-tasks/' + bridge.task.id + '/control', { action: 'cancel' });
+  }).catch(() => {});
+});

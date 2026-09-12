@@ -33,7 +33,7 @@
       <div class="form-group">
         <label class="form-label" for="chapter_number">Số Chapter <span>*</span></label>
         <input
-          type="number" step="0.1" id="chapter_number" name="chapter_number"
+          type="number" step="any" id="chapter_number" name="chapter_number"
           class="form-control {{ $errors->has('chapter_number') ? 'is-invalid' : '' }}"
           value="{{ old('chapter_number', $nextChapterNumber) }}"
           required autofocus
@@ -193,6 +193,7 @@
           id="tab-bulk-folder"
           class="tab-content-panel"
           style="display:none"
+          data-comic-id="{{ $comic->id }}"
           data-endpoint="{{ route('admin.comics.chapters.store', $comic->id) }}"
           data-csrf="{{ csrf_token() }}"
           data-chapters-url="{{ route('admin.comics.chapters.index', $comic->id) }}"
@@ -310,6 +311,14 @@
   .bulk-status-uploading { background:rgba(59,130,246,.14); color:#bfdbfe; }
   .bulk-status-done { background:rgba(16,185,129,.14); color:#a7f3d0; }
   .bulk-status-failed { background:rgba(239,68,68,.14); color:#fecaca; }
+  .bulk-status-skipped { background:rgba(148,163,184,.08); color:#94a3b8; }
+  /* DB conflict badges */
+  .bulk-db-badge { display:inline-flex; align-items:center; padding:4px 7px; border-radius:999px; font-size:10px; font-weight:700; white-space:nowrap; cursor:default; }
+  .bulk-db-new { background:rgba(16,185,129,.14); color:#a7f3d0; }
+  .bulk-db-existing { background:rgba(245,158,11,.18); color:#fde68a; }
+  .bulk-db-deleted { background:rgba(239,68,68,.14); color:#fecaca; }
+  .bulk-db-checking { background:rgba(148,163,184,.10); color:#94a3b8; }
+  .bulk-db-error { background:rgba(148,163,184,.10); color:#94a3b8; }
   .bulk-progress-wrap { margin-top:16px; }
   .bulk-progress-track { height:10px; border-radius:999px; background:rgba(255,255,255,.08); overflow:hidden; }
   .bulk-progress-bar { width:0; height:100%; border-radius:inherit; background:linear-gradient(90deg,#6c63ff,#22c55e); transition:width .25s ease; }

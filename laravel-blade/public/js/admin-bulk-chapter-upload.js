@@ -22,33 +22,37 @@
   const naturalCollator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
   const allowedExtensions = new Set(['jpg', 'jpeg', 'png', 'webp', 'gif', 'avif']);
   const MAX_IMAGE_BYTES = 20 * 1024 * 1024;
-  const MAX_BATCH_BYTES = 24 * 1024 * 1024;
-  const MAX_BATCH_FILES = 12;
   const MAX_PAGES_PER_CHAPTER = 2000;
   const MAX_SESSION_BYTES = 20 * 1024 * 1024 * 1024;
   const PREVIEW_PAGE_SIZE = 48;
 
   let chapters = [];
   let totalBytes = 0;
-  let uploadedBytes = 0;
-  let activeSession = null;
   let uploadRunning = false;
-  let activeChapterIndex = -1;
   let ignoredFileCount = 0;
   let inspectorChapterIndex = -1;
   let inspectorRenderedPages = 0;
   let inspectorObjectUrls = [];
 
-  const checksumCache = new WeakMap();
+  // DB conflict detection state
+  // 'skip' = skip existing chapters silently | 'stop' = abort on first conflict
+  let dbConflictMode = 'skip';
+  let dbCheckRunning = false;
 
-  class UploadHttpError extends Error {
-    constructor(message, status, payload = null) {
-      super(message);
-      this.name = 'UploadHttpError';
-      this.status = status;
-      this.payload = payload;
-    }
-  }
+
+  // State for Lightbox
+  const lightboxState = {
+    isOpen: false,
+    chapterIndex: -1,
+    pageIndex: -1,
+    zoomLevel: 1,
+  };
+  let lightboxTempUrl = null;
+
+  // State for Upload Errors
+  let lastUploadError = null;
+  const failedBatchPages = new Set();
+  let pendingReplacePageIndex = -1;
 
   injectPreflightUi();
 
@@ -68,15 +72,42 @@
     if (!uploadRunning) runUpload();
   });
 
-  window.addEventListener('beforeunload', (event) => {
-    if (!uploadRunning) return;
-    event.preventDefault();
-    event.returnValue = '';
+  let backgroundTask = null;
+  document.addEventListener('upload-task-snapshot', event => {
+    const task = event.detail;
+    if (String(task.comic_id) !== root.dataset.comicId) return;
+    backgroundTask = task;
+    const active = !['completed', 'cancelled'].includes(task.status);
+    uploadRunning = active && !['waiting_for_client', 'failed'].includes(task.status);
+    folderInput.disabled = uploadRunning;
+    progressWrap.style.display = 'block';
+    const percent = task.total_bytes ? Math.min(100, Math.floor(task.uploaded_bytes * 100 / task.total_bytes)) : 0;
+    progressBar.style.width = percent + '%';
+    progressBar.setAttribute('aria-valuenow', String(percent));
+    progressText.textContent = task.comic.title + ' · ' + percent + '% · ' + task.completed_chapters + '/' + task.uploadable_chapters + ' chapter · ' + task.uploaded_files + '/' + task.total_files + ' file · ' + humanBytes(task.uploaded_bytes) + '/' + humanBytes(task.total_bytes) + ' · Chapter ' + (task.current_chapter_number ?? '—') + ' · Batch ' + task.current_batch + '/' + task.total_batches;
+    validationBox.textContent = task.status === 'completed' ? 'Upload hoàn tất' : task.status === 'waiting_for_client' ? 'Upload đang tạm dừng. Chọn lại folder để tiếp tục.' : task.error_message || 'Đang upload nền · Upload worker đang hoạt động';
+    uploadButton.disabled = uploadRunning;
+    uploadButton.textContent = uploadRunning ? 'Đang upload nền' : task.status === 'completed' ? '✅ Upload hoàn tất' : task.status === 'failed' ? '↻ Thử lại từ Chapter ' + (task.error_context?.chapterNumber ?? task.current_chapter_number ?? '') : 'Mở trình upload nền';
+    if (task.error_context) {
+      lastUploadError = { errorId: task.id, chapterNumber: task.current_chapter_number, chapterIndex: task.current_chapter_index - 1, batchIndex: task.current_batch - 1, totalBatches: task.total_batches, pageIndexes: [], fileNames: [], httpStatus: 0, ...task.error_context, uploadedBytes: task.uploaded_bytes, totalBytes: task.total_bytes, timestamp: task.updated_at };
+      renderErrorPanel(lastUploadError);
+    } else {
+      document.getElementById('bulk-error-panel').style.display = 'none';
+    }
+    if (!chapters.length && active) document.querySelector('[data-target="tab-bulk-folder"]')?.click();
   });
+  const skipped = chapter => dbConflictMode === 'skip' && ['existing', 'deleted'].includes(chapter.dbConflict);
 
   function injectPreflightUi() {
     const headerRow = tableWrap?.querySelector('thead tr');
     if (headerRow && !headerRow.querySelector('[data-preflight-header]')) {
+      // Insert DB status column before preflight column
+      const dbTh = document.createElement('th');
+      dbTh.dataset.dbStatusHeader = 'true';
+      dbTh.style.width = '120px';
+      dbTh.textContent = 'Trạng thái DB';
+      headerRow.appendChild(dbTh);
+
       const th = document.createElement('th');
       th.dataset.preflightHeader = 'true';
       th.style.width = '175px';
@@ -94,14 +125,103 @@
           <strong>🔎 Kiểm tra trước khi upload</strong>
           <span id="bulk-preflight-summary">Chưa có chapter để kiểm tra.</span>
         </div>
-        <button type="button" id="bulk-check-all" class="btn-admin btn-admin-ghost btn-sm">
-          ✓ Kiểm tra tất cả Chapter
-        </button>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <label for="bulk-conflict-mode" style="white-space:nowrap;font-size:0.85em;">Khi trùng DB:</label>
+          <select id="bulk-conflict-mode" class="form-control" style="width:auto;min-width:160px;">
+            <option value="skip">✔ Bỏ qua chapter đã tồn tại</option>
+            <option value="stop">⛔ Dừng upload khi phát hiện trùng</option>
+          </select>
+          <button type="button" id="bulk-check-all" class="btn-admin btn-admin-ghost btn-sm">
+            ✓ Kiểm tra tất cả Chapter
+          </button>
+        </div>
       `;
       tableWrap?.before(toolbar);
 
       toolbar.querySelector('#bulk-check-all')?.addEventListener('click', () => {
         if (!uploadRunning) inspectAllChapters();
+      });
+
+      toolbar.querySelector('#bulk-conflict-mode')?.addEventListener('change', (event) => {
+        dbConflictMode = event.target.value;
+        renderChapterTable();
+        refreshValidation();
+        updatePreflightToolbar();
+      });
+    }
+
+    if (!document.getElementById('bulk-error-panel')) {
+      const errorPanel = document.createElement('section');
+      errorPanel.id = 'bulk-error-panel';
+      errorPanel.className = 'bulk-error-panel';
+      errorPanel.dataset.testid = 'bulk-error-panel';
+      errorPanel.style.display = 'none';
+      errorPanel.innerHTML = `
+        <div class="bulk-error-header">
+          <div>
+            <span class="bulk-error-badge">⚠ UPLOAD GẶP LỖI</span>
+            <h4 id="bulk-error-heading">Chi tiết lỗi upload dữ liệu</h4>
+          </div>
+          <button type="button" id="bulk-error-dismiss" class="btn-admin btn-admin-ghost btn-sm" title="Đóng panel lỗi">✕</button>
+        </div>
+
+        <div class="bulk-error-grid">
+          <div><span>Chapter:</span><strong id="bulk-error-chapter">-</strong></div>
+          <div><span>Thứ tự chapter:</span><strong id="bulk-error-chapter-index">-</strong></div>
+          <div><span>Batch:</span><strong id="bulk-error-batch">-</strong></div>
+          <div><span>Mã HTTP:</span><strong id="bulk-error-http">-</strong></div>
+          <div><span>Các trang:</span><strong id="bulk-error-pages">-</strong></div>
+          <div><span>Đã upload:</span><strong id="bulk-error-progress">-</strong></div>
+        </div>
+
+        <div class="bulk-error-files-wrap">
+          <span>File trong batch:</span>
+          <div id="bulk-error-files" class="bulk-error-files-list"></div>
+        </div>
+
+        <div class="bulk-error-message-box">
+          <strong>Thông báo lỗi:</strong>
+          <p id="bulk-error-message-text">-</p>
+        </div>
+
+        <div class="bulk-error-actions">
+          <button type="button" id="bulk-error-retry-btn" class="btn-admin btn-admin-primary btn-sm">
+            ↻ Thử lại Chapter này
+          </button>
+          <button type="button" id="bulk-error-copy-btn" class="btn-admin btn-admin-ghost btn-sm">
+            📋 Sao chép chi tiết lỗi
+          </button>
+          <button type="button" id="bulk-error-view-chapter-btn" class="btn-admin btn-admin-ghost btn-sm">
+            👁 Xem Chapter
+          </button>
+        </div>
+
+        <details id="bulk-error-details" class="bulk-error-details">
+          <summary>Chi tiết kỹ thuật (dành cho Admin)</summary>
+          <pre id="bulk-error-raw"></pre>
+        </details>
+      `;
+
+      if (progressWrap) {
+        progressWrap.after(errorPanel);
+      } else if (tableWrap) {
+        tableWrap.before(errorPanel);
+      }
+
+      errorPanel.querySelector('#bulk-error-dismiss')?.addEventListener('click', () => {
+        errorPanel.style.display = 'none';
+      });
+
+      errorPanel.querySelector('#bulk-error-retry-btn')?.addEventListener('click', () => {
+        if (!uploadRunning) runUpload();
+      });
+
+      errorPanel.querySelector('#bulk-error-copy-btn')?.addEventListener('click', copyErrorDetails);
+
+      errorPanel.querySelector('#bulk-error-view-chapter-btn')?.addEventListener('click', () => {
+        if (lastUploadError && lastUploadError.chapterIndex >= 0) {
+          openChapterInspector(lastUploadError.chapterIndex, false);
+        }
       });
     }
 
@@ -113,9 +233,9 @@
       inspector.innerHTML = `
         <div class="bulk-inspector-head">
           <div>
-            <div class="bulk-inspector-kicker">PRE-UPLOAD CHECK</div>
+            <div class="bulk-inspector-kicker">PRE-UPLOAD CHECK &amp; EDIT</div>
             <h3 id="bulk-inspector-title">Chapter</h3>
-            <p id="bulk-inspector-subtitle">Kiểm tra thứ tự trang, kích thước và ảnh hỏng trước khi upload.</p>
+            <p id="bulk-inspector-subtitle">Kiểm tra thứ tự trang, kích thước, ảnh hỏng và chỉnh sửa trước khi upload.</p>
           </div>
           <button type="button" id="bulk-inspector-close" class="btn-admin btn-admin-ghost btn-sm">✕ Đóng</button>
         </div>
@@ -133,7 +253,11 @@
 
         <div class="bulk-inspector-actions">
           <button type="button" id="bulk-inspector-run" class="btn-admin btn-admin-primary btn-sm">🔎 Kiểm tra Chapter này</button>
-          <span>Ảnh preview chỉ được tạo cho chapter đang mở và sẽ giải phóng khi đóng.</span>
+          <button type="button" id="bulk-inspector-add" class="btn-admin btn-admin-ghost btn-sm" title="Chọn thêm ảnh từ máy để bổ sung vào cuối chapter">➕ Thêm ảnh</button>
+          <button type="button" id="bulk-inspector-reset" class="btn-admin btn-admin-ghost btn-sm" title="Khôi phục lại danh sách ảnh gốc của chapter">↺ Khôi phục ban đầu</button>
+          <input type="file" id="bulk-inspector-add-input" multiple accept="image/*" style="display:none" />
+          <input type="file" id="bulk-inspector-replace-input" accept="image/*" style="display:none" />
+          <span>Kéo thả thumbnail để đổi thứ tự trang. Mọi thay đổi sẽ yêu cầu kiểm tra lại trước khi upload.</span>
         </div>
 
         <div id="bulk-inspector-pages-grid" class="bulk-inspector-pages-grid"></div>
@@ -152,6 +276,105 @@
       });
       inspector.querySelector('#bulk-inspector-more')?.addEventListener('click', () => {
         if (inspectorChapterIndex >= 0) renderInspectorPages(inspectorChapterIndex, false);
+      });
+
+      const addBtn = inspector.querySelector('#bulk-inspector-add');
+      const addInput = inspector.querySelector('#bulk-inspector-add-input');
+      const resetBtn = inspector.querySelector('#bulk-inspector-reset');
+      const replaceInput = inspector.querySelector('#bulk-inspector-replace-input');
+
+      addBtn?.addEventListener('click', () => {
+        if (uploadRunning) return;
+        addInput.value = '';
+        addInput.click();
+      });
+
+      addInput?.addEventListener('change', () => {
+        if (inspectorChapterIndex >= 0 && addInput.files && addInput.files.length) {
+          addInspectorPages(inspectorChapterIndex, Array.from(addInput.files));
+        }
+      });
+
+      replaceInput?.addEventListener('change', () => {
+        if (inspectorChapterIndex >= 0 && pendingReplacePageIndex >= 0 && replaceInput.files && replaceInput.files.length) {
+          replaceInspectorPage(inspectorChapterIndex, pendingReplacePageIndex, replaceInput.files[0]);
+        }
+      });
+
+      resetBtn?.addEventListener('click', () => {
+        if (inspectorChapterIndex >= 0 && !uploadRunning) {
+          resetInspectorChapter(inspectorChapterIndex);
+        }
+      });
+    }
+
+    if (!document.getElementById('bulk-preflight-lightbox')) {
+      const lightbox = document.createElement('div');
+      lightbox.id = 'bulk-preflight-lightbox';
+      lightbox.className = 'bulk-lightbox-overlay';
+      lightbox.dataset.testid = 'bulk-preflight-lightbox';
+      lightbox.style.display = 'none';
+      lightbox.innerHTML = `
+        <div class="bulk-lightbox-bar">
+          <div class="bulk-lightbox-title-area">
+            <strong id="bulk-lightbox-pos">1 / 1</strong>
+            <span id="bulk-lightbox-title">page.jpg</span>
+            <span id="bulk-lightbox-meta" class="bulk-lightbox-dim">-</span>
+          </div>
+          <div class="bulk-lightbox-ctrls">
+            <button type="button" id="bulk-lightbox-zoom-out" class="bulk-lightbox-btn" title="Thu nhỏ (-)">−</button>
+            <button type="button" id="bulk-lightbox-zoom-reset" class="bulk-lightbox-btn" title="Kích thước gốc (0)">100%</button>
+            <button type="button" id="bulk-lightbox-zoom-in" class="bulk-lightbox-btn" title="Phóng to (+)">+</button>
+            <button type="button" id="bulk-lightbox-close" class="bulk-lightbox-btn close" title="Đóng (Escape)">✕</button>
+          </div>
+        </div>
+
+        <button type="button" id="bulk-lightbox-prev" class="bulk-lightbox-nav prev" title="Trang trước (ArrowLeft)">‹</button>
+        <button type="button" id="bulk-lightbox-next" class="bulk-lightbox-nav next" title="Trang sau (ArrowRight)">›</button>
+
+        <div id="bulk-lightbox-body" class="bulk-lightbox-body">
+          <div id="bulk-lightbox-img-wrap" class="bulk-lightbox-img-wrap">
+            <img id="bulk-lightbox-img" src="" alt="Trang truyện lớn" />
+          </div>
+        </div>
+      `;
+      document.body.appendChild(lightbox);
+
+      lightbox.querySelector('#bulk-lightbox-close')?.addEventListener('click', closeLightbox);
+      lightbox.querySelector('#bulk-lightbox-prev')?.addEventListener('click', prevLightboxPage);
+      lightbox.querySelector('#bulk-lightbox-next')?.addEventListener('click', nextLightboxPage);
+      lightbox.querySelector('#bulk-lightbox-zoom-in')?.addEventListener('click', () => zoomLightbox(0.2));
+      lightbox.querySelector('#bulk-lightbox-zoom-out')?.addEventListener('click', () => zoomLightbox(-0.2));
+      lightbox.querySelector('#bulk-lightbox-zoom-reset')?.addEventListener('click', resetLightboxZoom);
+
+      const bodyEl = lightbox.querySelector('#bulk-lightbox-body');
+      bodyEl?.addEventListener('click', (e) => {
+        if (e.target === bodyEl || e.target.id === 'bulk-lightbox-img-wrap') {
+          closeLightbox();
+        }
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (!lightboxState.isOpen) return;
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          closeLightbox();
+        } else if (e.key === 'ArrowLeft') {
+          e.preventDefault();
+          prevLightboxPage();
+        } else if (e.key === 'ArrowRight') {
+          e.preventDefault();
+          nextLightboxPage();
+        } else if (e.key === '+' || e.key === '=') {
+          e.preventDefault();
+          zoomLightbox(0.2);
+        } else if (e.key === '-') {
+          e.preventDefault();
+          zoomLightbox(-0.2);
+        } else if (e.key === '0') {
+          e.preventDefault();
+          resetLightboxZoom();
+        }
       });
     }
 
@@ -251,8 +474,8 @@
         .bulk-inspector-actions span { font-size:11px; color:var(--admin-text-muted); }
         .bulk-inspector-pages-grid {
           display:grid;
-          grid-template-columns:repeat(auto-fill,minmax(128px,1fr));
-          gap:10px;
+          grid-template-columns:repeat(auto-fill,minmax(136px,1fr));
+          gap:12px;
           margin-top:14px;
         }
         .bulk-preview-page {
@@ -261,13 +484,72 @@
           border-radius:9px;
           background:rgba(255,255,255,.035);
           overflow:hidden;
+          position:relative;
+          transition:transform .12s ease, border-color .12s ease, box-shadow .12s ease;
+          user-select:none;
         }
-        .bulk-preview-page img {
+        .bulk-preview-page.is-dragging {
+          opacity: 0.35;
+          border: 2px dashed #818cf8;
+          transform: scale(0.96);
+        }
+        .bulk-preview-page.is-drag-over {
+          border-color: #6366f1 !important;
+          box-shadow: 0 0 0 2px #6366f1;
+          background: rgba(99, 102, 241, 0.15);
+        }
+        .bulk-preview-page.is-batch-error {
+          border-color: #ef4444 !important;
+          box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.55);
+          background: rgba(239, 68, 68, 0.08);
+        }
+        .bulk-preview-page-thumb {
+          position: relative;
+          overflow: hidden;
+        }
+        .bulk-preview-page-thumb img {
           display:block;
           width:100%;
           aspect-ratio:3/4;
           object-fit:contain;
           background:#09090b;
+          cursor:zoom-in;
+        }
+        .bulk-preview-page-actions {
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          padding: 4px 6px;
+          display: flex;
+          gap: 3px;
+          background: linear-gradient(to bottom, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0) 100%);
+          justify-content: flex-end;
+          opacity: 0.92;
+        }
+        .bulk-card-action-btn {
+          background: rgba(20, 20, 32, 0.85);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          color: #fff;
+          border-radius: 4px;
+          width: 22px;
+          height: 22px;
+          font-size: 11px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          padding: 0;
+          transition: all .12s ease;
+        }
+        .bulk-card-action-btn:hover {
+          background: #6366f1;
+          border-color: #818cf8;
+          transform: scale(1.1);
+        }
+        .bulk-card-action-btn.bulk-btn-delete:hover {
+          background: #ef4444;
+          border-color: #f87171;
         }
         .bulk-preview-page.is-error { border-color:rgba(239,68,68,.55); }
         .bulk-preview-page-meta { padding:7px; }
@@ -280,10 +562,268 @@
         }
         .bulk-preview-page-meta span { display:block; margin-top:2px; font-size:9.5px; color:var(--admin-text-muted); }
         .bulk-preview-page-error { color:#fecaca !important; }
+        .bulk-page-batch-error-badge {
+          display: inline-block;
+          margin-top: 3px;
+          padding: 1px 5px;
+          border-radius: 4px;
+          background: rgba(239,68,68,0.25);
+          color: #fca5a5 !important;
+          font-size: 9px;
+          font-weight: 700;
+        }
         .bulk-inspector-more-wrap { margin-top:12px; text-align:center; }
+
+        /* Lightbox CSS */
+        .bulk-lightbox-overlay {
+          position: fixed;
+          inset: 0;
+          z-index: 99999;
+          background: rgba(0, 0, 0, 0.92);
+          backdrop-filter: blur(8px);
+          display: flex;
+          flex-direction: column;
+        }
+        body.bulk-lightbox-active {
+          overflow: hidden !important;
+        }
+        .bulk-lightbox-bar {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 10px 18px;
+          background: rgba(15, 15, 25, 0.9);
+          border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+          color: #fff;
+          z-index: 10;
+        }
+        .bulk-lightbox-title-area {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          font-size: 13px;
+        }
+        .bulk-lightbox-title-area strong {
+          background: #6366f1;
+          padding: 2px 8px;
+          border-radius: 999px;
+          font-size: 11px;
+        }
+        .bulk-lightbox-dim {
+          color: #94a3b8;
+          font-size: 11px;
+        }
+        .bulk-lightbox-ctrls {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+        .bulk-lightbox-btn {
+          background: rgba(255, 255, 255, 0.1);
+          border: 1px solid rgba(255, 255, 255, 0.15);
+          color: #fff;
+          border-radius: 6px;
+          padding: 5px 10px;
+          cursor: pointer;
+          font-size: 13px;
+          transition: all .15s ease;
+        }
+        .bulk-lightbox-btn:hover {
+          background: rgba(255, 255, 255, 0.22);
+        }
+        .bulk-lightbox-btn.close {
+          background: rgba(239, 68, 68, 0.25);
+          border-color: rgba(239, 68, 68, 0.4);
+        }
+        .bulk-lightbox-btn.close:hover {
+          background: rgba(239, 68, 68, 0.45);
+        }
+        .bulk-lightbox-body {
+          flex: 1;
+          overflow-y: auto;
+          overflow-x: hidden;
+          display: flex;
+          align-items: flex-start;
+          justify-content: center;
+          padding: 20px;
+          position: relative;
+          cursor: default;
+        }
+        .bulk-lightbox-img-wrap {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          min-height: 100%;
+        }
+        .bulk-lightbox-img-wrap img {
+          display: block;
+          max-width: 900px;
+          width: 100%;
+          height: auto;
+          object-fit: contain;
+          box-shadow: 0 10px 40px rgba(0,0,0,0.85);
+          border-radius: 4px;
+          transition: transform 0.12s ease;
+          transform-origin: center top;
+        }
+        .bulk-lightbox-nav {
+          position: fixed;
+          top: 50%;
+          transform: translateY(-50%);
+          background: rgba(20, 20, 30, 0.7);
+          border: 1px solid rgba(255, 255, 255, 0.15);
+          color: #fff;
+          font-size: 32px;
+          width: 50px;
+          height: 70px;
+          border-radius: 8px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          z-index: 10;
+          transition: all .15s ease;
+        }
+        .bulk-lightbox-nav:hover:not(:disabled) {
+          background: rgba(99, 102, 241, 0.8);
+        }
+        .bulk-lightbox-nav:disabled {
+          opacity: 0.2;
+          cursor: not-allowed;
+        }
+        .bulk-lightbox-nav.prev { left: 16px; }
+        .bulk-lightbox-nav.next { right: 16px; }
+
+        /* Error Panel CSS */
+        .bulk-error-panel {
+          margin-top: 16px;
+          border: 1px solid rgba(239, 68, 68, 0.45);
+          border-radius: 12px;
+          background: rgba(239, 68, 68, 0.08);
+          padding: 16px;
+          color: #fecaca;
+        }
+        .bulk-error-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          gap: 12px;
+        }
+        .bulk-error-badge {
+          display: inline-block;
+          padding: 2px 7px;
+          background: #ef4444;
+          color: #fff;
+          border-radius: 4px;
+          font-size: 10px;
+          font-weight: 800;
+          letter-spacing: .05em;
+          margin-bottom: 4px;
+        }
+        .bulk-error-header h4 {
+          margin: 0;
+          font-size: 16px;
+          color: #fff;
+        }
+        .bulk-error-grid {
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 10px;
+          margin-top: 14px;
+          padding: 10px;
+          border-radius: 8px;
+          background: rgba(0, 0, 0, 0.25);
+          border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+        .bulk-error-grid > div span {
+          display: block;
+          font-size: 11px;
+          color: #cbd5e1;
+        }
+        .bulk-error-grid > div strong {
+          display: block;
+          font-size: 13px;
+          margin-top: 2px;
+          color: #fff;
+        }
+        .bulk-error-files-wrap {
+          margin-top: 12px;
+        }
+        .bulk-error-files-wrap > span {
+          display: block;
+          font-size: 11px;
+          color: #cbd5e1;
+          margin-bottom: 5px;
+        }
+        .bulk-error-files-list {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 6px;
+        }
+        .bulk-error-file-item {
+          display: inline-block;
+          padding: 3px 8px;
+          border-radius: 6px;
+          background: rgba(255, 255, 255, 0.08);
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          font-size: 11px;
+          font-family: monospace;
+          color: #f1f5f9;
+        }
+        .bulk-error-file-item.more {
+          color: #94a3b8;
+          border-style: dashed;
+        }
+        .bulk-error-message-box {
+          margin-top: 12px;
+          padding: 10px 12px;
+          border-radius: 8px;
+          background: rgba(239, 68, 68, 0.18);
+          border: 1px solid rgba(239, 68, 68, 0.35);
+        }
+        .bulk-error-message-box strong {
+          display: block;
+          font-size: 11.5px;
+          color: #fca5a5;
+          margin-bottom: 3px;
+        }
+        .bulk-error-message-box p {
+          margin: 0;
+          font-size: 13px;
+          color: #fff;
+          font-weight: 500;
+        }
+        .bulk-error-actions {
+          display: flex;
+          gap: 10px;
+          flex-wrap: wrap;
+          margin-top: 14px;
+        }
+        .bulk-error-details {
+          margin-top: 14px;
+          border-top: 1px solid rgba(255, 255, 255, 0.08);
+          padding-top: 10px;
+        }
+        .bulk-error-details summary {
+          cursor: pointer;
+          font-size: 12px;
+          color: #cbd5e1;
+        }
+        .bulk-error-details pre {
+          margin-top: 8px;
+          padding: 10px;
+          background: rgba(0, 0, 0, 0.4);
+          border-radius: 6px;
+          font-size: 11px;
+          font-family: monospace;
+          color: #e2e8f0;
+          overflow-x: auto;
+        }
+
         @media (max-width:700px) {
           .bulk-inspector-summary { grid-template-columns:repeat(2,minmax(0,1fr)); }
           .bulk-inspector-pages-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+          .bulk-error-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
         }
       `;
       document.head.appendChild(style);
@@ -291,11 +831,12 @@
   }
 
   function prepareFolder(files) {
-    activeSession = null;
-    uploadedBytes = 0;
-    activeChapterIndex = -1;
     ignoredFileCount = 0;
     chapters = [];
+    lastUploadError = null;
+    failedBatchPages.clear();
+    const errorPanel = document.getElementById('bulk-error-panel');
+    if (errorPanel) errorPanel.style.display = 'none';
     closeInspector();
 
     const groups = new Map();
@@ -341,8 +882,15 @@
       const parsed = parseChapterFolderName(group.folderName);
       const size = group.files.reduce((sum, item) => sum + item.file.size, 0);
 
+      // Keep originalFiles snapshot for Reset feature (A7)
+      const originalFiles = group.files.map((item) => ({
+        file: item.file,
+        innerPath: item.innerPath,
+      }));
+
       return {
         ...group,
+        originalFiles,
         chapterNumber: parsed.chapterNumber,
         title: parsed.title,
         size,
@@ -351,13 +899,13 @@
         preflightStatus: 'unchecked',
         preflightErrors: [],
         pageMeta: [],
+        dbConflict: 'checking', // 'new' | 'existing' | 'deleted' | 'checking' | 'error'
       };
     });
 
     chapters.sort((a, b) => {
-      const aNumber = Number.isInteger(a.chapterNumber) ? a.chapterNumber : Number.MAX_SAFE_INTEGER;
-      const bNumber = Number.isInteger(b.chapterNumber) ? b.chapterNumber : Number.MAX_SAFE_INTEGER;
-      if (aNumber !== bNumber) return aNumber - bNumber;
+      const comp = compareChapterNumbers(a.chapterNumber, b.chapterNumber);
+      if (comp !== 0) return comp;
       return naturalCollator.compare(a.folderName, b.folderName);
     });
 
@@ -369,6 +917,9 @@
     renderChapterTable();
     refreshValidation();
     updatePreflightToolbar();
+
+    // Kick off DB conflict check asynchronously; don't block the UI
+    checkExistingChaptersDb();
   }
 
   function detectChapterFolder(parts) {
@@ -398,21 +949,66 @@
     };
   }
 
+  function normalizeChapterNumber(val) {
+    if (val === null || val === undefined) return null;
+    const str = String(val).trim();
+    if (!/^\d+(?:\.\d+)?$/.test(str)) return null;
+
+    let [intPart, decPart] = str.split('.');
+    intPart = intPart.replace(/^0+/, '') || '0';
+    if (decPart !== undefined) {
+      decPart = decPart.replace(/0+$/, '');
+      if (decPart !== '') {
+        return `${intPart}.${decPart}`;
+      }
+    }
+    return intPart;
+  }
+
+  function compareChapterNumbers(a, b) {
+    const normA = normalizeChapterNumber(a);
+    const normB = normalizeChapterNumber(b);
+
+    if (normA === null && normB === null) return 0;
+    if (normA === null) return 1;
+    if (normB === null) return -1;
+    if (normA === normB) return 0;
+
+    const [intA, decA = ''] = normA.split('.');
+    const [intB, decB = ''] = normB.split('.');
+
+    if (intA.length !== intB.length) {
+      return intA.length - intB.length;
+    }
+    if (intA !== intB) {
+      return intA.localeCompare(intB);
+    }
+
+    const maxDecLen = Math.max(decA.length, decB.length);
+    const padA = decA.padEnd(maxDecLen, '0');
+    const padB = decB.padEnd(maxDecLen, '0');
+
+    return padA.localeCompare(padB);
+  }
+
   function parseChapterFolderName(folderName) {
-    const match = folderName.match(/\bCh(?:apter)?\.?\s*0*(\d+)\b/i);
+    let match = folderName.match(/\bCh(?:apter)?\.?\s*(\d+(?:\.\d+)?)(?=[^\d.]|$)/i);
+    if (!match) {
+      match = folderName.match(/^(?:Vol\.?\s*\d+[\s._\-–—]+)?(\d+(?:\.\d+)?)(?=[^\d.]|$)/i);
+    }
     if (!match) {
       return { chapterNumber: null, title: cleanFolderTitle(folderName) };
     }
 
-    const chapterNumber = Number.parseInt(match[1], 10);
+    const norm = normalizeChapterNumber(match[1]);
     let title = folderName.slice((match.index || 0) + match[0].length);
     title = title.replace(/^[\s._\-–—:]+/, '').trim();
     title = title.replace(/\s*\((?:en|vi|jp|ja|kr|ko)\)\s*(?:\[.*)?$/i, '').trim();
     title = title.replace(/\s*\[[^\]]*\]\s*$/g, '').trim();
 
     return {
-      chapterNumber: Number.isInteger(chapterNumber) ? chapterNumber : null,
-      title: title || `Chapter ${chapterNumber}`,
+      chapterNumber: norm,
+      title: title || (norm !== null ? `Chapter ${norm}` : cleanFolderTitle(folderName)),
     };
   }
 
@@ -432,6 +1028,11 @@
       row.dataset.chapterIndex = String(index);
       row.classList.add('bulk-row-clickable');
 
+      // Dim existing chapters that will be skipped
+      if (chapter.dbConflict === 'existing' && dbConflictMode === 'skip') {
+        row.style.opacity = '0.5';
+      }
+
       const folderCell = document.createElement('td');
       folderCell.innerHTML = `
         <div class="bulk-folder-name" title="${escapeHtml(chapter.folderName)}">${escapeHtml(chapter.folderName)}</div>
@@ -440,16 +1041,20 @@
 
       const numberCell = document.createElement('td');
       const numberInput = document.createElement('input');
-      numberInput.type = 'number';
-      numberInput.min = '0';
-      numberInput.step = '1';
+      numberInput.type = 'text';
       numberInput.className = 'form-control bulk-chapter-number';
       numberInput.dataset.testid = 'bulk-chapter-number';
       numberInput.value = chapter.chapterNumber ?? '';
-      numberInput.placeholder = 'VD: 140';
+      numberInput.placeholder = 'VD: 140 hoặc 187.5';
       numberInput.addEventListener('input', () => {
-        chapter.chapterNumber = numberInput.value === '' ? null : Number.parseInt(numberInput.value, 10);
+        const val = numberInput.value.trim();
+        const norm = normalizeChapterNumber(val);
+        chapter.chapterNumber = norm !== null ? norm : (val === '' ? null : val);
+        // Re-check DB conflict for this chapter when number changes
+        chapter.dbConflict = 'checking';
+        renderChapterTable();
         refreshValidation();
+        checkExistingChaptersDb();
       });
       numberCell.appendChild(numberInput);
 
@@ -469,6 +1074,16 @@
       const pagesCell = document.createElement('td');
       pagesCell.style.whiteSpace = 'nowrap';
       pagesCell.textContent = `${chapter.files.length} trang`;
+
+      // DB conflict badge cell
+      const dbCell = document.createElement('td');
+      dbCell.style.whiteSpace = 'nowrap';
+      const dbBadge = document.createElement('span');
+      dbBadge.dataset.testid = 'bulk-chapter-db-status';
+      dbBadge.className = `bulk-db-badge bulk-db-${chapter.dbConflict}`;
+      dbBadge.title = dbConflictBadgeTitle(chapter.dbConflict);
+      dbBadge.textContent = dbConflictBadgeText(chapter.dbConflict);
+      dbCell.appendChild(dbBadge);
 
       const statusCell = document.createElement('td');
       const status = document.createElement('span');
@@ -503,11 +1118,31 @@
         openChapterInspector(index, true);
       });
 
-      row.append(folderCell, numberCell, titleCell, pagesCell, statusCell, preflightCell);
+      row.append(folderCell, numberCell, titleCell, pagesCell, dbCell, statusCell, preflightCell);
       tableBody.appendChild(row);
     });
 
     tableWrap.style.display = chapters.length ? 'block' : 'none';
+  }
+
+  function dbConflictBadgeText(conflict) {
+    return {
+      new: '✓ Mới',
+      existing: '⚠ Đã tồn tại',
+      deleted: '🗑 Đã xóa',
+      checking: '⏳ Đang kiểm tra',
+      error: '? Lỗi check',
+    }[conflict] ?? '?';
+  }
+
+  function dbConflictBadgeTitle(conflict) {
+    return {
+      new: 'Chapter chưa tồn tại trong DB — an toàn để upload.',
+      existing: 'Chapter đã tồn tại trong DB. Sẽ bỏ qua khi mode là "Bỏ qua" hoặc dừng khi mode là "Dừng".',
+      deleted: 'Chapter đã bị xóa mềm. Sẽ bị bỏ qua hoặc dừng upload.',
+      checking: 'Đang kiểm tra trong database...',
+      error: 'Không kiểm tra được — sẽ coi như mới.',
+    }[conflict] ?? '';
   }
 
   function preflightLabel(status) {
@@ -563,6 +1198,7 @@
     const toolbar = document.getElementById('bulk-preflight-toolbar');
     const summary = document.getElementById('bulk-preflight-summary');
     const checkAllButton = document.getElementById('bulk-check-all');
+    const conflictModeSelect = document.getElementById('bulk-conflict-mode');
 
     if (!toolbar || !summary || !checkAllButton) return;
 
@@ -571,6 +1207,10 @@
     const checked = chapters.filter((chapter) => chapter.preflightStatus === 'ok').length;
     const checking = chapters.filter((chapter) => chapter.preflightStatus === 'checking').length;
     const failed = chapters.filter((chapter) => chapter.preflightStatus === 'error').length;
+    const conflictCount = chapters.filter((chapter) =>
+      chapter.dbConflict === 'existing' || chapter.dbConflict === 'deleted',
+    ).length;
+    const dbChecking = dbCheckRunning;
 
     if (!chapters.length) {
       summary.textContent = 'Chưa có chapter để kiểm tra.';
@@ -578,6 +1218,11 @@
       summary.textContent = `Đang kiểm tra ${checking} chapter · ${checked}/${chapters.length} đã đạt.`;
     } else if (failed) {
       summary.textContent = `${checked}/${chapters.length} chapter đạt · ${failed} chapter có lỗi cần xem lại.`;
+    } else if (dbChecking) {
+      summary.textContent = `Đang kiểm tra trùng DB...`;
+    } else if (conflictCount) {
+      const label = dbConflictMode === 'skip' ? 'sẽ bỏ qua' : 'sẽ dừng upload';
+      summary.textContent = `${conflictCount} chapter đã tồn tại — ${label}.`;
     } else if (checked === chapters.length) {
       summary.textContent = `Đã kiểm tra đủ ${checked}/${chapters.length} chapter. Có thể upload.`;
     } else {
@@ -588,6 +1233,10 @@
     checkAllButton.textContent = checked === chapters.length && !failed
       ? '✓ Đã kiểm tra tất cả'
       : '✓ Kiểm tra tất cả Chapter';
+
+    if (conflictModeSelect) {
+      conflictModeSelect.disabled = uploadRunning;
+    }
   }
 
   function collectValidationIssues() {
@@ -598,12 +1247,16 @@
     chapters.forEach((chapter, index) => {
       totalPages += chapter.files.length;
 
-      if (!Number.isInteger(chapter.chapterNumber) || chapter.chapterNumber < 0) {
-        issues.push(`Folder "${chapter.folderName}" chưa nhận diện được số chapter.`);
+      const norm = normalizeChapterNumber(chapter.chapterNumber);
+      const isNumValid = norm !== null;
+      if (!isNumValid) {
+        issues.push(`Folder "${chapter.folderName}" chưa nhận diện được số chapter hợp lệ.`);
       } else {
-        const count = numbers.get(chapter.chapterNumber) || 0;
-        numbers.set(chapter.chapterNumber, count + 1);
+        const count = numbers.get(norm) || 0;
+        numbers.set(norm, count + 1);
       }
+
+      if (skipped(chapter)) return;
 
       if (chapter.files.length === 0 || chapter.files.length > MAX_PAGES_PER_CHAPTER) {
         issues.push(`Chapter ${chapter.chapterNumber ?? index + 1} có số trang không hợp lệ.`);
@@ -622,11 +1275,20 @@
             : `Chapter ${chapter.chapterNumber ?? index + 1} có ảnh lỗi.`
         );
       }
+
+      // In 'stop' mode, any conflict blocks upload
+      if (dbConflictMode === 'stop' && (chapter.dbConflict === 'existing' || chapter.dbConflict === 'deleted')) {
+        issues.push(`Chapter ${chapter.chapterNumber ?? index + 1} đã tồn tại trong DB (mode: dừng khi phát hiện trùng).`);
+      }
     });
 
     numbers.forEach((count, number) => {
       if (count > 1) issues.push(`Chapter ${number} xuất hiện ${count} lần trong thư mục.`);
     });
+
+    if (dbCheckRunning) {
+      issues.push('Đang kiểm tra chapter trùng trong database...');
+    }
 
     if (totalBytes > MAX_SESSION_BYTES) {
       issues.push('Tổng dung lượng vượt giới hạn an toàn 20GB / phiên upload.');
@@ -636,11 +1298,12 @@
   }
 
   function refreshValidation() {
+    totalBytes = chapters.filter(chapter => !skipped(chapter)).reduce((sum, chapter) => sum + chapter.size, 0);
     const { issues, totalPages } = collectValidationIssues();
     const checkedCount = chapters.filter((chapter) => chapter.preflightStatus === 'ok').length;
     const checkingCount = chapters.filter((chapter) => chapter.preflightStatus === 'checking').length;
     const uncheckedCount = chapters.length - checkedCount - chapters.filter((chapter) => chapter.preflightStatus === 'error').length - checkingCount;
-    const allChecked = chapters.length > 0 && checkedCount === chapters.length;
+    const allChecked = chapters.length > 0 && chapters.every(chapter => skipped(chapter) || chapter.preflightStatus === 'ok');
 
     summaryChapters.textContent = String(chapters.length);
     summaryPages.textContent = String(totalPages);
@@ -739,10 +1402,254 @@
       runButton.disabled = uploadRunning;
       runButton.textContent = '↻ Kiểm tra lại sau khi sửa';
     } else {
-      message.textContent = 'Bấm kiểm tra để quét từng ảnh. Hệ thống chỉ mở một ảnh tại một thời điểm để tránh ngốn RAM với folder vài GB.';
+      message.textContent = 'Bấm kiểm tra để quét từng ảnh. Có thể thêm, xóa, thay ảnh hoặc kéo thả để đổi thứ tự.';
       runButton.disabled = uploadRunning;
       runButton.textContent = '🔎 Kiểm tra Chapter này';
     }
+  }
+
+  // ==========================================
+  // PART A: PRE-UPLOAD CHECK & EDITING
+  // ==========================================
+
+  // Mandatory Invalidation Rule (A8)
+  function invalidateChapterPreflight(index) {
+    const chapter = chapters[index];
+    if (!chapter) return;
+
+    chapter.preflightStatus = 'unchecked';
+    chapter.preflightErrors = [];
+    chapter.pageMeta = [];
+    chapter.size = chapter.files.reduce((sum, item) => sum + item.file.size, 0);
+
+    totalBytes = chapters.reduce((sum, ch) => sum + ch.size, 0);
+
+    // If lightbox is currently open on this chapter
+    if (lightboxState.isOpen && lightboxState.chapterIndex === index) {
+      if (chapter.files.length === 0) {
+        closeLightbox();
+      } else {
+        lightboxState.pageIndex = Math.min(lightboxState.pageIndex, chapter.files.length - 1);
+        renderLightboxPage();
+      }
+    }
+
+    renderChapterTable();
+    updateChapterStatus(index, 'pending', 'Chờ upload');
+
+    if (inspectorChapterIndex === index) {
+      document.getElementById('bulk-inspector-pages').textContent = String(chapter.files.length);
+      document.getElementById('bulk-inspector-size').textContent = humanBytes(chapter.size);
+      renderInspectorStatus(chapter);
+      renderInspectorPages(index, true);
+    }
+
+    refreshValidation();
+    updatePreflightToolbar();
+  }
+
+  // A3: Delete Page
+  function deleteInspectorPage(chapterIndex, pageIndex) {
+    const chapter = chapters[chapterIndex];
+    if (!chapter || uploadRunning) return;
+
+    if (chapter.files.length <= 1) {
+      alert('Chapter phải có ít nhất 1 trang ảnh.');
+      return;
+    }
+
+    chapter.files.splice(pageIndex, 1);
+    invalidateChapterPreflight(chapterIndex);
+  }
+
+  // A4: Replace Page
+  function startReplaceInspectorPage(chapterIndex, pageIndex) {
+    if (uploadRunning) return;
+    pendingReplacePageIndex = pageIndex;
+    const input = document.getElementById('bulk-inspector-replace-input');
+    if (input) {
+      input.value = '';
+      input.click();
+    }
+  }
+
+  function replaceInspectorPage(chapterIndex, pageIndex, newFile) {
+    const chapter = chapters[chapterIndex];
+    if (!chapter || !newFile || uploadRunning) return;
+
+    const ext = (newFile.name.split('.').pop() || '').toLowerCase();
+    if (!allowedExtensions.has(ext)) {
+      alert(`Định dạng .${ext} không được hỗ trợ. Chỉ nhận: jpg, png, webp, gif, avif.`);
+      return;
+    }
+
+    chapter.files[pageIndex] = {
+      file: newFile,
+      innerPath: newFile.name,
+    };
+
+    invalidateChapterPreflight(chapterIndex);
+  }
+
+  // A5: Add Pages
+  function addInspectorPages(chapterIndex, newFiles) {
+    const chapter = chapters[chapterIndex];
+    if (!chapter || !newFiles.length || uploadRunning) return;
+
+    let addedCount = 0;
+    newFiles.forEach((file) => {
+      const ext = (file.name.split('.').pop() || '').toLowerCase();
+      if (allowedExtensions.has(ext) && file.size > 0) {
+        chapter.files.push({
+          file,
+          innerPath: file.name,
+        });
+        addedCount++;
+      }
+    });
+
+    if (addedCount > 0) {
+      invalidateChapterPreflight(chapterIndex);
+    } else {
+      alert('Không có file ảnh hợp lệ nào được thêm.');
+    }
+  }
+
+  // A6: Reorder
+  function moveInspectorPage(chapterIndex, fromIndex, toIndex) {
+    const chapter = chapters[chapterIndex];
+    if (!chapter || uploadRunning) return;
+    if (toIndex < 0 || toIndex >= chapter.files.length || fromIndex === toIndex) return;
+
+    const [item] = chapter.files.splice(fromIndex, 1);
+    chapter.files.splice(toIndex, 0, item);
+
+    invalidateChapterPreflight(chapterIndex);
+  }
+
+  // A7: Reset
+  function resetInspectorChapter(chapterIndex) {
+    const chapter = chapters[chapterIndex];
+    if (!chapter || uploadRunning) return;
+    if (!chapter.originalFiles || !chapter.originalFiles.length) return;
+
+    chapter.files = chapter.originalFiles.map((item) => ({
+      file: item.file,
+      innerPath: item.innerPath,
+    }));
+
+    invalidateChapterPreflight(chapterIndex);
+  }
+
+  // A2: Lightbox Functions
+  function openLightbox(chapterIndex, pageIndex) {
+    const chapter = chapters[chapterIndex];
+    if (!chapter || !chapter.files[pageIndex]) return;
+
+    lightboxState.isOpen = true;
+    lightboxState.chapterIndex = chapterIndex;
+    lightboxState.pageIndex = pageIndex;
+    lightboxState.zoomLevel = 1;
+
+    const lightbox = document.getElementById('bulk-preflight-lightbox');
+    if (lightbox) {
+      lightbox.style.display = 'flex';
+      document.body.classList.add('bulk-lightbox-active');
+      renderLightboxPage();
+    }
+  }
+
+  function closeLightbox() {
+    lightboxState.isOpen = false;
+    lightboxState.chapterIndex = -1;
+    lightboxState.pageIndex = -1;
+    lightboxState.zoomLevel = 1;
+
+    const lightbox = document.getElementById('bulk-preflight-lightbox');
+    if (lightbox) {
+      lightbox.style.display = 'none';
+      document.body.classList.remove('bulk-lightbox-active');
+      const img = document.getElementById('bulk-lightbox-img');
+      if (img) img.src = '';
+    }
+
+    if (lightboxTempUrl) {
+      URL.revokeObjectURL(lightboxTempUrl);
+      lightboxTempUrl = null;
+    }
+  }
+
+  function renderLightboxPage() {
+    if (!lightboxState.isOpen) return;
+    const chapter = chapters[lightboxState.chapterIndex];
+    if (!chapter || !chapter.files[lightboxState.pageIndex]) return;
+
+    const item = chapter.files[lightboxState.pageIndex];
+    const meta = chapter.pageMeta[lightboxState.pageIndex] || {};
+    const img = document.getElementById('bulk-lightbox-img');
+    const title = document.getElementById('bulk-lightbox-title');
+    const pos = document.getElementById('bulk-lightbox-pos');
+    const metaEl = document.getElementById('bulk-lightbox-meta');
+    const prevBtn = document.getElementById('bulk-lightbox-prev');
+    const nextBtn = document.getElementById('bulk-lightbox-next');
+
+    let url = '';
+    if (inspectorChapterIndex === lightboxState.chapterIndex && inspectorObjectUrls[lightboxState.pageIndex]) {
+      url = inspectorObjectUrls[lightboxState.pageIndex];
+    } else {
+      if (lightboxTempUrl) URL.revokeObjectURL(lightboxTempUrl);
+      lightboxTempUrl = URL.createObjectURL(item.file);
+      url = lightboxTempUrl;
+    }
+
+    if (img) {
+      img.src = url;
+      img.style.transform = `scale(${lightboxState.zoomLevel})`;
+    }
+
+    if (pos) pos.textContent = `${lightboxState.pageIndex + 1} / ${chapter.files.length}`;
+    if (title) title.textContent = item.file.name;
+    if (metaEl) {
+      metaEl.textContent = meta.width && meta.height
+        ? `${meta.width}×${meta.height} · ${humanBytes(item.file.size)}`
+        : humanBytes(item.file.size);
+    }
+
+    if (prevBtn) prevBtn.disabled = lightboxState.pageIndex <= 0;
+    if (nextBtn) nextBtn.disabled = lightboxState.pageIndex >= chapter.files.length - 1;
+  }
+
+  function prevLightboxPage() {
+    if (!lightboxState.isOpen) return;
+    if (lightboxState.pageIndex > 0) {
+      lightboxState.pageIndex--;
+      lightboxState.zoomLevel = 1;
+      renderLightboxPage();
+    }
+  }
+
+  function nextLightboxPage() {
+    if (!lightboxState.isOpen) return;
+    const chapter = chapters[lightboxState.chapterIndex];
+    if (chapter && lightboxState.pageIndex < chapter.files.length - 1) {
+      lightboxState.pageIndex++;
+      lightboxState.zoomLevel = 1;
+      renderLightboxPage();
+    }
+  }
+
+  function zoomLightbox(delta) {
+    if (!lightboxState.isOpen) return;
+    lightboxState.zoomLevel = Math.max(0.4, Math.min(3.0, lightboxState.zoomLevel + delta));
+    const img = document.getElementById('bulk-lightbox-img');
+    if (img) img.style.transform = `scale(${lightboxState.zoomLevel})`;
+  }
+
+  function resetLightboxZoom() {
+    if (!lightboxState.isOpen) return;
+    lightboxState.zoomLevel = 1;
+    const img = document.getElementById('bulk-lightbox-img');
+    if (img) img.style.transform = 'scale(1)';
   }
 
   function renderInspectorPages(index, reset = false) {
@@ -762,10 +1669,50 @@
     for (let pageIndex = inspectorRenderedPages; pageIndex < nextLimit; pageIndex++) {
       const item = chapter.files[pageIndex];
       const meta = chapter.pageMeta[pageIndex] || {};
+      const isBatchError = inspectorChapterIndex === lastUploadError?.chapterIndex && failedBatchPages.has(pageIndex);
+
       const card = document.createElement('article');
-      card.className = `bulk-preview-page${meta.error ? ' is-error' : ''}`;
+      card.className = `bulk-preview-page${meta.error ? ' is-error' : ''}${isBatchError ? ' is-batch-error' : ''}`;
       card.dataset.pageIndex = String(pageIndex);
       card.dataset.testid = 'bulk-preview-page';
+      card.setAttribute('draggable', 'true');
+
+      // Drag and drop HTML5 handlers
+      card.addEventListener('dragstart', (e) => {
+        if (uploadRunning) { e.preventDefault(); return; }
+        e.dataTransfer.setData('text/plain', String(pageIndex));
+        e.dataTransfer.effectAllowed = 'move';
+        card.classList.add('is-dragging');
+      });
+
+      card.addEventListener('dragend', () => {
+        card.classList.remove('is-dragging');
+        grid.querySelectorAll('.bulk-preview-page').forEach((el) => el.classList.remove('is-drag-over'));
+      });
+
+      card.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        card.classList.add('is-drag-over');
+      });
+
+      card.addEventListener('dragleave', () => {
+        card.classList.remove('is-drag-over');
+      });
+
+      card.addEventListener('drop', (e) => {
+        e.preventDefault();
+        card.classList.remove('is-drag-over');
+        const fromIndex = Number.parseInt(e.dataTransfer.getData('text/plain'), 10);
+        const toIndex = pageIndex;
+        if (!Number.isNaN(fromIndex) && fromIndex !== toIndex) {
+          moveInspectorPage(index, fromIndex, toIndex);
+        }
+      });
+
+      // Thumbnail with actions toolbar
+      const thumbWrap = document.createElement('div');
+      thumbWrap.className = 'bulk-preview-page-thumb';
 
       const img = document.createElement('img');
       img.loading = 'lazy';
@@ -774,10 +1721,74 @@
       inspectorObjectUrls.push(objectUrl);
       img.src = objectUrl;
 
+      img.addEventListener('click', () => {
+        openLightbox(index, pageIndex);
+      });
+
       img.addEventListener('error', () => {
         card.classList.add('is-error');
       });
 
+      // Actions overlay
+      const actions = document.createElement('div');
+      actions.className = 'bulk-preview-page-actions';
+
+      const viewBtn = document.createElement('button');
+      viewBtn.type = 'button';
+      viewBtn.className = 'bulk-card-action-btn bulk-btn-view';
+      viewBtn.title = '🔍 Xem lớn';
+      viewBtn.textContent = '🔍';
+      viewBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openLightbox(index, pageIndex);
+      });
+
+      const replaceBtn = document.createElement('button');
+      replaceBtn.type = 'button';
+      replaceBtn.className = 'bulk-card-action-btn bulk-btn-replace';
+      replaceBtn.title = '🔄 Thay ảnh';
+      replaceBtn.textContent = '🔄';
+      replaceBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        startReplaceInspectorPage(index, pageIndex);
+      });
+
+      const upBtn = document.createElement('button');
+      upBtn.type = 'button';
+      upBtn.className = 'bulk-card-action-btn bulk-btn-up';
+      upBtn.title = '⬆ Di chuyển lên';
+      upBtn.textContent = '⬆';
+      upBtn.disabled = pageIndex === 0;
+      upBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        moveInspectorPage(index, pageIndex, pageIndex - 1);
+      });
+
+      const downBtn = document.createElement('button');
+      downBtn.type = 'button';
+      downBtn.className = 'bulk-card-action-btn bulk-btn-down';
+      downBtn.title = '⬇ Di chuyển xuống';
+      downBtn.textContent = '⬇';
+      downBtn.disabled = pageIndex === chapter.files.length - 1;
+      downBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        moveInspectorPage(index, pageIndex, pageIndex + 1);
+      });
+
+      const delBtn = document.createElement('button');
+      delBtn.type = 'button';
+      delBtn.className = 'bulk-card-action-btn bulk-btn-delete';
+      delBtn.title = '🗑 Xóa ảnh';
+      delBtn.textContent = '🗑';
+      delBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        deleteInspectorPage(index, pageIndex);
+      });
+
+      actions.append(viewBtn, replaceBtn, upBtn, downBtn, delBtn);
+      thumbWrap.append(img, actions);
+
+      // Meta info
       const info = document.createElement('div');
       info.className = 'bulk-preview-page-meta';
 
@@ -800,7 +1811,14 @@
         info.appendChild(errorLine);
       }
 
-      card.append(img, info);
+      if (isBatchError) {
+        const batchErrorLine = document.createElement('span');
+        batchErrorLine.className = 'bulk-page-batch-error-badge';
+        batchErrorLine.textContent = '⚠ Lỗi batch upload';
+        info.appendChild(batchErrorLine);
+      }
+
+      card.append(thumbWrap, info);
       grid.appendChild(card);
     }
 
@@ -820,7 +1838,7 @@
 
     grid.querySelectorAll('.bulk-preview-page').forEach((card) => {
       const pageIndex = Number.parseInt(card.dataset.pageIndex || '-1', 10);
-      if (pageIndex < 0) return;
+      if (pageIndex < 0 || pageIndex >= chapter.files.length) return;
 
       const meta = chapter.pageMeta[pageIndex] || {};
       const detail = card.querySelector('[data-testid="bulk-preview-page-meta"]');
@@ -913,7 +1931,7 @@
 
     for (let index = 0; index < chapters.length; index++) {
       const chapter = chapters[index];
-      if (chapter.preflightStatus === 'ok') continue;
+      if (skipped(chapter) || chapter.preflightStatus === 'ok') continue;
       await inspectChapter(index, inspectorChapterIndex === index);
     }
 
@@ -976,224 +1994,219 @@
     });
   }
 
-  async function runUpload() {
-    const issues = refreshValidation();
-    const allChecked = chapters.length > 0 && chapters.every((chapter) => chapter.preflightStatus === 'ok');
-    if (issues.length || !allChecked) return;
+  // ==========================================
+  // PART B: UPLOAD ERROR DIAGNOSTICS & RETRY
+  // ==========================================
 
-    uploadRunning = true;
-    uploadButton.disabled = true;
-    folderInput.disabled = true;
-    updatePreflightToolbar();
-    renderChapterTable();
-    uploadButton.textContent = activeSession ? '⏳ Đang tiếp tục...' : '⏳ Đang chuẩn bị phiên upload...';
-    progressWrap.style.display = 'block';
+  function renderErrorPanel(err) {
+    const panel = document.getElementById('bulk-error-panel');
+    if (!panel || !err) return;
 
-    try {
-      if (!activeSession) {
-        const started = await postAction({ bulk_action: 'start' });
-        activeSession = started.session;
+    panel.style.display = 'block';
+
+    const chEl = document.getElementById('bulk-error-chapter');
+    const chIdxEl = document.getElementById('bulk-error-chapter-index');
+    const batchEl = document.getElementById('bulk-error-batch');
+    const httpEl = document.getElementById('bulk-error-http');
+    const pagesEl = document.getElementById('bulk-error-pages');
+    const progressEl = document.getElementById('bulk-error-progress');
+    const filesEl = document.getElementById('bulk-error-files');
+    const msgEl = document.getElementById('bulk-error-message-text');
+    const rawEl = document.getElementById('bulk-error-raw');
+    const retryBtn = document.getElementById('bulk-error-retry-btn');
+
+    if (chEl) chEl.textContent = `Chapter ${err.chapterNumber}`;
+    if (chIdxEl) chIdxEl.textContent = `${err.chapterIndex + 1} / ${backgroundTask?.total_chapters ?? chapters.length}`;
+    if (batchEl) batchEl.textContent = `${err.batchIndex + 1} / ${err.totalBatches}`;
+    if (httpEl) {
+      httpEl.textContent = String(err.httpStatus);
+      httpEl.style.color = err.httpStatus === 422 ? '#fbbf24' : '#f87171';
+    }
+
+    if (pagesEl) {
+      if (err.pageIndexes.length > 0) {
+        const minP = Math.min(...err.pageIndexes) + 1;
+        const maxP = Math.max(...err.pageIndexes) + 1;
+        pagesEl.textContent = minP === maxP ? `Trang ${minP}` : `Trang ${minP} - ${maxP}`;
+      } else {
+        pagesEl.textContent = 'Toàn chapter (Finalize)';
       }
+    }
 
-      for (let chapterIndex = 0; chapterIndex < chapters.length; chapterIndex++) {
-        const chapter = chapters[chapterIndex];
-        if (chapter.status === 'done') continue;
+    if (progressEl) {
+      progressEl.textContent = `${humanBytes(err.uploadedBytes)} / ${humanBytes(err.totalBytes)}`;
+    }
 
-        activeChapterIndex = chapterIndex;
-        updateChapterStatus(chapterIndex, 'uploading', 'Đang upload');
-        uploadButton.textContent = `⏳ Chapter ${chapter.chapterNumber} (${chapterIndex + 1}/${chapters.length})`;
-
-        const batches = createBatches(chapter.files);
-        for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
-          await uploadBatchAdaptive(activeSession, chapter, batches[batchIndex]);
-          const batchBytes = batches[batchIndex].reduce((sum, item) => sum + item.file.size, 0);
-          uploadedBytes = Math.min(totalBytes, uploadedBytes + batchBytes);
-          renderProgress(chapter, batchIndex + 1, batches.length);
-        }
-
-        const finalized = await postAction({
-          bulk_action: 'finalize',
-          session: activeSession,
-          chapter_key: chapter.key,
-          chapter_number: String(chapter.chapterNumber),
-          title: chapter.title || '',
-          page_count: String(chapter.files.length),
+    if (filesEl) {
+      filesEl.innerHTML = '';
+      if (err.fileNames.length > 0) {
+        err.fileNames.slice(0, 8).forEach((name) => {
+          const badge = document.createElement('span');
+          badge.className = 'bulk-error-file-item';
+          badge.textContent = name;
+          filesEl.appendChild(badge);
         });
-
-        updateChapterStatus(chapterIndex, 'done', `✓ Xong · ${finalized.pages} trang`);
+        if (err.fileNames.length > 8) {
+          const more = document.createElement('span');
+          more.className = 'bulk-error-file-item more';
+          more.textContent = `+${err.fileNames.length - 8} file khác...`;
+          filesEl.appendChild(more);
+        }
+      } else {
+        filesEl.textContent = '(Không có danh sách file cụ thể)';
       }
+    }
 
-      const completed = await postAction({
-        bulk_action: 'complete',
-        session: activeSession,
-      });
+    if (msgEl) {
+      msgEl.textContent = err.message;
+    }
 
-      activeSession = null;
-      uploadedBytes = totalBytes;
-      renderProgress(null, 1, 1);
-      validationBox.className = 'bulk-validation bulk-validation-ok';
-      validationBox.innerHTML = `Đã tạo thành công <strong>${completed.chapters_created}</strong> chapter. Ảnh đã qua kiểm tra trước upload, giữ nguyên byte gốc và xác minh SHA-256 trước + sau khi lưu. <a href="${chaptersUrl}">Mở danh sách chapter →</a>`;
-      uploadButton.textContent = '✅ Upload hoàn tất';
-    } catch (error) {
-      if (activeChapterIndex >= 0) {
-        updateChapterStatus(activeChapterIndex, 'failed', 'Lỗi · có thể thử lại');
-      }
+    if (retryBtn) {
+      retryBtn.textContent = `↻ Thử lại Chapter ${err.chapterNumber}`;
+    }
 
-      validationBox.className = 'bulk-validation bulk-validation-error';
-      validationBox.textContent = error instanceof Error ? error.message : 'Upload thất bại.';
-      uploadButton.textContent = '↻ Thử lại / tiếp tục';
-    } finally {
-      uploadRunning = false;
-      folderInput.disabled = false;
-      renderChapterTable();
-      updatePreflightToolbar();
-      uploadButton.disabled = refreshValidation().length > 0 || !chapters.every((chapter) => chapter.preflightStatus === 'ok');
+    if (rawEl) {
+      const safeDetails = {
+        errorId: err.errorId,
+        chapterKey: err.chapterKey,
+        chapterNumber: err.chapterNumber,
+        batch: `${err.batchIndex + 1}/${err.totalBatches}`,
+        pageIndexes: err.pageIndexes,
+        fileCount: err.fileNames.length,
+        httpStatus: err.httpStatus,
+        serverMessage: err.serverMessage,
+        serverErrors: err.serverErrors,
+        timestamp: err.timestamp,
+      };
+      rawEl.textContent = JSON.stringify(safeDetails, null, 2);
     }
   }
 
-  function createBatches(files) {
-    const batches = [];
-    let current = [];
-    let currentBytes = 0;
+  function copyErrorDetails() {
+    if (!lastUploadError) return;
+    const minP = lastUploadError.pageIndexes.length ? Math.min(...lastUploadError.pageIndexes) + 1 : '?';
+    const maxP = lastUploadError.pageIndexes.length ? Math.max(...lastUploadError.pageIndexes) + 1 : '?';
+    const pageStr = minP === maxP ? `Trang ${minP}` : `Trang ${minP} - ${maxP}`;
 
-    files.forEach((item, index) => {
-      const wouldOverflow = current.length > 0 && (
-        current.length >= MAX_BATCH_FILES ||
-        currentBytes + item.file.size > MAX_BATCH_BYTES
-      );
+    const text = [
+      `[LỖI BULK UPLOAD COMICX]`,
+      `Mã lỗi: ${lastUploadError.errorId}`,
+      `Thời gian: ${lastUploadError.timestamp}`,
+      `Chapter: ${lastUploadError.chapterNumber} (Thứ tự: ${lastUploadError.chapterIndex + 1}/${chapters.length})`,
+      `Batch: ${lastUploadError.batchIndex + 1}/${lastUploadError.totalBatches}`,
+      `Các trang: ${pageStr}`,
+      `Files: ${lastUploadError.fileNames.join(', ')}`,
+      `HTTP Status: ${lastUploadError.httpStatus}`,
+      `Lỗi: ${lastUploadError.message}`,
+      `Server message: ${lastUploadError.serverMessage}`,
+      `Tiến độ: ${humanBytes(lastUploadError.uploadedBytes)} / ${humanBytes(lastUploadError.totalBytes)}`,
+    ].join('\n');
 
-      if (wouldOverflow) {
-        batches.push(current);
-        current = [];
-        currentBytes = 0;
-      }
-
-      current.push({ ...item, pageIndex: index });
-      currentBytes += item.file.size;
-    });
-
-    if (current.length) batches.push(current);
-    return batches;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(() => {
+        const copyBtn = document.getElementById('bulk-error-copy-btn');
+        if (copyBtn) {
+          const oldText = copyBtn.textContent;
+          copyBtn.textContent = '✓ Đã sao chép!';
+          setTimeout(() => { copyBtn.textContent = oldText; }, 2000);
+        }
+      }).catch(() => {
+        alert('Không thể sao chép tự động. Hãy mở "Chi tiết kỹ thuật" để sao chép.');
+      });
+    } else {
+      prompt('Chi tiết lỗi:', text);
+    }
   }
 
-  async function uploadBatchAdaptive(session, chapter, batch) {
+  async function runUpload() {
+    const bridge = window.ComicxUploads;
+    if (!bridge) return;
+    let popup;
     try {
-      return await uploadBatch(session, chapter, batch);
-    } catch (error) {
-      if (error instanceof UploadHttpError && error.status === 413 && batch.length > 1) {
-        const middle = Math.ceil(batch.length / 2);
-        await uploadBatchAdaptive(session, chapter, batch.slice(0, middle));
-        await uploadBatchAdaptive(session, chapter, batch.slice(middle));
+      // Open synchronously inside the click gesture, before any await (popup blockers).
+      popup = bridge.openWorker();
+      if (!chapters.length && backgroundTask?.worker_alive && ['failed', 'uploading', 'processing'].includes(backgroundTask.status)) {
+        await bridge.transfer(popup, backgroundTask, null);
         return;
       }
-      throw error;
-    }
-  }
-
-  async function uploadBatch(session, chapter, batch) {
-    const formData = new FormData();
-    formData.append('bulk_action', 'chunk');
-    formData.append('session', session);
-    formData.append('chapter_key', chapter.key);
-
-    for (const item of batch) {
-      formData.append('files[]', item.file, item.file.name);
-      formData.append('page_indexes[]', String(item.pageIndex));
-      formData.append('checksums[]', await sha256(item.file));
-    }
-
-    return sendForm(formData, 3);
-  }
-
-  async function sha256(file) {
-    if (checksumCache.has(file)) return checksumCache.get(file);
-
-    if (!window.crypto?.subtle) {
-      throw new Error('Trình duyệt không hỗ trợ SHA-256 Web Crypto. Hãy dùng Chrome / Edge bản mới.');
-    }
-
-    const digest = await window.crypto.subtle.digest('SHA-256', await file.arrayBuffer());
-    const hash = Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
-    checksumCache.set(file, hash);
-    return hash;
-  }
-
-  async function postAction(values) {
-    const formData = new FormData();
-    Object.entries(values).forEach(([key, value]) => formData.append(key, value));
-    return sendForm(formData, 3);
-  }
-
-  async function sendForm(formData, attempts = 3) {
-    let lastError = null;
-
-    for (let attempt = 1; attempt <= attempts; attempt++) {
-      try {
-        const response = await fetch(endpoint, {
-          method: 'POST',
-          credentials: 'same-origin',
-          headers: {
-            'X-CSRF-TOKEN': csrf,
-            'Accept': 'application/json',
-          },
-          body: formData,
-        });
-
-        const payload = await readResponsePayload(response);
-        if (!response.ok) {
-          const message = extractErrorMessage(payload) || `Upload lỗi HTTP ${response.status}.`;
-          throw new UploadHttpError(message, response.status, payload);
-        }
-
-        return payload;
-      } catch (error) {
-        lastError = error;
-
-        if (error instanceof UploadHttpError) {
-          if (error.status === 413 || (error.status >= 400 && error.status < 500)) {
-            throw error;
-          }
-        }
-
-        if (attempt < attempts) {
-          await sleep(700 * attempt);
-          continue;
-        }
+      if (!chapters.length) throw new Error('Chọn lại folder để tiếp tục.');
+      await checkExistingChaptersDb();
+      if (refreshValidation().length || !chapters.every(chapter => skipped(chapter) || chapter.preflightStatus === 'ok')) return;
+      const finalChapters = chapters.map(chapter => ({ key: chapter.key, number: normalizeChapterNumber(chapter.chapterNumber), title: chapter.title || '', files: chapter.files.map(item => ({ file: item.file })) }));
+      let task = backgroundTask;
+      if (!task || ['completed', 'cancelled'].includes(task.status)) {
+        task = await bridge.api('/admin/upload-tasks', { comic_id: Number(root.dataset.comicId), conflict_mode: dbConflictMode, chapters: finalChapters.map(chapter => ({ ...chapter, files: chapter.files.map(item => ({ name: item.file.name, size: item.file.size })) })) });
       }
+      if (String(task.comic_id) !== root.dataset.comicId) throw new Error('Đang có upload cho truyện khác. Theo dõi hoặc hủy task đó trước.');
+      await bridge.transfer(popup, task, finalChapters);
+      closeInspector();
+      closeLightbox();
+      chapters = []; // Worker now owns the File objects; navigation cannot stop its engine.
+      folderInput.value = '';
+      tableBody.replaceChildren();
+      tableWrap.style.display = 'none';
+    } catch (error) {
+      validationBox.textContent = error.message;
+      uploadButton.disabled = false;
+      uploadButton.textContent = 'Mở trình upload nền';
     }
-
-    throw lastError || new Error('Không thể kết nối máy chủ để upload.');
   }
 
-  async function readResponsePayload(response) {
-    const text = await response.text();
-    if (!text) return {};
+  /**
+   * Check all chapter numbers against the DB in one batch request.
+   * Updates chapter.dbConflict for each chapter and re-renders.
+   */
+  async function checkExistingChaptersDb() {
+    if (!chapters.length || dbCheckRunning) return;
+
+    // Collect all currently-valid chapter numbers
+    const toCheck = chapters
+      .map((chapter) => normalizeChapterNumber(chapter.chapterNumber))
+      .filter((num) => num !== null);
+
+    if (!toCheck.length) return;
+
+    dbCheckRunning = true;
+    updatePreflightToolbar();
 
     try {
-      return JSON.parse(text);
+      const formData = new FormData();
+      formData.append('_token', csrf);
+      formData.append('bulk_action', 'check_existing');
+      toCheck.forEach((num) => formData.append('chapter_numbers[]', num));
+
+      const response = await fetch(endpoint, { method: 'POST', body: formData });
+      if (!response.ok) {
+        // Non-fatal — treat all as 'error' so we don't block upload
+        chapters.forEach((chapter) => {
+          if (chapter.dbConflict === 'checking') chapter.dbConflict = 'error';
+        });
+        return;
+      }
+
+      const payload = await response.json();
+      // payload is { status: 'ok', conflicts: { "1": "existing", "187.5": "deleted" } }
+      const conflicts = payload.conflicts ?? {};
+
+      chapters.forEach((chapter) => {
+        const norm = normalizeChapterNumber(chapter.chapterNumber);
+        if (norm === null) {
+          chapter.dbConflict = 'new';
+          return;
+        }
+        const serverStatus = conflicts[norm];
+        chapter.dbConflict = serverStatus ?? 'new';
+      });
     } catch {
-      return { message: text.slice(0, 500) };
-    }
-  }
-
-  function extractErrorMessage(payload) {
-    if (!payload || typeof payload !== 'object') return null;
-    if (payload.errors && typeof payload.errors === 'object') {
-      const first = Object.values(payload.errors).flat().find(Boolean);
-      if (first) return String(first);
-    }
-    return payload.message ? String(payload.message) : null;
-  }
-
-  function renderProgress(chapter, batchNumber, totalBatches) {
-    const percent = totalBytes > 0 ? Math.min(100, Math.round((uploadedBytes / totalBytes) * 100)) : 0;
-    progressBar.style.width = `${percent}%`;
-    progressBar.setAttribute('aria-valuenow', String(percent));
-
-    if (chapter) {
-      progressText.textContent = `${percent}% · ${humanBytes(uploadedBytes)} / ${humanBytes(totalBytes)} · Chapter ${chapter.chapterNumber}, batch ${batchNumber}/${totalBatches}`;
-    } else {
-      progressText.textContent = `100% · ${humanBytes(totalBytes)} đã upload và xác minh`;
+      // Network failure is non-fatal
+      chapters.forEach((chapter) => {
+        if (chapter.dbConflict === 'checking') chapter.dbConflict = 'error';
+      });
+    } finally {
+      dbCheckRunning = false;
+      renderChapterTable();
+      refreshValidation();
+      updatePreflightToolbar();
     }
   }
 

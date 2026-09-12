@@ -87,14 +87,15 @@ class ChapterService
      * Tạo slug chuẩn cho chapter, đảm bảo unique trong phạm vi comic.
      * Nếu trùng, thêm suffix -v2, -v3, ...
      *
-     * @param  int        $comicId
-     * @param  int|float  $chapterNumber
-     * @param  int|null   $excludeId     ID chapter hiện tại khi update (để bỏ qua chính nó)
+     * @param  int               $comicId
+     * @param  int|float|string  $chapterNumber
+     * @param  int|null          $excludeId     ID chapter hiện tại khi update (để bỏ qua chính nó)
      * @return string
      */
-    public function generateSlug(int $comicId, int|float $chapterNumber, ?int $excludeId = null): string
+    public function generateSlug(int $comicId, int|float|string $chapterNumber, ?int $excludeId = null): string
     {
-        $base = 'chapter-' . Str::slug((string) $chapterNumber);
+        $normalized = Chapter::formatNumber($chapterNumber);
+        $base = 'chapter-' . $normalized;
         $slug = $base;
         $suffix = 1;
 

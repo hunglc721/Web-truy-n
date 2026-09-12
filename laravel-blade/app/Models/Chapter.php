@@ -43,6 +43,74 @@ class Chapter extends Model
         });
     }
 
+    public static function isValidNumber(float|int|string|null $number): bool
+    {
+        if ($number === null) {
+            return false;
+        }
+
+        $str = trim((string) $number);
+        return (bool) preg_match('/^\d+(?:\.\d+)?$/', $str);
+    }
+
+    public static function formatNumber(float|int|string|null $number): string
+    {
+        if ($number === null) {
+            return '';
+        }
+
+        $str = trim((string) $number);
+        if ($str === '') {
+            return '';
+        }
+
+        if (!preg_match('/^\d+(?:\.\d+)?$/', $str)) {
+            return $str;
+        }
+
+        if (str_contains($str, '.')) {
+            [$intPart, $decPart] = explode('.', $str, 2);
+            $intPart = ltrim($intPart, '0');
+            if ($intPart === '') {
+                $intPart = '0';
+            }
+            $decPart = rtrim($decPart, '0');
+            if ($decPart === '') {
+                return $intPart;
+            }
+            return $intPart . '.' . $decPart;
+        }
+
+        $intPart = ltrim($str, '0');
+        return $intPart === '' ? '0' : $intPart;
+    }
+
+    public function getChapterNumberAttribute($value): int|float|string
+    {
+        if ($value === null || $value === '') {
+            return 0;
+        }
+
+        $formatted = self::formatNumber($value);
+        if (!str_contains($formatted, '.')) {
+            return (int) $formatted;
+        }
+
+        $floatVal = (float) $formatted;
+        if ((string) $floatVal === $formatted) {
+            return $floatVal;
+        }
+
+        return $formatted;
+    }
+
+    public function setChapterNumberAttribute($value): void
+    {
+        $this->attributes['chapter_number'] = ($value !== null && $value !== '')
+            ? self::formatNumber($value)
+            : null;
+    }
+
     public function getSlugAttribute(?string $value): string
     {
         return !empty($value) ? $value : 'chapter-' . ($this->chapter_number ?? $this->id ?? 1);
