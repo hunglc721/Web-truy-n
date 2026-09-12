@@ -28,8 +28,8 @@ class ChapterCatalogController extends Controller
 
         if ($q !== '') {
             $query->where(function ($chapterQuery) use ($q) {
-                if (is_numeric($q)) {
-                    $chapterQuery->where('chapter_number', (float) $q)
+                if (Chapter::isValidNumber($q)) {
+                    $chapterQuery->where('chapter_number', Chapter::formatNumber($q))
                         ->orWhere('title', 'like', '%' . $q . '%');
                 } else {
                     $chapterQuery->where('title', 'like', '%' . $q . '%');

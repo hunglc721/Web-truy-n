@@ -39,150 +39,95 @@ class DecimalChapterNumberTest extends TestCase
         parent::tearDown();
     }
 
-    public function test_can_create_integer_and_decimal_chapters_in_same_comic(): void
+    public function test_can_create_required_decimal_chapters_without_false_duplicates(): void
     {
-        $ch187 = Chapter::factory()->create([
-            'comic_id' => $this->comicA->id,
-            'chapter_number' => 187,
-            'title' => 'Main Chapter',
-            'published_at' => now(),
-        ]);
+        // Must support: 90, 90.1, 90.01, 90.001, 90.12345, 91
+        $numbers = ['90', '90.1', '90.01', '90.001', '90.12345', '91'];
+        $created = [];
 
-        $ch187_5 = Chapter::factory()->create([
-            'comic_id' => $this->comicA->id,
-            'chapter_number' => 187.5,
-            'title' => 'Bonus Chapter',
-            'published_at' => now(),
-        ]);
+        foreach ($numbers as $num) {
+            $chapter = Chapter::factory()->create([
+                'comic_id' => $this->comicA->id,
+                'chapter_number' => $num,
+                'title' => "Chapter {$num}",
+                'published_at' => now(),
+            ]);
+            $created[$num] = $chapter;
+        }
 
-        $ch187_25 = Chapter::factory()->create([
-            'comic_id' => $this->comicA->id,
-            'chapter_number' => 187.25,
-            'title' => 'Extra Bonus Chapter',
-            'published_at' => now(),
-        ]);
+        $this->assertEquals(90, $created['90']->fresh()->chapter_number);
+        $this->assertEquals(90.1, $created['90.1']->fresh()->chapter_number);
+        $this->assertEquals(90.01, $created['90.01']->fresh()->chapter_number);
+        $this->assertEquals(90.001, $created['90.001']->fresh()->chapter_number);
+        $this->assertEquals(90.12345, $created['90.12345']->fresh()->chapter_number);
+        $this->assertEquals(91, $created['91']->fresh()->chapter_number);
 
-        $this->assertEquals(187, $ch187->fresh()->chapter_number);
-        $this->assertEquals(187.5, $ch187_5->fresh()->chapter_number);
-        $this->assertEquals(187.25, $ch187_25->fresh()->chapter_number);
+        // Labels
+        $this->assertSame('Ch.90', $created['90']->label);
+        $this->assertSame('Ch.90.1', $created['90.1']->label);
+        $this->assertSame('Ch.90.01', $created['90.01']->label);
+        $this->assertSame('Ch.90.001', $created['90.001']->label);
+        $this->assertSame('Ch.90.12345', $created['90.12345']->label);
+        $this->assertSame('Ch.91', $created['91']->label);
 
-        $this->assertSame('chapter-187', $ch187->slug);
-        $this->assertSame('chapter-187.5', $ch187_5->slug);
-        $this->assertSame('chapter-187.25', $ch187_25->slug);
-
-        $this->assertSame('Ch.187', $ch187->label);
-        $this->assertSame('Ch.187.5', $ch187_5->label);
-        $this->assertSame('Ch.187.25', $ch187_25->label);
+        // Inequality: 90.01 != 90.1
+        $this->assertNotEquals($created['90.01']->chapter_number, $created['90.1']->chapter_number);
     }
 
-    public function test_formatting_normalizes_trailing_zeros_and_prevents_precision_drift(): void
+    public function test_formatting_normalizes_leading_and_trailing_zeros(): void
     {
-        $this->assertSame('187', Chapter::formatNumber('187.000'));
-        $this->assertSame('187.5', Chapter::formatNumber('187.500'));
-        $this->assertSame('187.25', Chapter::formatNumber('187.250'));
-        $this->assertSame('0.5', Chapter::formatNumber('0.500'));
+        // Leading zeros in integer part removed
+        $this->assertSame('90.1', Chapter::formatNumber('090.1'));
+        $this->assertSame('1.25', Chapter::formatNumber('001.25'));
+
+        // Trailing zeros in decimal part removed
+        $this->assertSame('90.1', Chapter::formatNumber('90.100'));
+        $this->assertSame('90.01', Chapter::formatNumber('90.0100'));
+        $this->assertSame('90', Chapter::formatNumber('90.000'));
+
+        // Normalization equivalence: 90.1 == 90.10 == 90.100
+        $this->assertSame(Chapter::formatNumber('90.1'), Chapter::formatNumber('90.10'));
+        $this->assertSame(Chapter::formatNumber('90.10'), Chapter::formatNumber('90.100'));
+
+        // Generic precision preserved without rounding
+        $this->assertSame('90.12345', Chapter::formatNumber('90.12345'));
+        $this->assertSame('999.999999', Chapter::formatNumber('999.999999'));
+        $this->assertSame('187.5', Chapter::formatNumber('187.5'));
+        $this->assertSame('187.25', Chapter::formatNumber('187.25'));
+        $this->assertSame('0', Chapter::formatNumber('0'));
         $this->assertSame('0', Chapter::formatNumber('0.000'));
-        $this->assertSame('187.5', Chapter::formatNumber('187.499999'));
     }
 
-    public function test_duplicate_detection_treats_187_5_and_187_500_as_duplicate(): void
+    public function test_duplicate_detection_treats_90_1_and_90_10_as_duplicate_but_keeps_90_01_separate(): void
     {
         Chapter::factory()->create([
             'comic_id' => $this->comicA->id,
-            'chapter_number' => 187.5,
+            'chapter_number' => '90.1',
         ]);
 
         $bulkService = app(BulkChapterUploadService::class);
 
+        // 90.10 must be recognized as duplicate of 90.1
         $this->expectException(ValidationException::class);
         $bulkService->finalizeChapter(
             $this->comicA,
             $this->admin,
             'test-session',
             'chapter-0000',
-            187.500,
+            '90.10',
             'Duplicate Check',
             1
         );
     }
 
-    public function test_chapters_are_sorted_mathematically_not_alphabetically(): void
+    public function test_duplicate_detection_allows_90_01_when_90_1_exists(): void
     {
-        Chapter::factory()->create(['comic_id' => $this->comicA->id, 'chapter_number' => 188, 'published_at' => now()]);
-        Chapter::factory()->create(['comic_id' => $this->comicA->id, 'chapter_number' => 187.5, 'published_at' => now()]);
-        Chapter::factory()->create(['comic_id' => $this->comicA->id, 'chapter_number' => 186, 'published_at' => now()]);
-        Chapter::factory()->create(['comic_id' => $this->comicA->id, 'chapter_number' => 187.25, 'published_at' => now()]);
-        Chapter::factory()->create(['comic_id' => $this->comicA->id, 'chapter_number' => 187, 'published_at' => now()]);
-
-        $ordered = $this->comicA->chapters()->orderBy('chapter_number', 'asc')->pluck('chapter_number')->all();
-
-        $this->assertEquals([186, 187, 187.25, 187.5, 188], $ordered);
-    }
-
-    public function test_reader_next_and_previous_navigate_decimal_chapters_in_correct_order(): void
-    {
-        $ch187 = Chapter::factory()->create(['comic_id' => $this->comicB->id, 'chapter_number' => 187, 'published_at' => now()]);
-        $ch187_25 = Chapter::factory()->create(['comic_id' => $this->comicB->id, 'chapter_number' => 187.25, 'published_at' => now()]);
-        $ch187_5 = Chapter::factory()->create(['comic_id' => $this->comicB->id, 'chapter_number' => 187.5, 'published_at' => now()]);
-        $ch188 = Chapter::factory()->create(['comic_id' => $this->comicB->id, 'chapter_number' => 188, 'published_at' => now()]);
-
-        // Viewing 187.25: previous must be 187, next must be 187.5
-        $response = $this->get(route('chapters.show', [$this->comicB->slug, $ch187_25->slug]));
-        $response->assertOk();
-        $response->assertViewHas('prevChapter', fn($ch) => (float) $ch->chapter_number === 187.0);
-        $response->assertViewHas('nextChapter', fn($ch) => (float) $ch->chapter_number === 187.5);
-
-        // Viewing 187.5: previous must be 187.25, next must be 188
-        $response2 = $this->get(route('chapters.show', [$this->comicB->slug, $ch187_5->slug]));
-        $response2->assertOk();
-        $response2->assertViewHas('prevChapter', fn($ch) => (float) $ch->chapter_number === 187.25);
-        $response2->assertViewHas('nextChapter', fn($ch) => (float) $ch->chapter_number === 188.0);
-    }
-
-    public function test_decimal_chapter_route_and_numeric_slug_redirect_work_properly(): void
-    {
-        $ch = Chapter::factory()->create([
-            'comic_id' => $this->comicB->id,
-            'chapter_number' => 187.5,
-            'slug' => 'chapter-187.5',
-            'published_at' => now(),
-        ]);
-
-        // Direct canonical slug
-        $this->get('/truyen/' . $this->comicB->slug . '/chapter-187.5')
-            ->assertOk();
-
-        // Numeric slug redirect: /truyen/slug/187.5 -> 301 redirect to /truyen/slug/chapter-187.5
-        $this->get('/truyen/' . $this->comicB->slug . '/187.5')
-            ->assertRedirect('/truyen/' . $this->comicB->slug . '/chapter-187.5');
-    }
-
-    public function test_admin_can_create_decimal_chapter_via_store_endpoint(): void
-    {
-        $response = $this->actingAs($this->admin)
-            ->post(route('admin.comics.chapters.store', $this->comicA->id), [
-                'chapter_number' => '187.5',
-                'title' => 'Bonus Story',
-                'is_free' => true,
-                'pages_raw' => "https://cdn.example.com/page1.jpg\nhttps://cdn.example.com/page2.jpg",
-            ]);
-
-        $response->assertRedirect(route('admin.comics.chapters.index', $this->comicA->id));
-
-        $chapter = Chapter::where('comic_id', $this->comicA->id)
-            ->where('chapter_number', 187.5)
-            ->first();
-
-        $this->assertNotNull($chapter);
-        $this->assertEquals(187.5, $chapter->chapter_number);
-        $this->assertSame('Bonus Story', $chapter->title);
-        $this->assertSame('chapter-187.5', $chapter->slug);
-    }
-
-    public function test_bulk_folder_upload_finalize_accepts_decimal_chapter(): void
-    {
-        \Illuminate\Support\Facades\Bus::fake([\App\Jobs\GenerateChapterReaderVariants::class]);
         Storage::fake('public');
+
+        Chapter::factory()->create([
+            'comic_id' => $this->comicA->id,
+            'chapter_number' => '90.1',
+        ]);
 
         $gifBytes = base64_decode('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7');
         $hash = hash('sha256', $gifBytes);
@@ -201,7 +146,7 @@ class DecimalChapterNumberTest extends TestCase
             ->post(route('admin.comics.chapters.store', $this->comicA->id), [
                 'bulk_action' => 'chunk',
                 'session' => $session,
-                'chapter_key' => 'chapter-0000',
+                'chapter_key' => 'chapter-0001',
                 'files' => [
                     UploadedFile::fake()->createWithContent('01.gif', $gifBytes),
                 ],
@@ -210,63 +155,160 @@ class DecimalChapterNumberTest extends TestCase
             ])
             ->assertOk();
 
-        // Finalize with decimal chapter number
+        // 90.01 is distinct from 90.1 and must be accepted
         $finalizeRes = $this->actingAs($this->admin)
             ->withHeader('Accept', 'application/json')
             ->post(route('admin.comics.chapters.store', $this->comicA->id), [
                 'bulk_action' => 'finalize',
                 'session' => $session,
-                'chapter_key' => 'chapter-0000',
-                'chapter_number' => '187.5',
-                'title' => 'Bonus Chapter',
+                'chapter_key' => 'chapter-0001',
+                'chapter_number' => '90.01',
+                'title' => 'Different Chapter',
                 'page_count' => 1,
             ]);
 
-        $finalizeRes->assertOk()
-            ->assertJsonPath('status', 'ok')
-            ->assertJsonPath('chapter_number', 187.5);
+        $finalizeRes->assertOk();
+
+        $ch90_01 = Chapter::where('comic_id', $this->comicA->id)
+            ->where('chapter_number', '90.01')
+            ->first();
+        $this->assertNotNull($ch90_01);
+    }
+
+    public function test_chapters_are_sorted_mathematically_not_alphabetically(): void
+    {
+        // 90 < 90.001 < 90.01 < 90.1 < 90.11 < 90.5 < 91
+        $unsorted = ['91', '90.5', '90.01', '90', '90.11', '90.1', '90.001'];
+        foreach ($unsorted as $num) {
+            Chapter::factory()->create([
+                'comic_id' => $this->comicA->id,
+                'chapter_number' => $num,
+                'published_at' => now(),
+            ]);
+        }
+
+        $ordered = $this->comicA->chapters()
+            ->orderBy('chapter_number', 'asc')
+            ->pluck('chapter_number')
+            ->all();
+
+        $this->assertEquals([90, 90.001, 90.01, 90.1, 90.11, 90.5, 91], $ordered);
+    }
+
+    public function test_reader_next_and_previous_navigate_decimal_chapters_in_correct_order(): void
+    {
+        $ch90 = Chapter::factory()->create(['comic_id' => $this->comicB->id, 'chapter_number' => 90, 'published_at' => now()]);
+        $ch90_01 = Chapter::factory()->create(['comic_id' => $this->comicB->id, 'chapter_number' => '90.01', 'published_at' => now()]);
+        $ch90_1 = Chapter::factory()->create(['comic_id' => $this->comicB->id, 'chapter_number' => '90.1', 'published_at' => now()]);
+        $ch91 = Chapter::factory()->create(['comic_id' => $this->comicB->id, 'chapter_number' => 91, 'published_at' => now()]);
+
+        // Viewing 90.01: previous must be 90, next must be 90.1
+        $response = $this->get(route('chapters.show', [$this->comicB->slug, $ch90_01->slug]));
+        $response->assertOk();
+        $response->assertViewHas('prevChapter', fn($ch) => (float) $ch->chapter_number === 90.0);
+        $response->assertViewHas('nextChapter', fn($ch) => (float) $ch->chapter_number === 90.1);
+
+        // Viewing 90.1: previous must be 90.01, next must be 91
+        $response2 = $this->get(route('chapters.show', [$this->comicB->slug, $ch90_1->slug]));
+        $response2->assertOk();
+        $response2->assertViewHas('prevChapter', fn($ch) => (float) $ch->chapter_number === 90.01);
+        $response2->assertViewHas('nextChapter', fn($ch) => (float) $ch->chapter_number === 91.0);
+    }
+
+    public function test_decimal_chapter_route_and_numeric_slug_redirect_work_properly(): void
+    {
+        $ch = Chapter::factory()->create([
+            'comic_id' => $this->comicB->id,
+            'chapter_number' => '90.12345',
+            'slug' => 'chapter-90.12345',
+            'published_at' => now(),
+        ]);
+
+        // Direct canonical slug
+        $this->get('/truyen/' . $this->comicB->slug . '/chapter-90.12345')
+            ->assertOk();
+
+        // Numeric slug redirect: /truyen/slug/90.12345 -> 301 redirect to /truyen/slug/chapter-90.12345
+        $this->get('/truyen/' . $this->comicB->slug . '/90.12345')
+            ->assertRedirect('/truyen/' . $this->comicB->slug . '/chapter-90.12345');
+    }
+
+    public function test_admin_can_create_generic_decimal_chapter_via_store_endpoint(): void
+    {
+        $response = $this->actingAs($this->admin)
+            ->post(route('admin.comics.chapters.store', $this->comicA->id), [
+                'chapter_number' => '90.12345',
+                'title' => 'High Precision Chapter',
+                'is_free' => true,
+                'pages_raw' => "https://cdn.example.com/page1.jpg\nhttps://cdn.example.com/page2.jpg",
+            ]);
+
+        $response->assertRedirect(route('admin.comics.chapters.index', $this->comicA->id));
 
         $chapter = Chapter::where('comic_id', $this->comicA->id)
-            ->where('chapter_number', 187.5)
+            ->where('chapter_number', '90.12345')
             ->first();
 
         $this->assertNotNull($chapter);
-        $this->assertEquals(187.5, $chapter->chapter_number);
-        $this->assertSame('chapter-187.5', $chapter->slug);
+        $this->assertEquals(90.12345, $chapter->chapter_number);
+        $this->assertSame('High Precision Chapter', $chapter->title);
+        $this->assertSame('chapter-90.12345', $chapter->slug);
     }
 
-    public function test_validation_rejects_invalid_chapter_numbers(): void
+    public function test_validation_rejects_invalid_chapter_formats(): void
     {
-        // Letters
-        $this->actingAs($this->admin)
-            ->post(route('admin.comics.chapters.store', $this->comicA->id), [
-                'chapter_number' => 'abc',
-                'title' => 'Invalid',
-            ])
-            ->assertSessionHasErrors(['chapter_number']);
+        $invalidFormats = [
+            '90.',
+            '.5',
+            '90..1',
+            '90.1.2',
+            'abc',
+            '90a.1',
+            '-90.1',
+            '-5',
+        ];
 
-        // Multiple dots
-        $this->actingAs($this->admin)
-            ->post(route('admin.comics.chapters.store', $this->comicA->id), [
-                'chapter_number' => '187..5',
-                'title' => 'Invalid',
-            ])
-            ->assertSessionHasErrors(['chapter_number']);
+        foreach ($invalidFormats as $inv) {
+            $this->actingAs($this->admin)
+                ->post(route('admin.comics.chapters.store', $this->comicA->id), [
+                    'chapter_number' => $inv,
+                    'title' => 'Invalid Test',
+                ])
+                ->assertSessionHasErrors(['chapter_number']);
+        }
+    }
 
-        // Negative numbers
-        $this->actingAs($this->admin)
-            ->post(route('admin.comics.chapters.store', $this->comicA->id), [
-                'chapter_number' => -5,
-                'title' => 'Invalid',
-            ])
-            ->assertSessionHasErrors(['chapter_number']);
+    public function test_validation_accepts_valid_generic_decimal_chapter_numbers(): void
+    {
+        $validFormats = [
+            '1',
+            '1.1',
+            '1.01',
+            '1.001',
+            '1.5',
+            '1.25',
+            '1.125',
+            '10.10',
+            '10.99',
+            '90.1',
+            '90.01',
+            '90.001',
+            '90.12345',
+            '187.5',
+            '187.25',
+            '999.999999',
+        ];
 
-        // Exceeding precision (> 3 decimal places)
-        $this->actingAs($this->admin)
-            ->post(route('admin.comics.chapters.store', $this->comicA->id), [
-                'chapter_number' => '187.1234',
-                'title' => 'Invalid',
-            ])
-            ->assertSessionHasErrors(['chapter_number']);
+        foreach ($validFormats as $valid) {
+            $validator = \Illuminate\Support\Facades\Validator::make(
+                ['chapter_number' => $valid],
+                (new \App\Http\Requests\Admin\StoreChapterRequest())->rules()
+            );
+
+            $this->assertFalse(
+                $validator->fails(),
+                "Failed to validate {$valid}: " . json_encode($validator->errors()->all())
+            );
+        }
     }
 }

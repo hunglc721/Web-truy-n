@@ -24,10 +24,11 @@ class ChapterController extends Controller
         $comic = Comic::where('slug', $comicSlug)->firstOrFail();
         $baseQuery = Chapter::where('comic_id', $comic->id);
 
-        if (is_numeric($chapterSlug)) {
+        if (Chapter::isValidNumber($chapterSlug)) {
+            $normalizedSlug = Chapter::formatNumber($chapterSlug);
             $chapter = $isAdmin
-                ? $baseQuery->preview()->where('chapter_number', $chapterSlug)->firstOrFail()
-                : $baseQuery->published()->where('chapter_number', $chapterSlug)->firstOrFail();
+                ? $baseQuery->preview()->where('chapter_number', $normalizedSlug)->firstOrFail()
+                : $baseQuery->published()->where('chapter_number', $normalizedSlug)->firstOrFail();
         } else {
             $chapter = $isAdmin
                 ? $baseQuery->preview()->where('slug', $chapterSlug)->firstOrFail()

@@ -370,6 +370,12 @@ class BulkChapterUploadService
 
             $normalizedChapterNumber = Chapter::formatNumber($chapterNumber);
 
+            if (!Chapter::isValidNumber($normalizedChapterNumber)) {
+                throw ValidationException::withMessages([
+                    'chapter_number' => 'Số chapter không hợp lệ.',
+                ]);
+            }
+
             if (Chapter::withTrashed()
                 ->where('comic_id', $comic->id)
                 ->where('chapter_number', $normalizedChapterNumber)

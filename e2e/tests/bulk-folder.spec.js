@@ -182,3 +182,30 @@ test('bulk uploader detects decimal chapter numbers and sorts them correctly', a
   const titles = await page.locator('[data-testid="bulk-chapter-title"]').evaluateAll((nodes) => nodes.map((node) => node.value));
   expect(titles[2]).toBe('Bonus Chapter');
 });
+
+test('bulk uploader detects generic high-precision decimal chapters: 90, 90.001, 90.01, 90.1, 90.12345, 91', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name.includes('mobile'), 'Large directory picking is a desktop admin workflow.');
+
+  await openBulkUploader(page);
+
+  await setDirectoryFiles(page, [
+    { name: '1.gif', relativePath: 'Series/Ch.91/1.gif' },
+    { name: '1.gif', relativePath: 'Series/Ch.90.12345/1.gif' },
+    { name: '1.gif', relativePath: 'Series/Ch.90.01/1.gif' },
+    { name: '1.gif', relativePath: 'Series/Ch.90/1.gif' },
+    { name: '1.gif', relativePath: 'Series/Ch.90.1/1.gif' },
+    { name: '1.gif', relativePath: 'Series/Ch.90.001/1.gif' },
+  ]);
+
+  const rows = page.locator('[data-testid="bulk-chapter-row"]');
+  await expect(rows).toHaveCount(6);
+
+  await expect.poll(async () => {
+    return page.locator('[data-testid="bulk-chapter-number"]').evaluateAll((nodes) => nodes.map((node) => node.value));
+  }).toEqual(['90', '90.001', '90.01', '90.1', '90.12345', '91']);
+
+  // Verify no validation issues (no false duplicates)
+  const validationBox = page.locator('#bulk-validation-message');
+  await expect(validationBox).not.toContainText('xuất hiện');
+});
+
