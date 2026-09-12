@@ -495,11 +495,41 @@
       });
     })();
 
+    @if (app()->environment('local'))
+    // Local PWA cleanup: only this application's worker and caches.
+    (async () => {
+      try {
+        if ('serviceWorker' in navigator) {
+          const registrations = await navigator.serviceWorker.getRegistrations();
+          await Promise.allSettled(registrations.filter(registration =>
+            [registration.active, registration.waiting, registration.installing].some(worker => {
+              if (!worker) return false;
+              const url = new URL(worker.scriptURL);
+              return url.origin === window.location.origin && url.pathname === '/sw.js';
+            })
+          ).map(registration => registration.unregister()));
+        }
+      } catch (error) {
+        console.debug('Local SW cleanup unavailable:', error);
+      }
+      try {
+        if ('caches' in window) {
+          const names = await window.caches.keys();
+          await Promise.allSettled(names.filter(name => name.startsWith('webcomics-'))
+            .map(name => window.caches.delete(name)));
+        }
+      } catch (error) {
+        console.debug('Local PWA cache cleanup unavailable:', error);
+      }
+    })();
+    // End local PWA cleanup.
+    @else
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW registration failed:', err));
       });
     }
+    @endif
 
     let deferredPrompt;
     const pwaInstallBtn = document.getElementById('pwa-install-btn');
