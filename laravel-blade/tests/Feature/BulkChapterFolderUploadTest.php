@@ -229,4 +229,100 @@ class BulkChapterFolderUploadTest extends TestCase
 
         return new UploadedFile($path, $name, 'image/gif', null, true);
     }
+
+    public function test_check_existing_returns_existing_for_active_chapter(): void
+    {
+        Chapter::factory()->create([
+            'comic_id'       => $this->comic->id,
+            'chapter_number' => 10,
+        ]);
+
+        $response = $this->actingAs($this->admin)
+            ->withHeader('Accept', 'application/json')
+            ->post(route('admin.comics.chapters.store', $this->comic->id), [
+                'bulk_action'     => 'check_existing',
+                'chapter_numbers' => ['10'],
+            ]);
+
+        $response
+            ->assertOk()
+            ->assertJsonPath('status', 'ok')
+            ->assertJsonPath('conflicts.10', 'existing');
+    }
+
+    public function test_check_existing_returns_deleted_for_soft_deleted_chapter(): void
+    {
+        $chapter = Chapter::factory()->create([
+            'comic_id'       => $this->comic->id,
+            'chapter_number' => 5.5,
+        ]);
+        $chapter->delete(); // soft delete
+
+        $response = $this->actingAs($this->admin)
+            ->withHeader('Accept', 'application/json')
+            ->post(route('admin.comics.chapters.store', $this->comic->id), [
+                'bulk_action'     => 'check_existing',
+                'chapter_numbers' => ['5.5'],
+            ]);
+
+        $response
+            ->assertOk()
+            ->assertJsonPath('status', 'ok');
+
+        // assertJsonPath uses dot notation so '5.5' would be interpreted as nested path
+        // Use assertJson directly with the conflicts map to check the decimal key
+        $conflicts = $response->json('conflicts') ?? [];
+        $this->assertSame('deleted', $conflicts['5.5'] ?? null);
+    }
+
+    public function test_check_existing_returns_nothing_for_new_chapter(): void
+    {
+        $response = $this->actingAs($this->admin)
+            ->withHeader('Accept', 'application/json')
+            ->post(route('admin.comics.chapters.store', $this->comic->id), [
+                'bulk_action'     => 'check_existing',
+                'chapter_numbers' => ['99', '100.5'],
+            ]);
+
+        $response
+            ->assertOk()
+            ->assertJsonPath('status', 'ok');
+
+        $data = $response->json('conflicts') ?? [];
+        $this->assertArrayNotHasKey('99', $data);
+        $this->assertArrayNotHasKey('100.5', $data);
+    }
+
+    public function test_check_existing_isolates_chapters_by_comic(): void
+    {
+        $otherComic = Comic::factory()->create();
+        Chapter::factory()->create([
+            'comic_id'       => $otherComic->id,
+            'chapter_number' => 7,
+        ]);
+
+        // Chapter 7 belongs to $otherComic, not $this->comic — must return as new
+        $response = $this->actingAs($this->admin)
+            ->withHeader('Accept', 'application/json')
+            ->post(route('admin.comics.chapters.store', $this->comic->id), [
+                'bulk_action'     => 'check_existing',
+                'chapter_numbers' => ['7'],
+            ]);
+
+        $response->assertOk();
+        $data = $response->json('conflicts') ?? [];
+        $this->assertArrayNotHasKey('7', $data);
+    }
+
+    public function test_check_existing_validates_chapter_numbers_format(): void
+    {
+        $response = $this->actingAs($this->admin)
+            ->withHeader('Accept', 'application/json')
+            ->post(route('admin.comics.chapters.store', $this->comic->id), [
+                'bulk_action'     => 'check_existing',
+                'chapter_numbers' => ['abc', '1.2.3', '-1'],
+            ]);
+
+        $response->assertStatus(422);
+    }
 }

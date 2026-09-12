@@ -39,6 +39,11 @@
   let inspectorRenderedPages = 0;
   let inspectorObjectUrls = [];
 
+  // DB conflict detection state
+  // 'skip' = skip existing chapters silently | 'stop' = abort on first conflict
+  let dbConflictMode = 'skip';
+  let dbCheckRunning = false;
+
   const checksumCache = new WeakMap();
 
   // State for Lightbox
@@ -91,6 +96,13 @@
   function injectPreflightUi() {
     const headerRow = tableWrap?.querySelector('thead tr');
     if (headerRow && !headerRow.querySelector('[data-preflight-header]')) {
+      // Insert DB status column before preflight column
+      const dbTh = document.createElement('th');
+      dbTh.dataset.dbStatusHeader = 'true';
+      dbTh.style.width = '120px';
+      dbTh.textContent = 'Trạng thái DB';
+      headerRow.appendChild(dbTh);
+
       const th = document.createElement('th');
       th.dataset.preflightHeader = 'true';
       th.style.width = '175px';
@@ -108,14 +120,28 @@
           <strong>🔎 Kiểm tra trước khi upload</strong>
           <span id="bulk-preflight-summary">Chưa có chapter để kiểm tra.</span>
         </div>
-        <button type="button" id="bulk-check-all" class="btn-admin btn-admin-ghost btn-sm">
-          ✓ Kiểm tra tất cả Chapter
-        </button>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <label for="bulk-conflict-mode" style="white-space:nowrap;font-size:0.85em;">Khi trùng DB:</label>
+          <select id="bulk-conflict-mode" class="form-control" style="width:auto;min-width:160px;">
+            <option value="skip">✔ Bỏ qua chapter đã tồn tại</option>
+            <option value="stop">⛔ Dừng upload khi phát hiện trùng</option>
+          </select>
+          <button type="button" id="bulk-check-all" class="btn-admin btn-admin-ghost btn-sm">
+            ✓ Kiểm tra tất cả Chapter
+          </button>
+        </div>
       `;
       tableWrap?.before(toolbar);
 
       toolbar.querySelector('#bulk-check-all')?.addEventListener('click', () => {
         if (!uploadRunning) inspectAllChapters();
+      });
+
+      toolbar.querySelector('#bulk-conflict-mode')?.addEventListener('change', (event) => {
+        dbConflictMode = event.target.value;
+        renderChapterTable();
+        refreshValidation();
+        updatePreflightToolbar();
       });
     }
 
@@ -871,6 +897,7 @@
         preflightStatus: 'unchecked',
         preflightErrors: [],
         pageMeta: [],
+        dbConflict: 'checking', // 'new' | 'existing' | 'deleted' | 'checking' | 'error'
       };
     });
 
@@ -888,6 +915,9 @@
     renderChapterTable();
     refreshValidation();
     updatePreflightToolbar();
+
+    // Kick off DB conflict check asynchronously; don't block the UI
+    checkExistingChaptersDb();
   }
 
   function detectChapterFolder(parts) {
@@ -996,6 +1026,11 @@
       row.dataset.chapterIndex = String(index);
       row.classList.add('bulk-row-clickable');
 
+      // Dim existing chapters that will be skipped
+      if (chapter.dbConflict === 'existing' && dbConflictMode === 'skip') {
+        row.style.opacity = '0.5';
+      }
+
       const folderCell = document.createElement('td');
       folderCell.innerHTML = `
         <div class="bulk-folder-name" title="${escapeHtml(chapter.folderName)}">${escapeHtml(chapter.folderName)}</div>
@@ -1013,7 +1048,11 @@
         const val = numberInput.value.trim();
         const norm = normalizeChapterNumber(val);
         chapter.chapterNumber = norm !== null ? norm : (val === '' ? null : val);
+        // Re-check DB conflict for this chapter when number changes
+        chapter.dbConflict = 'checking';
+        renderChapterTable();
         refreshValidation();
+        checkExistingChaptersDb();
       });
       numberCell.appendChild(numberInput);
 
@@ -1033,6 +1072,16 @@
       const pagesCell = document.createElement('td');
       pagesCell.style.whiteSpace = 'nowrap';
       pagesCell.textContent = `${chapter.files.length} trang`;
+
+      // DB conflict badge cell
+      const dbCell = document.createElement('td');
+      dbCell.style.whiteSpace = 'nowrap';
+      const dbBadge = document.createElement('span');
+      dbBadge.dataset.testid = 'bulk-chapter-db-status';
+      dbBadge.className = `bulk-db-badge bulk-db-${chapter.dbConflict}`;
+      dbBadge.title = dbConflictBadgeTitle(chapter.dbConflict);
+      dbBadge.textContent = dbConflictBadgeText(chapter.dbConflict);
+      dbCell.appendChild(dbBadge);
 
       const statusCell = document.createElement('td');
       const status = document.createElement('span');
@@ -1067,11 +1116,31 @@
         openChapterInspector(index, true);
       });
 
-      row.append(folderCell, numberCell, titleCell, pagesCell, statusCell, preflightCell);
+      row.append(folderCell, numberCell, titleCell, pagesCell, dbCell, statusCell, preflightCell);
       tableBody.appendChild(row);
     });
 
     tableWrap.style.display = chapters.length ? 'block' : 'none';
+  }
+
+  function dbConflictBadgeText(conflict) {
+    return {
+      new: '✓ Mới',
+      existing: '⚠ Đã tồn tại',
+      deleted: '🗑 Đã xóa',
+      checking: '⏳ Đang kiểm tra',
+      error: '? Lỗi check',
+    }[conflict] ?? '?';
+  }
+
+  function dbConflictBadgeTitle(conflict) {
+    return {
+      new: 'Chapter chưa tồn tại trong DB — an toàn để upload.',
+      existing: 'Chapter đã tồn tại trong DB. Sẽ bỏ qua khi mode là "Bỏ qua" hoặc dừng khi mode là "Dừng".',
+      deleted: 'Chapter đã bị xóa mềm. Sẽ bị bỏ qua hoặc dừng upload.',
+      checking: 'Đang kiểm tra trong database...',
+      error: 'Không kiểm tra được — sẽ coi như mới.',
+    }[conflict] ?? '';
   }
 
   function preflightLabel(status) {
@@ -1127,6 +1196,7 @@
     const toolbar = document.getElementById('bulk-preflight-toolbar');
     const summary = document.getElementById('bulk-preflight-summary');
     const checkAllButton = document.getElementById('bulk-check-all');
+    const conflictModeSelect = document.getElementById('bulk-conflict-mode');
 
     if (!toolbar || !summary || !checkAllButton) return;
 
@@ -1135,6 +1205,10 @@
     const checked = chapters.filter((chapter) => chapter.preflightStatus === 'ok').length;
     const checking = chapters.filter((chapter) => chapter.preflightStatus === 'checking').length;
     const failed = chapters.filter((chapter) => chapter.preflightStatus === 'error').length;
+    const conflictCount = chapters.filter((chapter) =>
+      chapter.dbConflict === 'existing' || chapter.dbConflict === 'deleted',
+    ).length;
+    const dbChecking = dbCheckRunning;
 
     if (!chapters.length) {
       summary.textContent = 'Chưa có chapter để kiểm tra.';
@@ -1142,6 +1216,11 @@
       summary.textContent = `Đang kiểm tra ${checking} chapter · ${checked}/${chapters.length} đã đạt.`;
     } else if (failed) {
       summary.textContent = `${checked}/${chapters.length} chapter đạt · ${failed} chapter có lỗi cần xem lại.`;
+    } else if (dbChecking) {
+      summary.textContent = `Đang kiểm tra trùng DB...`;
+    } else if (conflictCount) {
+      const label = dbConflictMode === 'skip' ? 'sẽ bỏ qua' : 'sẽ dừng upload';
+      summary.textContent = `${conflictCount} chapter đã tồn tại — ${label}.`;
     } else if (checked === chapters.length) {
       summary.textContent = `Đã kiểm tra đủ ${checked}/${chapters.length} chapter. Có thể upload.`;
     } else {
@@ -1152,6 +1231,10 @@
     checkAllButton.textContent = checked === chapters.length && !failed
       ? '✓ Đã kiểm tra tất cả'
       : '✓ Kiểm tra tất cả Chapter';
+
+    if (conflictModeSelect) {
+      conflictModeSelect.disabled = uploadRunning;
+    }
   }
 
   function collectValidationIssues() {
@@ -1188,11 +1271,20 @@
             : `Chapter ${chapter.chapterNumber ?? index + 1} có ảnh lỗi.`
         );
       }
+
+      // In 'stop' mode, any conflict blocks upload
+      if (dbConflictMode === 'stop' && (chapter.dbConflict === 'existing' || chapter.dbConflict === 'deleted')) {
+        issues.push(`Chapter ${chapter.chapterNumber ?? index + 1} đã tồn tại trong DB (mode: dừng khi phát hiện trùng).`);
+      }
     });
 
     numbers.forEach((count, number) => {
       if (count > 1) issues.push(`Chapter ${number} xuất hiện ${count} lần trong thư mục.`);
     });
+
+    if (dbCheckRunning) {
+      issues.push('Đang kiểm tra chapter trùng trong database...');
+    }
 
     if (totalBytes > MAX_SESSION_BYTES) {
       issues.push('Tổng dung lượng vượt giới hạn an toàn 20GB / phiên upload.');
@@ -2104,6 +2196,11 @@
     const allChecked = chapters.length > 0 && chapters.every((chapter) => chapter.preflightStatus === 'ok');
     if (issues.length || !allChecked) return;
 
+    // Re-validate DB conflicts right before starting (race condition guard)
+    await checkExistingChaptersDb();
+    const reissues = refreshValidation();
+    if (reissues.length) return;
+
     uploadRunning = true;
     uploadButton.disabled = true;
     folderInput.disabled = true;
@@ -2115,19 +2212,34 @@
     const errorPanel = document.getElementById('bulk-error-panel');
     if (errorPanel) errorPanel.style.display = 'none';
 
+    // Build list of chapters to upload — skip DB conflicts when mode is 'skip'
+    const chaptersToUpload = chapters.filter((chapter) => {
+      if (chapter.status === 'done') return false;
+      if (dbConflictMode === 'skip' &&
+          (chapter.dbConflict === 'existing' || chapter.dbConflict === 'deleted')) {
+        updateChapterStatus(chapters.indexOf(chapter), 'skipped', '— Bỏ qua (đã tồn tại)');
+        return false;
+      }
+      return true;
+    });
+
+    // Recalculate totalBytes to exclude skipped chapters so the progress bar is accurate
+    totalBytes = chaptersToUpload.reduce((sum, chapter) => sum + chapter.size, 0);
+    uploadedBytes = 0;
+
     try {
       if (!activeSession) {
         const started = await postAction({ bulk_action: 'start' });
         activeSession = started.session;
       }
 
-      for (let chapterIndex = 0; chapterIndex < chapters.length; chapterIndex++) {
-        const chapter = chapters[chapterIndex];
-        if (chapter.status === 'done') continue;
+      for (let ci = 0; ci < chaptersToUpload.length; ci++) {
+        const chapter = chaptersToUpload[ci];
+        const chapterIndex = chapters.indexOf(chapter);
 
         activeChapterIndex = chapterIndex;
         updateChapterStatus(chapterIndex, 'uploading', 'Đang upload');
-        uploadButton.textContent = `⏳ Chapter ${chapter.chapterNumber} (${chapterIndex + 1}/${chapters.length})`;
+        uploadButton.textContent = `⏳ Chapter ${chapter.chapterNumber} (${ci + 1}/${chaptersToUpload.length})`;
 
         // Uses current edited chapter.files (A10)
         const batches = createBatches(chapter.files);
@@ -2172,7 +2284,9 @@
       failedBatchPages.clear();
       renderProgress(null, 1, 1);
       validationBox.className = 'bulk-validation bulk-validation-ok';
-      validationBox.innerHTML = `Đã tạo thành công <strong>${completed.chapters_created}</strong> chapter. Ảnh đã qua kiểm tra trước upload, giữ nguyên byte gốc và xác minh SHA-256 trước + sau khi lưu. <a href="${chaptersUrl}">Mở danh sách chapter →</a>`;
+      const skippedCount = chapters.length - chaptersToUpload.length;
+      const skippedNote = skippedCount > 0 ? ` (${skippedCount} chapter bị bỏ qua do đã tồn tại)` : '';
+      validationBox.innerHTML = `Đã tạo thành công <strong>${completed.chapters_created}</strong> chapter${skippedNote}. Ảnh đã qua kiểm tra trước upload, giữ nguyên byte gốc và xác minh SHA-256 trước + sau khi lưu. <a href="${chaptersUrl}">Mở danh sách chapter →</a>`;
       uploadButton.textContent = '✅ Upload hoàn tất';
     } catch (error) {
       handleUploadError(error);
@@ -2182,6 +2296,64 @@
       renderChapterTable();
       updatePreflightToolbar();
       uploadButton.disabled = refreshValidation().length > 0 || !chapters.every((chapter) => chapter.preflightStatus === 'ok');
+    }
+  }
+
+  /**
+   * Check all chapter numbers against the DB in one batch request.
+   * Updates chapter.dbConflict for each chapter and re-renders.
+   */
+  async function checkExistingChaptersDb() {
+    if (!chapters.length || dbCheckRunning) return;
+
+    // Collect all currently-valid chapter numbers
+    const toCheck = chapters
+      .map((chapter) => normalizeChapterNumber(chapter.chapterNumber))
+      .filter((num) => num !== null);
+
+    if (!toCheck.length) return;
+
+    dbCheckRunning = true;
+    updatePreflightToolbar();
+
+    try {
+      const formData = new FormData();
+      formData.append('_token', csrf);
+      formData.append('bulk_action', 'check_existing');
+      toCheck.forEach((num) => formData.append('chapter_numbers[]', num));
+
+      const response = await fetch(endpoint, { method: 'POST', body: formData });
+      if (!response.ok) {
+        // Non-fatal — treat all as 'error' so we don't block upload
+        chapters.forEach((chapter) => {
+          if (chapter.dbConflict === 'checking') chapter.dbConflict = 'error';
+        });
+        return;
+      }
+
+      const payload = await response.json();
+      // payload is { status: 'ok', conflicts: { "1": "existing", "187.5": "deleted" } }
+      const conflicts = payload.conflicts ?? {};
+
+      chapters.forEach((chapter) => {
+        const norm = normalizeChapterNumber(chapter.chapterNumber);
+        if (norm === null) {
+          chapter.dbConflict = 'new';
+          return;
+        }
+        const serverStatus = conflicts[norm];
+        chapter.dbConflict = serverStatus ?? 'new';
+      });
+    } catch {
+      // Network failure is non-fatal
+      chapters.forEach((chapter) => {
+        if (chapter.dbConflict === 'checking') chapter.dbConflict = 'error';
+      });
+    } finally {
+      dbCheckRunning = false;
+      renderChapterTable();
+      refreshValidation();
+      updatePreflightToolbar();
     }
   }
 

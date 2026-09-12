@@ -38,11 +38,15 @@ class StoreChapterRequest extends FormRequest
     private function bulkRules(string $action): array
     {
         $base = [
-            'bulk_action' => 'required|string|in:start,chunk,finalize,complete',
+            'bulk_action' => 'required|string|in:start,chunk,finalize,complete,check_existing',
         ];
 
         return match ($action) {
             'start' => $base,
+            'check_existing' => $base + [
+                'chapter_numbers'   => 'required|array|min:1|max:500',
+                'chapter_numbers.*' => ['required', 'string', 'max:32', 'regex:/^\d+(?:\.\d+)?$/'],
+            ],
             'chunk' => $base + [
                 'session' => 'required|uuid',
                 'chapter_key' => ['required', 'string', 'max:80', 'regex:/^[A-Za-z0-9_-]+$/'],

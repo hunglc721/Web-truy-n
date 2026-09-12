@@ -161,6 +161,10 @@ class AdminChapterController extends Controller
         try {
             $result = match ($action) {
                 'start' => $this->bulkChapterUploadService->start($comic, $user),
+                'check_existing' => ['conflicts' => $this->bulkChapterUploadService->checkExistingChapters(
+                    $comic,
+                    array_values((array) $request->input('chapter_numbers', [])),
+                )],
                 'chunk' => $this->bulkChapterUploadService->storeChunk(
                     $comic,
                     $user,
