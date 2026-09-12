@@ -271,7 +271,7 @@
         items.slice(0, 7).forEach((item) => {
           const title = item.title || item.name || '';
           const slug = item.slug || '';
-          const cover = item.cover_image || '';
+          const cover = item.cover_url || item.cover_image || '';
           const rating = item.avg_rating ? `★ ${Number(item.avg_rating).toFixed(1)}` : '';
           const el = document.createElement('a');
           el.className = 'search-item';

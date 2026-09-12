@@ -1161,7 +1161,7 @@
       const currentItem = {
         comicId: {{ $comic->id }},
         title: @json($comic->title),
-        cover: @json($comic->cover_image),
+        cover: @json($comic->cover_url),
         chapterNum: {{ $chapter->chapter_number }},
         chapterTitle: @json($chapter->title ?: 'Chapter ' . $chapter->chapter_number),
         url: window.location.pathname,

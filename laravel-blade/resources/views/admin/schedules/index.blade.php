@@ -27,7 +27,7 @@
         <div style="flex:1">
           @forelse($day['schedules'] as $sched)
             <div class="sched-item {{ $sched->is_active ? '' : 'inactive' }}">
-              @if($sched->comic?->cover_image)<img src="{{ $sched->comic->cover_image }}" alt="{{ $sched->comic->title }}" class="sched-cover" loading="lazy">@else<div class="sched-cover" style="display:grid;place-items:center;background:rgba(108,99,255,.1)">📚</div>@endif
+              @if($sched->comic?->cover_url)<img src="{{ $sched->comic->cover_url }}" alt="{{ $sched->comic->title }}" class="sched-cover" loading="lazy">@else<div class="sched-cover" style="display:grid;place-items:center;background:rgba(108,99,255,.1)">📚</div>@endif
               <div class="sched-info">
                 <div class="sched-name">{{ $sched->comic->title ?? 'Truyện đã xóa' }}</div>
                 <div class="sched-meta">⏰ {{ substr((string)$sched->release_time,0,5) }} · {{ $sched->is_active ? 'Đang bật' : 'Đang tắt' }}</div>

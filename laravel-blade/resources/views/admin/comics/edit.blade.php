@@ -314,8 +314,8 @@
         </h2>
 
         <div class="cover-preview-box" id="cover-preview-box">
-          @if($comic->cover_image)
-            <img src="{{ $comic->cover_image }}" alt="Bìa {{ $comic->title }}" id="cover-img-preview" />
+          @if($comic->cover_url)
+            <img src="{{ $comic->cover_url }}" alt="Bìa {{ $comic->title }}" id="cover-img-preview" />
           @else
             <div class="cover-placeholder" id="cover-placeholder">
               <div style="font-size:32px; margin-bottom:8px">📖</div>
@@ -331,12 +331,12 @@
           type="file"
           id="cover_image"
           name="cover_image"
-          accept="image/jpeg,image/png,image/jpg,image/webp"
+          accept="image/jpeg,image/png,image/jpg,image/webp,image/avif"
           style="display:none"
           onchange="previewCoverImage(this)"
         />
         <span class="form-hint" style="text-align:center; display:block; margin-top:8px">
-          Định dạng: JPG, PNG, WEBP (Tối đa 2MB).
+          Định dạng: JPG, PNG, WEBP, AVIF (Tối đa 5MB).
         </span>
         @error('cover_image') <span class="invalid-feedback" style="display:block; text-align:center">{{ $message }}</span> @enderror
       </div>

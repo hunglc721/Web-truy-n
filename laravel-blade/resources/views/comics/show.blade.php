@@ -22,7 +22,7 @@
 
     <section class="orig-spotlight-card" style="margin-bottom:30px;">
       <div class="spotlight-cover">
-        <img src="{{ $comic->cover_image }}" alt="{{ $comic->title }}" class="cover-img" />
+        <img src="{{ $comic->cover_url }}" alt="{{ $comic->title }}" class="cover-img" />
         @if($comic->is_original)<span class="spotlight-badge">ORIGINAL</span>@endif
       </div>
       <div class="spotlight-details">
@@ -167,7 +167,7 @@
         <div class="comics-grid">
           @foreach($suggested as $item)
             <a href="{{ route('comics.show', $item->slug) }}" class="comic-card-sm">
-              <div class="sm-cover"><img src="{{ $item->cover_image }}" alt="{{ $item->title }}" class="cover-img" loading="lazy"><span class="sm-badge">★ {{ number_format($item->avg_rating,1) }}</span></div>
+              <div class="sm-cover"><img src="{{ $item->cover_url }}" alt="{{ $item->title }}" class="cover-img" loading="lazy"><span class="sm-badge">★ {{ number_format($item->avg_rating,1) }}</span></div>
               <p class="sm-title">{{ $item->title }}</p>
             </a>
           @endforeach
@@ -179,7 +179,7 @@
         <div class="comics-grid">
           @foreach($relatedComics as $item)
             <a href="{{ route('comics.show', $item->slug) }}" class="comic-card-sm">
-              <div class="sm-cover"><img src="{{ $item->cover_image }}" alt="{{ $item->title }}" class="cover-img" loading="lazy"><span class="sm-badge">★ {{ number_format($item->avg_rating,1) }}</span></div>
+              <div class="sm-cover"><img src="{{ $item->cover_url }}" alt="{{ $item->title }}" class="cover-img" loading="lazy"><span class="sm-badge">★ {{ number_format($item->avg_rating,1) }}</span></div>
               <p class="sm-title">{{ $item->title }}</p>
             </a>
           @endforeach

@@ -216,7 +216,7 @@
         <div class="browse-card">
           <div class="browse-cover">
             <a href="{{ route('comics.show', $comic->slug) }}">
-              <img src="{{ $comic->cover_image }}"
+              <img src="{{ $comic->cover_url }}"
                    alt="{{ $comic->title }}"
                    class="cover-img"
                    loading="lazy" />

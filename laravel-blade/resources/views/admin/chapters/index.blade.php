@@ -13,8 +13,8 @@
 <div class="admin-page-header">
   <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px">
     <div style="display:flex; align-items:center; gap:14px">
-      @if($comic->cover_image)
-        <img src="{{ $comic->cover_image }}" alt="{{ $comic->title }}" style="width:48px; height:64px; border-radius:8px; object-fit:cover; border:1px solid var(--admin-border)" />
+      @if($comic->cover_url)
+        <img src="{{ $comic->cover_url }}" alt="{{ $comic->title }}" style="width:48px; height:64px; border-radius:8px; object-fit:cover; border:1px solid var(--admin-border)" />
       @endif
       <div>
         <h1 class="admin-page-title">📖 Quản lý Chapter: {{ $comic->title }}</h1>
