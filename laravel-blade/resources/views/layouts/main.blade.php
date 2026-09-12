@@ -20,6 +20,7 @@
     <meta property="og:url" content="{{ url()->current() }}" />
   @endif
   <link rel="manifest" href="{{ asset('manifest.json') }}" />
+  <link rel="icon" href="{{ $siteSettings['favicon_url'] }}" />
   <meta name="theme-color" content="#ff5e36" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -246,6 +247,9 @@
       <div class="header-left">
         <a href="{{ route('home') }}" class="logo-link" aria-label="{{ $siteSettings['site_name'] ?? 'WebComics' }} Trang chủ">
           <div class="logo-icon">
+            @if($siteSettings['site_logo_url'])
+              <img src="{{ $siteSettings['site_logo_url'] }}" alt="{{ $siteSettings['site_name'] }}" width="40" height="40" style="object-fit:contain;max-width:100%" />
+            @else
             <svg width="40" height="40" viewBox="0 0 44 44" fill="none">
               <rect width="44" height="44" rx="13" fill="url(#logo-grad)"/>
               <defs>
@@ -256,6 +260,7 @@
               </defs>
               <text x="50%" y="54%" dominant-baseline="middle" text-anchor="middle" font-family="Inter, -apple-system, sans-serif" font-weight="900" font-size="19" fill="white" letter-spacing="-0.5">WC</text>
             </svg>
+            @endif
           </div>
           <span class="logo-text">{{ $siteSettings['site_name'] ?? 'WebComics' }}</span>
         </a>
@@ -363,10 +368,14 @@
         <div class="fgrid-brand-col">
           <a href="{{ route('home') }}" class="logo-link" aria-label="{{ $siteSettings['site_name'] ?? 'WebComics' }}">
             <div class="logo-icon">
+              @if($siteSettings['site_logo_url'])
+                <img src="{{ $siteSettings['site_logo_url'] }}" alt="{{ $siteSettings['site_name'] }}" width="40" height="40" style="object-fit:contain;max-width:100%" />
+              @else
               <svg width="40" height="40" viewBox="0 0 44 44">
                 <rect width="44" height="44" rx="12" fill="#FF5E36"/>
                 <text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle" font-family="Inter" font-weight="900" font-size="18" fill="white">WC</text>
               </svg>
+              @endif
             </div>
             <span class="logo-text">{{ $siteSettings['site_name'] ?? 'WebComics' }}</span>
           </a>

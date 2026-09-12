@@ -70,14 +70,16 @@ class AppServiceProvider extends ServiceProvider
             Route::middleware('web')->group($roadmapRoutes);
         }
 
-        // Public layout consumes the persistent settings created by the admin UI.
+        // Both layouts consume the same cached settings created by the admin UI.
         // The fallback keeps fresh installs usable before the settings migration runs.
-        View::composer('layouts.main', function ($view) {
+        View::composer(['layouts.main', 'layouts.admin'], function ($view) {
             $defaults = [
                 'site_name' => 'WebComics',
                 'tagline' => 'Đọc Manga, Manhwa & Manhua Online',
                 'meta_description' => 'Nền tảng đọc truyện tranh trực tuyến WebComics.',
                 'seo_keywords' => 'đọc truyện,manga,manhwa,manhua,webtoon',
+                'site_logo' => null,
+                'site_favicon' => null,
             ];
 
             try {
@@ -89,7 +91,7 @@ class AppServiceProvider extends ServiceProvider
                 $siteSettings = $defaults;
             }
 
-            $view->with('siteSettings', $siteSettings);
+            $view->with('siteSettings', app(\App\Services\BrandingService::class)->urls($siteSettings));
         });
 
         RateLimiter::for('comments', function (Request $request) {
