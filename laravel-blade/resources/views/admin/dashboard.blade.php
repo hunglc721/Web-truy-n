@@ -271,7 +271,7 @@
             @forelse($topComics as $comic)
               <tr>
                 <td>
-                  <img src="{{ $comic->cover_image }}" alt="" style="width: 34px; height: 46px; object-fit: cover; border-radius: 4px;" />
+                  <img src="{{ $comic->cover_url }}" alt="" style="width: 34px; height: 46px; object-fit: cover; border-radius: 4px;" />
                 </td>
                 <td>
                   <a href="{{ route('comics.show', $comic->slug) }}" target="_blank" style="color: #fff; font-weight: 700; text-decoration: none;" class="hover:underline">

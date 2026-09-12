@@ -101,7 +101,7 @@
               @php($chapter = $comic->latestChapter)
               <a href="{{ route('comics.show', $comic->slug) }}" class="discovery-card">
                 <div class="discovery-cover">
-                  <img src="{{ $comic->cover_image }}" alt="{{ $comic->title }}" loading="lazy">
+                  <img src="{{ $comic->cover_url }}" alt="{{ $comic->title }}" loading="lazy">
                   @if($chapter)<span class="discovery-chapter">{{ $chapter->label }}</span>@endif
                   <span class="discovery-rating">★ {{ number_format($comic->avg_rating, 1) }}</span>
                 </div>
@@ -139,7 +139,7 @@
               @php($chapter = $comic->latestChapter)
               <a href="{{ route('comics.show', $comic->slug) }}" class="discovery-card">
                 <div class="discovery-cover">
-                  <img src="{{ $comic->cover_image }}" alt="{{ $comic->title }}" loading="lazy">
+                  <img src="{{ $comic->cover_url }}" alt="{{ $comic->title }}" loading="lazy">
                   <span class="discovery-rank">{{ $loop->iteration }}</span>
                   @if($chapter)<span class="discovery-chapter">{{ $chapter->label }}</span>@endif
                   <span class="discovery-rating">★ {{ number_format($comic->avg_rating, 1) }}</span>

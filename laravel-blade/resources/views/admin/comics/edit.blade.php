@@ -314,8 +314,8 @@
         </h2>
 
         <div class="cover-preview-box" id="cover-preview-box">
-          @if($comic->cover_image)
-            <img src="{{ $comic->cover_image }}" alt="Bìa {{ $comic->title }}" id="cover-img-preview" />
+          @if($comic->cover_url)
+            <img src="{{ $comic->cover_url }}" alt="Bìa {{ $comic->title }}" id="cover-img-preview" />
           @else
             <div class="cover-placeholder" id="cover-placeholder">
               <div style="font-size:32px; margin-bottom:8px">📖</div>

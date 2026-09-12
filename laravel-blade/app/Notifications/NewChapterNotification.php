@@ -31,7 +31,7 @@ class NewChapterNotification extends Notification
             'message' => $this->chapter->label . ($this->chapter->title ? ' - ' . $this->chapter->title : '') . ' vừa được phát hành.',
             'comic_id' => $comic?->id,
             'comic_title' => $comic?->title,
-            'comic_cover' => $comic?->cover_image,
+            'comic_cover' => $comic?->cover_url,
             'chapter_id' => $this->chapter->id,
             'chapter_number' => $this->chapter->chapter_number,
             'url' => $comic ? route('chapters.show', [

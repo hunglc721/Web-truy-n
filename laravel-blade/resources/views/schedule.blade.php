@@ -77,7 +77,7 @@
         <article class="browse-card">
           <div class="browse-cover">
             <a href="{{ route('comics.show', $comic->slug) }}" aria-label="Xem {{ $comic->title }}">
-              <img src="{{ $comic->cover_image }}" alt="{{ $comic->title }}" class="cover-img" loading="lazy" />
+              <img src="{{ $comic->cover_url }}" alt="{{ $comic->title }}" class="cover-img" loading="lazy" />
             </a>
 
             @if($chapter)

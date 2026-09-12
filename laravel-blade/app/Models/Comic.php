@@ -57,6 +57,10 @@ class Comic extends Model
         'published_at'   => 'date',
     ];
 
+    protected $appends = [
+        'cover_url',
+    ];
+
     // ─────────────────────────────────────────────────────────────
     // AUTO SLUG & NORMALIZATION
     // ─────────────────────────────────────────────────────────────
@@ -289,6 +293,41 @@ class Comic extends Model
             return round($views / 1_000, 1) . 'K';
         }
         return (string) $views;
+    }
+
+    /**
+     * Nguồn URL chuẩn dùng chung cho ảnh bìa truyện.
+     * Tự động xử lý local path, path đã có /storage/, external URL (http/https), hoặc null/rỗng.
+     */
+    public function getCoverUrlAttribute(): ?string
+    {
+        $cover = $this->cover_image;
+        if (empty($cover)) {
+            return null;
+        }
+
+        $cover = trim($cover);
+        if ($cover === '') {
+            return null;
+        }
+
+        // Trường hợp 3 & 4: External URL hoặc base64 data
+        if (str_starts_with($cover, 'http://') || str_starts_with($cover, 'https://') || str_starts_with($cover, '//') || str_starts_with($cover, 'data:image/')) {
+            return $cover;
+        }
+
+        // Trường hợp 2: Đã có /storage/ prefix
+        if (str_starts_with($cover, '/storage/')) {
+            return $cover;
+        }
+
+        // Nếu bắt đầu bằng storage/ (không có slash đầu)
+        if (str_starts_with($cover, 'storage/')) {
+            return '/' . $cover;
+        }
+
+        // Trường hợp 1: Path local (ví dụ: comics/covers/abc.jpg)
+        return '/storage/' . ltrim($cover, '/');
     }
 
     /** Cập nhật avg_rating và rating_count sau khi có rating mới — gọi từ RatingObserver */

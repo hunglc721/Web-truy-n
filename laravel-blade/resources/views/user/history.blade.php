@@ -20,7 +20,7 @@
         @forelse($histories as $item)
             @if($item->comic && $item->chapter)
             <article class="user-history-card" style="display:flex;gap:14px;background:var(--card-bg);border:1px solid var(--border);border-radius:14px;padding:14px;align-items:center;">
-                <img src="{{ $item->comic->cover_image }}" alt="{{ $item->comic->title }}" style="width:62px;height:84px;object-fit:cover;border-radius:9px;">
+                <img src="{{ $item->comic->cover_url }}" alt="{{ $item->comic->title }}" style="width:62px;height:84px;object-fit:cover;border-radius:9px;">
                 <div style="min-width:0;flex:1;"><a href="{{ route('comics.show',$item->comic->slug) }}" style="font-size:16px;font-weight:800;text-decoration:none;color:inherit;">{{ $item->comic->title }}</a><div style="font-size:12px;color:var(--text-sub);margin-top:5px;">Chương {{ $item->chapter->chapter_number }} · {{ $item->last_read_at?->diffForHumans() }}</div><div style="height:7px;background:rgba(255,255,255,.07);border-radius:99px;overflow:hidden;margin-top:10px;"><div style="height:100%;width:{{ min(100,max(0,$item->scroll_percent ?? 0)) }}%;background:var(--primary);"></div></div></div>
                 <a href="{{ route('chapters.show',[$item->comic->slug,$item->chapter->slug ?: ('chapter-' . $item->chapter->chapter_number)]) }}" class="btn-spotlight-read history-read-button" style="text-decoration:none;white-space:nowrap;">Đọc tiếp</a>
             </article>

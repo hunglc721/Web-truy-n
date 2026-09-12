@@ -376,8 +376,8 @@
                 @endphp
                 <tr>
                   <td>
-                    @if($comic->cover_image)
-                      <img src="{{ $comic->cover_image }}" alt="{{ $comic->title }}" style="width:40px;height:54px;object-fit:cover;border-radius:6px;border:1px solid var(--admin-border)" loading="lazy" />
+                    @if($comic->cover_url)
+                      <img src="{{ $comic->cover_url }}" alt="{{ $comic->title }}" style="width:40px;height:54px;object-fit:cover;border-radius:6px;border:1px solid var(--admin-border)" loading="lazy" />
                     @else
                       <div style="width:40px;height:54px;background:rgba(255,255,255,.06);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:18px">📖</div>
                     @endif
@@ -412,7 +412,7 @@
         @forelse($topComics as $index => $top)
           <div class="widget-item">
             <span class="rank-badge {{ $index == 0 ? 'rank-1' : ($index == 1 ? 'rank-2' : ($index == 2 ? 'rank-3' : 'rank-other')) }}">{{ $index + 1 }}</span>
-            <img src="{{ $top->cover_image }}" alt="{{ $top->title }}" style="width:34px;height:46px;border-radius:5px;object-fit:cover;border:1px solid var(--admin-border)" loading="lazy" />
+            <img src="{{ $top->cover_url }}" alt="{{ $top->title }}" style="width:34px;height:46px;border-radius:5px;object-fit:cover;border:1px solid var(--admin-border)" loading="lazy" />
             <div style="flex:1;min-width:0"><a href="{{ route('comics.show', $top->slug) }}" target="_blank" rel="noopener" style="font-size:13px;font-weight:700;color:var(--admin-text);text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block">{{ $top->title }}</a><div style="font-size:11.5px;color:var(--admin-text-muted)">👁️ {{ number_format($top->views) }} lượt xem</div></div>
           </div>
         @empty

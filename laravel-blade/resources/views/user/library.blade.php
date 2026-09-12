@@ -130,7 +130,7 @@
             <article class="library-card" id="library-item-{{ $comic->id }}" data-state="{{ $unreadCount > 0 ? 'unread' : 'caught-up' }}" data-title="{{ Str::lower($comic->title) }}">
               <a href="{{ route('comics.show',$comic->slug) }}" class="library-card-cover-link">
                 <div class="library-cover">
-                  <img src="{{ $comic->cover_image }}" alt="{{ $comic->title }}" loading="lazy">
+                  <img src="{{ $comic->cover_url }}" alt="{{ $comic->title }}" loading="lazy">
                   <span class="library-rating">★ {{ number_format($comic->avg_rating,1) }}</span>
                   @if($unreadCount > 0)
                     <span class="library-unread-badge unread">+{{ $unreadCount }} chưa đọc</span>

@@ -162,10 +162,66 @@ class ImageService
      */
     public function uploadCover(UploadedFile $file): string
     {
-        $extension = $file->getClientOriginalExtension() ?: 'jpg';
+        if (!$this->validateRealMime($file)) {
+            throw new \InvalidArgumentException('Tệp tải lên không phải là hình ảnh hợp lệ (Phát hiện MIME không an toàn).');
+        }
+
+        $extension = strtolower($file->getClientOriginalExtension() ?: 'jpg');
         $filename  = Str::random(16) . '.' . $extension;
 
-        return $file->storeAs('comics/covers', $filename, $this->disk);
+        $path = $file->storeAs('comics/covers', $filename, $this->disk);
+        if (!$path) {
+            throw new \RuntimeException('Không thể lưu ảnh bìa vào hệ thống tệp.');
+        }
+
+        return $path;
+    }
+
+    /**
+     * Xóa ảnh bìa truyện cũ khỏi public disk một cách an toàn.
+     *
+     * @param  string|null $path
+     * @return bool
+     */
+    public function deleteCover(?string $path): bool
+    {
+        if (empty($path)) {
+            return false;
+        }
+
+        $path = trim($path);
+
+        // Không xóa external URL
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://') || str_starts_with($path, '//') || str_starts_with($path, 'data:')) {
+            return false;
+        }
+
+        // Chuẩn hóa: loại bỏ prefix /storage/ hoặc storage/ nếu có
+        $cleanPath = preg_replace('#^/?storage/#i', '', $path);
+        $cleanPath = ltrim($cleanPath, '/');
+
+        // Chỉ xóa file thuộc comics/covers/
+        if (!str_starts_with($cleanPath, 'comics/covers/')) {
+            return false;
+        }
+
+        // Không xóa nếu vẫn còn comic khác đang tham chiếu (shared path)
+        $isUsedElsewhere = \App\Models\Comic::where(function ($query) use ($path, $cleanPath) {
+            $query->where('cover_image', $path)
+                  ->orWhere('cover_image', $cleanPath)
+                  ->orWhere('cover_image', '/storage/' . $cleanPath)
+                  ->orWhere('cover_image', 'storage/' . $cleanPath);
+        })->exists();
+
+        if ($isUsedElsewhere) {
+            return false;
+        }
+
+        if (Storage::disk($this->disk)->exists($cleanPath)) {
+            return Storage::disk($this->disk)->delete($cleanPath);
+        }
+
+        return false;
     }
 
     /**

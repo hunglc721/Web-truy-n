@@ -141,8 +141,8 @@
             <tr>
               <td>
                 <div class="chapter-comic-cell">
-                  @if($comic && $comic->cover_image)
-                    <img src="{{ $comic->cover_image }}" alt="{{ $comic->title }}" class="chapter-comic-thumb" loading="lazy">
+                  @if($comic && $comic->cover_url)
+                    <img src="{{ $comic->cover_url }}" alt="{{ $comic->title }}" class="chapter-comic-thumb" loading="lazy">
                   @else
                     <div class="chapter-comic-thumb" style="background:rgba(255,255,255,.05);display:flex;align-items:center;justify-content:center;font-size:16px">📖</div>
                   @endif

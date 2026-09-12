@@ -12,6 +12,7 @@ use App\Models\Genre;
 use App\Models\Tag;
 use App\Services\ImageService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class AdminComicController extends Controller
 {
@@ -92,31 +93,44 @@ class AdminComicController extends Controller
     public function store(StoreComicRequest $request)
     {
         $data = $request->safe()->except(['genre_ids', 'tag_ids', 'author_ids', 'cover_image']);
+        $newCover = null;
 
         // Xử lý upload ảnh bìa (nếu có)
         if ($request->hasFile('cover_image')) {
-            $data['cover_image'] = $this->imageService->uploadCover($request->file('cover_image'));
+            $newCover = $this->imageService->uploadCover($request->file('cover_image'));
+            $data['cover_image'] = $newCover;
         } else {
             $data['cover_image'] = '';
         }
 
-        $comic = Comic::create($data);
+        try {
+            $comic = DB::transaction(function () use ($data, $request) {
+                $comic = Comic::create($data);
 
-        // Sync quan hệ nhiều-nhiều
-        $comic->genres()->sync($request->input('genre_ids', []));
-        $comic->tags()->sync($request->input('tag_ids', []));
+                // Sync quan hệ nhiều-nhiều
+                $comic->genres()->sync($request->input('genre_ids', []));
+                $comic->tags()->sync($request->input('tag_ids', []));
 
-        if (!empty($request->input('author_ids'))) {
-            $comic->authors()->sync($request->input('author_ids'));
+                if (!empty($request->input('author_ids'))) {
+                    $comic->authors()->sync($request->input('author_ids'));
+                }
+
+                // Ghi activity log
+                ActivityLog::record('admin.comic.created', $comic, [
+                    'title'      => $comic->title,
+                    'genre_ids'  => $request->input('genre_ids', []),
+                    'tag_ids'    => $request->input('tag_ids', []),
+                    'author_ids' => $request->input('author_ids', []),
+                ]);
+
+                return $comic;
+            });
+        } catch (\Throwable $e) {
+            if ($newCover) {
+                $this->imageService->deleteCover($newCover);
+            }
+            throw $e;
         }
-
-        // Ghi activity log
-        ActivityLog::record('admin.comic.created', $comic, [
-            'title'      => $comic->title,
-            'genre_ids'  => $request->input('genre_ids', []),
-            'tag_ids'    => $request->input('tag_ids', []),
-            'author_ids' => $request->input('author_ids', []),
-        ]);
 
         return redirect()->route('admin.comics.index')
             ->with('success', 'Đăng bộ truyện mới thành công!');
@@ -144,29 +158,47 @@ class AdminComicController extends Controller
         $comic = Comic::findOrFail($id);
 
         $data = $request->safe()->except(['genre_ids', 'tag_ids', 'author_ids', 'cover_image']);
+        $oldCover = $comic->cover_image;
+        $newCover = null;
 
         // Xử lý upload ảnh bìa mới (nếu có)
         if ($request->hasFile('cover_image')) {
-            $data['cover_image'] = $this->imageService->uploadCover($request->file('cover_image'));
+            $newCover = $this->imageService->uploadCover($request->file('cover_image'));
+            $data['cover_image'] = $newCover;
         }
 
-        $comic->update($data);
+        try {
+            DB::transaction(function () use ($comic, $data, $request) {
+                $comic->update($data);
 
-        // Sync quan hệ nhiều-nhiều (chỉ khi field được gửi lên)
-        if ($request->has('genre_ids')) {
-            $comic->genres()->sync($request->input('genre_ids', []));
-        }
-        if ($request->has('tag_ids')) {
-            $comic->tags()->sync($request->input('tag_ids', []));
-        }
-        if ($request->has('author_ids')) {
-            $comic->authors()->sync($request->input('author_ids', []));
+                // Sync quan hệ nhiều-nhiều (chỉ khi field được gửi lên)
+                if ($request->has('genre_ids')) {
+                    $comic->genres()->sync($request->input('genre_ids', []));
+                }
+                if ($request->has('tag_ids')) {
+                    $comic->tags()->sync($request->input('tag_ids', []));
+                }
+                if ($request->has('author_ids')) {
+                    $comic->authors()->sync($request->input('author_ids', []));
+                }
+
+                // Ghi activity log
+                ActivityLog::record('admin.comic.updated', $comic, [
+                    'changed_fields' => array_keys($data),
+                ]);
+            });
+        } catch (\Throwable $e) {
+            // Nếu update DB thất bại, xóa file mới vừa upload để tránh file mồ côi, giữ nguyên cover cũ
+            if ($newCover) {
+                $this->imageService->deleteCover($newCover);
+            }
+            throw $e;
         }
 
-        // Ghi activity log
-        ActivityLog::record('admin.comic.updated', $comic, [
-            'changed_fields' => array_keys($data),
-        ]);
+        // Chỉ khi DB update thành công mới xóa file cover cũ
+        if ($newCover && $oldCover && $oldCover !== $newCover) {
+            $this->imageService->deleteCover($oldCover);
+        }
 
         return redirect()->route('admin.comics.index')
             ->with('success', 'Cập nhật bộ truyện thành công!');
