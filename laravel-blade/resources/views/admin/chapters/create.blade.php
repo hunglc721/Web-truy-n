@@ -33,7 +33,7 @@
       <div class="form-group">
         <label class="form-label" for="chapter_number">Số Chapter <span>*</span></label>
         <input
-          type="number" step="0.1" id="chapter_number" name="chapter_number"
+          type="number" step="any" id="chapter_number" name="chapter_number"
           class="form-control {{ $errors->has('chapter_number') ? 'is-invalid' : '' }}"
           value="{{ old('chapter_number', $nextChapterNumber) }}"
           required autofocus

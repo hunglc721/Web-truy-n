@@ -22,7 +22,7 @@ class StoreChapterRequest extends FormRequest
         }
 
         return [
-            'chapter_number' => 'required|numeric|min:0',
+            'chapter_number' => ['required', 'numeric', 'min:0', 'max:9999999.999', 'regex:/^\d+(\.\d{1,3})?$/'],
             'title'          => 'nullable|string|max:255',
             'is_free'        => 'nullable|boolean',
             'images'         => 'nullable|array',
@@ -56,7 +56,7 @@ class StoreChapterRequest extends FormRequest
             'finalize' => $base + [
                 'session' => 'required|uuid',
                 'chapter_key' => ['required', 'string', 'max:80', 'regex:/^[A-Za-z0-9_-]+$/'],
-                'chapter_number' => 'required|integer|min:0',
+                'chapter_number' => ['required', 'numeric', 'min:0', 'max:9999999.999', 'regex:/^\d+(\.\d{1,3})?$/'],
                 'title' => 'nullable|string|max:255',
                 'page_count' => 'required|integer|min:1|max:2000',
             ],
@@ -75,8 +75,9 @@ class StoreChapterRequest extends FormRequest
         return [
             'chapter_number.required' => 'Vui lòng nhập số chương.',
             'chapter_number.numeric'  => 'Số chương phải là dạng số.',
-            'chapter_number.integer'  => 'Upload nhiều chapter hiện hỗ trợ số chương nguyên như 140, 141, 142...',
+            'chapter_number.regex'    => 'Số chương chỉ chấp nhận số nguyên hoặc số thập phân tối đa 3 chữ số sau dấu phẩy.',
             'chapter_number.min'      => 'Số chương phải >= 0.',
+            'chapter_number.max'      => 'Số chương không được vượt quá 9999999.999.',
             'images.*.image'          => 'File tải lên phải là hình ảnh hợp lệ.',
             'images.*.mimes'          => 'Chấp nhận các định dạng: JPEG, PNG, JPG, WEBP, GIF.',
             'images.*.max'            => 'Kích thước mỗi ảnh tối đa là 5MB.',

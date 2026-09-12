@@ -43,6 +43,37 @@ class Chapter extends Model
         });
     }
 
+    public static function formatNumber(float|int|string|null $number): string
+    {
+        if ($number === null || $number === '') {
+            return '';
+        }
+
+        $formatted = number_format((float) $number, 3, '.', '');
+        $trimmed = rtrim(rtrim($formatted, '0'), '.');
+
+        return $trimmed === '' ? '0' : $trimmed;
+    }
+
+    public function getChapterNumberAttribute($value): int|float
+    {
+        if ($value === null || $value === '') {
+            return 0;
+        }
+
+        $formatted = self::formatNumber($value);
+        $floatVal = (float) $formatted;
+
+        return ((float) (int) $floatVal === $floatVal) ? (int) $floatVal : $floatVal;
+    }
+
+    public function setChapterNumberAttribute($value): void
+    {
+        $this->attributes['chapter_number'] = ($value !== null && $value !== '')
+            ? self::formatNumber($value)
+            : null;
+    }
+
     public function getSlugAttribute(?string $value): string
     {
         return !empty($value) ? $value : 'chapter-' . ($this->chapter_number ?? $this->id ?? 1);

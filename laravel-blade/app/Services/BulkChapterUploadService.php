@@ -292,7 +292,7 @@ class BulkChapterUploadService
         User $user,
         string $session,
         string $chapterKey,
-        int $chapterNumber,
+        float|int|string $chapterNumber,
         ?string $title,
         int $pageCount,
     ): array {
@@ -368,17 +368,19 @@ class BulkChapterUploadService
                 $orderedPages[] = $page;
             }
 
+            $normalizedChapterNumber = Chapter::formatNumber($chapterNumber);
+
             if (Chapter::withTrashed()
                 ->where('comic_id', $comic->id)
-                ->where('chapter_number', $chapterNumber)
+                ->where('chapter_number', $normalizedChapterNumber)
                 ->exists()) {
                 throw ValidationException::withMessages([
-                    'chapter_number' => "Chapter {$chapterNumber} đã tồn tại trong truyện này.",
+                    'chapter_number' => "Chapter {$normalizedChapterNumber} đã tồn tại trong truyện này.",
                 ]);
             }
 
             $chapter = $this->chapterService->createWithPages($comic, [
-                'chapter_number' => $chapterNumber,
+                'chapter_number' => $normalizedChapterNumber,
                 'title' => $title,
                 'is_free' => true,
             ], []);

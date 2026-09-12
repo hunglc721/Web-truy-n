@@ -355,8 +355,8 @@
     });
 
     chapters.sort((a, b) => {
-      const aNumber = Number.isInteger(a.chapterNumber) ? a.chapterNumber : Number.MAX_SAFE_INTEGER;
-      const bNumber = Number.isInteger(b.chapterNumber) ? b.chapterNumber : Number.MAX_SAFE_INTEGER;
+      const aNumber = typeof a.chapterNumber === 'number' && Number.isFinite(a.chapterNumber) ? a.chapterNumber : Number.MAX_SAFE_INTEGER;
+      const bNumber = typeof b.chapterNumber === 'number' && Number.isFinite(b.chapterNumber) ? b.chapterNumber : Number.MAX_SAFE_INTEGER;
       if (aNumber !== bNumber) return aNumber - bNumber;
       return naturalCollator.compare(a.folderName, b.folderName);
     });
@@ -399,20 +399,24 @@
   }
 
   function parseChapterFolderName(folderName) {
-    const match = folderName.match(/\bCh(?:apter)?\.?\s*0*(\d+)\b/i);
+    let match = folderName.match(/\bCh(?:apter)?\.?\s*(\d+(?:\.\d+)?)(?=[^\d.]|$)/i);
+    if (!match) {
+      match = folderName.match(/^(?:Vol\.?\s*\d+[\s._\-–—]+)?(\d+(?:\.\d+)?)(?=[^\d.]|$)/i);
+    }
     if (!match) {
       return { chapterNumber: null, title: cleanFolderTitle(folderName) };
     }
 
-    const chapterNumber = Number.parseInt(match[1], 10);
+    const rawNum = Number.parseFloat(match[1]);
+    const chapterNumber = Number.isFinite(rawNum) ? rawNum : null;
     let title = folderName.slice((match.index || 0) + match[0].length);
     title = title.replace(/^[\s._\-–—:]+/, '').trim();
     title = title.replace(/\s*\((?:en|vi|jp|ja|kr|ko)\)\s*(?:\[.*)?$/i, '').trim();
     title = title.replace(/\s*\[[^\]]*\]\s*$/g, '').trim();
 
     return {
-      chapterNumber: Number.isInteger(chapterNumber) ? chapterNumber : null,
-      title: title || `Chapter ${chapterNumber}`,
+      chapterNumber,
+      title: title || (chapterNumber !== null ? `Chapter ${chapterNumber}` : cleanFolderTitle(folderName)),
     };
   }
 
@@ -442,13 +446,14 @@
       const numberInput = document.createElement('input');
       numberInput.type = 'number';
       numberInput.min = '0';
-      numberInput.step = '1';
+      numberInput.step = 'any';
       numberInput.className = 'form-control bulk-chapter-number';
       numberInput.dataset.testid = 'bulk-chapter-number';
       numberInput.value = chapter.chapterNumber ?? '';
-      numberInput.placeholder = 'VD: 140';
+      numberInput.placeholder = 'VD: 140 hoặc 187.5';
       numberInput.addEventListener('input', () => {
-        chapter.chapterNumber = numberInput.value === '' ? null : Number.parseInt(numberInput.value, 10);
+        const val = numberInput.value.trim();
+        chapter.chapterNumber = val === '' ? null : Number.parseFloat(val);
         refreshValidation();
       });
       numberCell.appendChild(numberInput);
@@ -598,7 +603,8 @@
     chapters.forEach((chapter, index) => {
       totalPages += chapter.files.length;
 
-      if (!Number.isInteger(chapter.chapterNumber) || chapter.chapterNumber < 0) {
+      const isNumValid = typeof chapter.chapterNumber === 'number' && Number.isFinite(chapter.chapterNumber) && chapter.chapterNumber >= 0;
+      if (!isNumValid) {
         issues.push(`Folder "${chapter.folderName}" chưa nhận diện được số chapter.`);
       } else {
         const count = numbers.get(chapter.chapterNumber) || 0;

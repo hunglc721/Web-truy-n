@@ -174,7 +174,7 @@ class AdminChapterController extends Controller
                 $user,
                 (string) $request->input('session'),
                 (string) $request->input('chapter_key'),
-                (int) $request->input('chapter_number'),
+                (float) $request->input('chapter_number'),
                 $request->filled('title') ? (string) $request->input('title') : null,
                 (int) $request->input('page_count'),
             ),

@@ -21,8 +21,8 @@ class ChapterFactory extends Factory
         return [
             'comic_id'       => Comic::factory(),
             'chapter_number' => $chapterNumber,
-            'title'          => 'Chapter ' . $chapterNumber,
-            'slug'           => 'chapter-' . $chapterNumber,
+            'title'          => fn (array $attributes) => 'Chapter ' . ($attributes['chapter_number'] ?? $chapterNumber),
+            'slug'           => fn (array $attributes) => 'chapter-' . ($attributes['chapter_number'] ?? $chapterNumber),
             'pages'          => $this->fakePagesArray(),
             'content'        => null,
             'views'          => fake()->numberBetween(0, 50000),

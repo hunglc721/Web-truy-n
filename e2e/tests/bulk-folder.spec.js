@@ -147,3 +147,38 @@ test('pre-upload chapter check blocks upload when one image is corrupted', async
   await expect(page.locator('#bulk-start-upload')).toBeDisabled();
   await expect(page.locator('#bulk-validation-message')).toContainText('Không thể giải mã ảnh');
 });
+
+test('bulk uploader detects decimal chapter numbers and sorts them correctly', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name.includes('mobile'), 'Large directory picking is a desktop admin workflow.');
+
+  await openBulkUploader(page);
+
+  await setDirectoryFiles(page, [
+    {
+      name: '1.gif',
+      relativePath: 'Eleceed/Ch.187/1.gif',
+    },
+    {
+      name: '1.gif',
+      relativePath: 'Eleceed/Vol.16 Ch.187.5 - Bonus Chapter/1.gif',
+    },
+    {
+      name: '1.gif',
+      relativePath: 'Eleceed/Ch.187.25/1.gif',
+    },
+    {
+      name: '1.gif',
+      relativePath: 'Eleceed/Ch.188/1.gif',
+    },
+  ]);
+
+  const rows = page.locator('[data-testid="bulk-chapter-row"]');
+  await expect(rows).toHaveCount(4);
+
+  await expect.poll(async () => {
+    return page.locator('[data-testid="bulk-chapter-number"]').evaluateAll((nodes) => nodes.map((node) => node.value));
+  }).toEqual(['187', '187.25', '187.5', '188']);
+
+  const titles = await page.locator('[data-testid="bulk-chapter-title"]').evaluateAll((nodes) => nodes.map((node) => node.value));
+  expect(titles[2]).toBe('Bonus Chapter');
+});
