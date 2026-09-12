@@ -1,6 +1,9 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Admin\UploadTaskController;
+
+
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\GenreController;
 use App\Http\Controllers\ScheduleController;
@@ -146,6 +149,15 @@ Route::get('/api/search/advanced', [SearchController::class, 'advanced'])->middl
 Route::get('/api/comments', [CommentController::class, 'index'])->middleware('throttle:api')->name('comments.index');
 Route::get('/api/recommendations', [RecommendationController::class, 'index'])->middleware('throttle:api')->name('recommendations.index');
 Route::post('/api/reports', [\App\Http\Controllers\ReportController::class, 'store'])->middleware('throttle:api')->name('reports.store');
+
+Route::middleware(['auth', '2fa'])->prefix('admin')->group(function () {
+    Route::get('/upload-worker', [UploadTaskController::class, 'worker'])->name('admin.upload-worker');
+    Route::get('/upload-tasks/active', [UploadTaskController::class, 'active']);
+    Route::post('/upload-tasks', [UploadTaskController::class, 'store']);
+    Route::get('/upload-tasks/{task}', [UploadTaskController::class, 'show']);
+    Route::post('/upload-tasks/{task}/control', [UploadTaskController::class, 'control']);
+    Route::post('/upload-tasks/{task}/upload', [UploadTaskController::class, 'upload']);
+});
 
 Route::middleware(['auth', '2fa', AdminMiddleware::class])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [AdminDashboardController::class, 'index'])->middleware('permission:dashboard.view')->name('dashboard');

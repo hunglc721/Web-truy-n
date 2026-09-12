@@ -336,7 +336,7 @@ test('upload failure shows detailed error panel with chapter, batch, HTTP 422 an
   await expect(page.locator('#bulk-start-upload')).toBeEnabled();
 
   // Intercept backend bulk upload endpoint to return 422 on chunk
-  await page.route('**/admin/comics/*/chapters', async (route) => {
+  await page.context().route('**/admin/upload-tasks/*/upload', async (route) => {
     const postData = route.request().postData() || '';
     if (route.request().method() === 'POST' && postData.includes('chunk')) {
       await route.fulfill({
@@ -360,8 +360,8 @@ test('upload failure shows detailed error panel with chapter, batch, HTTP 422 an
   await expect(page.locator('#bulk-error-message-text')).toContainText('Checksum không khớp');
   await expect(page.locator('#bulk-error-retry-btn')).toBeVisible();
 
-  // Assert row in table shows failed batch
-  await expect(page.locator('[data-testid="bulk-chapter-status"]')).toContainText('❌ Lỗi batch');
+  // The main page releases File objects; persisted task replaces page-owned rows.
+  await expect(page.locator('#upload-task-widget')).toHaveAttribute('data-status', 'failed');
 
   // Assert upload button offers retry with context
   await expect(page.locator('#bulk-start-upload')).toContainText('↻ Thử lại');
@@ -382,7 +382,7 @@ test('upload handles HTTP 500 and network disconnection cleanly without JS crash
   await page.locator('[data-testid="bulk-chapter-inspect"]').click();
 
   // Mock 500 error on chunk
-  await page.route('**/admin/comics/*/chapters', async (route) => {
+  await page.context().route('**/admin/upload-tasks/*/upload', async (route) => {
     const postData = route.request().postData() || '';
     if (route.request().method() === 'POST' && postData.includes('chunk')) {
       await route.fulfill({
@@ -403,8 +403,8 @@ test('upload handles HTTP 500 and network disconnection cleanly without JS crash
   await expect(page.locator('#bulk-error-message-text')).toContainText('Lỗi server khi ghi storage');
 
   // Test network failure
-  await page.unroute('**/admin/comics/*/chapters');
-  await page.route('**/admin/comics/*/chapters', async (route) => {
+  await page.context().unroute('**/admin/upload-tasks/*/upload');
+  await page.context().route('**/admin/upload-tasks/*/upload', async (route) => {
     const postData = route.request().postData() || '';
     if (route.request().method() === 'POST' && postData.includes('chunk')) {
       await route.abort('failed');
@@ -434,7 +434,7 @@ test('retry continues from failed chapter without resetting already completed ch
 
   let ch2ChunkFailedOnce = true;
 
-  await page.route('**/admin/comics/*/chapters', async (route) => {
+  await page.context().route('**/admin/upload-tasks/*/upload', async (route) => {
     const postData = route.request().postData() || '';
     if (route.request().method() === 'POST' && postData.includes('chapter-0001') && postData.includes('chunk') && ch2ChunkFailedOnce) {
       ch2ChunkFailedOnce = false;
@@ -450,11 +450,11 @@ test('retry continues from failed chapter without resetting already completed ch
 
   await page.locator('#bulk-start-upload').click();
 
-  // Chapter 1 is completed
-  await expect(page.locator('[data-testid="bulk-chapter-status"]').first()).toContainText('✓ Xong');
-
-  // Chapter 2 failed
-  await expect(page.locator('[data-testid="bulk-chapter-status"]').nth(1)).toContainText('❌ Lỗi batch');
+  await expect(page.locator('#upload-task-widget')).toHaveAttribute('data-status', 'failed');
+  const taskId = await page.locator('#upload-task-widget').getAttribute('data-task-id');
+  const paused = (await (await page.request.get('/admin/upload-tasks/' + taskId)).json()).task;
+  expect(paused.completed_chapters).toBe(1);
+  const completedBytes = paused.uploaded_bytes;
 
   // Error panel displays Chapter 921
   await expect(page.locator('#bulk-error-panel')).toBeVisible();
@@ -465,10 +465,19 @@ test('retry continues from failed chapter without resetting already completed ch
   await page.locator('#bulk-error-retry-btn').click();
 
   // Now both chapters are done! Chapter 1 was not re-done or reset to pending
-  await expect(page.locator('[data-testid="bulk-chapter-status"]').first()).toContainText('✓ Xong');
-  await expect(page.locator('[data-testid="bulk-chapter-status"]').nth(1)).toContainText('✓ Xong');
   await expect(page.locator('#bulk-start-upload')).toHaveText('✅ Upload hoàn tất');
+  const done = (await (await page.request.get('/admin/upload-tasks/' + taskId)).json()).task;
+  expect(done.completed_chapters).toBe(2);
+  expect(done.uploaded_bytes).toBe(completedBytes * 2);
+  expect(done.uploaded_files).toBe(2);
 });
 
 
 
+
+test.afterEach(async ({ page }) => {
+  await page.evaluate(async () => {
+    const bridge = window.ComicxUploads;
+    if (bridge?.task && !['completed', 'cancelled'].includes(bridge.task.status)) await bridge.api('/admin/upload-tasks/' + bridge.task.id + '/control', { action: 'cancel' });
+  }).catch(() => {});
+});

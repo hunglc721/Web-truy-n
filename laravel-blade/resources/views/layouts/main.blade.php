@@ -549,5 +549,6 @@
     });
   </script>
   @stack('scripts')
+@include('partials.upload-task-widget')
 </body>
 </html>

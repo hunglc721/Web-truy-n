@@ -22,18 +22,13 @@
   const naturalCollator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
   const allowedExtensions = new Set(['jpg', 'jpeg', 'png', 'webp', 'gif', 'avif']);
   const MAX_IMAGE_BYTES = 20 * 1024 * 1024;
-  const MAX_BATCH_BYTES = 24 * 1024 * 1024;
-  const MAX_BATCH_FILES = 12;
   const MAX_PAGES_PER_CHAPTER = 2000;
   const MAX_SESSION_BYTES = 20 * 1024 * 1024 * 1024;
   const PREVIEW_PAGE_SIZE = 48;
 
   let chapters = [];
   let totalBytes = 0;
-  let uploadedBytes = 0;
-  let activeSession = null;
   let uploadRunning = false;
-  let activeChapterIndex = -1;
   let ignoredFileCount = 0;
   let inspectorChapterIndex = -1;
   let inspectorRenderedPages = 0;
@@ -44,7 +39,6 @@
   let dbConflictMode = 'skip';
   let dbCheckRunning = false;
 
-  const checksumCache = new WeakMap();
 
   // State for Lightbox
   const lightboxState = {
@@ -59,15 +53,6 @@
   let lastUploadError = null;
   const failedBatchPages = new Set();
   let pendingReplacePageIndex = -1;
-
-  class UploadHttpError extends Error {
-    constructor(message, status, payload = null) {
-      super(message);
-      this.name = 'UploadHttpError';
-      this.status = status;
-      this.payload = payload;
-    }
-  }
 
   injectPreflightUi();
 
@@ -87,11 +72,31 @@
     if (!uploadRunning) runUpload();
   });
 
-  window.addEventListener('beforeunload', (event) => {
-    if (!uploadRunning) return;
-    event.preventDefault();
-    event.returnValue = '';
+  let backgroundTask = null;
+  document.addEventListener('upload-task-snapshot', event => {
+    const task = event.detail;
+    if (String(task.comic_id) !== root.dataset.comicId) return;
+    backgroundTask = task;
+    const active = !['completed', 'cancelled'].includes(task.status);
+    uploadRunning = active && !['waiting_for_client', 'failed'].includes(task.status);
+    folderInput.disabled = uploadRunning;
+    progressWrap.style.display = 'block';
+    const percent = task.total_bytes ? Math.min(100, Math.floor(task.uploaded_bytes * 100 / task.total_bytes)) : 0;
+    progressBar.style.width = percent + '%';
+    progressBar.setAttribute('aria-valuenow', String(percent));
+    progressText.textContent = task.comic.title + ' · ' + percent + '% · ' + task.completed_chapters + '/' + task.uploadable_chapters + ' chapter · ' + task.uploaded_files + '/' + task.total_files + ' file · ' + humanBytes(task.uploaded_bytes) + '/' + humanBytes(task.total_bytes) + ' · Chapter ' + (task.current_chapter_number ?? '—') + ' · Batch ' + task.current_batch + '/' + task.total_batches;
+    validationBox.textContent = task.status === 'completed' ? 'Upload hoàn tất' : task.status === 'waiting_for_client' ? 'Upload đang tạm dừng. Chọn lại folder để tiếp tục.' : task.error_message || 'Đang upload nền · Upload worker đang hoạt động';
+    uploadButton.disabled = uploadRunning;
+    uploadButton.textContent = uploadRunning ? 'Đang upload nền' : task.status === 'completed' ? '✅ Upload hoàn tất' : task.status === 'failed' ? '↻ Thử lại từ Chapter ' + (task.error_context?.chapterNumber ?? task.current_chapter_number ?? '') : 'Mở trình upload nền';
+    if (task.error_context) {
+      lastUploadError = { errorId: task.id, chapterNumber: task.current_chapter_number, chapterIndex: task.current_chapter_index - 1, batchIndex: task.current_batch - 1, totalBatches: task.total_batches, pageIndexes: [], fileNames: [], httpStatus: 0, ...task.error_context, uploadedBytes: task.uploaded_bytes, totalBytes: task.total_bytes, timestamp: task.updated_at };
+      renderErrorPanel(lastUploadError);
+    } else {
+      document.getElementById('bulk-error-panel').style.display = 'none';
+    }
+    if (!chapters.length && active) document.querySelector('[data-target="tab-bulk-folder"]')?.click();
   });
+  const skipped = chapter => dbConflictMode === 'skip' && ['existing', 'deleted'].includes(chapter.dbConflict);
 
   function injectPreflightUi() {
     const headerRow = tableWrap?.querySelector('thead tr');
@@ -826,9 +831,6 @@
   }
 
   function prepareFolder(files) {
-    activeSession = null;
-    uploadedBytes = 0;
-    activeChapterIndex = -1;
     ignoredFileCount = 0;
     chapters = [];
     lastUploadError = null;
@@ -1254,6 +1256,8 @@
         numbers.set(norm, count + 1);
       }
 
+      if (skipped(chapter)) return;
+
       if (chapter.files.length === 0 || chapter.files.length > MAX_PAGES_PER_CHAPTER) {
         issues.push(`Chapter ${chapter.chapterNumber ?? index + 1} có số trang không hợp lệ.`);
       }
@@ -1294,11 +1298,12 @@
   }
 
   function refreshValidation() {
+    totalBytes = chapters.filter(chapter => !skipped(chapter)).reduce((sum, chapter) => sum + chapter.size, 0);
     const { issues, totalPages } = collectValidationIssues();
     const checkedCount = chapters.filter((chapter) => chapter.preflightStatus === 'ok').length;
     const checkingCount = chapters.filter((chapter) => chapter.preflightStatus === 'checking').length;
     const uncheckedCount = chapters.length - checkedCount - chapters.filter((chapter) => chapter.preflightStatus === 'error').length - checkingCount;
-    const allChecked = chapters.length > 0 && checkedCount === chapters.length;
+    const allChecked = chapters.length > 0 && chapters.every(chapter => skipped(chapter) || chapter.preflightStatus === 'ok');
 
     summaryChapters.textContent = String(chapters.length);
     summaryPages.textContent = String(totalPages);
@@ -1483,7 +1488,6 @@
       innerPath: newFile.name,
     };
 
-    checksumCache.delete(newFile);
     invalidateChapterPreflight(chapterIndex);
   }
 
@@ -1927,7 +1931,7 @@
 
     for (let index = 0; index < chapters.length; index++) {
       const chapter = chapters[index];
-      if (chapter.preflightStatus === 'ok') continue;
+      if (skipped(chapter) || chapter.preflightStatus === 'ok') continue;
       await inspectChapter(index, inspectorChapterIndex === index);
     }
 
@@ -1994,83 +1998,6 @@
   // PART B: UPLOAD ERROR DIAGNOSTICS & RETRY
   // ==========================================
 
-  function handleUploadError(error) {
-    const errorId = 'UPL-' + Math.random().toString(36).slice(2, 8).toUpperCase();
-    const chIndex = error.chapterIndex ?? activeChapterIndex;
-    const chapter = chapters[chIndex];
-    const chNumber = error.chapterNumber ?? (chapter?.chapterNumber ?? '?');
-    const chKey = error.chapterKey ?? (chapter?.key ?? '');
-    const bIndex = error.batchIndex ?? 0;
-    const tBatches = error.totalBatches ?? 1;
-    const pageIdxs = error.pageIndexes ?? [];
-    const fNames = error.fileNames ?? [];
-    const status = error.status ?? (error.name === 'TypeError' ? 'Network Error' : 500);
-
-    failedBatchPages.clear();
-    pageIdxs.forEach((p) => failedBatchPages.add(p));
-
-    let friendlyMessage = '';
-    const rawServerMessage = error.message || '';
-
-    if (status === 413) {
-      if (pageIdxs.length <= 1) {
-        friendlyMessage = `File ${fNames[0] || 'này'} vẫn vượt giới hạn dung lượng request của server.`;
-      } else {
-        friendlyMessage = 'Batch quá lớn. Uploader đã thử chia nhỏ nhưng vẫn vượt giới hạn server.';
-      }
-    } else if (status === 422) {
-      friendlyMessage = rawServerMessage || 'Dữ liệu tải lên không hợp lệ (Validation Error).';
-    } else if (status === 401 || status === 403) {
-      friendlyMessage = 'Phiên đăng nhập hoặc quyền Admin không còn hợp lệ.';
-      activeSession = null;
-    } else if (status === 419) {
-      friendlyMessage = 'CSRF hoặc phiên làm việc đã hết hạn. Vui lòng tải lại trang.';
-      activeSession = null;
-    } else if (status === 500) {
-      friendlyMessage = rawServerMessage && rawServerMessage !== 'Upload lỗi HTTP 500.'
-        ? rawServerMessage
-        : 'Lỗi server khi xử lý upload.';
-    } else if (status === 'Network Error' || status === 0) {
-      friendlyMessage = 'Mất kết nối hoặc server không phản hồi.';
-    } else {
-      friendlyMessage = rawServerMessage || `Upload gặp lỗi HTTP ${status}.`;
-    }
-
-    lastUploadError = {
-      errorId,
-      chapterIndex: chIndex,
-      chapterNumber: chNumber,
-      chapterKey: chKey,
-      batchIndex: bIndex,
-      totalBatches: tBatches,
-      pageIndexes: pageIdxs,
-      fileNames: fNames,
-      httpStatus: status,
-      message: friendlyMessage,
-      serverMessage: rawServerMessage,
-      serverErrors: error.payload?.errors || null,
-      uploadedBytes,
-      totalBytes,
-      timestamp: new Date().toISOString(),
-    };
-
-    console.error(`[Bulk Upload Error ${errorId}]`, lastUploadError);
-
-    renderErrorPanel(lastUploadError);
-
-    if (chIndex >= 0) {
-      updateChapterStatus(chIndex, 'failed', `❌ Lỗi batch ${bIndex + 1}/${tBatches}`);
-    }
-
-    validationBox.className = 'bulk-validation bulk-validation-error';
-    validationBox.textContent = `[${errorId}] Chapter ${chNumber}: ${friendlyMessage}`;
-    uploadButton.textContent = `↻ Thử lại từ Chapter ${chNumber}`;
-
-    if (inspectorChapterIndex === chIndex) {
-      renderInspectorPages(chIndex, false);
-    }
-  }
-
   function renderErrorPanel(err) {
     const panel = document.getElementById('bulk-error-panel');
     if (!panel || !err) return;
@@ -2089,7 +2016,7 @@
     const retryBtn = document.getElementById('bulk-error-retry-btn');
 
     if (chEl) chEl.textContent = `Chapter ${err.chapterNumber}`;
-    if (chIdxEl) chIdxEl.textContent = `${err.chapterIndex + 1} / ${chapters.length}`;
+    if (chIdxEl) chIdxEl.textContent = `${err.chapterIndex + 1} / ${backgroundTask?.total_chapters ?? chapters.length}`;
     if (batchEl) batchEl.textContent = `${err.batchIndex + 1} / ${err.totalBatches}`;
     if (httpEl) {
       httpEl.textContent = String(err.httpStatus);
@@ -2192,110 +2119,36 @@
   }
 
   async function runUpload() {
-    const issues = refreshValidation();
-    const allChecked = chapters.length > 0 && chapters.every((chapter) => chapter.preflightStatus === 'ok');
-    if (issues.length || !allChecked) return;
-
-    // Re-validate DB conflicts right before starting (race condition guard)
-    await checkExistingChaptersDb();
-    const reissues = refreshValidation();
-    if (reissues.length) return;
-
-    uploadRunning = true;
-    uploadButton.disabled = true;
-    folderInput.disabled = true;
-    updatePreflightToolbar();
-    renderChapterTable();
-    uploadButton.textContent = activeSession ? '⏳ Đang tiếp tục...' : '⏳ Đang chuẩn bị phiên upload...';
-    progressWrap.style.display = 'block';
-
-    const errorPanel = document.getElementById('bulk-error-panel');
-    if (errorPanel) errorPanel.style.display = 'none';
-
-    // Build list of chapters to upload — skip DB conflicts when mode is 'skip'
-    const chaptersToUpload = chapters.filter((chapter) => {
-      if (chapter.status === 'done') return false;
-      if (dbConflictMode === 'skip' &&
-          (chapter.dbConflict === 'existing' || chapter.dbConflict === 'deleted')) {
-        updateChapterStatus(chapters.indexOf(chapter), 'skipped', '— Bỏ qua (đã tồn tại)');
-        return false;
-      }
-      return true;
-    });
-
-    // Recalculate totalBytes to exclude skipped chapters so the progress bar is accurate
-    totalBytes = chaptersToUpload.reduce((sum, chapter) => sum + chapter.size, 0);
-    uploadedBytes = 0;
-
+    const bridge = window.ComicxUploads;
+    if (!bridge) return;
+    let popup;
     try {
-      if (!activeSession) {
-        const started = await postAction({ bulk_action: 'start' });
-        activeSession = started.session;
+      // Open synchronously inside the click gesture, before any await (popup blockers).
+      popup = bridge.openWorker();
+      if (!chapters.length && backgroundTask?.worker_alive && ['failed', 'uploading', 'processing'].includes(backgroundTask.status)) {
+        await bridge.transfer(popup, backgroundTask, null);
+        return;
       }
-
-      for (let ci = 0; ci < chaptersToUpload.length; ci++) {
-        const chapter = chaptersToUpload[ci];
-        const chapterIndex = chapters.indexOf(chapter);
-
-        activeChapterIndex = chapterIndex;
-        updateChapterStatus(chapterIndex, 'uploading', 'Đang upload');
-        uploadButton.textContent = `⏳ Chapter ${chapter.chapterNumber} (${ci + 1}/${chaptersToUpload.length})`;
-
-        // Uses current edited chapter.files (A10)
-        const batches = createBatches(chapter.files);
-        for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
-          await uploadBatchAdaptive(activeSession, chapter, batches[batchIndex], batchIndex, batches.length);
-          const batchBytes = batches[batchIndex].reduce((sum, item) => sum + item.file.size, 0);
-          uploadedBytes = Math.min(totalBytes, uploadedBytes + batchBytes);
-          renderProgress(chapter, batchIndex + 1, batches.length);
-        }
-
-        try {
-          const finalized = await postAction({
-            bulk_action: 'finalize',
-            session: activeSession,
-            chapter_key: chapter.key,
-            chapter_number: normalizeChapterNumber(chapter.chapterNumber) ?? String(chapter.chapterNumber),
-            title: chapter.title || '',
-            page_count: String(chapter.files.length),
-          });
-
-          updateChapterStatus(chapterIndex, 'done', `✓ Xong · ${finalized.pages} trang`);
-        } catch (finError) {
-          finError.chapterIndex = chapterIndex;
-          finError.chapterNumber = chapter.chapterNumber;
-          finError.chapterKey = chapter.key;
-          finError.batchIndex = batches.length - 1;
-          finError.totalBatches = batches.length;
-          finError.pageIndexes = [];
-          finError.fileNames = [];
-          throw finError;
-        }
+      if (!chapters.length) throw new Error('Chọn lại folder để tiếp tục.');
+      await checkExistingChaptersDb();
+      if (refreshValidation().length || !chapters.every(chapter => skipped(chapter) || chapter.preflightStatus === 'ok')) return;
+      const finalChapters = chapters.map(chapter => ({ key: chapter.key, number: normalizeChapterNumber(chapter.chapterNumber), title: chapter.title || '', files: chapter.files.map(item => ({ file: item.file })) }));
+      let task = backgroundTask;
+      if (!task || ['completed', 'cancelled'].includes(task.status)) {
+        task = await bridge.api('/admin/upload-tasks', { comic_id: Number(root.dataset.comicId), conflict_mode: dbConflictMode, chapters: finalChapters.map(chapter => ({ ...chapter, files: chapter.files.map(item => ({ name: item.file.name, size: item.file.size })) })) });
       }
-
-      const completed = await postAction({
-        bulk_action: 'complete',
-        session: activeSession,
-      });
-
-      activeSession = null;
-      uploadedBytes = totalBytes;
-      lastUploadError = null;
-      failedBatchPages.clear();
-      renderProgress(null, 1, 1);
-      validationBox.className = 'bulk-validation bulk-validation-ok';
-      const skippedCount = chapters.length - chaptersToUpload.length;
-      const skippedNote = skippedCount > 0 ? ` (${skippedCount} chapter bị bỏ qua do đã tồn tại)` : '';
-      validationBox.innerHTML = `Đã tạo thành công <strong>${completed.chapters_created}</strong> chapter${skippedNote}. Ảnh đã qua kiểm tra trước upload, giữ nguyên byte gốc và xác minh SHA-256 trước + sau khi lưu. <a href="${chaptersUrl}">Mở danh sách chapter →</a>`;
-      uploadButton.textContent = '✅ Upload hoàn tất';
+      if (String(task.comic_id) !== root.dataset.comicId) throw new Error('Đang có upload cho truyện khác. Theo dõi hoặc hủy task đó trước.');
+      await bridge.transfer(popup, task, finalChapters);
+      closeInspector();
+      closeLightbox();
+      chapters = []; // Worker now owns the File objects; navigation cannot stop its engine.
+      folderInput.value = '';
+      tableBody.replaceChildren();
+      tableWrap.style.display = 'none';
     } catch (error) {
-      handleUploadError(error);
-    } finally {
-      uploadRunning = false;
-      folderInput.disabled = false;
-      renderChapterTable();
-      updatePreflightToolbar();
-      uploadButton.disabled = refreshValidation().length > 0 || !chapters.every((chapter) => chapter.preflightStatus === 'ok');
+      validationBox.textContent = error.message;
+      uploadButton.disabled = false;
+      uploadButton.textContent = 'Mở trình upload nền';
     }
   }
 
@@ -2354,160 +2207,6 @@
       renderChapterTable();
       refreshValidation();
       updatePreflightToolbar();
-    }
-  }
-
-  function createBatches(files) {
-    const batches = [];
-    let current = [];
-    let currentBytes = 0;
-
-    files.forEach((item, index) => {
-      const wouldOverflow = current.length > 0 && (
-        current.length >= MAX_BATCH_FILES ||
-        currentBytes + item.file.size > MAX_BATCH_BYTES
-      );
-
-      if (wouldOverflow) {
-        batches.push(current);
-        current = [];
-        currentBytes = 0;
-      }
-
-      current.push({ ...item, pageIndex: index });
-      currentBytes += item.file.size;
-    });
-
-    if (current.length) batches.push(current);
-    return batches;
-  }
-
-  async function uploadBatchAdaptive(session, chapter, batch, batchIndex, totalBatches) {
-    try {
-      return await uploadBatch(session, chapter, batch);
-    } catch (error) {
-      if (error instanceof UploadHttpError && error.status === 413 && batch.length > 1) {
-        const middle = Math.ceil(batch.length / 2);
-        await uploadBatchAdaptive(session, chapter, batch.slice(0, middle), batchIndex, totalBatches);
-        await uploadBatchAdaptive(session, chapter, batch.slice(middle), batchIndex, totalBatches);
-        return;
-      }
-      // Attach structured context to error before re-throwing (B4)
-      error.chapterIndex = activeChapterIndex;
-      error.chapterNumber = chapter.chapterNumber;
-      error.chapterKey = chapter.key;
-      error.batchIndex = batchIndex;
-      error.totalBatches = totalBatches;
-      error.pageIndexes = batch.map((item) => item.pageIndex);
-      error.fileNames = batch.map((item) => item.file.name);
-      throw error;
-    }
-  }
-
-  async function uploadBatch(session, chapter, batch) {
-    const formData = new FormData();
-    formData.append('bulk_action', 'chunk');
-    formData.append('session', session);
-    formData.append('chapter_key', chapter.key);
-
-    for (const item of batch) {
-      formData.append('files[]', item.file, item.file.name);
-      formData.append('page_indexes[]', String(item.pageIndex));
-      formData.append('checksums[]', await sha256(item.file));
-    }
-
-    return sendForm(formData, 3);
-  }
-
-  async function sha256(file) {
-    if (checksumCache.has(file)) return checksumCache.get(file);
-
-    if (!window.crypto?.subtle) {
-      throw new Error('Trình duyệt không hỗ trợ SHA-256 Web Crypto. Hãy dùng Chrome / Edge bản mới.');
-    }
-
-    const digest = await window.crypto.subtle.digest('SHA-256', await file.arrayBuffer());
-    const hash = Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
-    checksumCache.set(file, hash);
-    return hash;
-  }
-
-  async function postAction(values) {
-    const formData = new FormData();
-    Object.entries(values).forEach(([key, value]) => formData.append(key, value));
-    return sendForm(formData, 3);
-  }
-
-  async function sendForm(formData, attempts = 3) {
-    let lastError = null;
-
-    for (let attempt = 1; attempt <= attempts; attempt++) {
-      try {
-        const response = await fetch(endpoint, {
-          method: 'POST',
-          credentials: 'same-origin',
-          headers: {
-            'X-CSRF-TOKEN': csrf,
-            'Accept': 'application/json',
-          },
-          body: formData,
-        });
-
-        const payload = await readResponsePayload(response);
-        if (!response.ok) {
-          const message = extractErrorMessage(payload) || `Upload lỗi HTTP ${response.status}.`;
-          throw new UploadHttpError(message, response.status, payload);
-        }
-
-        return payload;
-      } catch (error) {
-        lastError = error;
-
-        if (error instanceof UploadHttpError) {
-          if (error.status === 413 || (error.status >= 400 && error.status < 500)) {
-            throw error;
-          }
-        }
-
-        if (attempt < attempts) {
-          await sleep(700 * attempt);
-          continue;
-        }
-      }
-    }
-
-    throw lastError || new Error('Không thể kết nối máy chủ để upload.');
-  }
-
-  async function readResponsePayload(response) {
-    const text = await response.text();
-    if (!text) return {};
-
-    try {
-      return JSON.parse(text);
-    } catch {
-      return { message: text.slice(0, 500) };
-    }
-  }
-
-  function extractErrorMessage(payload) {
-    if (!payload || typeof payload !== 'object') return null;
-    if (payload.errors && typeof payload.errors === 'object') {
-      const first = Object.values(payload.errors).flat().find(Boolean);
-      if (first) return String(first);
-    }
-    return payload.message ? String(payload.message) : null;
-  }
-
-  function renderProgress(chapter, batchNumber, totalBatches) {
-    const percent = totalBytes > 0 ? Math.min(100, Math.round((uploadedBytes / totalBytes) * 100)) : 0;
-    progressBar.style.width = `${percent}%`;
-    progressBar.setAttribute('aria-valuenow', String(percent));
-
-    if (chapter) {
-      progressText.textContent = `${percent}% · ${humanBytes(uploadedBytes)} / ${humanBytes(totalBytes)} · Chapter ${chapter.chapterNumber}, batch ${batchNumber}/${totalBatches}`;
-    } else {
-      progressText.textContent = `100% · ${humanBytes(totalBytes)} đã upload và xác minh`;
     }
   }
 

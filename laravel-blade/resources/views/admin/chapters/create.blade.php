@@ -193,6 +193,7 @@
           id="tab-bulk-folder"
           class="tab-content-panel"
           style="display:none"
+          data-comic-id="{{ $comic->id }}"
           data-endpoint="{{ route('admin.comics.chapters.store', $comic->id) }}"
           data-csrf="{{ csrf_token() }}"
           data-chapters-url="{{ route('admin.comics.chapters.index', $comic->id) }}"

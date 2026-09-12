@@ -8,6 +8,10 @@ class StoreChapterRequest extends FormRequest
 {
     public function authorize(): bool
     {
+        $task = $this->route('task');
+        if ($task instanceof \App\Models\UploadTask) {
+            return $this->user()?->isAdmin() && $task->user_id === $this->user()->id;
+        }
         // Đã bảo vệ bởi AdminMiddleware + permission:chapters.create ở route level.
         return true;
     }

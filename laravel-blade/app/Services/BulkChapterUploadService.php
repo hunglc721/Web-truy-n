@@ -496,6 +496,21 @@ class BulkChapterUploadService
         });
     }
 
+    public function snapshot(Comic $comic, User $user, string $session, bool $includePages = false): array
+    {
+        return $this->withSessionLock($session, function () use ($comic, $user, $session, $includePages) {
+            $state = $this->loadAuthorizedSession($session, $comic, $user);
+            $pages = [];
+            foreach ($includePages ? (glob($this->sessionDir($session) . '/chapters/*/manifest.json') ?: []) : [] as $path) {
+                $pages[basename(dirname($path))] = array_map(
+                    fn ($page) => ['sha256' => $page['sha256'], 'size' => $page['size']],
+                    $this->readJson($path)['pages'] ?? [],
+                );
+            }
+            return $state + ['pages' => $pages];
+        });
+    }
+
     public function complete(Comic $comic, User $user, string $session): array
     {
         $state = $this->withSessionLock($session, function () use ($comic, $user, $session) {

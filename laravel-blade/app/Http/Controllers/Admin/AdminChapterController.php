@@ -158,6 +158,9 @@ class AdminChapterController extends Controller
         $user = $request->user();
         $action = (string) $request->input('bulk_action');
 
+        // Task-owned sessions must pass through the worker lease/cancellation checks.
+        abort_if($request->filled('session') && \App\Models\UploadTask::where('upload_session_id', $request->input('session'))->exists(), 409, 'Phiên này thuộc trình upload nền.');
+
         try {
             $result = match ($action) {
                 'start' => $this->bulkChapterUploadService->start($comic, $user),
