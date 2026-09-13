@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Data\RecommendationPreference;
 use App\Models\Genre;
 use App\Models\Tag;
 use App\Services\AI\IntentParser;
@@ -49,6 +50,8 @@ class IntentParserTest extends TestCase
         $this->assertSame(['Overpowered MC'], $result['preferences']['character_traits']);
         $this->assertSame(['Harem'], $result['preferences']['exclude']);
         $this->assertSame([], $result['preferences']['relationships']);
+        $dto = RecommendationPreference::fromArray($result['preferences']);
+        $this->assertSame($result['preferences'], $dto->toArray());
         Http::assertSent(fn ($request) => $request['messages'][1]['content'] === 'tìm fantasy main mạnh không harem'
             && str_contains($request['messages'][0]['content'], 'JSON only')
             && str_contains($request['messages'][0]['content'], 'Fantasy')

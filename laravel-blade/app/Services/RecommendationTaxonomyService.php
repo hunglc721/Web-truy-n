@@ -10,7 +10,7 @@ class RecommendationTaxonomyService
     // Matches the existing comics.status enum without changing its business logic.
     public const STATUSES = ['ongoing', 'completed', 'hiatus', 'cancelled'];
 
-    private const CATEGORIES = [
+    public const CATEGORIES = [
         'theme' => 'themes', 'setting' => 'settings', 'character' => 'character_traits',
         'tone' => 'tones', 'relationship' => 'relationships',
     ];
