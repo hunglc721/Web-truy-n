@@ -64,6 +64,18 @@ class PreferenceRecommendationTest extends TestCase
         $this->assertSame([$allowed->id], $results->pluck('comic.id')->all());
     }
 
+    public function test_each_dimension_has_its_documented_weight(): void
+    {
+        $comic = $this->comic(['Fantasy'], ['System', 'Overpowered MC', 'Modern', 'Dark'], ['status' => 'completed']);
+        foreach (['genres' => ['Fantasy', 30], 'themes' => ['System', 25],
+            'character_traits' => ['Overpowered MC', 20], 'settings' => ['Modern', 15],
+            'tones' => ['Dark', 10], 'status' => ['completed', 5]] as $dimension => [$value, $weight]) {
+            $results = $this->results([$dimension => $dimension === 'status' ? $value : [$value]]);
+            $this->assertSame([$comic->id], $results->pluck('comic.id')->all(), $dimension);
+            $this->assertSame($weight, $results[0]['score'], $dimension);
+        }
+    }
+
     public function test_publication_and_soft_delete_filter(): void
     {
         $public = $this->comic();

@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Data\RecommendationPreference;
 use App\Models\Genre;
 use App\Models\Tag;
+use App\Services\AI\AIClientInterface;
 use App\Services\AI\IntentParser;
 use Database\Seeders\RecommendationTaxonomySeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -66,6 +67,21 @@ class IntentParserTest extends TestCase
         $this->assertTrue($result['success']);
         $this->assertTrue($result['preferences']['needs_more_info']);
         $this->assertSame('Bạn thích thể loại nào?', $result['preferences']['follow_up_question']);
+    }
+
+    public function test_vietnamese_intent_with_mock_client(): void
+    {
+        $this->mock(AIClientInterface::class)->shouldReceive('complete')->once()
+            ->withArgs(fn (string $instruction, string $message) => $message === 'fantasy main bá không harem')
+            ->andReturn(['success' => true, 'content' => json_encode($this->preferences([
+                'genres' => ['Fantasy'], 'character_traits' => ['Overpowered MC'], 'exclude' => ['Harem'],
+            ])), 'error' => null]);
+        $result = app(IntentParser::class)->parse('fantasy main bá không harem');
+        $this->assertTrue($result['success']);
+        $this->assertSame(['Fantasy'], $result['preferences']['genres']);
+        $this->assertSame(['Overpowered MC'], $result['preferences']['character_traits']);
+        $this->assertSame(['Harem'], $result['preferences']['exclude']);
+        Http::assertNothingSent();
     }
 
     public function test_unknown_taxonomy_is_removed_and_existing_db_values_are_allowed(): void
