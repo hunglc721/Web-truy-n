@@ -22,12 +22,15 @@ class PreferenceParser
             return ['success' => false, 'preferences' => null, 'error' => 'invalid_input'];
         }
         $scopeHash = hash('sha256', $scopeKey);
-        $cacheKey = 'ai:parse:'.$scopeHash.':'.hash('sha256', $normalized);
+        $enabled = (bool) config('ai.enabled');
+        $cacheKey = 'ai:parse:'.($enabled ? 'enabled:' : 'disabled:').$scopeHash.':'.hash('sha256', $normalized);
         if (($cached = Cache::get($cacheKey)) !== null) {
             return [...$cached, 'cached' => true];
         }
         $rateKey = 'ai:calls:'.$scopeHash;
-        if ((int) config('ai.max_calls') <= 0 || RateLimiter::tooManyAttempts($rateKey, (int) config('ai.max_calls'))) {
+        if (! $enabled) {
+            $result = ['success' => false, 'error' => 'ai_disabled'];
+        } elseif ((int) config('ai.max_calls') <= 0 || RateLimiter::tooManyAttempts($rateKey, (int) config('ai.max_calls'))) {
             $result = ['success' => false, 'error' => 'rate_limited'];
         } else {
             // Reserve the call before contacting the provider, including failed calls.
@@ -37,7 +40,7 @@ class PreferenceParser
         if ($result['success']) {
             $result += ['source' => 'ai', 'cached' => false];
         } else {
-            $reason = in_array($result['error'], ['rate_limited', 'connection_error', 'http_error',
+            $reason = in_array($result['error'], ['ai_disabled', 'rate_limited', 'connection_error', 'http_error',
                 'invalid_json', 'invalid_schema', 'invalid_response', 'unsupported_provider', 'invalid_configuration'], true)
                 ? $result['error'] : 'parse_failed';
             Log::notice('AI preference fallback', [

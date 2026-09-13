@@ -5,12 +5,16 @@ namespace App\Services\AI;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class OpenAICompatibleClient implements AIClientInterface
 {
     public function complete(string $instruction, string $message): array
     {
         $failure = fn (string $error) => ['success' => false, 'content' => null, 'error' => $error];
+        if (! config('ai.enabled')) {
+            return $failure('ai_disabled');
+        }
         $url = rtrim((string) config('ai.base_url'), '/');
         if (config('ai.provider') !== 'openai_compatible') {
             return $failure('unsupported_provider');
@@ -21,6 +25,14 @@ class OpenAICompatibleClient implements AIClientInterface
             return $failure('invalid_configuration');
         }
 
+        $started = hrtime(true);
+        $logFailure = function (string $error, ?int $status = null) use ($started): void {
+            Log::warning('AI provider failure', [
+                'provider' => config('ai.provider'), 'model' => config('ai.model'),
+                'error_type' => $error, 'http_status' => $status,
+                'duration_ms' => (int) ((hrtime(true) - $started) / 1_000_000),
+            ]);
+        };
         try {
             $response = Http::withToken(config('ai.api_key'))->acceptJson()
                 ->timeout(max(1, min(60, (int) config('ai.timeout'))))
@@ -41,14 +53,20 @@ class OpenAICompatibleClient implements AIClientInterface
                 ]);
         } catch (ConnectionException) {
             // Timeouts and connection failures expose no transport details or secrets.
+            $logFailure('connection_error');
+
             return $failure('connection_error');
         }
 
         if (! $response->successful()) {
+            $logFailure('http_error', $response->status());
+
             return $failure('http_error');
         }
         $content = $response->json('choices.0.message.content');
         if (! is_string($content) || trim($content) === '') {
+            $logFailure('invalid_response', $response->status());
+
             return $failure('invalid_response');
         }
 

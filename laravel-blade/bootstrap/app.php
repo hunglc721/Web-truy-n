@@ -35,6 +35,15 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
+        // Never pass chatbot exceptions (which may contain SQL/bindings or transport
+        // details) to Laravel's default raw exception logger.
+        $exceptions->report(function (\Throwable $e) {
+            if (request()->is('api/recommendation/chat')) {
+                Log::error('Recommendation chat failure', ['error_type' => class_basename($e)]);
+
+                return false;
+            }
+        });
         $exceptions->render(function (NotFoundHttpException $e, Request $request) {
             if ($request->expectsJson()) {
                 return response()->json([
@@ -145,6 +154,14 @@ return Application::configure(basePath: dirname(__DIR__))
                 || $e instanceof \Illuminate\Http\Exceptions\HttpResponseException
             ) {
                 return null;
+            }
+
+            if ($request->is('api/recommendation/chat')) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Hệ thống gặp sự cố. Vui lòng thử lại sau.',
+                    'code' => 500,
+                ], 500);
             }
 
             Log::error('Unhandled exception', [
