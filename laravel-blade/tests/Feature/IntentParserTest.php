@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Genre;
 use App\Models\Tag;
 use App\Services\AI\IntentParser;
+use Database\Seeders\RecommendationTaxonomySeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -21,7 +22,8 @@ class IntentParserTest extends TestCase
         config(['ai.provider' => 'openai_compatible', 'ai.api_key' => 'test-only',
             'ai.model' => 'test-model', 'ai.base_url' => 'https://ai.example/v1', 'ai.retry_times' => 0]);
         Genre::create(['name' => 'Fantasy']);
-        Tag::create(['name' => 'Vampire']);
+        $this->seed(RecommendationTaxonomySeeder::class);
+        Tag::create(['name' => 'Vampire', 'category' => 'theme']);
     }
 
     private function preferences(array $changes = []): array

@@ -190,6 +190,8 @@ class DatabaseSeeder extends Seeder
             $tags[$t['name']] = Tag::firstOrCreate(['slug' => $t['slug']], ['name' => $t['name'], 'color' => $t['color']]);
         }
 
+        $this->call(RecommendationTaxonomySeeder::class);
+
         // ─────────────────────────────────────────────────────────────
         // 5. AUTHORS
         // ─────────────────────────────────────────────────────────────
