@@ -162,7 +162,7 @@ return Application::configure(basePath: dirname(__DIR__))
             if ($request->expectsJson()) {
                 return response()->json([
                     'status'  => 'error',
-                    'message' => app()->isProduction()
+                    'message' => (app()->isProduction() || $request->is('api/recommendation/chat'))
                         ? 'Hệ thống gặp sự cố. Vui lòng thử lại sau.'
                         : $e->getMessage(),
                     'code'    => 500,

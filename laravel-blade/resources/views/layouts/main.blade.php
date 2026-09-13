@@ -559,5 +559,8 @@
   </script>
   @stack('scripts')
 @include('partials.upload-task-widget')
+@unless(request()->routeIs('chapters.show'))
+  @include('partials.recommendation-chat-widget')
+@endunless
 </body>
 </html>

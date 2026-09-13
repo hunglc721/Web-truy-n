@@ -148,6 +148,7 @@ Route::get('/api/search/hot', [SearchController::class, 'hot'])->middleware('thr
 Route::get('/api/search/advanced', [SearchController::class, 'advanced'])->middleware('throttle:api')->name('search.advanced');
 Route::get('/api/comments', [CommentController::class, 'index'])->middleware('throttle:api')->name('comments.index');
 Route::get('/api/recommendations', [RecommendationController::class, 'index'])->middleware('throttle:api')->name('recommendations.index');
+Route::post('/api/recommendation/chat', \App\Http\Controllers\RecommendationChatController::class)->middleware('throttle:api')->name('recommendation.chat');
 Route::post('/api/reports', [\App\Http\Controllers\ReportController::class, 'store'])->middleware('throttle:api')->name('reports.store');
 
 Route::middleware(['auth', '2fa'])->prefix('admin')->group(function () {
