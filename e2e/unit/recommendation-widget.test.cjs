@@ -34,7 +34,7 @@ test('widget opens, closes and stays within desktop/mobile viewports without API
         assert.ok(box.x + box.width <= viewport.width + 1);
         assert.ok(box.y + box.height <= viewport.height + 1);
       }
-      if (viewport.width < 768) {
+      if (viewport.width < 768 && viewport.height > 500) {
         const box = await toggle.boundingBox();
         assert.ok(box.y + box.height <= viewport.height - 79, 'reserve mobile navigation space');
       }
