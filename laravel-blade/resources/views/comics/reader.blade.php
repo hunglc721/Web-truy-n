@@ -135,7 +135,7 @@
     -webkit-backdrop-filter: blur(16px);
     border: 1px solid rgba(255,255,255,0.15);
     border-radius: 14px;
-    padding: 16px 18px;
+    padding: 12px 14px;
     box-shadow: 0 16px 48px rgba(0,0,0,0.85);
     z-index: 990;
     display: none;
@@ -553,7 +553,10 @@
     margin-bottom: 12px;
   }
   .reader-settings-panel .setting-section {
-    margin-bottom: 7px;
+    margin-bottom: 5px;
+  }
+  .reader-settings-panel .setting-label {
+    margin-bottom: 3px;
   }
   .setting-label {
     display: block;
@@ -1016,6 +1019,17 @@
         <button type="button" class="reader-settings-close-btn" onclick="toggleSettingsPanel(false)" aria-label="Đóng cài đặt" title="Đóng cài đặt (Phím Esc)">✕</button>
       </div>
 
+      <!-- PRESET STATUS BAR (⭐ Khuyến nghị / ⚙ Tùy chỉnh) -->
+      <div id="reader-preset-bar" style="display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 4px 8px; margin-bottom: 7px;">
+        <div id="reader-preset-badge" style="font-size: 11.5px; font-weight: 700; display: flex; align-items: center; gap: 4px;">
+          <span id="preset-badge-icon" style="color: #fbbf24; font-size: 12px;">⭐</span>
+          <span id="preset-badge-text" style="color: #f3f4f6;">Chế độ: Khuyến nghị</span>
+        </div>
+        <button type="button" id="btn-restore-recommended-quick" onclick="applyRecommendedPreset()" style="display: none; background: rgba(255,94,54,0.12); border: 1px solid rgba(255,94,54,0.3); border-radius: 6px; color: var(--primary); font-size: 10.5px; font-weight: 600; padding: 2px 7px; cursor: pointer; transition: all 0.15s ease;" title="Quay lại cài đặt khuyến nghị">
+          ↺ Khôi phục khuyến nghị
+        </button>
+      </div>
+
       <!-- A. CHẾ ĐỘ ĐỌC (3 MODE) -->
       <div class="setting-section" id="section-reading-mode">
         <label class="setting-label">CHẾ ĐỘ ĐỌC (PHÍM M)</label>
@@ -1106,7 +1120,13 @@
         <span style="font-size: 18px;">⚙️</span>
         <strong style="color: #fff; font-size: 15px; font-weight: 700;">Cài Đặt Trình Đọc Nâng Cao</strong>
       </div>
-      <button type="button" class="reader-advanced-close-btn" id="btn-close-advanced-modal" onclick="closeAdvancedModal()" aria-label="Đóng cài đặt nâng cao" title="Đóng cài đặt nâng cao (Phím Esc)">✕</button>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <button type="button" id="btn-restore-recommended-modal" onclick="applyRecommendedPreset()" style="background: rgba(255, 94, 54, 0.12); border: 1px solid rgba(255, 94, 54, 0.35); border-radius: 6px; color: var(--primary); font-size: 11.5px; font-weight: 600; padding: 5px 10px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; transition: all 0.15s ease;" title="Quay lại cài đặt khuyến nghị">
+          <span>↺</span>
+          <span>Dùng cài đặt khuyến nghị</span>
+        </button>
+        <button type="button" class="reader-advanced-close-btn" id="btn-close-advanced-modal" onclick="closeAdvancedModal()" aria-label="Đóng cài đặt nâng cao" title="Đóng cài đặt nâng cao (Phím Esc)">✕</button>
+      </div>
     </div>
 
     <!-- 5 TABS NAVIGATION -->
@@ -1391,7 +1411,10 @@
         </div>
 
         <!-- Khôi phục cài đặt mặc định -->
-        <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.08); text-align: center;">
+        <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.08); display: flex; flex-direction: column; gap: 8px;">
+          <button type="button" id="btn-restore-recommended-tab5" onclick="applyRecommendedPreset()" class="setting-btn" style="width: 100%; padding: 10px; font-weight: 700; color: #38bdf8; background: rgba(56,189,248,0.08); border-color: rgba(56,189,248,0.3);">
+            ↺ Dùng cài đặt khuyến nghị
+          </button>
           <button type="button" id="btn-reset-all-settings" onclick="resetAllSettingsToDefault()" class="setting-btn" style="width: 100%; padding: 10px; font-weight: 700; color: #ff8f70; background: rgba(255,94,54,0.08); border-color: rgba(255,94,54,0.25);">
             🔄 Khôi phục toàn bộ cài đặt mặc định
           </button>
@@ -1612,15 +1635,17 @@
     if (toast) toast.style.display = 'none';
   }
 
-  // ── READER STATE & DEFAULTS (FE-04 UPGRADE) ──
-  const defaultReaderSettings = {
+  // ── READER STATE & PRESETS (⭐ KHUYẾN NGHỊ & ⚙ TÙY CHỈNH) ──
+  const RECOMMENDED_PRESET_VERSION = 1;
+
+  const recommendedReaderSettings = {
     layout: 'vertical',            // 'vertical' | 'single' | 'double'
     spacing: 0,                   // 0 | 8 | 16 | 24 (px)
     direction: 'ltr',             // 'ltr' | 'rtl'
     headerVisibility: 'shown',    // 'shown' | 'hidden'
-    progressBarStyle: 'normal',   // 'hidden' | 'light' | 'normal'
-    progressBarPos: 'top',        // 'top' | 'bottom' | 'left' | 'right'
-    progressBarSize: 4,           // px (1..16)
+    progressBarStyle: 'light',    // 'hidden' | 'light' | 'normal'
+    progressBarPos: 'bottom',     // 'top' | 'bottom' | 'left' | 'right'
+    progressBarSize: 3,           // px (1..16)
     cursorHints: 'none',          // 'none' | 'overlay' | 'cursor'
     readerExtras: {
       show_menu_btn: true,
@@ -1629,23 +1654,27 @@
       dim: false
     },
     readerBg: 'theme',            // 'theme' | 'white' | 'black'
-    fit: 'custom',                // 'custom' | 'fit-width' | 'fit-height'
-    width: 800,                   // 680 | 800 | 1000 | '100%'
+    fit: 'fit-width',             // 'custom' | 'fit-width' | 'fit-height'
+    width: '100%',                // 680 | 800 | 1000 | '100%'
     stretchSmall: false,
     maxWidthLimit: 'none',        // '680' | '800' | '1000' | 'full' | 'none'
     maxHeightLimit: 'none',       // '70vh' | '85vh' | '100vh' | 'none'
     night: false,
-    brightness: 100,              // 50..100
+    brightness: 100,              // 30..100
     autoAdvanceChapter: false,
     historyMode: 'push',          // 'none' | 'replace' | 'push'
     tapTurnMode: 'direction',     // 'direction' | 'always_forward' | 'off'
-    scrollTurnMode: 'wheel',      // 'off' | 'wheel' | 'keyboard' | 'both'
-    dblClickFullscreen: false,
+    scrollTurnMode: 'both',       // 'off' | 'wheel' | 'keyboard' | 'both'
+    dblClickFullscreen: true,
+    swipeTurnMode: true,
     autoScrollFitMode: 'none',    // 'width' | 'height' | 'none'
     autoScrollOffset: 0,
+    presetMode: 'recommended',    // 'recommended' | 'custom'
     panelOpen: false,
     activeTab: 'layout'
   };
+
+  const defaultReaderSettings = JSON.parse(JSON.stringify(recommendedReaderSettings));
 
   const defaultKeybinds = {
     toggle_menu: ['m', 'M'],
@@ -1788,50 +1817,72 @@
   // ── LOAD & SAVE PERSISTENT SETTINGS ──
   function loadReaderSettings() {
     try {
+      const savedMode = localStorage.getItem('reader_settings_mode');
+      const savedVersion = parseInt(localStorage.getItem('reader_preset_version'), 10) || 0;
       const saved = localStorage.getItem('webcomics_reader_settings');
-      if (saved) {
-        readerSettings = { ...defaultReaderSettings, ...JSON.parse(saved) };
+      const hasExistingKeys = localStorage.getItem('reader_mode') || localStorage.getItem('image_fit') || localStorage.getItem('page_gap') || localStorage.getItem('brightness');
+
+      if (!savedMode && !saved && !hasExistingKeys) {
+        // User mới tinh: Áp dụng Recommended Preset
+        readerSettings = JSON.parse(JSON.stringify(recommendedReaderSettings));
+        readerSettings.presetMode = 'recommended';
+        localStorage.setItem('reader_settings_mode', 'recommended');
+        localStorage.setItem('reader_preset_version', String(RECOMMENDED_PRESET_VERSION));
+      } else if (savedMode === 'recommended') {
+        // User đang ở preset Khuyến nghị
+        readerSettings = JSON.parse(JSON.stringify(recommendedReaderSettings));
+        readerSettings.presetMode = 'recommended';
+        if (savedVersion < RECOMMENDED_PRESET_VERSION) {
+          localStorage.setItem('reader_preset_version', String(RECOMMENDED_PRESET_VERSION));
+        }
+      } else {
+        // User có cấu hình tùy chỉnh (custom)
+        readerSettings = JSON.parse(JSON.stringify(recommendedReaderSettings));
+        readerSettings.presetMode = 'custom';
+        if (saved) {
+          try {
+            readerSettings = { ...readerSettings, ...JSON.parse(saved) };
+            readerSettings.presetMode = 'custom';
+          } catch (_) {}
+        }
+        // Fallback các key độc lập
+        if (localStorage.getItem('reader_mode')) readerSettings.layout = localStorage.getItem('reader_mode');
+        if (localStorage.getItem('reading_direction')) readerSettings.direction = localStorage.getItem('reading_direction');
+        if (localStorage.getItem('header_visibility')) readerSettings.headerVisibility = localStorage.getItem('header_visibility');
+        if (localStorage.getItem('progress_bar_style')) readerSettings.progressBarStyle = localStorage.getItem('progress_bar_style');
+        if (localStorage.getItem('progress_bar_position')) readerSettings.progressBarPos = localStorage.getItem('progress_bar_position');
+        if (localStorage.getItem('progress_bar_size')) readerSettings.progressBarSize = parseInt(localStorage.getItem('progress_bar_size'), 10) || 3;
+        if (localStorage.getItem('cursor_hints')) readerSettings.cursorHints = localStorage.getItem('cursor_hints');
+        if (localStorage.getItem('reader_extras')) {
+          try { readerSettings.readerExtras = { ...readerSettings.readerExtras, ...JSON.parse(localStorage.getItem('reader_extras')) }; } catch (_) {}
+        }
+        if (localStorage.getItem('reader_background')) readerSettings.readerBg = localStorage.getItem('reader_background');
+        if (localStorage.getItem('image_fit')) readerSettings.fit = localStorage.getItem('image_fit');
+        if (localStorage.getItem('image_fit_width') === '1') readerSettings.fit = 'fit-width';
+        if (localStorage.getItem('image_fit_height') === '1') readerSettings.fit = 'fit-height';
+        if (localStorage.getItem('image_width')) {
+          const w = localStorage.getItem('image_width');
+          readerSettings.width = (w === '100%') ? '100%' : (parseInt(w, 10) || 800);
+        }
+        if (localStorage.getItem('stretch_small_pages')) readerSettings.stretchSmall = localStorage.getItem('stretch_small_pages') === '1';
+        if (localStorage.getItem('max_width_limit')) readerSettings.maxWidthLimit = localStorage.getItem('max_width_limit');
+        if (localStorage.getItem('max_height_limit')) readerSettings.maxHeightLimit = localStorage.getItem('max_height_limit');
+        if (localStorage.getItem('page_gap')) readerSettings.spacing = parseInt(localStorage.getItem('page_gap'), 10) || 0;
+        if (localStorage.getItem('night_mode')) readerSettings.night = localStorage.getItem('night_mode') === '1';
+        if (localStorage.getItem('brightness')) readerSettings.brightness = parseInt(localStorage.getItem('brightness'), 10) || 100;
+        if (localStorage.getItem('auto_advance_chapter')) readerSettings.autoAdvanceChapter = localStorage.getItem('auto_advance_chapter') === '1';
+        if (localStorage.getItem('history_mode')) readerSettings.historyMode = localStorage.getItem('history_mode');
+        if (localStorage.getItem('tap_turn_mode')) readerSettings.tapTurnMode = localStorage.getItem('tap_turn_mode');
+        if (localStorage.getItem('scroll_turn_mode')) readerSettings.scrollTurnMode = localStorage.getItem('scroll_turn_mode');
+        if (localStorage.getItem('fullscreen_toggle')) readerSettings.dblClickFullscreen = localStorage.getItem('fullscreen_toggle') === '1';
+        if (localStorage.getItem('mobile_swipe')) readerSettings.swipeTurn = localStorage.getItem('mobile_swipe') === '1';
+        if (localStorage.getItem('auto_scroll_fit_mode')) readerSettings.autoScrollFitMode = localStorage.getItem('auto_scroll_fit_mode');
+        if (localStorage.getItem('auto_scroll_offset')) readerSettings.autoScrollOffset = parseInt(localStorage.getItem('auto_scroll_offset'), 10) || 0;
       }
 
-      const savedKeys = localStorage.getItem('webcomics_reader_keybinds');
+      const savedKeys = localStorage.getItem('webcomics_reader_keybinds') || localStorage.getItem('keybinds');
       if (savedKeys) {
-        keybindSettings = { ...defaultKeybinds, ...JSON.parse(savedKeys) };
-      }
-
-      // Fallback các key độc lập theo yêu cầu spec
-      if (localStorage.getItem('reader_mode')) readerSettings.layout = localStorage.getItem('reader_mode');
-      if (localStorage.getItem('reading_direction')) readerSettings.direction = localStorage.getItem('reading_direction');
-      if (localStorage.getItem('header_visibility')) readerSettings.headerVisibility = localStorage.getItem('header_visibility');
-      if (localStorage.getItem('progress_bar_style')) readerSettings.progressBarStyle = localStorage.getItem('progress_bar_style');
-      if (localStorage.getItem('progress_bar_position')) readerSettings.progressBarPos = localStorage.getItem('progress_bar_position');
-      if (localStorage.getItem('progress_bar_size')) readerSettings.progressBarSize = parseInt(localStorage.getItem('progress_bar_size'), 10) || 4;
-      if (localStorage.getItem('cursor_hints')) readerSettings.cursorHints = localStorage.getItem('cursor_hints');
-      if (localStorage.getItem('reader_extras')) {
-        try { readerSettings.readerExtras = { ...defaultReaderSettings.readerExtras, ...JSON.parse(localStorage.getItem('reader_extras')) }; } catch (_) {}
-      }
-      if (localStorage.getItem('reader_background')) readerSettings.readerBg = localStorage.getItem('reader_background');
-      if (localStorage.getItem('image_fit')) readerSettings.fit = localStorage.getItem('image_fit');
-      if (localStorage.getItem('image_fit_width') === '1') readerSettings.fit = 'fit-width';
-      if (localStorage.getItem('image_fit_height') === '1') readerSettings.fit = 'fit-height';
-      if (localStorage.getItem('image_width')) {
-        const w = localStorage.getItem('image_width');
-        readerSettings.width = (w === '100%') ? '100%' : (parseInt(w, 10) || 800);
-      }
-      if (localStorage.getItem('stretch_small_pages')) readerSettings.stretchSmall = localStorage.getItem('stretch_small_pages') === '1';
-      if (localStorage.getItem('max_width_limit')) readerSettings.maxWidthLimit = localStorage.getItem('max_width_limit');
-      if (localStorage.getItem('max_height_limit')) readerSettings.maxHeightLimit = localStorage.getItem('max_height_limit');
-      if (localStorage.getItem('page_gap')) readerSettings.spacing = parseInt(localStorage.getItem('page_gap'), 10) || 0;
-      if (localStorage.getItem('night_mode')) readerSettings.night = localStorage.getItem('night_mode') === '1';
-      if (localStorage.getItem('brightness')) readerSettings.brightness = parseInt(localStorage.getItem('brightness'), 10) || 100;
-      if (localStorage.getItem('auto_advance_chapter')) readerSettings.autoAdvanceChapter = localStorage.getItem('auto_advance_chapter') === '1';
-      if (localStorage.getItem('history_mode')) readerSettings.historyMode = localStorage.getItem('history_mode');
-      if (localStorage.getItem('tap_turn_mode')) readerSettings.tapTurnMode = localStorage.getItem('tap_turn_mode');
-      if (localStorage.getItem('scroll_turn_mode')) readerSettings.scrollTurnMode = localStorage.getItem('scroll_turn_mode');
-      if (localStorage.getItem('fullscreen_toggle')) readerSettings.dblClickFullscreen = localStorage.getItem('fullscreen_toggle') === '1';
-      if (localStorage.getItem('auto_scroll_fit_mode')) readerSettings.autoScrollFitMode = localStorage.getItem('auto_scroll_fit_mode');
-      if (localStorage.getItem('auto_scroll_offset')) readerSettings.autoScrollOffset = parseInt(localStorage.getItem('auto_scroll_offset'), 10) || 0;
-      if (localStorage.getItem('keybinds')) {
-        try { keybindSettings = { ...defaultKeybinds, ...JSON.parse(localStorage.getItem('keybinds')) }; } catch (_) {}
+        try { keybindSettings = { ...defaultKeybinds, ...JSON.parse(savedKeys) }; } catch (_) {}
       }
     } catch (e) {
       console.debug('Error reading reader settings:', e);
@@ -1842,6 +1893,8 @@
     try {
       localStorage.setItem('webcomics_reader_settings', JSON.stringify(readerSettings));
       localStorage.setItem('webcomics_reader_keybinds', JSON.stringify(keybindSettings));
+      localStorage.setItem('reader_settings_mode', readerSettings.presetMode || 'recommended');
+      localStorage.setItem('reader_preset_version', String(RECOMMENDED_PRESET_VERSION));
       localStorage.setItem('reader_mode', readerSettings.layout);
       localStorage.setItem('reading_direction', readerSettings.direction);
       localStorage.setItem('header_visibility', readerSettings.headerVisibility);
@@ -1866,12 +1919,78 @@
       localStorage.setItem('tap_turn_mode', readerSettings.tapTurnMode);
       localStorage.setItem('scroll_turn_mode', readerSettings.scrollTurnMode);
       localStorage.setItem('fullscreen_toggle', readerSettings.dblClickFullscreen ? '1' : '0');
+      localStorage.setItem('mobile_swipe', readerSettings.swipeTurn ? '1' : '0');
       localStorage.setItem('auto_scroll_fit_mode', readerSettings.autoScrollFitMode);
       localStorage.setItem('auto_scroll_offset', String(readerSettings.autoScrollOffset));
       localStorage.setItem('keybinds', JSON.stringify(keybindSettings));
     } catch (e) {
       console.debug('Error saving reader settings:', e);
     }
+  }
+
+  // ── PRESET BADGE & RESTORE FUNCTIONS ──
+  function updatePresetBadgeUI() {
+    const icon = document.getElementById('preset-badge-icon');
+    const text = document.getElementById('preset-badge-text');
+    const quickBtn = document.getElementById('btn-restore-recommended-quick');
+    const modalBtn = document.getElementById('btn-restore-recommended-modal');
+    const tab5Btn = document.getElementById('btn-restore-recommended-tab5');
+
+    if (readerSettings.presetMode === 'recommended') {
+      if (icon) {
+        icon.textContent = '⭐';
+        icon.style.color = '#fbbf24';
+      }
+      if (text) {
+        text.textContent = 'Chế độ: Khuyến nghị';
+      }
+      if (quickBtn) quickBtn.style.display = 'none';
+      if (modalBtn) {
+        modalBtn.style.opacity = '0.5';
+        modalBtn.title = 'Đang dùng cài đặt khuyến nghị';
+      }
+      if (tab5Btn) {
+        tab5Btn.style.opacity = '0.6';
+      }
+    } else {
+      if (icon) {
+        icon.textContent = '⚙';
+        icon.style.color = '#60a5fa';
+      }
+      if (text) {
+        text.textContent = 'Chế độ: Tùy chỉnh';
+      }
+      if (quickBtn) quickBtn.style.display = 'inline-block';
+      if (modalBtn) {
+        modalBtn.style.opacity = '1';
+        modalBtn.title = 'Quay lại cài đặt khuyến nghị';
+      }
+      if (tab5Btn) {
+        tab5Btn.style.opacity = '1';
+      }
+    }
+  }
+
+  function markSettingsAsCustom() {
+    if (readerSettings.presetMode !== 'custom') {
+      readerSettings.presetMode = 'custom';
+      try {
+        localStorage.setItem('reader_settings_mode', 'custom');
+      } catch (e) {}
+      updatePresetBadgeUI();
+    }
+  }
+
+  function applyRecommendedPreset() {
+    readerSettings = JSON.parse(JSON.stringify(recommendedReaderSettings));
+    readerSettings.presetMode = 'recommended';
+    try {
+      localStorage.setItem('reader_settings_mode', 'recommended');
+      localStorage.setItem('reader_preset_version', String(RECOMMENDED_PRESET_VERSION));
+    } catch (e) {}
+    saveReaderSettings();
+    applyAllReaderSettings();
+    updatePresetBadgeUI();
   }
 
   // ── TAB SWITCHING ──
@@ -1912,9 +2031,9 @@
     setReadingLayout(readerSettings.layout || 'vertical', false);
     setReadingDirection(readerSettings.direction || 'ltr', false);
     setHeaderVisibility(readerSettings.headerVisibility || 'shown', false);
-    setProgressBarStyle(readerSettings.progressBarStyle || 'normal', false);
-    setProgressBarPosition(readerSettings.progressBarPos || 'top', false);
-    setProgressBarSize(readerSettings.progressBarSize || 4, false);
+    setProgressBarStyle(readerSettings.progressBarStyle || 'light', false);
+    setProgressBarPosition(readerSettings.progressBarPos || 'bottom', false);
+    setProgressBarSize(readerSettings.progressBarSize || 3, false);
     setCursorHints(readerSettings.cursorHints || 'none', false);
 
     // Reader extras
@@ -1947,19 +2066,27 @@
       btnNight?.classList.add('active');
       btnNight?.setAttribute('aria-pressed', 'true');
       if (btnNight) btnNight.textContent = '🌙 Đang bật giảm chói';
+    } else {
+      document.body.classList.remove('reader-night-mode');
+      const btnNight = document.getElementById('btn-toggle-night');
+      btnNight?.classList.remove('active');
+      btnNight?.setAttribute('aria-pressed', 'false');
+      if (btnNight) btnNight.textContent = '🌙 Giảm chói mắt';
     }
 
     // Behaviors
     setAutoAdvanceChapter(readerSettings.autoAdvanceChapter, false);
     setHistoryMode(readerSettings.historyMode || 'push', false);
     setTapTurnMode(readerSettings.tapTurnMode || 'direction', false);
-    setScrollTurnMode(readerSettings.scrollTurnMode || 'wheel', false);
-    setDblClickFullscreen(readerSettings.dblClickFullscreen, false);
+    setScrollTurnMode(readerSettings.scrollTurnMode || 'both', false);
+    setSwipeTurnMode(readerSettings.swipeTurn !== false, false);
+    setDblClickFullscreen(readerSettings.dblClickFullscreen !== false, false);
     setAutoScrollFitMode(readerSettings.autoScrollFitMode || 'none', false);
     setAutoScrollOffset(readerSettings.autoScrollOffset || 0, false);
 
     renderKeybindsList();
     updateHotkeyBox();
+    updatePresetBadgeUI();
 
     if (readerSettings.panelOpen) {
       toggleSettingsPanel(true);
@@ -2064,7 +2191,10 @@
       btnOn.classList.toggle('active', !!val);
       btnOn.setAttribute('aria-pressed', !!val ? 'true' : 'false');
     }
-    if (persist) saveReaderSettings();
+    if (persist) {
+      markSettingsAsCustom();
+      saveReaderSettings();
+    }
   }
 
   // ── TAB 1: BỐ CỤC TRANG (Page Layout) ──
@@ -2140,7 +2270,10 @@
 
     updateHotkeyBox();
     window.readerImages?.show(currentSinglePageIndex, mode);
-    if (persist) saveReaderSettings();
+    if (persist) {
+      markSettingsAsCustom();
+      saveReaderSettings();
+    }
   }
 
   function setReadingDirection(dir, persist = true) {
@@ -2176,7 +2309,10 @@
     }
 
     updateHotkeyBox();
-    if (persist) saveReaderSettings();
+    if (persist) {
+      markSettingsAsCustom();
+      saveReaderSettings();
+    }
   }
 
   function setPageSpacing(spacing, persist = true) {
@@ -2210,7 +2346,10 @@
       document.documentElement.style.setProperty('--page-spacing', num + 'px');
     }
 
-    if (persist) saveReaderSettings();
+    if (persist) {
+      markSettingsAsCustom();
+      saveReaderSettings();
+    }
   }
 
   function setHeaderVisibility(val, persist = true) {
@@ -2237,7 +2376,10 @@
       floatBtn.style.display = (isHidden && readerSettings.readerExtras?.show_menu_btn) ? 'flex' : 'none';
     }
 
-    if (persist) saveReaderSettings();
+    if (persist) {
+      markSettingsAsCustom();
+      saveReaderSettings();
+    }
   }
 
   function setProgressBarStyle(style, persist = true) {
@@ -2271,7 +2413,10 @@
     }
 
     updateProgress();
-    if (persist) saveReaderSettings();
+    if (persist) {
+      markSettingsAsCustom();
+      saveReaderSettings();
+    }
   }
 
   function setProgressBarPosition(pos, persist = true) {
@@ -2300,7 +2445,10 @@
     }
 
     updateProgress();
-    if (persist) saveReaderSettings();
+    if (persist) {
+      markSettingsAsCustom();
+      saveReaderSettings();
+    }
   }
 
   function setProgressBarSize(size, persist = true) {
@@ -2314,7 +2462,10 @@
     if (label) label.textContent = `Kích thước thanh tiến trình: ${num}px`;
     if (bar) bar.style.setProperty('--progress-size', `${num}px`);
 
-    if (persist) saveReaderSettings();
+    if (persist) {
+      markSettingsAsCustom();
+      saveReaderSettings();
+    }
   }
 
   function setCursorHints(hints, persist = true) {
@@ -2341,7 +2492,10 @@
     if (canonical === 'overlay') body.classList.add('reader-cursor-overlay');
     if (canonical === 'cursor') body.classList.add('reader-cursor-custom', 'reader-cursor-pointer');
 
-    if (persist) saveReaderSettings();
+    if (persist) {
+      markSettingsAsCustom();
+      saveReaderSettings();
+    }
   }
 
   function setReaderExtra(extraKey, checked, persist = true) {
@@ -2367,7 +2521,10 @@
       updateProgress();
     }
 
-    if (persist) saveReaderSettings();
+    if (persist) {
+      markSettingsAsCustom();
+      saveReaderSettings();
+    }
   }
 
   function setReaderBackground(bg, persist = true) {
@@ -2393,7 +2550,10 @@
     if (bg === 'white') body.classList.add('reader-bg-white');
     if (bg === 'black') body.classList.add('reader-bg-black');
 
-    if (persist) saveReaderSettings();
+    if (persist) {
+      markSettingsAsCustom();
+      saveReaderSettings();
+    }
   }
 
   // ── TAB 2: HIỂN THỊ ẢNH (Image Fit & Display) ──
@@ -2448,7 +2608,10 @@
     }
 
     window.readerImages?.resize();
-    if (persist) saveReaderSettings();
+    if (persist) {
+      markSettingsAsCustom();
+      saveReaderSettings();
+    }
   }
 
   function setReaderWidth(w, persist = true) {
@@ -2496,7 +2659,10 @@
     }
 
     window.readerImages?.resize();
-    if (persist) saveReaderSettings();
+    if (persist) {
+      markSettingsAsCustom();
+      saveReaderSettings();
+    }
   }
 
   function setStretchSmall(val, persist = true) {
@@ -2509,7 +2675,10 @@
       btn.classList.toggle('active', !!val);
       btn.setAttribute('aria-pressed', val ? 'true' : 'false');
     }
-    if (persist) saveReaderSettings();
+    if (persist) {
+      markSettingsAsCustom();
+      saveReaderSettings();
+    }
   }
 
   function toggleStretchSmall(persist = true) {
@@ -2548,7 +2717,10 @@
       }
     }
 
-    if (persist) saveReaderSettings();
+    if (persist) {
+      markSettingsAsCustom();
+      saveReaderSettings();
+    }
   }
 
   function setMaxHeightLimit(val, persist = true) {
@@ -2578,7 +2750,10 @@
       }
     });
 
-    if (persist) saveReaderSettings();
+    if (persist) {
+      markSettingsAsCustom();
+      saveReaderSettings();
+    }
   }
 
   function toggleNightMode(persist = true) {
@@ -2595,7 +2770,10 @@
       btn?.setAttribute('aria-pressed', 'false');
       if (btn) btn.textContent = '🌙 Giảm chói mắt';
     }
-    if (persist) saveReaderSettings();
+    if (persist) {
+      markSettingsAsCustom();
+      saveReaderSettings();
+    }
   }
 
   function setBrightness(val, persist = true) {
@@ -2617,7 +2795,10 @@
     if (advSlider) advSlider.value = num;
     if (advValLabel) advValLabel.textContent = `${num}%`;
 
-    if (persist) saveReaderSettings();
+    if (persist) {
+      markSettingsAsCustom();
+      saveReaderSettings();
+    }
   }
 
   // ── TAB 3: QUẢN LÝ PHÍM TẮT (Keybinds) ──
@@ -2741,7 +2922,10 @@
       btnOn?.classList.remove('active');
       btnOn?.setAttribute('aria-pressed', 'false');
     }
-    if (persist) saveReaderSettings();
+    if (persist) {
+      markSettingsAsCustom();
+      saveReaderSettings();
+    }
   }
 
   function setHistoryMode(mode, persist = true) {
@@ -2762,7 +2946,10 @@
       }
     });
 
-    if (persist) saveReaderSettings();
+    if (persist) {
+      markSettingsAsCustom();
+      saveReaderSettings();
+    }
   }
 
   function setTapTurnMode(mode, persist = true) {
@@ -2784,7 +2971,10 @@
       }
     });
 
-    if (persist) saveReaderSettings();
+    if (persist) {
+      markSettingsAsCustom();
+      saveReaderSettings();
+    }
   }
 
   function setScrollTurnMode(mode, persist = true) {
@@ -2807,7 +2997,10 @@
       }
     });
 
-    if (persist) saveReaderSettings();
+    if (persist) {
+      markSettingsAsCustom();
+      saveReaderSettings();
+    }
   }
 
   function setDblClickFullscreen(val, persist = true) {
@@ -2825,7 +3018,10 @@
       btnOn?.classList.remove('active');
       btnOn?.setAttribute('aria-pressed', 'false');
     }
-    if (persist) saveReaderSettings();
+    if (persist) {
+      markSettingsAsCustom();
+      saveReaderSettings();
+    }
   }
 
   function setAutoScrollFitMode(mode, persist = true) {
@@ -2846,7 +3042,10 @@
       }
     });
 
-    if (persist) saveReaderSettings();
+    if (persist) {
+      markSettingsAsCustom();
+      saveReaderSettings();
+    }
   }
 
   function setAutoScrollOffset(val, persist = true) {
@@ -2858,15 +3057,21 @@
     if (input2) input2.value = num;
     const valLabel = document.getElementById('scroll-offset-val');
     if (valLabel) valLabel.textContent = `${num}px`;
-    if (persist) saveReaderSettings();
+    if (persist) {
+      markSettingsAsCustom();
+      saveReaderSettings();
+    }
   }
 
   // ── RESET BUTTONS ──
   function resetAllSettingsToDefault() {
-    readerSettings = JSON.parse(JSON.stringify(defaultReaderSettings));
+    applyRecommendedPreset();
     keybindSettings = JSON.parse(JSON.stringify(defaultKeybinds));
-    saveReaderSettings();
-    applyAllReaderSettings();
+    try {
+      localStorage.setItem('webcomics_reader_keybinds', JSON.stringify(keybindSettings));
+      localStorage.setItem('keybinds', JSON.stringify(keybindSettings));
+    } catch (e) {}
+    renderKeybindsList();
     closeAdvancedModal();
   }
 
