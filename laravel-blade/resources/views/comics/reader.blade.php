@@ -101,7 +101,7 @@
     .reader-main-wrapper::before {
       content: '';
       display: none;
-      width: 320px;
+      width: 350px;
       margin-right: 20px;
       flex-shrink: 0;
     }
@@ -111,7 +111,7 @@
   }
 
   .reader-settings-track {
-    width: 320px;
+    width: 350px;
     flex-shrink: 0;
     margin-left: 20px;
     position: relative;
@@ -126,8 +126,8 @@
   .reader-settings-panel {
     position: sticky;
     top: calc(var(--header-height, 72px) + 68px);
-    width: 320px;
-    max-height: calc(100vh - 160px);
+    width: 350px;
+    max-height: calc(100vh - 150px);
     overflow-y: auto;
     overscroll-behavior: contain;
     background: rgba(19, 22, 30, 0.96);
@@ -135,7 +135,7 @@
     -webkit-backdrop-filter: blur(16px);
     border: 1px solid rgba(255,255,255,0.15);
     border-radius: 14px;
-    padding: 18px 20px;
+    padding: 16px 18px;
     box-shadow: 0 16px 48px rgba(0,0,0,0.85);
     z-index: 990;
     display: none;
@@ -214,7 +214,7 @@
       right: 16px !important;
       left: auto !important;
       bottom: auto !important;
-      width: 320px !important;
+      width: 350px !important;
       max-height: calc(100vh - 160px) !important;
       z-index: 1001 !important;
     }
@@ -297,18 +297,286 @@
     --reader-width: 800px;
     --page-spacing: 0px;
     --reader-brightness: 100%;
+    --progress-size: 4px;
   }
 
-  /* Reading Progress Bar (Top) */
+  /* Reading Progress Bar (Top / Bottom / Left / Right) */
   #reader-progress-bar {
     position: fixed;
-    top: 0;
-    left: 0;
-    height: 4px;
-    width: 0%;
-    background: linear-gradient(90deg, #ff5e36, #ff2a6d);
     z-index: 99999;
-    transition: width 0.15s ease-out;
+    background: linear-gradient(90deg, #ff5e36, #ff2a6d);
+    transition: width 0.15s ease-out, height 0.15s ease-out;
+  }
+  #reader-progress-bar.pos-top {
+    top: 0; left: 0; right: auto; bottom: auto;
+    height: var(--progress-size, 4px);
+    width: 0%;
+  }
+  #reader-progress-bar.pos-bottom {
+    top: auto; left: 0; right: auto; bottom: 0;
+    height: var(--progress-size, 4px);
+    width: 0%;
+  }
+  #reader-progress-bar.pos-left {
+    top: 0; left: 0; right: auto; bottom: auto;
+    width: var(--progress-size, 4px);
+    height: 0%;
+    background: linear-gradient(180deg, #ff5e36, #ff2a6d);
+  }
+  #reader-progress-bar.pos-right {
+    top: 0; left: auto; right: 0; bottom: auto;
+    width: var(--progress-size, 4px);
+    height: 0%;
+    background: linear-gradient(180deg, #ff5e36, #ff2a6d);
+  }
+  #reader-progress-bar.is-hidden {
+    display: none !important;
+  }
+
+  /* Header visibility */
+  body.reader-header-hidden .site-header,
+  body.reader-header-hidden .reader-toolbar,
+  body.reader-header-hidden #reader-hint-bar {
+    display: none !important;
+  }
+
+  /* Reader Background Colors */
+  body.reader-bg-white {
+    background: #ffffff !important;
+    color: #111827 !important;
+  }
+  body.reader-bg-white .reader-page-wrapper {
+    background: #ffffff !important;
+    color: #111827 !important;
+  }
+  body.reader-bg-white #reader-container {
+    background: #ffffff !important;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.1) !important;
+  }
+  body.reader-bg-white .comic-page-wrapper {
+    background: #f9fafb !important;
+  }
+  body.reader-bg-black {
+    background: #000000 !important;
+    color: #e0e0e0 !important;
+  }
+  body.reader-bg-black .reader-page-wrapper {
+    background: #000000 !important;
+  }
+  body.reader-bg-black #reader-container {
+    background: #000000 !important;
+  }
+  body.reader-bg-black .comic-page-wrapper {
+    background: #000000 !important;
+  }
+
+  /* Image Filters & Stretch */
+  body.reader-grayscale img.comic-page-img {
+    filter: grayscale(100%) !important;
+  }
+  body.reader-dim img.comic-page-img {
+    opacity: 0.65 !important;
+  }
+  body.reader-stretch-small img.comic-page-img {
+    min-width: 100% !important;
+    width: 100% !important;
+  }
+
+  /* Image Max-height limits */
+  .comic-page-img.max-h-70vh {
+    max-height: 70vh !important;
+    width: auto !important;
+    object-fit: contain !important;
+  }
+  .comic-page-img.max-h-85vh {
+    max-height: 85vh !important;
+    width: auto !important;
+    object-fit: contain !important;
+  }
+  .comic-page-img.max-h-100vh {
+    max-height: 100vh !important;
+    width: auto !important;
+    object-fit: contain !important;
+  }
+
+  /* Cursor hints */
+  body.reader-cursor-overlay #reader-container {
+    position: relative;
+  }
+  body.reader-cursor-pointer #reader-container {
+    cursor: pointer;
+  }
+
+  /* Setting Tabs & Form Controls */
+  .reader-tabs-nav {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 4px;
+    margin-bottom: 14px;
+    background: rgba(19, 22, 30, 0.95);
+    backdrop-filter: blur(12px);
+    padding: 4px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  .reader-tab-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 7px 2px;
+    border-radius: 7px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+    white-space: nowrap;
+  }
+  .reader-tab-btn:hover:not(.active) {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.08);
+  }
+  .reader-tab-btn.active {
+    background: var(--primary);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(255, 94, 54, 0.35);
+  }
+  .reader-tab-pane {
+    display: block !important;
+    padding-bottom: 16px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    scroll-margin-top: 55px;
+  }
+  .reader-tab-pane:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+  }
+
+  .setting-section {
+    margin-bottom: 12px;
+  }
+  .setting-label {
+    display: block;
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: 5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+  .setting-toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 10px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px;
+    margin-bottom: 6px;
+    cursor: pointer;
+    font-size: 11.5px;
+    color: #e0e0e0;
+    transition: background 0.15s;
+  }
+  .setting-toggle-row:hover {
+    background: rgba(255,255,255,0.06);
+    color: #fff;
+  }
+  .setting-toggle-row input[type="checkbox"] {
+    accent-color: var(--primary);
+    width: 15px;
+    height: 15px;
+    cursor: pointer;
+    margin: 0;
+  }
+
+  /* Keybinds Table */
+  .keybind-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 7px 6px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    font-size: 11.5px;
+    gap: 6px;
+  }
+  .keybind-row:last-child {
+    border-bottom: none;
+  }
+  .keybind-action-name {
+    color: #e0e0e0;
+    flex: 1;
+    min-width: 0;
+    font-weight: 500;
+  }
+  .keybind-keys-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    align-items: center;
+    justify-content: flex-end;
+  }
+  .keybind-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.18);
+    color: #fff;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 10.5px;
+    font-weight: 700;
+  }
+  .keybind-del-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 11px;
+    line-height: 1;
+    padding: 0 2px;
+  }
+  .keybind-del-btn:hover {
+    color: #ff4d4f;
+  }
+  .keybind-add-btn {
+    background: rgba(255,255,255,0.06);
+    border: 1px dashed rgba(255,255,255,0.22);
+    color: var(--primary);
+    border-radius: 4px;
+    padding: 2px 7px;
+    font-size: 10.5px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .keybind-add-btn:hover {
+    background: rgba(255,94,54,0.15);
+    border-color: var(--primary);
+  }
+  .keybind-add-btn.listening {
+    background: var(--primary);
+    color: #fff;
+    border-style: solid;
+    border-color: var(--primary);
+    animation: pulse 1s infinite;
+  }
+  .keybind-reset-row-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 11px;
+    padding: 2px;
+  }
+  .keybind-reset-row-btn:hover {
+    color: #fff;
   }
 
   /* Webtoon / Vertical Continuous */
@@ -482,7 +750,11 @@
 
 @section('content')
 <!-- ── TOP READING PROGRESS BAR ── -->
-<div id="reader-progress-bar"></div>
+<div id="reader-progress-bar" class="pos-top"></div>
+
+<!-- ── FLOATING CONTROLS FOR EXTRAS ── -->
+<button type="button" id="floating-menu-btn" class="reader-controls-btn" onclick="toggleSettingsPanel(true)" style="display:none; position:fixed; top:16px; left:16px; z-index:9998; background:rgba(19,22,30,0.92); border:1px solid rgba(255,255,255,0.2); box-shadow:0 6px 20px rgba(0,0,0,0.7); padding:8px 14px; border-radius:20px; font-weight:700;">⚙️ Cài đặt</button>
+<div id="reader-floating-page-number" style="display:none; position:fixed; bottom:24px; right:24px; background:rgba(19,22,30,0.92); color:#fff; font-size:12px; font-weight:700; padding:6px 14px; border-radius:20px; border:1px solid rgba(255,255,255,0.2); z-index:998; box-shadow:0 6px 20px rgba(0,0,0,0.7); pointer-events:none;"><span id="floating-page-counter-text">1 / 1</span></div>
 
 <div class="reader-page-wrapper">
 
@@ -638,78 +910,299 @@
 
   <!-- ── STICKY / FLOATING SETTINGS PANEL (FE-04) ── -->
   <aside class="reader-settings-track" id="reader-settings-track">
-    <div class="reader-settings-panel" id="reader-settings-panel" role="dialog" aria-modal="false" aria-label="Tùy chỉnh chế độ đọc">
+    <div class="reader-settings-panel" id="reader-settings-panel" role="dialog" aria-modal="false" aria-label="Cài đặt trình đọc">
       <div class="sheet-grab-handle"></div>
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px;">
-        <strong style="color: #fff; font-size: 14px;">⚙️ Tùy Chỉnh Chế Độ Đọc</strong>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px;">
+        <strong style="color: #fff; font-size: 14px;">⚙️ Cài Đặt Trình Đọc <span style="font-size:11px;opacity:0.75;font-weight:normal;">(Tùy Chỉnh Chế Độ Đọc)</span></strong>
         <button type="button" class="reader-settings-close-btn" onclick="toggleSettingsPanel(false)" aria-label="Đóng cài đặt" title="Đóng cài đặt (Phím Esc)">✕</button>
       </div>
 
-      <!-- 1. Reading Mode (3 Chế độ: Cuộn dọc / Từng trang / Trang đôi) -->
-      <div style="margin-bottom: 14px;" id="section-reading-mode">
-        <label style="display: block; font-size: 11.5px; color: var(--text-muted); margin-bottom: 6px; font-weight: 700;">CHẾ ĐỘ ĐỌC (PHÍM M)</label>
-        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px;">
-          <button type="button" class="setting-btn active" id="btn-mode-vertical" onclick="setReadingLayout('vertical')" aria-pressed="true">📜 Cuộn dọc</button>
-          <button type="button" class="setting-btn" id="btn-mode-single" onclick="setReadingLayout('single')" aria-pressed="false">📄 Từng trang</button>
-          <button type="button" class="setting-btn" id="btn-mode-double" onclick="setReadingLayout('double')" aria-pressed="false">📖 Trang đôi</button>
+      <!-- 4 TABS NAVIGATION -->
+      <div class="reader-tabs-nav" role="tablist">
+        <button type="button" class="reader-tab-btn active" id="tab-btn-layout" role="tab" aria-selected="true" onclick="switchReaderTab('layout')">Bố cục</button>
+        <button type="button" class="reader-tab-btn" id="tab-btn-image" role="tab" aria-selected="false" onclick="switchReaderTab('image')">Ảnh</button>
+        <button type="button" class="reader-tab-btn" id="tab-btn-keybinds" role="tab" aria-selected="false" onclick="switchReaderTab('keybinds')">Phím tắt</button>
+        <button type="button" class="reader-tab-btn" id="tab-btn-behaviors" role="tab" aria-selected="false" onclick="switchReaderTab('behaviors')">Hành vi</button>
+      </div>
+
+      <!-- ── TAB 1: BỐ CỤC TRANG ── -->
+      <div class="reader-tab-pane active" id="tab-pane-layout" role="tabpanel">
+        <!-- 1.1. Kiểu hiển thị trang (3 Mode) -->
+        <div class="setting-section" id="section-reading-mode">
+          <label class="setting-label">KIỂU HIỂN THỊ TRANG (PHÍM M)</label>
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px;">
+            <button type="button" class="setting-btn active" id="btn-mode-vertical" onclick="setReadingLayout('vertical')" aria-pressed="true">📜 Cuộn dọc</button>
+            <button type="button" class="setting-btn" id="btn-mode-single" onclick="setReadingLayout('single')" aria-pressed="false" title="Từng trang">📄 Trang đơn <span style="font-size: 10px; opacity: 0.7;">(Từng trang)</span></button>
+            <button type="button" class="setting-btn" id="btn-mode-double" onclick="setReadingLayout('double')" aria-pressed="false">📖 Trang đôi</button>
+          </div>
+        </div>
+
+        <!-- 1.2. Hướng đọc (Chỉ hiện khi Trang đơn hoặc Trang đôi, ẩn khi Cuộn dọc) -->
+        <div class="setting-section" style="display: none;" id="section-reading-direction">
+          <label class="setting-label">HƯỚNG ĐỌC</label>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+            <button type="button" class="setting-btn active" id="btn-dir-ltr" onclick="setReadingDirection('ltr')" aria-pressed="true">➡️ Trái sang phải</button>
+            <button type="button" class="setting-btn" id="btn-dir-rtl" onclick="setReadingDirection('rtl')" aria-pressed="false" title="Phải qua Trái">⬅️ Phải sang trái (Manga)<span style="display:none">Phải qua Trái</span></button>
+          </div>
+        </div>
+
+        <!-- 1.3. Lề / khoảng cách -->
+        <div class="setting-section" id="section-page-spacing">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+            <label class="setting-label" id="label-page-spacing" style="margin-bottom: 0;">KHOẢNG CÁCH GIỮA ẢNH</label>
+            <span id="label-margin-val" style="font-size: 11px; color: var(--primary); font-weight: 700;">0px</span>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-bottom: 6px;">
+            <button type="button" class="setting-btn active" id="btn-space-0" onclick="setPageSpacing(0)" aria-pressed="true">0px</button>
+            <button type="button" class="setting-btn" id="btn-space-8" onclick="setPageSpacing(8)" aria-pressed="false">8px</button>
+            <button type="button" class="setting-btn" id="btn-space-16" onclick="setPageSpacing(16)" aria-pressed="false">16px</button>
+            <button type="button" class="setting-btn" id="btn-space-24" onclick="setPageSpacing(24)" aria-pressed="false">24px</button>
+          </div>
+          <input type="range" id="margin-slider" min="0" max="40" value="0" oninput="setPageSpacing(this.value)" style="width: 100%; accent-color: var(--primary); cursor: pointer;" aria-label="Điều chỉnh lề dải ảnh">
+        </div>
+
+        <!-- 1.4. Hiển thị thanh đầu trang -->
+        <div class="setting-section" id="section-header-visibility">
+          <label class="setting-label">HIỂN THỊ ĐẦU TRANG</label>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+            <button type="button" class="setting-btn active" id="btn-header-show" onclick="setHeaderVisibility('show')" aria-pressed="true">Hiện đầu trang</button>
+            <button type="button" class="setting-btn" id="btn-header-hide" onclick="setHeaderVisibility('hide')" aria-pressed="false">Ẩn đầu trang</button>
+          </div>
+        </div>
+
+        <!-- 1.5. Kiểu thanh tiến trình -->
+        <div class="setting-section" id="section-progress-style">
+          <label class="setting-label">KIỂU THANH TIẾN TRÌNH</label>
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px;">
+            <button type="button" class="setting-btn" id="btn-progress-hidden" onclick="setProgressBarStyle('hidden')" aria-pressed="false">Ẩn thanh</button>
+            <button type="button" class="setting-btn" id="btn-progress-light" onclick="setProgressBarStyle('light')" aria-pressed="false">Thanh mảnh</button>
+            <button type="button" class="setting-btn active" id="btn-progress-normal" onclick="setProgressBarStyle('normal')" aria-pressed="true">Bình thường</button>
+          </div>
+        </div>
+
+        <!-- 1.6. Vị trí thanh tiến trình -->
+        <div class="setting-section" id="section-progress-pos">
+          <label class="setting-label">VỊ TRÍ THANH TIẾN TRÌNH</label>
+          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px;">
+            <button type="button" class="setting-btn active" id="btn-progress-pos-top" onclick="setProgressBarPosition('top')" aria-pressed="true">Trên</button>
+            <button type="button" class="setting-btn" id="btn-progress-pos-bottom" onclick="setProgressBarPosition('bottom')" aria-pressed="false">Dưới</button>
+            <button type="button" class="setting-btn" id="btn-progress-pos-left" onclick="setProgressBarPosition('left')" aria-pressed="false">Trái</button>
+            <button type="button" class="setting-btn" id="btn-progress-pos-right" onclick="setProgressBarPosition('right')" aria-pressed="false">Phải</button>
+          </div>
+        </div>
+
+        <!-- 1.7. Kích thước thanh tiến trình -->
+        <div class="setting-section" id="section-progress-size">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+            <label class="setting-label" style="margin-bottom: 0;">KÍCH THƯỚC THANH TIẾN TRÌNH</label>
+            <span id="progress-size-val" style="font-size: 11px; color: var(--primary); font-weight: 700;">4px</span>
+          </div>
+          <input type="range" id="progress-size-slider" min="1" max="16" value="4" oninput="setProgressBarSize(this.value)" style="width: 100%; accent-color: var(--primary); cursor: pointer;" aria-label="Kích thước pixel thanh tiến trình">
+        </div>
+
+        <!-- 1.8. Gợi ý thao tác con trỏ -->
+        <div class="setting-section" id="section-cursor-hints">
+          <label class="setting-label">GỢI Ý THAO TÁC CON TRỎ</label>
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px;">
+            <button type="button" class="setting-btn active" id="btn-cursor-none" onclick="setCursorHints('none')" aria-pressed="true">Không</button>
+            <button type="button" class="setting-btn" id="btn-cursor-overlay" onclick="setCursorHints('overlay')" aria-pressed="false">Lớp phủ</button>
+            <button type="button" class="setting-btn" id="btn-cursor-pointer" onclick="setCursorHints('pointer')" aria-pressed="false">Con trỏ</button>
+          </div>
+        </div>
+
+        <!-- 1.9. Tùy chọn bổ sung cho reader -->
+        <div class="setting-section" id="section-reader-extras">
+          <label class="setting-label">TÙY CHỌN BỔ SUNG</label>
+          <label class="setting-toggle-row">
+            <span>Hiện nút menu khi menu đang ghim và đầu trang bị ẩn</span>
+            <input type="checkbox" id="toggle-extra-menu-btn" onchange="setReaderExtra('menuBtn', this.checked)">
+          </label>
+          <label class="setting-toggle-row">
+            <span>Hiện số trang khi thanh tiến trình bị ẩn</span>
+            <input type="checkbox" id="toggle-extra-page-num" onchange="setReaderExtra('pageNum', this.checked)">
+          </label>
+          <label class="setting-toggle-row">
+            <span>Hiển thị trang ở chế độ thang xám</span>
+            <input type="checkbox" id="toggle-extra-grayscale" onchange="setReaderExtra('grayscale', this.checked)">
+          </label>
+          <label class="setting-toggle-row">
+            <span>Làm mờ trang</span>
+            <input type="checkbox" id="toggle-extra-dim" onchange="setReaderExtra('dim', this.checked)">
+          </label>
+        </div>
+
+        <!-- 1.10. Màu nền reader -->
+        <div class="setting-section" id="section-reader-bg">
+          <label class="setting-label">MÀU NỀN TRÌNH ĐỌC</label>
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px;">
+            <button type="button" class="setting-btn active" id="btn-bg-theme" onclick="setReaderBackground('theme')" aria-pressed="true">Theo giao diện</button>
+            <button type="button" class="setting-btn" id="btn-bg-white" onclick="setReaderBackground('white')" aria-pressed="false">Trắng</button>
+            <button type="button" class="setting-btn" id="btn-bg-black" onclick="setReaderBackground('black')" aria-pressed="false">Đen</button>
+          </div>
         </div>
       </div>
 
-      <!-- 2. Reading Direction (Chỉ áp dụng cho Từng trang và Trang đôi) -->
-      <div style="margin-bottom: 14px; display: none;" id="section-reading-direction">
-        <label style="display: block; font-size: 11.5px; color: var(--text-muted); margin-bottom: 6px; font-weight: 700;">HƯỚNG ĐỌC</label>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
-          <button type="button" class="setting-btn active" id="btn-dir-ltr" onclick="setReadingDirection('ltr')" aria-pressed="true">➡️ Trái qua Phải</button>
-          <button type="button" class="setting-btn" id="btn-dir-rtl" onclick="setReadingDirection('rtl')" aria-pressed="false">⬅️ Phải qua Trái (Manga)</button>
+      <!-- ── TAB 2: HIỂN THỊ ẢNH ── -->
+      <div class="reader-tab-pane" id="tab-pane-image" role="tabpanel">
+        <!-- 2.1. Căn chỉnh khung ảnh (Fit Mode) -->
+        <div class="setting-section" id="section-image-sizing">
+          <label class="setting-label">CĂN CHỈNH KHUNG ẢNH</label>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 6px;">
+            <button type="button" class="setting-btn" id="btn-fit-width" onclick="setFitMode('fit-width')" aria-pressed="false">↔️ Vừa chiều rộng</button>
+            <button type="button" class="setting-btn" id="btn-fit-height" onclick="setFitMode('fit-height')" aria-pressed="false">↕️ Vừa chiều cao</button>
+          </div>
+        </div>
+
+        <!-- 2.2. Kéo giãn ảnh nhỏ -->
+        <div class="setting-section" id="section-stretch-small">
+          <label class="setting-label">KÉO GIÃN ẢNH NHỎ</label>
+          <button type="button" class="setting-btn" id="btn-stretch-small" onclick="toggleStretchSmall()" style="width: 100%; text-align: left; padding: 8px 12px;" aria-pressed="false">
+            🔍 Phóng to ảnh nhỏ để vừa khung
+          </button>
+        </div>
+
+        <!-- 2.3. Giới hạn chiều rộng tối đa -->
+        <div class="setting-section" id="section-max-width">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+            <label class="setting-label" style="margin-bottom: 0;">GIỚI HẠN CHIỀU RỘNG TỐI ĐA</label>
+            <span id="max-width-val" style="font-size: 11px; color: var(--primary); font-weight: 700;">800px</span>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-bottom: 6px;">
+            <button type="button" class="setting-btn" id="btn-w-680" onclick="setReaderWidth(680)" aria-pressed="false">680px</button>
+            <button type="button" class="setting-btn active" id="btn-w-800" onclick="setReaderWidth(800)" aria-pressed="true">800px</button>
+            <button type="button" class="setting-btn" id="btn-w-1000" onclick="setReaderWidth(1000)" aria-pressed="false">1000px</button>
+            <button type="button" class="setting-btn" id="btn-w-full" onclick="setReaderWidth('100%')" aria-pressed="false">100%</button>
+          </div>
+        </div>
+
+        <!-- 2.4. Giới hạn chiều cao tối đa -->
+        <div class="setting-section" id="section-max-height">
+          <label class="setting-label">GIỚI HẠN CHIỀU CAO TỐI ĐA</label>
+          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px;">
+            <button type="button" class="setting-btn active" id="btn-h-none" onclick="setMaxHeightLimit('none')" aria-pressed="true">Không</button>
+            <button type="button" class="setting-btn" id="btn-h-70vh" onclick="setMaxHeightLimit('70vh')" aria-pressed="false">70vh</button>
+            <button type="button" class="setting-btn" id="btn-h-85vh" onclick="setMaxHeightLimit('85vh')" aria-pressed="false">85vh</button>
+            <button type="button" class="setting-btn" id="btn-h-100vh" onclick="setMaxHeightLimit('100vh')" aria-pressed="false">100vh</button>
+          </div>
+        </div>
+
+        <!-- 2.5. Chế độ ban đêm & Độ sáng -->
+        <div class="setting-section" id="section-night-brightness">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <label class="setting-label" style="margin-bottom: 0;">🌙 CHẾ ĐỘ BAN ĐÊM & ĐỘ SÁNG</label>
+            <span id="brightness-val" style="font-size: 11px; color: var(--primary); font-weight: 700;">Độ sáng: 100%</span>
+          </div>
+          <button type="button" class="setting-btn" id="btn-toggle-night" onclick="toggleNightMode()" style="width: 100%; margin-bottom: 8px;" aria-pressed="false">
+            🌙 Giảm chói mắt
+          </button>
+          <input type="range" id="brightness-slider" min="50" max="100" value="100" oninput="setBrightness(this.value)" style="width: 100%; accent-color: var(--primary); cursor: pointer;" aria-label="Độ sáng ảnh truyện">
         </div>
       </div>
 
-      <!-- 3. Kích thước hiển thị (Fit Mode & Width) -->
-      <div style="margin-bottom: 14px;" id="section-image-sizing">
-        <label style="display: block; font-size: 11.5px; color: var(--text-muted); margin-bottom: 6px; font-weight: 700;">KÍCH THƯỚC HIỂN THỊ</label>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 6px;">
-          <button type="button" class="setting-btn" id="btn-fit-width" onclick="setFitMode('fit-width')" aria-pressed="false">↔️ Vừa chiều rộng</button>
-          <button type="button" class="setting-btn" id="btn-fit-height" onclick="setFitMode('fit-height')" aria-pressed="false">↕️ Vừa chiều cao</button>
+      <!-- ── TAB 3: PHÍM TẮT ── -->
+      <div class="reader-tab-pane" id="tab-pane-keybinds" role="tabpanel">
+        <div class="setting-section">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <label class="setting-label" style="margin-bottom: 0;">DANH SÁCH PHÍM TẮT</label>
+            <button type="button" onclick="resetAllKeybinds()" class="keybind-reset-row-btn" title="Đặt lại toàn bộ phím tắt mặc định" style="color: var(--primary); font-size: 11px; font-weight: 700;">
+              ↺ Đặt lại mặc định
+            </button>
+          </div>
+          <div id="keybinds-list-container" style="background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; max-height: 280px; overflow-y: auto;">
+            <!-- Render động bằng JS -->
+          </div>
         </div>
-        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px;">
-          <button type="button" class="setting-btn" id="btn-w-680" onclick="setReaderWidth(680)" aria-pressed="false">680px</button>
-          <button type="button" class="setting-btn active" id="btn-w-800" onclick="setReaderWidth(800)" aria-pressed="true">800px</button>
-          <button type="button" class="setting-btn" id="btn-w-1000" onclick="setReaderWidth(1000)" aria-pressed="false">1000px</button>
-          <button type="button" class="setting-btn" id="btn-w-full" onclick="setReaderWidth('100%')" aria-pressed="false">100%</button>
+
+        <!-- Hướng dẫn phím tắt tóm tắt theo mode -->
+        <div id="reader-hotkey-box" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 8px 10px; font-size: 11px; color: var(--text-muted); line-height: 1.6;">
+          <div style="font-weight: 700; color: #fff; margin-bottom: 4px;">⌨️ Hướng dẫn thao tác nhanh:</div>
+          <div>• Bấm <strong>+</strong> để gán phím mới, bấm <strong>✕</strong> để xóa</div>
+          <div>• Nhấn <strong>Esc</strong> khi đang gán để hủy</div>
         </div>
       </div>
 
-      <!-- 4. Khoảng cách trang (Đổi tên động theo mode: Cuộn dọc -> Giữa ảnh; Trang đôi -> Giữa 2 trang; Từng trang -> Ẩn) -->
-      <div style="margin-bottom: 14px;" id="section-page-spacing">
-        <label id="label-page-spacing" style="display: block; font-size: 11.5px; color: var(--text-muted); margin-bottom: 6px; font-weight: 700;">KHOẢNG CÁCH GIỮA ẢNH</label>
-        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;">
-          <button type="button" class="setting-btn active" id="btn-space-0" onclick="setPageSpacing(0)" aria-pressed="true">0px (Liền)</button>
-          <button type="button" class="setting-btn" id="btn-space-8" onclick="setPageSpacing(8)" aria-pressed="false">8px</button>
-          <button type="button" class="setting-btn" id="btn-space-16" onclick="setPageSpacing(16)" aria-pressed="false">16px</button>
+      <!-- ── TAB 4: HÀNH VI ĐỌC ── -->
+      <div class="reader-tab-pane" id="tab-pane-behaviors" role="tabpanel">
+        <!-- 4.1. Tự động sang chap tiếp theo ở trang cuối -->
+        <div class="setting-section" id="section-auto-advance">
+          <label class="setting-label">TỰ ĐỘNG SANG CHAP TIẾP THEO Ở TRANG CUỐI</label>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+            <button type="button" class="setting-btn" id="btn-auto-advance-off" onclick="setAutoAdvanceChapter(false)" aria-pressed="false">Tắt</button>
+            <button type="button" class="setting-btn active" id="btn-auto-advance-on" onclick="setAutoAdvanceChapter(true)" aria-pressed="true">Bật</button>
+          </div>
+        </div>
+
+        <!-- 4.2. Chế độ lịch sử reader -->
+        <div class="setting-section" id="section-history-mode">
+          <label class="setting-label">CHẾ ĐỘ LỊCH SỬ READER</label>
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            <button type="button" class="setting-btn" id="btn-history-none" onclick="setHistoryMode('none')" style="text-align: left; padding: 6px 10px;" aria-pressed="false">
+              • Không cập nhật URL và tiêu đề
+            </button>
+            <button type="button" class="setting-btn active" id="btn-history-replace" onclick="setHistoryMode('replace')" style="text-align: left; padding: 6px 10px;" aria-pressed="true">
+              • Cập nhật URL và tiêu đề
+            </button>
+            <button type="button" class="setting-btn" id="btn-history-push" onclick="setHistoryMode('push')" style="text-align: left; padding: 6px 10px;" aria-pressed="false">
+              • Cập nhật URL + hỗ trợ Back/Forward
+            </button>
+          </div>
+        </div>
+
+        <!-- 4.3. Chuyển trang bằng chạm -->
+        <div class="setting-section" id="section-tap-turn">
+          <label class="setting-label">CHUYỂN TRANG BẰNG CHẠM</label>
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px;">
+            <button type="button" class="setting-btn active" id="btn-tap-directional" onclick="setTapTurnMode('directional')" aria-pressed="true">Hướng chạm</button>
+            <button type="button" class="setting-btn" id="btn-tap-always" onclick="setTapTurnMode('always')" aria-pressed="false">Luôn tiến</button>
+            <button type="button" class="setting-btn" id="btn-tap-none" onclick="setTapTurnMode('none')" aria-pressed="false">Tắt</button>
+          </div>
+        </div>
+
+        <!-- 4.4. Chuyển trang bằng cuộn -->
+        <div class="setting-section" id="section-scroll-turn">
+          <label class="setting-label">CHUYỂN TRANG BẰNG CUỘN</label>
+          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px;">
+            <button type="button" class="setting-btn" id="btn-scroll-none" onclick="setScrollTurnMode('none')" aria-pressed="false">Tắt</button>
+            <button type="button" class="setting-btn" id="btn-scroll-wheel" onclick="setScrollTurnMode('wheel')" aria-pressed="false">Chuột</button>
+            <button type="button" class="setting-btn" id="btn-scroll-keys" onclick="setScrollTurnMode('keys')" aria-pressed="false">Phím</button>
+            <button type="button" class="setting-btn active" id="btn-scroll-both" onclick="setScrollTurnMode('both')" aria-pressed="true">Cả hai</button>
+          </div>
+        </div>
+
+        <!-- 4.5. Nhấp đúp để bật/tắt toàn màn hình -->
+        <div class="setting-section" id="section-dblclick-fs">
+          <label class="setting-label">NHẤP ĐÚP ĐỂ BẬT/TẮT TOÀN MÀN HÌNH</label>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+            <button type="button" class="setting-btn" id="btn-dblclick-fs-off" onclick="setDblClickFullscreen(false)" aria-pressed="false">Tắt</button>
+            <button type="button" class="setting-btn active" id="btn-dblclick-fs-on" onclick="setDblClickFullscreen(true)" aria-pressed="true">Bật</button>
+          </div>
+        </div>
+
+        <!-- 4.6. Tự cuộn lên đầu khi đổi chế độ ảnh -->
+        <div class="setting-section" id="section-autoscroll-fit">
+          <label class="setting-label">TỰ CUỘN LÊN KHI ĐỔI CHẾ ĐỘ ẢNH</label>
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px;">
+            <button type="button" class="setting-btn" id="btn-autoscroll-width" onclick="setAutoScrollFitMode('width')" aria-pressed="false">Chiều rộng</button>
+            <button type="button" class="setting-btn" id="btn-autoscroll-height" onclick="setAutoScrollFitMode('height')" aria-pressed="false">Chiều cao</button>
+            <button type="button" class="setting-btn active" id="btn-autoscroll-none" onclick="setAutoScrollFitMode('none')" aria-pressed="true">Không</button>
+          </div>
+        </div>
+
+        <!-- 4.7. Độ lệch tự cuộn -->
+        <div class="setting-section" id="section-scroll-offset">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+            <label class="setting-label" style="margin-bottom: 0;">ĐỘ LỆCH TỰ CUỘN (PIXEL)</label>
+            <span id="scroll-offset-val" style="font-size: 11px; color: var(--primary); font-weight: 700;">0px</span>
+          </div>
+          <input type="number" id="input-scroll-offset" min="0" max="500" value="0" oninput="setAutoScrollOffset(this.value)" style="width: 100%; box-sizing: border-box; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15); color: #fff; padding: 6px 10px; border-radius: 8px; font-size: 12px;" aria-label="Độ lệch pixel khi tự cuộn">
         </div>
       </div>
 
-      <!-- 5. Chế độ ban đêm & Độ sáng (Tách bạch Night Mode và Brightness slider 50% - 100%) -->
-      <div style="margin-bottom: 14px;" id="section-night-brightness">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-          <label style="font-size: 11.5px; color: var(--text-muted); font-weight: 700;">🌙 CHẾ ĐỘ BAN ĐÊM & ĐỘ SÁNG</label>
-          <span id="brightness-val" style="font-size: 12px; color: var(--primary); font-weight: 700;">Độ sáng: 100%</span>
-        </div>
-        <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 8px;">
-          <button type="button" class="setting-btn" id="btn-toggle-night" onclick="toggleNightMode()" style="flex: 1;" aria-pressed="false">🌙 Giảm chói mắt</button>
-        </div>
-        <input type="range" id="brightness-slider" min="50" max="100" value="100" oninput="setBrightness(this.value)" style="width: 100%; accent-color: var(--primary); cursor: pointer;" aria-label="Độ sáng ảnh truyện">
-      </div>
-
-      <!-- 6. Phím tắt nhanh (Cập nhật theo mode) -->
-      <div id="reader-hotkey-box" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 10px; font-size: 11px; color: var(--text-muted); line-height: 1.6;">
-        <div style="font-weight: 700; color: #fff; margin-bottom: 4px;">⌨️ Phím tắt (Cuộn dọc):</div>
-        <div>• <code>↑</code> / <code>↓</code> hoặc <code>Space</code>: Cuộn mượt trang</div>
-        <div>• <code>←</code> / <code>→</code>: Chuyển Chap trước / sau</div>
-        <div>• <code>M</code>: Đổi chế độ đọc</div>
-        <div>• <code>H</code>: Ẩn/Hiện giao diện (Zen Mode)</div>
-        <div>• <code>F</code>: Toàn màn hình</div>
-        <div>• <code>Esc</code>: Đóng bảng cài đặt</div>
+      <!-- ── PANEL FOOTER: RESET ALL TO DEFAULT ── -->
+      <div style="margin-top: 14px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.08); text-align: center;">
+        <button type="button" id="btn-reset-all-settings" onclick="resetAllSettingsToDefault()" class="setting-btn" style="width: 100%; padding: 8px; font-weight: 700; color: #ff8f70; background: rgba(255,94,54,0.08); border-color: rgba(255,94,54,0.25);">
+          🔄 Đặt lại toàn bộ mặc định
+        </button>
       </div>
     </div>
   </aside>
@@ -927,6 +1420,75 @@
     if (toast) toast.style.display = 'none';
   }
 
+  // ── READER STATE & DEFAULTS (FE-04 UPGRADE) ──
+  const defaultReaderSettings = {
+    layout: 'vertical',            // 'vertical' | 'single' | 'double'
+    spacing: 0,                   // 0 | 8 | 16 | 24 (px)
+    direction: 'ltr',             // 'ltr' | 'rtl'
+    headerVisibility: 'shown',    // 'shown' | 'hidden'
+    progressBarStyle: 'normal',   // 'hidden' | 'light' | 'normal'
+    progressBarPos: 'top',        // 'top' | 'bottom' | 'left' | 'right'
+    progressBarSize: 4,           // px (1..16)
+    cursorHints: 'none',          // 'none' | 'overlay' | 'cursor'
+    readerExtras: {
+      show_menu_btn: true,
+      show_page_number: false,
+      greyscale: false,
+      dim: false
+    },
+    readerBg: 'theme',            // 'theme' | 'white' | 'black'
+    fit: 'custom',                // 'custom' | 'fit-width' | 'fit-height'
+    width: 800,                   // 680 | 800 | 1000 | '100%'
+    stretchSmall: false,
+    maxWidthLimit: 'none',        // '680' | '800' | '1000' | 'full' | 'none'
+    maxHeightLimit: 'none',       // '70vh' | '85vh' | '100vh' | 'none'
+    night: false,
+    brightness: 100,              // 50..100
+    autoAdvanceChapter: false,
+    historyMode: 'push',          // 'none' | 'replace' | 'push'
+    tapTurnMode: 'direction',     // 'direction' | 'always_forward' | 'off'
+    scrollTurnMode: 'wheel',      // 'off' | 'wheel' | 'keyboard' | 'both'
+    dblClickFullscreen: false,
+    autoScrollFitMode: 'none',    // 'width' | 'height' | 'none'
+    autoScrollOffset: 0,
+    panelOpen: false,
+    activeTab: 'layout'
+  };
+
+  const defaultKeybinds = {
+    toggle_menu: ['m', 'M'],
+    page_right: ['ArrowRight', 'd', 'D'],
+    page_left: ['ArrowLeft', 'a', 'A'],
+    scroll_up: ['PageUp', 'k', 'K'],
+    scroll_down: ['PageDown', 'j', 'J', ' '],
+    chapter_forward: [']'],
+    chapter_backward: ['['],
+    toggle_fullscreen: ['f', 'F'],
+    cycle_fit_mode: ['w', 'W'],
+    toggle_direction: ['r', 'R']
+  };
+
+  const keybindActionLabels = {
+    toggle_menu: 'Bật/tắt menu',
+    page_right: 'Sang trang phải',
+    page_left: 'Sang trang trái',
+    scroll_up: 'Cuộn lên',
+    scroll_down: 'Cuộn xuống',
+    chapter_forward: 'Chap tiếp theo',
+    chapter_backward: 'Chap trước',
+    toggle_fullscreen: 'Bật/tắt toàn màn hình',
+    cycle_fit_mode: 'Chuyển chế độ hiển thị ảnh',
+    toggle_direction: 'Đổi hướng đọc / lật trang đôi'
+  };
+
+  let readerSettings = JSON.parse(JSON.stringify(defaultReaderSettings));
+  let keybindSettings = JSON.parse(JSON.stringify(defaultKeybinds));
+  let listeningAction = null;
+  let wheelLock = false;
+  let currentSinglePageIndex = 0;
+  const pageWrappers = document.querySelectorAll('.comic-page-wrapper');
+  const totalPagesCount = pageWrappers.length;
+
   function calculateCurrentScrollPercent() {
     if (readerSettings.layout === 'single' || readerSettings.layout === 'double') {
       if (totalPagesCount <= 1) return 100;
@@ -947,7 +1509,48 @@
   function updateProgress() {
     const percent = calculateCurrentScrollPercent();
     const progressBar = document.getElementById('reader-progress-bar');
-    if (progressBar) progressBar.style.width = percent + '%';
+    if (progressBar) {
+      if (readerSettings.progressBarStyle === 'hidden') {
+        progressBar.style.display = 'none';
+      } else {
+        progressBar.style.display = 'block';
+        if (readerSettings.progressBarPos === 'left' || readerSettings.progressBarPos === 'right') {
+          progressBar.style.height = percent + '%';
+          progressBar.style.width = '';
+        } else {
+          progressBar.style.width = percent + '%';
+          progressBar.style.height = '';
+        }
+      }
+    }
+
+    const floatingNum = document.getElementById('reader-floating-page-number');
+    const floatingText = document.getElementById('floating-page-counter-text') || floatingNum;
+    if (floatingNum) {
+      const showPageNum = readerSettings.readerExtras?.show_page_number || readerSettings.readerExtras?.pageNum;
+      if (readerSettings.progressBarStyle === 'hidden' && showPageNum) {
+        floatingNum.style.display = 'block';
+        let cur = currentSinglePageIndex + 1;
+        if (readerSettings.layout === 'double' && cur < totalPagesCount) {
+          if (floatingText) floatingText.textContent = `${cur}-${cur + 1} / ${totalPagesCount}`;
+        } else {
+          if (floatingText) floatingText.textContent = `${cur} / ${totalPagesCount}`;
+        }
+      } else {
+        floatingNum.style.display = 'none';
+      }
+    }
+
+    // Auto advance ở vertical mode khi cuộn tới cuối trang
+    if (readerSettings.layout === 'vertical' && readerSettings.autoAdvanceChapter && percent >= 99.8) {
+      if (!window.__autoAdvanceTriggered) {
+        window.__autoAdvanceTriggered = true;
+        setTimeout(() => {
+          advanceToNextChapter();
+        }, 600);
+      }
+    }
+
     @guest
     saveGuestReadingHistory(percent);
     @endguest
@@ -990,39 +1593,53 @@
     });
   }
 
-  // ── FE-04: CÀI ĐẶT CHẾ ĐỘ ĐỌC & TÙY CHỈNH (localStorage Persistent) ──
-  let readerSettings = {
-    layout: 'vertical',    // 'vertical' | 'single' | 'double'
-    direction: 'ltr',      // 'ltr' | 'rtl'
-    fit: 'custom',         // 'custom' | 'fit-width' | 'fit-height'
-    width: 800,            // 680 | 800 | 1000 | '100%'
-    spacing: 0,            // 0 | 8 | 16
-    brightness: 100,       // 50..100
-    night: false,          // true | false
-    panelOpen: false       // true | false
-  };
-
-  let currentSinglePageIndex = 0;
-  const pageWrappers = document.querySelectorAll('.comic-page-wrapper');
-  const totalPagesCount = pageWrappers.length;
-
+  // ── LOAD & SAVE PERSISTENT SETTINGS ──
   function loadReaderSettings() {
     try {
       const saved = localStorage.getItem('webcomics_reader_settings');
       if (saved) {
-        readerSettings = { ...readerSettings, ...JSON.parse(saved) };
-      } else {
-        // Hỗ trợ fallback các key độc lập
-        if (localStorage.getItem('reader_mode')) readerSettings.layout = localStorage.getItem('reader_mode');
-        if (localStorage.getItem('reading_direction')) readerSettings.direction = localStorage.getItem('reading_direction');
-        if (localStorage.getItem('image_fit')) readerSettings.fit = localStorage.getItem('image_fit');
-        if (localStorage.getItem('image_width')) {
-          const w = localStorage.getItem('image_width');
-          readerSettings.width = (w === '100%') ? '100%' : (parseInt(w, 10) || 800);
-        }
-        if (localStorage.getItem('page_gap')) readerSettings.spacing = parseInt(localStorage.getItem('page_gap'), 10) || 0;
-        if (localStorage.getItem('night_mode')) readerSettings.night = localStorage.getItem('night_mode') === '1';
-        if (localStorage.getItem('brightness')) readerSettings.brightness = parseInt(localStorage.getItem('brightness'), 10) || 100;
+        readerSettings = { ...defaultReaderSettings, ...JSON.parse(saved) };
+      }
+
+      const savedKeys = localStorage.getItem('webcomics_reader_keybinds');
+      if (savedKeys) {
+        keybindSettings = { ...defaultKeybinds, ...JSON.parse(savedKeys) };
+      }
+
+      // Fallback các key độc lập theo yêu cầu spec
+      if (localStorage.getItem('reader_mode')) readerSettings.layout = localStorage.getItem('reader_mode');
+      if (localStorage.getItem('reading_direction')) readerSettings.direction = localStorage.getItem('reading_direction');
+      if (localStorage.getItem('header_visibility')) readerSettings.headerVisibility = localStorage.getItem('header_visibility');
+      if (localStorage.getItem('progress_bar_style')) readerSettings.progressBarStyle = localStorage.getItem('progress_bar_style');
+      if (localStorage.getItem('progress_bar_position')) readerSettings.progressBarPos = localStorage.getItem('progress_bar_position');
+      if (localStorage.getItem('progress_bar_size')) readerSettings.progressBarSize = parseInt(localStorage.getItem('progress_bar_size'), 10) || 4;
+      if (localStorage.getItem('cursor_hints')) readerSettings.cursorHints = localStorage.getItem('cursor_hints');
+      if (localStorage.getItem('reader_extras')) {
+        try { readerSettings.readerExtras = { ...defaultReaderSettings.readerExtras, ...JSON.parse(localStorage.getItem('reader_extras')) }; } catch (_) {}
+      }
+      if (localStorage.getItem('reader_background')) readerSettings.readerBg = localStorage.getItem('reader_background');
+      if (localStorage.getItem('image_fit')) readerSettings.fit = localStorage.getItem('image_fit');
+      if (localStorage.getItem('image_fit_width') === '1') readerSettings.fit = 'fit-width';
+      if (localStorage.getItem('image_fit_height') === '1') readerSettings.fit = 'fit-height';
+      if (localStorage.getItem('image_width')) {
+        const w = localStorage.getItem('image_width');
+        readerSettings.width = (w === '100%') ? '100%' : (parseInt(w, 10) || 800);
+      }
+      if (localStorage.getItem('stretch_small_pages')) readerSettings.stretchSmall = localStorage.getItem('stretch_small_pages') === '1';
+      if (localStorage.getItem('max_width_limit')) readerSettings.maxWidthLimit = localStorage.getItem('max_width_limit');
+      if (localStorage.getItem('max_height_limit')) readerSettings.maxHeightLimit = localStorage.getItem('max_height_limit');
+      if (localStorage.getItem('page_gap')) readerSettings.spacing = parseInt(localStorage.getItem('page_gap'), 10) || 0;
+      if (localStorage.getItem('night_mode')) readerSettings.night = localStorage.getItem('night_mode') === '1';
+      if (localStorage.getItem('brightness')) readerSettings.brightness = parseInt(localStorage.getItem('brightness'), 10) || 100;
+      if (localStorage.getItem('auto_advance_chapter')) readerSettings.autoAdvanceChapter = localStorage.getItem('auto_advance_chapter') === '1';
+      if (localStorage.getItem('history_mode')) readerSettings.historyMode = localStorage.getItem('history_mode');
+      if (localStorage.getItem('tap_turn_mode')) readerSettings.tapTurnMode = localStorage.getItem('tap_turn_mode');
+      if (localStorage.getItem('scroll_turn_mode')) readerSettings.scrollTurnMode = localStorage.getItem('scroll_turn_mode');
+      if (localStorage.getItem('fullscreen_toggle')) readerSettings.dblClickFullscreen = localStorage.getItem('fullscreen_toggle') === '1';
+      if (localStorage.getItem('auto_scroll_fit_mode')) readerSettings.autoScrollFitMode = localStorage.getItem('auto_scroll_fit_mode');
+      if (localStorage.getItem('auto_scroll_offset')) readerSettings.autoScrollOffset = parseInt(localStorage.getItem('auto_scroll_offset'), 10) || 0;
+      if (localStorage.getItem('keybinds')) {
+        try { keybindSettings = { ...defaultKeybinds, ...JSON.parse(localStorage.getItem('keybinds')) }; } catch (_) {}
       }
     } catch (e) {
       console.debug('Error reading reader settings:', e);
@@ -1032,53 +1649,92 @@
   function saveReaderSettings() {
     try {
       localStorage.setItem('webcomics_reader_settings', JSON.stringify(readerSettings));
-      // Ghi đồng thời các key độc lập theo yêu cầu spec
+      localStorage.setItem('webcomics_reader_keybinds', JSON.stringify(keybindSettings));
       localStorage.setItem('reader_mode', readerSettings.layout);
       localStorage.setItem('reading_direction', readerSettings.direction);
+      localStorage.setItem('header_visibility', readerSettings.headerVisibility);
+      localStorage.setItem('progress_bar_style', readerSettings.progressBarStyle);
+      localStorage.setItem('progress_bar_position', readerSettings.progressBarPos);
+      localStorage.setItem('progress_bar_size', String(readerSettings.progressBarSize));
+      localStorage.setItem('cursor_hints', readerSettings.cursorHints);
+      localStorage.setItem('reader_extras', JSON.stringify(readerSettings.readerExtras));
+      localStorage.setItem('reader_background', readerSettings.readerBg);
       localStorage.setItem('image_fit', readerSettings.fit || 'custom');
+      localStorage.setItem('image_fit_width', readerSettings.fit === 'fit-width' ? '1' : '0');
+      localStorage.setItem('image_fit_height', readerSettings.fit === 'fit-height' ? '1' : '0');
       localStorage.setItem('image_width', String(readerSettings.width));
+      localStorage.setItem('stretch_small_pages', readerSettings.stretchSmall ? '1' : '0');
+      localStorage.setItem('max_width_limit', readerSettings.maxWidthLimit);
+      localStorage.setItem('max_height_limit', readerSettings.maxHeightLimit);
       localStorage.setItem('page_gap', String(readerSettings.spacing));
       localStorage.setItem('night_mode', readerSettings.night ? '1' : '0');
       localStorage.setItem('brightness', String(readerSettings.brightness));
+      localStorage.setItem('auto_advance_chapter', readerSettings.autoAdvanceChapter ? '1' : '0');
+      localStorage.setItem('history_mode', readerSettings.historyMode);
+      localStorage.setItem('tap_turn_mode', readerSettings.tapTurnMode);
+      localStorage.setItem('scroll_turn_mode', readerSettings.scrollTurnMode);
+      localStorage.setItem('fullscreen_toggle', readerSettings.dblClickFullscreen ? '1' : '0');
+      localStorage.setItem('auto_scroll_fit_mode', readerSettings.autoScrollFitMode);
+      localStorage.setItem('auto_scroll_offset', String(readerSettings.autoScrollOffset));
+      localStorage.setItem('keybinds', JSON.stringify(keybindSettings));
     } catch (e) {
       console.debug('Error saving reader settings:', e);
     }
   }
 
-  function updateHotkeyBox() {
-    const box = document.getElementById('reader-hotkey-box');
-    if (!box) return;
+  // ── TAB SWITCHING ──
+  function switchReaderTab(tabName) {
+    const canonicalName = (tabName === 'fit' || tabName === 'image') ? 'image' : ((tabName === 'keys' || tabName === 'keybinds') ? 'keybinds' : tabName);
+    readerSettings.activeTab = canonicalName;
+    const tabBtns = {
+      layout: document.getElementById('tab-btn-layout'),
+      image: document.getElementById('tab-btn-image') || document.getElementById('tab-btn-fit'),
+      keybinds: document.getElementById('tab-btn-keybinds') || document.getElementById('tab-btn-keys'),
+      behaviors: document.getElementById('tab-btn-behaviors')
+    };
 
-    if (readerSettings.layout === 'single' || readerSettings.layout === 'double') {
-      const modeName = readerSettings.layout === 'single' ? 'Từng trang' : 'Trang đôi';
-      const isRtl = readerSettings.direction === 'rtl';
-      box.innerHTML = `
-        <div style="font-weight: 700; color: #fff; margin-bottom: 4px;">⌨️ Phím tắt (${modeName}):</div>
-        <div>• <code>←</code> / <code>→</code> hoặc <code>A</code> / <code>D</code>: Lật trang (${isRtl ? 'Phải qua Trái' : 'Trái qua Phải'})</div>
-        <div>• <code>PageUp</code> / <code>PageDown</code>: Trang trước / sau</div>
-        <div>• <code>Space</code> / <code>Shift+Space</code>: Trang sau / trước</div>
-        <div>• <code>R</code>: Đổi hướng đọc</div>
-        <div>• <code>M</code>: Đổi chế độ đọc</div>
-        <div>• <code>H</code>: Ẩn/Hiện giao diện</div>
-        <div>• <code>F</code>: Toàn màn hình • <code>Esc</code>: Đóng cài đặt</div>
-      `;
-    } else {
-      box.innerHTML = `
-        <div style="font-weight: 700; color: #fff; margin-bottom: 4px;">⌨️ Phím tắt (Cuộn dọc):</div>
-        <div>• <code>↑</code> / <code>↓</code> hoặc <code>Space</code>: Cuộn mượt trang</div>
-        <div>• <code>←</code> / <code>→</code>: Chuyển Chap trước / sau</div>
-        <div>• <code>M</code>: Đổi chế độ đọc</div>
-        <div>• <code>H</code>: Ẩn/Hiện giao diện (Zen Mode)</div>
-        <div>• <code>F</code>: Toàn màn hình</div>
-        <div>• <code>Esc</code>: Đóng bảng cài đặt</div>
-      `;
+    Object.entries(tabBtns).forEach(([k, btn]) => {
+      if (k === canonicalName) {
+        btn?.classList.add('active');
+        btn?.setAttribute('aria-selected', 'true');
+      } else {
+        btn?.classList.remove('active');
+        btn?.setAttribute('aria-selected', 'false');
+      }
+    });
+
+    const targetPane = document.getElementById(`tab-pane-${canonicalName}`) || document.getElementById(`tab-pane-${tabName}`);
+    const panel = document.getElementById('reader-settings-panel');
+    if (targetPane && panel) {
+      const targetTop = targetPane.offsetTop - panel.offsetTop - 55;
+      panel.scrollTo({ top: Math.max(0, targetTop), behavior: 'smooth' });
+    }
+
+    if (canonicalName === 'keybinds' || tabName === 'keys') {
+      renderKeybindsList();
     }
   }
 
+  // ── APPLY ALL READER SETTINGS ──
   function applyAllReaderSettings() {
     setReadingLayout(readerSettings.layout || 'vertical', false);
     setReadingDirection(readerSettings.direction || 'ltr', false);
+    setHeaderVisibility(readerSettings.headerVisibility || 'shown', false);
+    setProgressBarStyle(readerSettings.progressBarStyle || 'normal', false);
+    setProgressBarPosition(readerSettings.progressBarPos || 'top', false);
+    setProgressBarSize(readerSettings.progressBarSize || 4, false);
+    setCursorHints(readerSettings.cursorHints || 'none', false);
 
+    // Reader extras
+    if (readerSettings.readerExtras) {
+      Object.entries(readerSettings.readerExtras).forEach(([k, v]) => {
+        setReaderExtra(k, v, false);
+      });
+    }
+
+    setReaderBackground(readerSettings.readerBg || 'theme', false);
+
+    // Fit & sizing
     if (readerSettings.fit === 'fit-height') {
       setFitMode('fit-height', false);
     } else if (readerSettings.fit === 'fit-width') {
@@ -1087,6 +1743,9 @@
       setReaderWidth(readerSettings.width || 800, false);
     }
 
+    setStretchSmall(readerSettings.stretchSmall, false);
+    setMaxWidthLimit(readerSettings.maxWidthLimit || 'none', false);
+    setMaxHeightLimit(readerSettings.maxHeightLimit || 'none', false);
     setPageSpacing(readerSettings.spacing || 0, false);
     setBrightness(readerSettings.brightness || 100, false);
 
@@ -1098,14 +1757,24 @@
       if (btnNight) btnNight.textContent = '🌙 Đang bật giảm chói';
     }
 
+    // Behaviors
+    setAutoAdvanceChapter(readerSettings.autoAdvanceChapter, false);
+    setHistoryMode(readerSettings.historyMode || 'push', false);
+    setTapTurnMode(readerSettings.tapTurnMode || 'direction', false);
+    setScrollTurnMode(readerSettings.scrollTurnMode || 'wheel', false);
+    setDblClickFullscreen(readerSettings.dblClickFullscreen, false);
+    setAutoScrollFitMode(readerSettings.autoScrollFitMode || 'none', false);
+    setAutoScrollOffset(readerSettings.autoScrollOffset || 0, false);
+
+    renderKeybindsList();
     updateHotkeyBox();
 
-    // Restore settings panel open state across chapters
     if (readerSettings.panelOpen) {
       toggleSettingsPanel(true);
     }
   }
 
+  // ── TOGGLE SETTINGS PANEL & FLOATING TRACK ──
   function toggleSettingsPanel(forceState) {
     const panel = document.getElementById('reader-settings-panel');
     const track = document.getElementById('reader-settings-track');
@@ -1146,16 +1815,17 @@
     const panel = document.getElementById('reader-settings-panel');
     const btn = document.getElementById('btn-open-settings');
     const dockBtn = document.querySelector('.reader-bottom-dock button[title*="Cài đặt"]');
+    const floatBtn = document.getElementById('floating-menu-btn');
     if (panel && (panel.classList.contains('is-open') || panel.style.display === 'block')) {
       if (window.innerWidth < 1024) {
-        if (!panel.contains(e.target) && !btn?.contains(e.target) && !dockBtn?.contains(e.target)) {
+        if (!panel.contains(e.target) && !btn?.contains(e.target) && !dockBtn?.contains(e.target) && !floatBtn?.contains(e.target)) {
           toggleSettingsPanel(false);
         }
       }
     }
   });
 
-  // 1. CHẾ ĐỘ ĐỌC (Vertical / Single / Double Page)
+  // ── TAB 1: BỐ CỤC TRANG (Page Layout) ──
   function setReadingLayout(mode, persist = true) {
     readerSettings.layout = mode;
     const body = document.body;
@@ -1178,9 +1848,7 @@
 
     if (mode === 'single') {
       body.classList.add('reader-layout-single');
-      if (readerSettings.direction === 'rtl') {
-        body.classList.add('reader-dir-rtl');
-      }
+      if (readerSettings.direction === 'rtl') body.classList.add('reader-dir-rtl');
       btnSingle?.classList.add('active');
       btnSingle?.setAttribute('aria-pressed', 'true');
       if (singleNav) singleNav.style.display = 'inline-flex';
@@ -1190,9 +1858,7 @@
       showPage(currentSinglePageIndex);
     } else if (mode === 'double') {
       body.classList.add('reader-layout-double');
-      if (readerSettings.direction === 'rtl') {
-        body.classList.add('reader-dir-rtl');
-      }
+      if (readerSettings.direction === 'rtl') body.classList.add('reader-dir-rtl');
       btnDouble?.classList.add('active');
       btnDouble?.setAttribute('aria-pressed', 'true');
       if (singleNav) singleNav.style.display = 'inline-flex';
@@ -1224,6 +1890,722 @@
     if (persist) saveReaderSettings();
   }
 
+  function setReadingDirection(dir, persist = true) {
+    readerSettings.direction = dir;
+    const body = document.body;
+    const btnLtr = document.getElementById('btn-dir-ltr');
+    const btnRtl = document.getElementById('btn-dir-rtl');
+
+    if (dir === 'rtl') {
+      if (readerSettings.layout !== 'vertical') {
+        body.classList.add('reader-dir-rtl');
+      }
+      btnLtr?.classList.remove('active');
+      btnLtr?.setAttribute('aria-pressed', 'false');
+      btnRtl?.classList.add('active');
+      btnRtl?.setAttribute('aria-pressed', 'true');
+    } else {
+      body.classList.remove('reader-dir-rtl');
+      btnLtr?.classList.add('active');
+      btnLtr?.setAttribute('aria-pressed', 'true');
+      btnRtl?.classList.remove('active');
+      btnRtl?.setAttribute('aria-pressed', 'false');
+    }
+
+    updateHotkeyBox();
+    if (persist) saveReaderSettings();
+  }
+
+  function setPageSpacing(spacing, persist = true) {
+    const num = Math.max(0, parseInt(spacing, 10) || 0);
+    readerSettings.spacing = num;
+    const container = document.getElementById('reader-container');
+    const btns = {
+      '0': document.getElementById('btn-space-0'),
+      '8': document.getElementById('btn-space-8'),
+      '16': document.getElementById('btn-space-16'),
+      '24': document.getElementById('btn-space-24'),
+    };
+
+    Object.entries(btns).forEach(([key, b]) => {
+      if (String(num) === key) {
+        b?.classList.add('active');
+        b?.setAttribute('aria-pressed', 'true');
+      } else {
+        b?.classList.remove('active');
+        b?.setAttribute('aria-pressed', 'false');
+      }
+    });
+
+    const slider = document.getElementById('page-spacing-slider');
+    const label = document.getElementById('page-spacing-val');
+    if (slider) slider.value = num;
+    if (label) label.textContent = `Khoảng cách: ${num}px`;
+
+    if (container) {
+      container.style.gap = num + 'px';
+      document.documentElement.style.setProperty('--page-spacing', num + 'px');
+    }
+
+    if (persist) saveReaderSettings();
+  }
+
+  function setHeaderVisibility(val, persist = true) {
+    const isHidden = (val === 'hidden' || val === 'hide');
+    readerSettings.headerVisibility = isHidden ? 'hidden' : 'shown';
+    document.body.classList.toggle('reader-header-hidden', isHidden);
+
+    const btnHidden = document.getElementById('btn-header-hidden') || document.getElementById('btn-header-hide');
+    const btnShown = document.getElementById('btn-header-shown') || document.getElementById('btn-header-show');
+    if (isHidden) {
+      btnHidden?.classList.add('active');
+      btnHidden?.setAttribute('aria-pressed', 'true');
+      btnShown?.classList.remove('active');
+      btnShown?.setAttribute('aria-pressed', 'false');
+    } else {
+      btnShown?.classList.add('active');
+      btnShown?.setAttribute('aria-pressed', 'true');
+      btnHidden?.classList.remove('active');
+      btnHidden?.setAttribute('aria-pressed', 'false');
+    }
+
+    const floatBtn = document.getElementById('floating-menu-btn');
+    if (floatBtn) {
+      floatBtn.style.display = (isHidden && readerSettings.readerExtras?.show_menu_btn) ? 'flex' : 'none';
+    }
+
+    if (persist) saveReaderSettings();
+  }
+
+  function setProgressBarStyle(style, persist = true) {
+    readerSettings.progressBarStyle = style;
+    const bar = document.getElementById('reader-progress-bar');
+    const btnHidden = document.getElementById('btn-progress-hidden');
+    const btnLight = document.getElementById('btn-progress-light');
+    const btnNormal = document.getElementById('btn-progress-normal');
+
+    btnHidden?.classList.remove('active');
+    btnHidden?.setAttribute('aria-pressed', 'false');
+    btnLight?.classList.remove('active');
+    btnLight?.setAttribute('aria-pressed', 'false');
+    btnNormal?.classList.remove('active');
+    btnNormal?.setAttribute('aria-pressed', 'false');
+
+    if (style === 'hidden') {
+      btnHidden?.classList.add('active');
+      btnHidden?.setAttribute('aria-pressed', 'true');
+      bar?.classList.add('is-hidden');
+    } else if (style === 'light') {
+      btnLight?.classList.add('active');
+      btnLight?.setAttribute('aria-pressed', 'true');
+      bar?.classList.remove('is-hidden');
+      if (bar) bar.style.opacity = '0.7';
+    } else {
+      btnNormal?.classList.add('active');
+      btnNormal?.setAttribute('aria-pressed', 'true');
+      bar?.classList.remove('is-hidden');
+      if (bar) bar.style.opacity = '1';
+    }
+
+    updateProgress();
+    if (persist) saveReaderSettings();
+  }
+
+  function setProgressBarPosition(pos, persist = true) {
+    readerSettings.progressBarPos = pos;
+    const bar = document.getElementById('reader-progress-bar');
+    const btns = {
+      bottom: document.getElementById('btn-pos-bottom') || document.getElementById('btn-progress-pos-bottom'),
+      left: document.getElementById('btn-pos-left') || document.getElementById('btn-progress-pos-left'),
+      right: document.getElementById('btn-pos-right') || document.getElementById('btn-progress-pos-right'),
+      top: document.getElementById('btn-pos-top') || document.getElementById('btn-progress-pos-top')
+    };
+
+    Object.entries(btns).forEach(([k, b]) => {
+      if (k === pos) {
+        b?.classList.add('active');
+        b?.setAttribute('aria-pressed', 'true');
+      } else {
+        b?.classList.remove('active');
+        b?.setAttribute('aria-pressed', 'false');
+      }
+    });
+
+    if (bar) {
+      bar.classList.remove('pos-top', 'pos-bottom', 'pos-left', 'pos-right');
+      bar.classList.add(`pos-${pos}`);
+    }
+
+    updateProgress();
+    if (persist) saveReaderSettings();
+  }
+
+  function setProgressBarSize(size, persist = true) {
+    const num = Math.min(Math.max(parseInt(size, 10) || 4, 1), 16);
+    readerSettings.progressBarSize = num;
+    const bar = document.getElementById('reader-progress-bar');
+    const slider = document.getElementById('progress-size-slider');
+    const label = document.getElementById('progress-size-val');
+
+    if (slider) slider.value = num;
+    if (label) label.textContent = `Kích thước thanh tiến trình: ${num}px`;
+    if (bar) bar.style.setProperty('--progress-size', `${num}px`);
+
+    if (persist) saveReaderSettings();
+  }
+
+  function setCursorHints(hints, persist = true) {
+    const canonical = (hints === 'pointer') ? 'cursor' : hints;
+    readerSettings.cursorHints = canonical;
+    const body = document.body;
+    const btns = {
+      none: document.getElementById('btn-cursor-none'),
+      overlay: document.getElementById('btn-cursor-overlay'),
+      cursor: document.getElementById('btn-cursor-cursor') || document.getElementById('btn-cursor-pointer')
+    };
+
+    Object.entries(btns).forEach(([k, b]) => {
+      if (k === canonical) {
+        b?.classList.add('active');
+        b?.setAttribute('aria-pressed', 'true');
+      } else {
+        b?.classList.remove('active');
+        b?.setAttribute('aria-pressed', 'false');
+      }
+    });
+
+    body.classList.remove('reader-cursor-overlay', 'reader-cursor-custom', 'reader-cursor-pointer');
+    if (canonical === 'overlay') body.classList.add('reader-cursor-overlay');
+    if (canonical === 'cursor') body.classList.add('reader-cursor-custom', 'reader-cursor-pointer');
+
+    if (persist) saveReaderSettings();
+  }
+
+  function setReaderExtra(extraKey, checked, persist = true) {
+    if (!readerSettings.readerExtras) readerSettings.readerExtras = {};
+    const key = (extraKey === 'menuBtn') ? 'show_menu_btn' : ((extraKey === 'pageNum') ? 'show_page_number' : ((extraKey === 'grayscale') ? 'greyscale' : extraKey));
+    readerSettings.readerExtras[key] = !!checked;
+
+    const cb1 = document.getElementById(`extra-${key.replace(/_/g, '-')}`);
+    const cb2 = document.getElementById(`toggle-extra-${extraKey}`);
+    const cb3 = document.getElementById(`toggle-extra-${key.replace(/_/g, '-')}`);
+    [cb1, cb2, cb3].forEach(c => { if (c) c.checked = !!checked; });
+
+    if (key === 'greyscale') {
+      document.body.classList.toggle('reader-grayscale', !!checked);
+    } else if (key === 'dim') {
+      document.body.classList.toggle('reader-dim', !!checked);
+    } else if (key === 'show_menu_btn') {
+      const floatBtn = document.getElementById('floating-menu-btn');
+      if (floatBtn) {
+        floatBtn.style.display = (readerSettings.headerVisibility === 'hidden' && !!checked) ? 'flex' : 'none';
+      }
+    } else if (key === 'show_page_number') {
+      updateProgress();
+    }
+
+    if (persist) saveReaderSettings();
+  }
+
+  function setReaderBackground(bg, persist = true) {
+    readerSettings.readerBg = bg;
+    const body = document.body;
+    const btns = {
+      theme: document.getElementById('btn-bg-theme'),
+      white: document.getElementById('btn-bg-white'),
+      black: document.getElementById('btn-bg-black')
+    };
+
+    Object.entries(btns).forEach(([k, b]) => {
+      if (k === bg) {
+        b?.classList.add('active');
+        b?.setAttribute('aria-pressed', 'true');
+      } else {
+        b?.classList.remove('active');
+        b?.setAttribute('aria-pressed', 'false');
+      }
+    });
+
+    body.classList.remove('reader-bg-white', 'reader-bg-black');
+    if (bg === 'white') body.classList.add('reader-bg-white');
+    if (bg === 'black') body.classList.add('reader-bg-black');
+
+    if (persist) saveReaderSettings();
+  }
+
+  // ── TAB 2: HIỂN THỊ ẢNH (Image Fit & Display) ──
+  function setFitMode(mode, persist = true) {
+    readerSettings.fit = mode;
+    const body = document.body;
+    const btnWidth = document.getElementById('btn-fit-width');
+    const btnHeight = document.getElementById('btn-fit-height');
+    const btnFull = document.getElementById('btn-w-full') || document.getElementById('btn-maxw-full');
+    const container = document.getElementById('reader-container');
+
+    body.classList.remove('reader-fit-width', 'reader-fit-height');
+    btnWidth?.classList.remove('active');
+    btnWidth?.setAttribute('aria-pressed', 'false');
+    btnHeight?.classList.remove('active');
+    btnHeight?.setAttribute('aria-pressed', 'false');
+
+    if (mode === 'fit-width') {
+      body.classList.add('reader-fit-width');
+      btnWidth?.classList.add('active');
+      btnWidth?.setAttribute('aria-pressed', 'true');
+      readerSettings.width = '100%';
+      if (container) {
+        container.style.maxWidth = '100%';
+        container.style.width = '100%';
+      }
+      btnFull?.classList.add('active');
+      btnFull?.setAttribute('aria-pressed', 'true');
+      if (readerSettings.autoScrollFitMode === 'width') {
+        window.scrollTo({ top: readerSettings.autoScrollOffset || 0, behavior: 'smooth' });
+      }
+    } else if (mode === 'fit-height') {
+      body.classList.add('reader-fit-height');
+      btnHeight?.classList.add('active');
+      btnHeight?.setAttribute('aria-pressed', 'true');
+      if (container) {
+        container.style.maxWidth = '100%';
+      }
+      if (readerSettings.autoScrollFitMode === 'height') {
+        window.scrollTo({ top: readerSettings.autoScrollOffset || 0, behavior: 'smooth' });
+      }
+    }
+
+    window.readerImages?.resize();
+    if (persist) saveReaderSettings();
+  }
+
+  function setReaderWidth(w, persist = true) {
+    readerSettings.width = w;
+    readerSettings.fit = (w === '100%') ? 'fit-width' : 'custom';
+    const body = document.body;
+    body.classList.remove('reader-fit-height');
+
+    const btnWidth = document.getElementById('btn-fit-width');
+    const btnHeight = document.getElementById('btn-fit-height');
+    btnHeight?.classList.remove('active');
+    btnHeight?.setAttribute('aria-pressed', 'false');
+
+    if (w === '100%') {
+      body.classList.add('reader-fit-width');
+      btnWidth?.classList.add('active');
+      btnWidth?.setAttribute('aria-pressed', 'true');
+    } else {
+      body.classList.remove('reader-fit-width');
+      btnWidth?.classList.remove('active');
+      btnWidth?.setAttribute('aria-pressed', 'false');
+    }
+
+    const container = document.getElementById('reader-container');
+    const btns = {
+      '680': document.getElementById('btn-w-680') || document.getElementById('btn-maxw-680'),
+      '800': document.getElementById('btn-w-800') || document.getElementById('btn-maxw-800'),
+      '1000': document.getElementById('btn-w-1000') || document.getElementById('btn-maxw-1000'),
+      '100%': document.getElementById('btn-w-full') || document.getElementById('btn-maxw-full'),
+    };
+
+    Object.entries(btns).forEach(([key, b]) => {
+      if (String(w) === key) {
+        b?.classList.add('active');
+        b?.setAttribute('aria-pressed', 'true');
+      } else {
+        b?.classList.remove('active');
+        b?.setAttribute('aria-pressed', 'false');
+      }
+    });
+
+    if (container) {
+      container.style.maxWidth = (w === '100%') ? '100%' : (w + 'px');
+      container.style.width = '100%';
+    }
+
+    window.readerImages?.resize();
+    if (persist) saveReaderSettings();
+  }
+
+  function setStretchSmall(val, persist = true) {
+    readerSettings.stretchSmall = !!val;
+    document.body.classList.toggle('reader-stretch-small', !!val);
+    const cb = document.getElementById('checkbox-stretch-small');
+    if (cb) cb.checked = !!val;
+    const btn = document.getElementById('btn-stretch-small');
+    if (btn) {
+      btn.classList.toggle('active', !!val);
+      btn.setAttribute('aria-pressed', val ? 'true' : 'false');
+    }
+    if (persist) saveReaderSettings();
+  }
+
+  function toggleStretchSmall(persist = true) {
+    setStretchSmall(!readerSettings.stretchSmall, persist);
+  }
+
+  function setMaxWidthLimit(val, persist = true) {
+    readerSettings.maxWidthLimit = val;
+    const btns = {
+      '680': document.getElementById('btn-maxw-680') || document.getElementById('btn-w-680'),
+      '800': document.getElementById('btn-maxw-800') || document.getElementById('btn-w-800'),
+      '1000': document.getElementById('btn-maxw-1000') || document.getElementById('btn-w-1000'),
+      'full': document.getElementById('btn-maxw-full') || document.getElementById('btn-w-full'),
+      'none': document.getElementById('btn-maxw-none')
+    };
+
+    Object.entries(btns).forEach(([k, b]) => {
+      if (k === val) {
+        b?.classList.add('active');
+        b?.setAttribute('aria-pressed', 'true');
+      } else {
+        b?.classList.remove('active');
+        b?.setAttribute('aria-pressed', 'false');
+      }
+    });
+
+    const container = document.getElementById('reader-container');
+    if (container) {
+      if (val === 'none') {
+        if (readerSettings.fit === 'fit-width') container.style.maxWidth = '100%';
+        else if (readerSettings.width) container.style.maxWidth = (readerSettings.width === '100%') ? '100%' : `${readerSettings.width}px`;
+      } else if (val === 'full') {
+        container.style.maxWidth = '100%';
+      } else {
+        container.style.maxWidth = `${val}px`;
+      }
+    }
+
+    if (persist) saveReaderSettings();
+  }
+
+  function setMaxHeightLimit(val, persist = true) {
+    readerSettings.maxHeightLimit = val;
+    const btns = {
+      '70vh': document.getElementById('btn-maxh-70') || document.getElementById('btn-h-70vh'),
+      '85vh': document.getElementById('btn-maxh-85') || document.getElementById('btn-h-85vh'),
+      '100vh': document.getElementById('btn-maxh-100') || document.getElementById('btn-h-100vh'),
+      'none': document.getElementById('btn-maxh-none') || document.getElementById('btn-h-none')
+    };
+
+    Object.entries(btns).forEach(([k, b]) => {
+      if (k === val) {
+        b?.classList.add('active');
+        b?.setAttribute('aria-pressed', 'true');
+      } else {
+        b?.classList.remove('active');
+        b?.setAttribute('aria-pressed', 'false');
+      }
+    });
+
+    const imgs = document.querySelectorAll('.comic-page-img');
+    imgs.forEach(img => {
+      img.classList.remove('max-h-70vh', 'max-h-85vh', 'max-h-100vh');
+      if (val !== 'none') {
+        img.classList.add(`max-h-${val}`);
+      }
+    });
+
+    if (persist) saveReaderSettings();
+  }
+
+  function toggleNightMode(persist = true) {
+    readerSettings.night = !readerSettings.night;
+    const btn = document.getElementById('btn-toggle-night');
+    if (readerSettings.night) {
+      document.body.classList.add('reader-night-mode');
+      btn?.classList.add('active');
+      btn?.setAttribute('aria-pressed', 'true');
+      if (btn) btn.textContent = '🌙 Đang bật giảm chói';
+    } else {
+      document.body.classList.remove('reader-night-mode');
+      btn?.classList.remove('active');
+      btn?.setAttribute('aria-pressed', 'false');
+      if (btn) btn.textContent = '🌙 Giảm chói mắt';
+    }
+    if (persist) saveReaderSettings();
+  }
+
+  function setBrightness(val, persist = true) {
+    const num = Math.min(Math.max(parseInt(val, 10) || 100, 50), 100);
+    readerSettings.brightness = num;
+
+    const container = document.getElementById('reader-container');
+    if (container) {
+      container.style.filter = (num < 100) ? `brightness(${num}%)` : 'none';
+    }
+
+    const slider = document.getElementById('brightness-slider');
+    const valLabel = document.getElementById('brightness-val');
+    if (slider) slider.value = num;
+    if (valLabel) valLabel.textContent = `Độ sáng: ${num}%`;
+
+    if (persist) saveReaderSettings();
+  }
+
+  // ── TAB 3: QUẢN LÝ PHÍM TẮT (Keybinds) ──
+  function escapeHtml(str) {
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function formatKeyDisplay(k) {
+    if (k === ' ') return 'Space';
+    if (k === 'ArrowRight') return '→';
+    if (k === 'ArrowLeft') return '←';
+    if (k === 'ArrowUp') return '↑';
+    if (k === 'ArrowDown') return '↓';
+    return k.toUpperCase();
+  }
+
+  function renderKeybindsList() {
+    const table = document.getElementById('keybinds-list-container') || document.getElementById('keybinds-table');
+    if (!table) return;
+
+    const actions = Object.keys(defaultKeybinds);
+    let html = '';
+
+    actions.forEach(act => {
+      const label = keybindActionLabels[act] || act;
+      const keys = keybindSettings[act] || [];
+      const isListening = listeningAction === act;
+
+      html += `
+        <div class="keybind-row">
+          <span class="keybind-label">${escapeHtml(label)}</span>
+          <div class="keybind-keys">
+            ${keys.map((k, idx) => `
+              <span class="keybind-badge">
+                ${escapeHtml(formatKeyDisplay(k))}
+                <span class="keybind-remove" onclick="deleteKeybind('${act}', ${idx})" title="Xóa phím">✕</span>
+              </span>
+            `).join('')}
+            ${isListening ? '<span class="keybind-badge" style="background:#ff5e36; color:#fff;">Nhấn phím... (Esc hủy)</span>' : ''}
+            <button type="button" class="keybind-add-btn" onclick="startRecordingKey('${act}')" title="Gán thêm phím">+</button>
+          </div>
+          <button type="button" class="keybind-reset-btn" onclick="resetActionKeybind('${act}')" title="Đặt lại action này">↺</button>
+        </div>
+      `;
+    });
+
+    table.innerHTML = html;
+  }
+
+  function startRecordingKey(action) {
+    listeningAction = action;
+    renderKeybindsList();
+  }
+
+  function deleteKeybind(action, index) {
+    if (keybindSettings[action]) {
+      keybindSettings[action].splice(index, 1);
+      saveReaderSettings();
+      renderKeybindsList();
+      updateHotkeyBox();
+    }
+  }
+
+  function resetActionKeybind(action) {
+    if (defaultKeybinds[action]) {
+      keybindSettings[action] = [...defaultKeybinds[action]];
+      saveReaderSettings();
+      renderKeybindsList();
+      updateHotkeyBox();
+    }
+  }
+
+  function resetAllKeybinds() {
+    keybindSettings = JSON.parse(JSON.stringify(defaultKeybinds));
+    saveReaderSettings();
+    renderKeybindsList();
+    updateHotkeyBox();
+  }
+
+  function updateHotkeyBox() {
+    const box = document.getElementById('reader-hotkey-box');
+    if (!box) return;
+
+    const getKeyList = (act) => (keybindSettings[act] || defaultKeybinds[act] || []).map(formatKeyDisplay).join(' / ') || 'Chưa gán';
+
+    if (readerSettings.layout === 'single' || readerSettings.layout === 'double') {
+      const modeName = readerSettings.layout === 'single' ? 'Trang đơn' : 'Trang đôi';
+      const isRtl = readerSettings.direction === 'rtl';
+      box.innerHTML = `
+        <div style="font-weight: 700; color: #fff; margin-bottom: 4px;">⌨️ Phím tắt (${modeName}):</div>
+        <div>• <code>${getKeyList('page_left')}</code> / <code>${getKeyList('page_right')}</code>: Lật trang (${isRtl ? 'Phải sang Trái' : 'Trái sang Phải'})</div>
+        <div>• <code>${getKeyList('scroll_up')}</code> / <code>${getKeyList('scroll_down')}</code>: Trang trước / Trang sau</div>
+        <div>• <code>${getKeyList('chapter_backward')}</code> / <code>${getKeyList('chapter_forward')}</code>: Chap trước / Chap sau</div>
+        <div>• <code>${getKeyList('toggle_direction')}</code>: Đổi hướng đọc • <code>${getKeyList('cycle_fit_mode')}</code>: Đổi chế độ ảnh</div>
+        <div>• <code>${getKeyList('toggle_menu')}</code>: Bật/tắt cài đặt • <code>${getKeyList('toggle_fullscreen')}</code>: Toàn màn hình</div>
+      `;
+    } else {
+      box.innerHTML = `
+        <div style="font-weight: 700; color: #fff; margin-bottom: 4px;">⌨️ Phím tắt (Cuộn dọc):</div>
+        <div>• <code>${getKeyList('scroll_up')}</code> / <code>${getKeyList('scroll_down')}</code>: Cuộn mượt trang</div>
+        <div>• <code>${getKeyList('chapter_backward')}</code> / <code>${getKeyList('chapter_forward')}</code> hoặc <code>${getKeyList('page_left')}</code> / <code>${getKeyList('page_right')}</code>: Chuyển Chap</div>
+        <div>• <code>${getKeyList('toggle_menu')}</code>: Cài đặt • <code>${getKeyList('toggle_fullscreen')}</code>: Toàn màn hình</div>
+        <div>• <code>${getKeyList('cycle_fit_mode')}</code>: Chuyển chế độ ảnh • <code>Esc</code>: Đóng bảng cài đặt</div>
+      `;
+    }
+  }
+
+  // ── TAB 4: HÀNH VI ĐỌC (Behaviors) ──
+  function setAutoAdvanceChapter(val, persist = true) {
+    readerSettings.autoAdvanceChapter = !!val;
+    const btnOn = document.getElementById('btn-auto-advance-on');
+    const btnOff = document.getElementById('btn-auto-advance-off');
+    if (val) {
+      btnOn?.classList.add('active');
+      btnOn?.setAttribute('aria-pressed', 'true');
+      btnOff?.classList.remove('active');
+      btnOff?.setAttribute('aria-pressed', 'false');
+    } else {
+      btnOff?.classList.add('active');
+      btnOff?.setAttribute('aria-pressed', 'true');
+      btnOn?.classList.remove('active');
+      btnOn?.setAttribute('aria-pressed', 'false');
+    }
+    if (persist) saveReaderSettings();
+  }
+
+  function setHistoryMode(mode, persist = true) {
+    readerSettings.historyMode = mode;
+    const btns = {
+      none: document.getElementById('btn-hist-none') || document.getElementById('btn-history-none'),
+      replace: document.getElementById('btn-hist-replace') || document.getElementById('btn-history-replace'),
+      push: document.getElementById('btn-hist-push') || document.getElementById('btn-history-push')
+    };
+
+    Object.entries(btns).forEach(([k, b]) => {
+      if (k === mode) {
+        b?.classList.add('active');
+        b?.setAttribute('aria-pressed', 'true');
+      } else {
+        b?.classList.remove('active');
+        b?.setAttribute('aria-pressed', 'false');
+      }
+    });
+
+    if (persist) saveReaderSettings();
+  }
+
+  function setTapTurnMode(mode, persist = true) {
+    const canonical = (mode === 'directional' || mode === 'direction') ? 'direction' : ((mode === 'always' || mode === 'always_forward') ? 'always_forward' : 'off');
+    readerSettings.tapTurnMode = canonical;
+    const btns = {
+      direction: document.getElementById('btn-tap-dir') || document.getElementById('btn-tap-directional'),
+      always_forward: document.getElementById('btn-tap-forward') || document.getElementById('btn-tap-always'),
+      off: document.getElementById('btn-tap-off') || document.getElementById('btn-tap-none')
+    };
+
+    Object.entries(btns).forEach(([k, b]) => {
+      if (k === canonical) {
+        b?.classList.add('active');
+        b?.setAttribute('aria-pressed', 'true');
+      } else {
+        b?.classList.remove('active');
+        b?.setAttribute('aria-pressed', 'false');
+      }
+    });
+
+    if (persist) saveReaderSettings();
+  }
+
+  function setScrollTurnMode(mode, persist = true) {
+    const canonical = (mode === 'none' || mode === 'off') ? 'off' : ((mode === 'keys' || mode === 'keyboard') ? 'keyboard' : mode);
+    readerSettings.scrollTurnMode = canonical;
+    const btns = {
+      off: document.getElementById('btn-scroll-off') || document.getElementById('btn-scroll-none'),
+      wheel: document.getElementById('btn-scroll-wheel'),
+      keyboard: document.getElementById('btn-scroll-keyboard') || document.getElementById('btn-scroll-keys'),
+      both: document.getElementById('btn-scroll-both')
+    };
+
+    Object.entries(btns).forEach(([k, b]) => {
+      if (k === canonical) {
+        b?.classList.add('active');
+        b?.setAttribute('aria-pressed', 'true');
+      } else {
+        b?.classList.remove('active');
+        b?.setAttribute('aria-pressed', 'false');
+      }
+    });
+
+    if (persist) saveReaderSettings();
+  }
+
+  function setDblClickFullscreen(val, persist = true) {
+    readerSettings.dblClickFullscreen = !!val;
+    const btnOn = document.getElementById('btn-dblclick-on') || document.getElementById('btn-dblclick-fs-on');
+    const btnOff = document.getElementById('btn-dblclick-off') || document.getElementById('btn-dblclick-fs-off');
+    if (val) {
+      btnOn?.classList.add('active');
+      btnOn?.setAttribute('aria-pressed', 'true');
+      btnOff?.classList.remove('active');
+      btnOff?.setAttribute('aria-pressed', 'false');
+    } else {
+      btnOff?.classList.add('active');
+      btnOff?.setAttribute('aria-pressed', 'true');
+      btnOn?.classList.remove('active');
+      btnOn?.setAttribute('aria-pressed', 'false');
+    }
+    if (persist) saveReaderSettings();
+  }
+
+  function setAutoScrollFitMode(mode, persist = true) {
+    readerSettings.autoScrollFitMode = mode;
+    const btns = {
+      width: document.getElementById('btn-autoscroll-width'),
+      height: document.getElementById('btn-autoscroll-height'),
+      none: document.getElementById('btn-autoscroll-none')
+    };
+
+    Object.entries(btns).forEach(([k, b]) => {
+      if (k === mode) {
+        b?.classList.add('active');
+        b?.setAttribute('aria-pressed', 'true');
+      } else {
+        b?.classList.remove('active');
+        b?.setAttribute('aria-pressed', 'false');
+      }
+    });
+
+    if (persist) saveReaderSettings();
+  }
+
+  function setAutoScrollOffset(val, persist = true) {
+    const num = parseInt(val, 10) || 0;
+    readerSettings.autoScrollOffset = num;
+    const input1 = document.getElementById('input-autoscroll-offset');
+    const input2 = document.getElementById('input-scroll-offset');
+    if (input1) input1.value = num;
+    if (input2) input2.value = num;
+    const valLabel = document.getElementById('scroll-offset-val');
+    if (valLabel) valLabel.textContent = `${num}px`;
+    if (persist) saveReaderSettings();
+  }
+
+  // ── RESET BUTTONS ──
+  function resetAllSettingsToDefault() {
+    readerSettings = JSON.parse(JSON.stringify(defaultReaderSettings));
+    keybindSettings = JSON.parse(JSON.stringify(defaultKeybinds));
+    saveReaderSettings();
+    applyAllReaderSettings();
+  }
+
+  function resetLocks() {
+    listeningAction = null;
+    wheelLock = false;
+    renderKeybindsList();
+  }
+
+  function resetMargin() {
+    setPageSpacing(0);
+  }
+
+  function resetOffset() {
+    setAutoScrollOffset(0);
+  }
+
+  // ── SINGLE & DOUBLE PAGE NAVIGATION ──
   function showPage(index) {
     if (totalPagesCount === 0) return;
 
@@ -1273,9 +2655,33 @@
       if (dockCounter) dockCounter.textContent = text;
     }
 
+    // Cập nhật URL và History theo historyMode
+    const pageNum = currentSinglePageIndex + 1;
+    if (readerSettings.historyMode === 'replace') {
+      window.history.replaceState({ page: pageNum }, '', `#page-${pageNum}`);
+    } else if (readerSettings.historyMode === 'push') {
+      if (window.location.hash !== `#page-${pageNum}`) {
+        window.history.pushState({ page: pageNum }, '', `#page-${pageNum}`);
+      }
+    }
+
     window.readerImages?.show(currentSinglePageIndex, readerSettings.layout);
     window.scrollTo({ top: 0, behavior: 'instant' });
     setTimeout(updateProgress, 50);
+  }
+
+  function advanceToNextChapter() {
+    const nextBtn = document.getElementById('btn-next-chap') || document.getElementById('footer-btn-next-chap') || document.getElementById('dock-btn-next-chap');
+    if (nextBtn && nextBtn.href && !nextBtn.classList.contains('disabled')) {
+      window.location.href = nextBtn.href;
+    }
+  }
+
+  function goToPrevChapter() {
+    const prevBtn = document.getElementById('btn-prev-chap');
+    if (prevBtn && prevBtn.href && !prevBtn.classList.contains('disabled')) {
+      window.location.href = prevBtn.href;
+    }
   }
 
   function nextPage() {
@@ -1283,15 +2689,21 @@
       if (currentSinglePageIndex + 2 < totalPagesCount) {
         showPage(currentSinglePageIndex + 2);
       } else {
-        const nextBtn = document.getElementById('btn-next-chap') || document.getElementById('footer-btn-next-chap');
-        if (nextBtn && nextBtn.href) window.location.href = nextBtn.href;
+        if (readerSettings.autoAdvanceChapter) {
+          advanceToNextChapter();
+        } else {
+          advanceToNextChapter();
+        }
       }
     } else if (readerSettings.layout === 'single') {
       if (currentSinglePageIndex < totalPagesCount - 1) {
         showPage(currentSinglePageIndex + 1);
       } else {
-        const nextBtn = document.getElementById('btn-next-chap') || document.getElementById('footer-btn-next-chap');
-        if (nextBtn && nextBtn.href) window.location.href = nextBtn.href;
+        if (readerSettings.autoAdvanceChapter) {
+          advanceToNextChapter();
+        } else {
+          advanceToNextChapter();
+        }
       }
     }
   }
@@ -1301,15 +2713,13 @@
       if (currentSinglePageIndex >= 2) {
         showPage(currentSinglePageIndex - 2);
       } else {
-        const prevBtn = document.getElementById('btn-prev-chap');
-        if (prevBtn && prevBtn.href) window.location.href = prevBtn.href;
+        goToPrevChapter();
       }
     } else if (readerSettings.layout === 'single') {
       if (currentSinglePageIndex > 0) {
         showPage(currentSinglePageIndex - 1);
       } else {
-        const prevBtn = document.getElementById('btn-prev-chap');
-        if (prevBtn && prevBtn.href) window.location.href = prevBtn.href;
+        goToPrevChapter();
       }
     }
   }
@@ -1330,205 +2740,7 @@
     }
   }
 
-  // 2. HƯỚNG ĐỌC (LTR vs RTL Manga)
-  function setReadingDirection(dir, persist = true) {
-    readerSettings.direction = dir;
-    const body = document.body;
-    const btnLtr = document.getElementById('btn-dir-ltr');
-    const btnRtl = document.getElementById('btn-dir-rtl');
-
-    if (dir === 'rtl') {
-      if (readerSettings.layout !== 'vertical') {
-        body.classList.add('reader-dir-rtl');
-      }
-      btnLtr?.classList.remove('active');
-      btnLtr?.setAttribute('aria-pressed', 'false');
-      btnRtl?.classList.add('active');
-      btnRtl?.setAttribute('aria-pressed', 'true');
-    } else {
-      body.classList.remove('reader-dir-rtl');
-      btnLtr?.classList.add('active');
-      btnLtr?.setAttribute('aria-pressed', 'true');
-      btnRtl?.classList.remove('active');
-      btnRtl?.setAttribute('aria-pressed', 'false');
-    }
-
-    updateHotkeyBox();
-    if (persist) saveReaderSettings();
-  }
-
-  // 3. KÍCH THƯỚC HIỂN THỊ (Fit Mode / Width)
-  function setFitMode(mode, persist = true) {
-    readerSettings.fit = mode;
-    const body = document.body;
-    const btnWidth = document.getElementById('btn-fit-width');
-    const btnHeight = document.getElementById('btn-fit-height');
-    const btnFull = document.getElementById('btn-w-full');
-    const container = document.getElementById('reader-container');
-
-    body.classList.remove('reader-fit-width', 'reader-fit-height');
-    btnWidth?.classList.remove('active');
-    btnWidth?.setAttribute('aria-pressed', 'false');
-    btnHeight?.classList.remove('active');
-    btnHeight?.setAttribute('aria-pressed', 'false');
-
-    if (mode === 'fit-width') {
-      body.classList.add('reader-fit-width');
-      btnWidth?.classList.add('active');
-      btnWidth?.setAttribute('aria-pressed', 'true');
-      readerSettings.width = '100%';
-      if (container) {
-        container.style.maxWidth = '100%';
-        container.style.width = '100%';
-      }
-      const btns = {
-        '680': document.getElementById('btn-w-680'),
-        '800': document.getElementById('btn-w-800'),
-        '1000': document.getElementById('btn-w-1000'),
-        '100%': btnFull,
-      };
-      Object.values(btns).forEach(b => {
-        b?.classList.remove('active');
-        b?.setAttribute('aria-pressed', 'false');
-      });
-      btnFull?.classList.add('active');
-      btnFull?.setAttribute('aria-pressed', 'true');
-    } else if (mode === 'fit-height') {
-      body.classList.add('reader-fit-height');
-      btnHeight?.classList.add('active');
-      btnHeight?.setAttribute('aria-pressed', 'true');
-      if (container) {
-        container.style.maxWidth = '100%';
-      }
-      const btns = {
-        '680': document.getElementById('btn-w-680'),
-        '800': document.getElementById('btn-w-800'),
-        '1000': document.getElementById('btn-w-1000'),
-        '100%': btnFull,
-      };
-      Object.values(btns).forEach(b => {
-        b?.classList.remove('active');
-        b?.setAttribute('aria-pressed', 'false');
-      });
-    }
-
-    window.readerImages?.resize();
-    if (persist) saveReaderSettings();
-  }
-
-  function setReaderWidth(w, persist = true) {
-    readerSettings.width = w;
-    readerSettings.fit = (w === '100%') ? 'fit-width' : 'custom';
-    const body = document.body;
-    body.classList.remove('reader-fit-height');
-
-    const btnWidth = document.getElementById('btn-fit-width');
-    const btnHeight = document.getElementById('btn-fit-height');
-    btnHeight?.classList.remove('active');
-    btnHeight?.setAttribute('aria-pressed', 'false');
-
-    if (w === '100%') {
-      body.classList.add('reader-fit-width');
-      btnWidth?.classList.add('active');
-      btnWidth?.setAttribute('aria-pressed', 'true');
-    } else {
-      body.classList.remove('reader-fit-width');
-      btnWidth?.classList.remove('active');
-      btnWidth?.setAttribute('aria-pressed', 'false');
-    }
-
-    const container = document.getElementById('reader-container');
-    const btns = {
-      '680': document.getElementById('btn-w-680'),
-      '800': document.getElementById('btn-w-800'),
-      '1000': document.getElementById('btn-w-1000'),
-      '100%': document.getElementById('btn-w-full'),
-    };
-
-    Object.entries(btns).forEach(([key, b]) => {
-      if (String(w) === key) {
-        b?.classList.add('active');
-        b?.setAttribute('aria-pressed', 'true');
-      } else {
-        b?.classList.remove('active');
-        b?.setAttribute('aria-pressed', 'false');
-      }
-    });
-
-    if (container) {
-      container.style.maxWidth = (w === '100%') ? '100%' : (w + 'px');
-      container.style.width = '100%';
-    }
-
-    window.readerImages?.resize();
-    if (persist) saveReaderSettings();
-  }
-
-  // 4. KHOẢNG CÁCH TRANG (Page Spacing)
-  function setPageSpacing(spacing, persist = true) {
-    const num = parseInt(spacing, 10) || 0;
-    readerSettings.spacing = num;
-    const container = document.getElementById('reader-container');
-    const btns = {
-      '0': document.getElementById('btn-space-0'),
-      '8': document.getElementById('btn-space-8'),
-      '16': document.getElementById('btn-space-16'),
-    };
-
-    Object.entries(btns).forEach(([key, b]) => {
-      if (String(num) === key) {
-        b?.classList.add('active');
-        b?.setAttribute('aria-pressed', 'true');
-      } else {
-        b?.classList.remove('active');
-        b?.setAttribute('aria-pressed', 'false');
-      }
-    });
-
-    if (container) {
-      container.style.gap = num + 'px';
-      document.documentElement.style.setProperty('--page-spacing', num + 'px');
-    }
-
-    if (persist) saveReaderSettings();
-  }
-
-  // 5. CHẾ ĐỘ BAN ĐÊM & ĐỘ SÁNG
-  function toggleNightMode(persist = true) {
-    readerSettings.night = !readerSettings.night;
-    const btn = document.getElementById('btn-toggle-night');
-    if (readerSettings.night) {
-      document.body.classList.add('reader-night-mode');
-      btn?.classList.add('active');
-      btn?.setAttribute('aria-pressed', 'true');
-      if (btn) btn.textContent = '🌙 Đang bật giảm chói';
-    } else {
-      document.body.classList.remove('reader-night-mode');
-      btn?.classList.remove('active');
-      btn?.setAttribute('aria-pressed', 'false');
-      if (btn) btn.textContent = '🌙 Giảm chói mắt';
-    }
-    if (persist) saveReaderSettings();
-  }
-
-  function setBrightness(val, persist = true) {
-    const num = Math.min(Math.max(parseInt(val, 10) || 100, 50), 100);
-    readerSettings.brightness = num;
-
-    const container = document.getElementById('reader-container');
-    if (container) {
-      container.style.filter = (num < 100) ? `brightness(${num}%)` : 'none';
-    }
-
-    const slider = document.getElementById('brightness-slider');
-    const valLabel = document.getElementById('brightness-val');
-    if (slider) slider.value = num;
-    if (valLabel) valLabel.textContent = `Độ sáng: ${num}%`;
-
-    if (persist) saveReaderSettings();
-  }
-
-  // 6. TOÀN MÀN HÌNH (Fullscreen)
+  // ── FULLSCREEN & UI TOGGLES ──
   function toggleFullscreen() {
     if (!document.fullscreenElement) {
       document.documentElement.requestFullscreen().catch(() => {});
@@ -1537,19 +2749,11 @@
     }
   }
 
-  // 7. ẨN / HIỆN UI (Zen Mode)
   function toggleUI() {
     document.body.classList.toggle('ui-hidden');
   }
 
-  document.addEventListener('click', function(e) {
-    const isInteractive = e.target.closest('button, a, input, select, textarea, .reader-toolbar, .reader-settings-panel, .reader-settings-track, .reader-settings-backdrop, .reader-bottom-dock, #single-page-nav, #resume-scroll-toast, .broken-image-box');
-    if (!isInteractive && e.target.closest('.reader-page-wrapper')) {
-      toggleUI();
-    }
-  });
-
-  // Touch swipe cho Single & Double Mode
+  // ── TOUCH & GESTURE NAVIGATION ──
   let touchStartX = 0;
   let touchStartY = 0;
   const containerSwipeEl = document.getElementById('reader-container');
@@ -1576,12 +2780,45 @@
         }
       }
     }, { passive: true });
+
+    // Tap turn page & double click
+    containerSwipeEl.addEventListener('click', function(e) {
+      const isInteractive = e.target.closest('button, a, input, select, textarea, .reader-toolbar, .reader-settings-panel, .reader-settings-track, .reader-settings-backdrop, .reader-bottom-dock, #single-page-nav, #resume-scroll-toast, .broken-image-box');
+      if (isInteractive) return;
+
+      if (!e.target.closest('.comic-page-wrapper')) return;
+
+      if (readerSettings.layout === 'single' || readerSettings.layout === 'double') {
+        if (readerSettings.tapTurnMode === 'always_forward') {
+          handleNavNext();
+          return;
+        } else if (readerSettings.tapTurnMode === 'direction') {
+          const w = window.innerWidth;
+          const clickX = e.clientX;
+          if (clickX < w * 0.35) {
+            handleNavPrev();
+            return;
+          } else if (clickX > w * 0.65) {
+            handleNavNext();
+            return;
+          }
+        }
+      }
+
+      toggleUI();
+    });
+
+    containerSwipeEl.addEventListener('dblclick', function(e) {
+      if (!readerSettings.dblClickFullscreen) return;
+      if (e.target.closest('button, a, input, select, textarea')) return;
+      toggleFullscreen();
+    });
   }
 
-  // Mouse wheel cho Single & Double Mode (không cuộn trang dài mà chuyển trang)
-  let wheelLock = false;
+  // ── MOUSE WHEEL NAVIGATION ──
   window.addEventListener('wheel', function(e) {
     if (readerSettings.layout === 'vertical') return;
+    if (readerSettings.scrollTurnMode !== 'wheel' && readerSettings.scrollTurnMode !== 'both') return;
     if (e.target.closest('#reader-settings-panel, #reader-chapter-picker, .comments-section, .reader-toolbar, .reader-footer')) return;
 
     if (Math.abs(e.deltaY) > 25) {
@@ -1598,8 +2835,43 @@
     }
   }, { passive: false });
 
-  // 8. BỘ PHÍM TẮT ĐIỀU HƯỚNG
+  // ── BROWSER HISTORY POPSTATE ──
+  window.addEventListener('popstate', function(e) {
+    if (readerSettings.historyMode === 'push' && e.state && typeof e.state.page === 'number') {
+      showPage(e.state.page - 1);
+    }
+  });
+
+  // ── DYNAMIC KEYBOARD SHORTCUTS ENGINE ──
+  function isKeyMatched(actionName, eventKey) {
+    const list = keybindSettings[actionName] || defaultKeybinds[actionName] || [];
+    return list.some(k => k.toLowerCase() === eventKey.toLowerCase());
+  }
+
   document.addEventListener('keydown', function(e) {
+    // Nếu đang trong chế độ gán phím mới
+    if (listeningAction) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (e.key === 'Escape' || e.key === 'Esc') {
+        listeningAction = null;
+        renderKeybindsList();
+        return;
+      }
+      if (['Shift', 'Control', 'Alt', 'Meta'].includes(e.key)) return;
+
+      const act = listeningAction;
+      if (!Array.isArray(keybindSettings[act])) keybindSettings[act] = [];
+      if (!keybindSettings[act].some(k => k.toLowerCase() === e.key.toLowerCase())) {
+        keybindSettings[act].push(e.key);
+      }
+      listeningAction = null;
+      saveReaderSettings();
+      renderKeybindsList();
+      updateHotkeyBox();
+      return;
+    }
+
     const activeEl = document.activeElement;
     if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.tagName === 'SELECT')) {
       return;
@@ -1607,7 +2879,7 @@
 
     const key = e.key;
 
-    // Phím Escape: Đóng panel cài đặt
+    // Phím Escape: Đóng bảng cài đặt
     if (key === 'Escape' || key === 'Esc') {
       const panel = document.getElementById('reader-settings-panel');
       if (panel && (panel.classList.contains('is-open') || panel.style.display === 'block')) {
@@ -1617,71 +2889,55 @@
       }
     }
 
-    // Phím R: Đổi hướng đọc khi ở single/double mode
-    if ((key === 'r' || key === 'R') && (readerSettings.layout === 'single' || readerSettings.layout === 'double')) {
+    // Toggle menu
+    if (isKeyMatched('toggle_menu', key)) {
       e.preventDefault();
-      setReadingDirection(readerSettings.direction === 'ltr' ? 'rtl' : 'ltr');
+      toggleSettingsPanel();
       return;
     }
 
-    // Phím M: Đổi chế độ đọc
-    if (key === 'm' || key === 'M') {
-      e.preventDefault();
-      const current = readerSettings.layout || 'vertical';
-      const next = current === 'vertical' ? 'single' : (current === 'single' ? 'double' : 'vertical');
-      setReadingLayout(next);
-      return;
-    }
-
-    // Phím H: Zen mode
-    if (key === 'h' || key === 'H') {
-      e.preventDefault();
-      toggleUI();
-      return;
-    }
-
-    // Phím F: Fullscreen
-    if (key === 'f' || key === 'F') {
+    // Toggle fullscreen
+    if (isKeyMatched('toggle_fullscreen', key)) {
       e.preventDefault();
       toggleFullscreen();
       return;
     }
 
-    // PageDown
-    if (key === 'PageDown') {
+    // Cycle fit mode
+    if (isKeyMatched('cycle_fit_mode', key)) {
       e.preventDefault();
-      if (readerSettings.layout === 'single' || readerSettings.layout === 'double') {
-        if (readerSettings.direction === 'rtl') prevPage(); else nextPage();
-      } else {
-        window.scrollBy({ top: window.innerHeight * 0.8, behavior: 'smooth' });
+      const current = readerSettings.fit || 'custom';
+      const next = current === 'custom' ? 'fit-width' : (current === 'fit-width' ? 'fit-height' : 'custom');
+      if (next === 'custom') setReaderWidth(800);
+      else setFitMode(next);
+      return;
+    }
+
+    // Toggle direction
+    if (isKeyMatched('toggle_direction', key)) {
+      e.preventDefault();
+      if (readerSettings.layout !== 'vertical') {
+        setReadingDirection(readerSettings.direction === 'ltr' ? 'rtl' : 'ltr');
       }
       return;
     }
 
-    // PageUp
-    if (key === 'PageUp') {
+    // Chapter forward
+    if (isKeyMatched('chapter_forward', key)) {
       e.preventDefault();
-      if (readerSettings.layout === 'single' || readerSettings.layout === 'double') {
-        if (readerSettings.direction === 'rtl') nextPage(); else prevPage();
-      } else {
-        window.scrollBy({ top: -window.innerHeight * 0.8, behavior: 'smooth' });
-      }
+      advanceToNextChapter();
       return;
     }
 
-    // Phím J hoặc Space: Cuộn mượt xuống / Trang sau
-    if (key === 'j' || key === 'J' || (key === ' ' && !e.shiftKey)) {
+    // Chapter backward
+    if (isKeyMatched('chapter_backward', key)) {
       e.preventDefault();
-      if (readerSettings.layout === 'single' || readerSettings.layout === 'double') {
-        if (readerSettings.direction === 'rtl') prevPage(); else nextPage();
-      } else {
-        window.scrollBy({ top: 380, behavior: 'smooth' });
-      }
+      goToPrevChapter();
       return;
     }
 
-    // Phím K hoặc Shift+Space: Cuộn mượt lên / Trang trước
-    if (key === 'k' || key === 'K' || (key === ' ' && e.shiftKey)) {
+    // Scroll up
+    if (isKeyMatched('scroll_up', key)) {
       e.preventDefault();
       if (readerSettings.layout === 'single' || readerSettings.layout === 'double') {
         if (readerSettings.direction === 'rtl') nextPage(); else prevPage();
@@ -1691,32 +2947,41 @@
       return;
     }
 
-    // Phím Mũi tên Trái / A
-    if (key === 'ArrowLeft' || key === 'Left' || key === 'a' || key === 'A') {
-      e.preventDefault();
-      if (readerSettings.layout === 'single' || readerSettings.layout === 'double') {
-        if (readerSettings.direction === 'rtl') nextPage(); else prevPage();
-      } else {
-        const prevBtn = document.getElementById('btn-prev-chap');
-        if (prevBtn && prevBtn.href) window.location.href = prevBtn.href;
-      }
-      return;
-    }
-
-    // Phím Mũi tên Phải / D
-    if (key === 'ArrowRight' || key === 'Right' || key === 'd' || key === 'D') {
+    // Scroll down
+    if (isKeyMatched('scroll_down', key)) {
       e.preventDefault();
       if (readerSettings.layout === 'single' || readerSettings.layout === 'double') {
         if (readerSettings.direction === 'rtl') prevPage(); else nextPage();
       } else {
-        const nextBtn = document.getElementById('btn-next-chap') || document.getElementById('footer-btn-next-chap');
-        if (nextBtn && nextBtn.href) window.location.href = nextBtn.href;
+        window.scrollBy({ top: 380, behavior: 'smooth' });
+      }
+      return;
+    }
+
+    // Page right
+    if (isKeyMatched('page_right', key)) {
+      e.preventDefault();
+      if (readerSettings.layout === 'single' || readerSettings.layout === 'double') {
+        if (readerSettings.direction === 'rtl') prevPage(); else nextPage();
+      } else {
+        advanceToNextChapter();
+      }
+      return;
+    }
+
+    // Page left
+    if (isKeyMatched('page_left', key)) {
+      e.preventDefault();
+      if (readerSettings.layout === 'single' || readerSettings.layout === 'double') {
+        if (readerSettings.direction === 'rtl') nextPage(); else prevPage();
+      } else {
+        goToPrevChapter();
       }
       return;
     }
   });
 
-  // Cập nhật thanh tiến độ đọc (Top Progress Bar) & Guest history
+  // Cập nhật thanh tiến độ đọc (Progress Bar) & Guest history
   window.addEventListener('scroll', updateProgress, { passive: true });
 
   function saveGuestReadingHistory(scrollPercent) {
