@@ -2,6 +2,8 @@ const { defineConfig, devices } = require('@playwright/test');
 
 module.exports = defineConfig({
   testDir: './tests',
+  // Chatbot uses its own isolated database/server setup in playwright.chatbot.config.js.
+  testIgnore: '**/recommendation-chatbot.spec.js',
   timeout: 30_000,
   expect: { timeout: 8_000 },
   fullyParallel: false,

@@ -86,7 +86,11 @@ class UpdateComicRequest extends FormRequest
             'genre_ids.*' => 'integer|exists:genres,id',
 
             'tag_ids'     => 'sometimes|nullable|array',
-            'tag_ids.*'   => 'integer|exists:tags,id',
+            'tag_ids.*'   => ['integer', Rule::exists('tags', 'id')->where(fn ($query) => $query
+                ->whereNull('category')->orWhereNotIn('category', array_keys(\App\Services\RecommendationTaxonomyService::CATEGORIES)))],
+            'recommendation_tag_ids' => 'sometimes|nullable|array',
+            'recommendation_tag_ids.*' => ['integer', 'distinct', Rule::exists('tags', 'id')
+                ->whereIn('category', array_keys(\App\Services\RecommendationTaxonomyService::CATEGORIES))],
 
             'author_ids'   => 'sometimes|nullable|array',
             'author_ids.*' => 'integer|exists:authors,id',

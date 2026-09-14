@@ -11,6 +11,7 @@ use App\Models\Comic;
 use App\Models\Genre;
 use App\Models\Tag;
 use App\Services\ImageService;
+use App\Services\RecommendationTaxonomyService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -84,7 +85,10 @@ class AdminComicController extends Controller
         $authors = Author::orderBy('name')->get();
         $tags    = Tag::orderBy('name')->get();
 
-        return view('admin.comics.create', compact('genres', 'authors', 'tags'));
+        $metadataTags = $tags->whereIn('category', array_keys(RecommendationTaxonomyService::CATEGORIES))->groupBy('category');
+        $tags = $tags->whereNotIn('category', array_keys(RecommendationTaxonomyService::CATEGORIES));
+
+        return view('admin.comics.create', compact('genres', 'authors', 'tags', 'metadataTags'));
     }
 
     /**
@@ -93,7 +97,7 @@ class AdminComicController extends Controller
      */
     public function store(StoreComicRequest $request)
     {
-        $data = $request->safe()->except(['genre_ids', 'tag_ids', 'author_ids', 'cover_image']);
+        $data = $request->safe()->except(['genre_ids', 'tag_ids', 'recommendation_tag_ids', 'author_ids', 'cover_image']);
         $coverPath = null;
 
         // Xử lý upload ảnh bìa (nếu có)
@@ -110,7 +114,7 @@ class AdminComicController extends Controller
 
                 // Sync quan hệ nhiều-nhiều
                 $comic->genres()->sync($request->input('genre_ids', []));
-                $comic->tags()->sync($request->input('tag_ids', []));
+                $this->syncTags($comic, $request);
 
                 if (!empty($request->input('author_ids'))) {
                     $comic->authors()->sync($request->input('author_ids'));
@@ -147,7 +151,10 @@ class AdminComicController extends Controller
         $authors = Author::orderBy('name')->get();
         $tags    = Tag::orderBy('name')->get();
 
-        return view('admin.comics.edit', compact('comic', 'genres', 'authors', 'tags'));
+        $metadataTags = $tags->whereIn('category', array_keys(RecommendationTaxonomyService::CATEGORIES))->groupBy('category');
+        $tags = $tags->whereNotIn('category', array_keys(RecommendationTaxonomyService::CATEGORIES));
+
+        return view('admin.comics.edit', compact('comic', 'genres', 'authors', 'tags', 'metadataTags'));
     }
 
     /**
@@ -158,7 +165,7 @@ class AdminComicController extends Controller
     {
         $comic = Comic::findOrFail($id);
 
-        $data = $request->safe()->except(['genre_ids', 'tag_ids', 'author_ids', 'cover_image']);
+        $data = $request->safe()->except(['genre_ids', 'tag_ids', 'recommendation_tag_ids', 'author_ids', 'cover_image']);
         $newCoverPath = null;
         $oldCoverPath = $comic->cover_image;
 
@@ -176,9 +183,7 @@ class AdminComicController extends Controller
                 if ($request->has('genre_ids')) {
                     $comic->genres()->sync($request->input('genre_ids', []));
                 }
-                if ($request->has('tag_ids')) {
-                    $comic->tags()->sync($request->input('tag_ids', []));
-                }
+                $this->syncTags($comic, $request);
                 if ($request->has('author_ids')) {
                     $comic->authors()->sync($request->input('author_ids', []));
                 }
@@ -218,6 +223,20 @@ class AdminComicController extends Controller
 
         return redirect()->route('admin.comics.index')
             ->with('success', 'Cập nhật bộ truyện thành công!');
+    }
+
+    private function syncTags(Comic $comic, Request $request): void
+    {
+        if (! $request->hasAny(['tag_ids', 'recommendation_tag_ids'])) {
+            return;
+        }
+        $categories = array_keys(RecommendationTaxonomyService::CATEGORIES);
+        $current = $comic->tags()->get(['tags.id', 'tags.category']);
+        $regular = $request->has('tag_ids') ? ($request->input('tag_ids') ?? [])
+            : $current->whereNotIn('category', $categories)->pluck('id')->all();
+        $metadata = $request->has('recommendation_tag_ids') ? ($request->input('recommendation_tag_ids') ?? [])
+            : $current->whereIn('category', $categories)->pluck('id')->all();
+        $comic->tags()->sync(array_merge($regular, $metadata));
     }
 
     /**

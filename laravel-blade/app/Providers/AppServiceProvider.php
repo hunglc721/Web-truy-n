@@ -34,6 +34,8 @@ class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        $this->app->bind(\App\Services\AI\AIClientInterface::class, \App\Services\AI\OpenAICompatibleClient::class);
+
         config(['queue.connections.reader-images' => [
             'driver' => 'database',
             'connection' => null,

@@ -222,6 +222,8 @@
         @error('author_ids') <span class="invalid-feedback" style="display:block; margin-top:8px">{{ $message }}</span> @enderror
       </div>
 
+      @include('admin.comics._recommendation-metadata')
+
       {{-- Nhãn Tags --}}
       <div class="admin-card">
         <h2 style="font-size:15px; font-weight:700; color:var(--admin-text); margin-bottom:14px; padding-bottom:10px; border-bottom:1px solid var(--admin-border)">
