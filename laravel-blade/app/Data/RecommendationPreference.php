@@ -6,7 +6,7 @@ final readonly class RecommendationPreference
 {
     private const DIMENSIONS = ['genres', 'themes', 'settings', 'character_traits', 'tones', 'relationships'];
 
-    private function __construct(private array $data) {}
+    private function __construct(private array $data, private array $remove = []) {}
 
     public static function fromArray(array $data): self
     {
@@ -22,7 +22,12 @@ final readonly class RecommendationPreference
         $normalized['follow_up_question'] = $normalized['needs_more_info']
             ? self::normalizeString($data['follow_up_question'] ?? null) : null;
 
-        return new self($normalized);
+        $remove = [];
+        foreach ([...self::DIMENSIONS, 'exclude'] as $field) {
+            $remove[$field] = self::normalizeList($data['remove'][$field] ?? []);
+        }
+
+        return new self($normalized, $remove);
     }
 
     public function toArray(): array
@@ -34,6 +39,10 @@ final readonly class RecommendationPreference
     {
         $merged = $this->data;
         $new = $newPreference->data;
+        // Explicit quick-reply removal differs from an empty (unspecified) dimension.
+        foreach ($newPreference->remove as $field => $values) {
+            $merged[$field] = array_values(array_diff($merged[$field], $values));
+        }
         foreach (self::DIMENSIONS as $field) {
             if ($new[$field] !== []) {
                 $merged[$field] = $new[$field];

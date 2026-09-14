@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "scripts": {
     "test": "playwright test",
+    "test:chatbot": "playwright test --config=playwright.chatbot.config.js",
     "test:headed": "playwright test --headed",
     "test:report": "playwright show-report"
   },

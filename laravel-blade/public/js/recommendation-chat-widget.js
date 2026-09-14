@@ -13,7 +13,16 @@
   const loading = document.getElementById('recommendation-chat-loading');
   const error = document.getElementById('recommendation-chat-error');
   const storageKey = 'comicx.recommendation.conversation';
-  const defaults = ['Action', 'Fantasy', 'Main OP', 'Weak → Strong', 'No Romance', 'Completed'];
+  const historyKey = `comicx.recommendation.history:${widget.dataset.historyScope || 'guest'}`;
+  let history = [];
+  let lastReplies = [];
+  let restoring = false;
+  const remember = (entry) => {
+    if (restoring) return;
+    if (entry) history.push(entry);
+    history = history.slice(-60);
+    try { sessionStorage.setItem(historyKey, JSON.stringify({ token, history, replies: lastReplies })); } catch (_) { /* Optional tab history. */ }
+  };
   let token = null;
   let busy = false;
   let failedSubmission = null;
@@ -27,17 +36,20 @@
       else sessionStorage.removeItem(storageKey);
     } catch (_) { /* Keep the in-memory token when storage is unavailable. */ }
   };
-  const bubble = (text, role) => {
+  const bubble = (text, role, type = 'text') => {
     const element = document.createElement('p');
     element.className = `recommendation-chat-bubble recommendation-chat-${role}`;
     element.textContent = text;
     messages.append(element);
+    element.dataset.type = type;
+    remember({ role: role === 'user' ? 'user' : 'assistant', type, content: text });
     messages.scrollTop = messages.scrollHeight;
   };
   const renderChips = (values) => {
     const labels = Array.isArray(values) ? values.filter(value => typeof value === 'string' && value.trim() && value.length <= 100) : [];
     chips.replaceChildren();
-    [...new Set(labels.length ? labels : defaults)].slice(0, 8).forEach(label => {
+    lastReplies = [...new Set(labels)].slice(0, 8);
+    lastReplies.forEach(label => {
       const button = document.createElement('button');
       button.type = 'button';
       button.textContent = label;
@@ -45,6 +57,7 @@
       button.addEventListener('click', () => submit('quick_reply', label));
       chips.append(button);
     });
+    remember();
   };
   const setBusy = (value) => {
     busy = value;
@@ -78,12 +91,11 @@
       if (!data || !['question', 'recommendations'].includes(data.type)
         || (data.type === 'recommendations' && !Array.isArray(data.recommendations))) throw new Error('Invalid response');
       saveToken(data.conversation_token);
-      if (data.type === 'recommendations' && data.recommendations.length === 0) {
-        bubble('Chưa tìm thấy truyện phù hợp với các tiêu chí hiện tại.', 'bot');
-      } else if (typeof data.message === 'string' && data.message.trim()) {
+      if (typeof data.message === 'string' && data.message.trim()) {
         bubble(data.message, 'bot');
       }
       if (data.type === 'recommendations') renderCards(data.recommendations);
+      if (typeof data.follow_up_message === 'string' && data.follow_up_message.trim()) bubble(data.follow_up_message, 'bot', 'follow_up');
       renderChips(data.quick_replies);
       failedSubmission = null;
     } catch (_) {
@@ -107,6 +119,8 @@
     } catch (_) { return null; }
   }
   function renderCards(results) {
+    results = results.slice(0, 5);
+    if (results.length) remember({ role: 'assistant', type: 'recommendations', content: results });
     const seen = new Set();
     results.forEach(comic => {
       if (!comic || typeof comic.title !== 'string' || seen.has(comic.id)) return;
@@ -132,7 +146,7 @@
         info.append(score);
       }
       const reasons = Array.isArray(comic.matched_reasons)
-        ? comic.matched_reasons.filter(reason => typeof reason === 'string').slice(0, 4) : [];
+        ? comic.matched_reasons.filter(reason => typeof reason === 'string').slice(0, 1).map(reason => reason.slice(0, 180)) : [];
       if (reasons.length) {
         const text = document.createElement('p');
         text.textContent = `Phù hợp vì: ${reasons.join(' • ')}`;
@@ -156,7 +170,22 @@
       submit('message', input.value);
     }
   });
-  renderChips(defaults);
+  try {
+    const raw = sessionStorage.getItem(historyKey);
+    const saved = raw && raw.length <= 200000 ? JSON.parse(raw) : null;
+    if (saved && saved.token === token && Array.isArray(saved.history) && saved.history.length <= 60
+      && saved.history.every(entry => entry && ['user', 'assistant'].includes(entry.role)
+        && (['text', 'follow_up'].includes(entry.type) ? typeof entry.content === 'string' && entry.content.length <= 8000
+          : entry.type === 'recommendations' && entry.role === 'assistant' && Array.isArray(entry.content) && entry.content.length <= 5))) {
+      restoring = true;
+      history = saved.history;
+      if (history.length) messages.replaceChildren();
+      history.forEach(entry => entry.type === 'recommendations' ? renderCards(entry.content)
+        : bubble(entry.content, entry.role === 'user' ? 'user' : 'bot', entry.type));
+      renderChips(saved.replies);
+      restoring = false;
+    }
+  } catch (_) { restoring = false; /* Ignore invalid or unavailable history. */ }
 
   const setOpen = (open) => {
     panel.hidden = !open;

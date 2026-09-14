@@ -30,5 +30,6 @@
         <env name="SESSION_DRIVER" value="array"/>
         <env name="MAIL_MAILER" value="log"/>
         <env name="BCRYPT_ROUNDS" value="4"/>
+        <env name="AI_CONVERSATIONAL_RESPONSE" value="false"/>
     </php>
 </phpunit>

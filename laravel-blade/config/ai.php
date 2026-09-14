@@ -2,6 +2,7 @@
 
 return [
     'enabled' => (bool) env('AI_ENABLED', true),
+    'conversational_response' => (bool) env('AI_CONVERSATIONAL_RESPONSE', true),
     'provider' => env('AI_PROVIDER', 'openai_compatible'),
     'api_key' => env('AI_API_KEY', ''),
     'model' => env('AI_MODEL', ''),

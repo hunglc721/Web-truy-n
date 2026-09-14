@@ -83,6 +83,11 @@ class RuleBasedPreferenceParser
     public function quickReply(string $label): ?array
     {
         $label = mb_strtolower(trim($label));
+        $remove = str_starts_with($label, 'bỏ ');
+        $allow = str_starts_with($label, 'cho phép ');
+        if ($remove || $allow) {
+            $label = mb_substr($label, $remove ? 3 : 9);
+        }
         $aliases = [
             'main op' => ['character_traits', 'Overpowered MC'],
             'weak → strong' => ['character_traits', 'Weak to Strong'],
@@ -93,6 +98,15 @@ class RuleBasedPreferenceParser
         foreach ($allowed as $field => $values) {
             foreach ($values as $value) {
                 if ($label === mb_strtolower($value) || ($aliases[$label] ?? null) === [$field, $value]) {
+                    if ($allow && $field !== 'status') {
+                        return ['remove' => ['exclude' => [$value]]];
+                    }
+                    if ($remove && $field !== 'status') {
+                        return ['remove' => [$field => [$value]]];
+                    }
+                    if ($remove || $allow) {
+                        return null;
+                    }
                     return [$field => $field === 'status' ? $value : [$value]];
                 }
             }

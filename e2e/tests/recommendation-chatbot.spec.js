@@ -33,6 +33,12 @@ test('natural request shows loading, excludes Harem, and opens the real comic', 
   const body = await response.json();
   expect(body.type).toBe('recommendations');
   expect(body.preferences.exclude).toEqual(['Harem']);
+  expect(body.message).toContain('Harem');
+  expect(body.quick_replies).not.toContain('Main OP');
+  await expect(panel.getByText(body.follow_up_message, { exact: true })).toBeVisible();
+  const order = await panel.locator('#recommendation-chat-messages').evaluate(log => [...log.children].map(node => node.dataset.type || (node.tagName === 'ARTICLE' ? 'card' : 'greeting')));
+  expect(order.indexOf('card')).toBeGreaterThan(order.indexOf('text', 2));
+  expect(order.indexOf('follow_up')).toBeGreaterThan(order.lastIndexOf('card'));
   await expect(panel.getByRole('status')).toBeHidden();
   await expect(panel.getByText(message, { exact: true })).toHaveCount(1);
   const card = panel.getByRole('article').filter({ has: page.getByRole('heading', { name: 'Chatbot Comic A' }) });
@@ -59,6 +65,8 @@ test('question, quick reply and reload reuse the guest conversation', async ({ p
   await expect(panel.getByRole('status')).toBeHidden();
   await page.reload();
   await page.getByRole('button', { name: 'Mở trợ lý tìm truyện' }).click();
+  await expect(panel.getByText('tìm truyện hay', { exact: true })).toHaveCount(1);
+  await expect(panel.getByText(question.message, { exact: true })).toHaveCount(1);
   reply = page.waitForResponse('**/api/recommendation/chat');
   await panel.getByRole('button', { name: 'Main OP', exact: true }).click();
   const response = await reply;
@@ -68,6 +76,28 @@ test('question, quick reply and reload reuse the guest conversation', async ({ p
   expect(body.preferences.genres).toEqual(['Fantasy']);
   expect(body.preferences.character_traits).toEqual(['Overpowered MC']);
   await expect(panel.getByRole('heading', { name: 'Chatbot Comic A' })).toBeVisible();
+  await expect(panel.getByText('Main OP', { exact: true })).toHaveCount(1);
+  await expect(panel.getByRole('button', { name: 'Main OP', exact: true })).toHaveCount(0);
+  await page.reload();
+  await page.getByRole('button', { name: 'Mở trợ lý tìm truyện' }).click();
+  await expect(panel.getByRole('heading', { name: 'Chatbot Comic A' })).toHaveCount(1);
+  await expect(panel.getByText(body.message, { exact: true })).toHaveCount(1);
+});
+
+test('user and response HTML remain inert text after reload', async ({ page }) => {
+  const payload = '<img src=x onerror=alert(1)>';
+  await page.route('**/api/recommendation/chat', route => route.fulfill({ json: {
+    type: 'question', conversation_token: 'a'.repeat(64), message: payload,
+    recommendations: [], follow_up_message: '<script>alert(1)</script>', quick_replies: [],
+  } }));
+  await page.locator('#recommendation-chat-input').fill(payload);
+  await page.locator('#recommendation-chat-input').press('Enter');
+  await expect(page.locator('#recommendation-chat-messages').getByText(payload, { exact: true })).toHaveCount(2);
+  await expect(page.locator('#recommendation-chat-messages img, #recommendation-chat-messages script')).toHaveCount(0);
+  await page.reload();
+  await page.getByRole('button', { name: 'Mở trợ lý tìm truyện' }).click();
+  await expect(page.locator('#recommendation-chat-messages').getByText(payload, { exact: true })).toHaveCount(2);
+  await expect(page.locator('#recommendation-chat-messages img, #recommendation-chat-messages script')).toHaveCount(0);
 });
 
 test('chat stays usable below the real header on short viewports', async ({ page }) => {

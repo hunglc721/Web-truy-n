@@ -4,11 +4,10 @@ namespace App\Services\AI;
 
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\RateLimiter;
 
 class PreferenceParser
 {
-    public function __construct(private IntentParser $ai, private RuleBasedPreferenceParser $rules) {}
+    public function __construct(private IntentParser $ai, private RuleBasedPreferenceParser $rules, private AIQuota $quota) {}
 
     /**
      * The backend supplies a trusted user:<id>, conversation:<id>, or session:<id> scope.
@@ -27,11 +26,9 @@ class PreferenceParser
         if (($cached = Cache::get($cacheKey)) !== null) {
             return [...$cached, 'cached' => true];
         }
-        $rateKeys = array_map(fn (string $scope) => 'ai:calls:'.hash('sha256', $scope),
-            array_unique([$scopeKey, ...$quotaScopes]));
         if (! $enabled) {
             $result = ['success' => false, 'error' => 'ai_disabled'];
-        } elseif (! $this->reserveCall($rateKeys)) {
+        } elseif (! $this->quota->reserve([$scopeKey, ...$quotaScopes])) {
             $result = ['success' => false, 'error' => 'rate_limited'];
         } else {
             $result = $this->ai->parse($normalized);
@@ -66,24 +63,4 @@ class PreferenceParser
             'error' => $delta === null ? 'invalid_quick_reply' : null, 'source' => 'quick_reply'];
     }
 
-    private function reserveCall(array $keys): bool
-    {
-        $maximum = (int) config('ai.max_calls');
-        if ($maximum <= 0) {
-            return false;
-        }
-        foreach ($keys as $key) {
-            if (RateLimiter::tooManyAttempts($key, $maximum)) {
-                return false;
-            }
-        }
-        foreach ($keys as $key) {
-            // Check the increment result too: concurrent requests must reserve a slot.
-            if (RateLimiter::hit($key, max(1, (int) config('ai.decay_seconds'))) > $maximum) {
-                return false;
-            }
-        }
-
-        return true;
-    }
 }

@@ -1,5 +1,5 @@
 <link rel="stylesheet" href="{{ asset('css/recommendation-chat-widget.css') }}">
-<aside id="recommendation-chat-widget" aria-label="Trợ lý tìm truyện" data-endpoint="{{ route('recommendation.chat') }}" data-placeholder="{{ asset('images/default-brand.svg') }}">
+<aside id="recommendation-chat-widget" aria-label="Trợ lý tìm truyện" data-history-scope="{{ auth()->check() ? 'user:'.auth()->id() : 'guest' }}" data-endpoint="{{ route('recommendation.chat') }}" data-placeholder="{{ asset('images/default-brand.svg') }}">
   <button id="recommendation-chat-toggle" type="button" aria-label="Mở trợ lý tìm truyện" aria-expanded="false" aria-controls="recommendation-chat-panel">
     <span aria-hidden="true">🤖</span> Tìm truyện cho tôi
   </button>
