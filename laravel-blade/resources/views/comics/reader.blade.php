@@ -5,8 +5,11 @@
 
 @push('styles')
 <style>
+  html,
   body {
     background: #0d0f14 !important;
+    overflow-x: clip !important;
+    overflow-y: visible !important;
   }
 
   .reader-page-wrapper {
@@ -17,8 +20,8 @@
 
   .reader-toolbar {
     position: sticky;
-    top: 0;
-    z-index: 100;
+    top: var(--header-height, 72px);
+    z-index: 900;
     background: rgba(19, 22, 30, 0.95);
     backdrop-filter: blur(10px);
     padding: 12px 24px;
@@ -82,21 +85,186 @@
     border: 1px solid rgba(255,255,255,0.1);
   }
 
-  /* ── FE-04: CÀI ĐẶT CHẾ ĐỘ ĐỌC & TÙY CHỈNH ── */
+  /* ── FE-04: CÀI ĐẶT CHẾ ĐỘ ĐỌC & TÙY CHỈNH (STICKY / FLOATING) ── */
+  .reader-main-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: stretch;
+    position: relative;
+    width: 100%;
+    min-height: 600px;
+    margin: 0 auto;
+    transition: all 0.25s ease;
+  }
+
+  @media (min-width: 1480px) {
+    .reader-main-wrapper::before {
+      content: '';
+      display: none;
+      width: 320px;
+      margin-right: 20px;
+      flex-shrink: 0;
+    }
+    body.reader-panel-open .reader-main-wrapper::before {
+      display: block;
+    }
+  }
+
+  .reader-settings-track {
+    width: 320px;
+    flex-shrink: 0;
+    margin-left: 20px;
+    position: relative;
+    display: none;
+    z-index: 990;
+  }
+
+  body.reader-panel-open .reader-settings-track {
+    display: block;
+  }
+
   .reader-settings-panel {
-    position: absolute;
-    top: 55px;
-    right: 24px;
-    background: rgba(19, 22, 30, 0.98);
+    position: sticky;
+    top: calc(var(--header-height, 72px) + 68px);
+    width: 320px;
+    max-height: calc(100vh - 160px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    background: rgba(19, 22, 30, 0.96);
     backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
     border: 1px solid rgba(255,255,255,0.15);
     border-radius: 14px;
     padding: 18px 20px;
-    width: 320px;
     box-shadow: 0 16px 48px rgba(0,0,0,0.85);
-    z-index: 1000;
+    z-index: 990;
     display: none;
+    transition: opacity 0.2s ease, transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .reader-settings-panel.is-open {
+    display: block;
     animation: fadeIn 0.2s ease;
+  }
+
+  .reader-settings-panel::-webkit-scrollbar {
+    width: 5px;
+  }
+  .reader-settings-panel::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 4px;
+  }
+  .reader-settings-panel::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+  }
+  .reader-settings-panel::-webkit-scrollbar-thumb:hover {
+    background: var(--primary);
+  }
+
+  .sheet-grab-handle {
+    display: none;
+  }
+
+  .reader-settings-backdrop {
+    display: none;
+  }
+
+  .reader-settings-close-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: color 0.15s ease, background 0.15s ease;
+  }
+  .reader-settings-close-btn:hover {
+    color: #fff;
+    background: rgba(255,255,255,0.08);
+  }
+
+  .setting-btn:focus-visible,
+  .reader-settings-close-btn:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+
+  @media (max-width: 1023.98px) {
+    .reader-main-wrapper {
+      display: block;
+    }
+    #reader-container {
+      margin: 0 auto !important;
+    }
+    .reader-settings-track {
+      position: static;
+      width: 0;
+      margin: 0;
+      display: block;
+    }
+  }
+
+  @media (min-width: 768px) and (max-width: 1023.98px) {
+    .reader-settings-panel {
+      position: fixed !important;
+      top: calc(var(--header-height, 72px) + 68px) !important;
+      right: 16px !important;
+      left: auto !important;
+      bottom: auto !important;
+      width: 320px !important;
+      max-height: calc(100vh - 160px) !important;
+      z-index: 1001 !important;
+    }
+  }
+
+  @media (max-width: 767.98px) {
+    .reader-settings-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      z-index: 1000;
+    }
+    .reader-settings-backdrop.is-open {
+      display: block;
+      animation: fadeIn 0.2s ease;
+    }
+    .sheet-grab-handle {
+      display: block;
+      width: 40px;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.25);
+      border-radius: 4px;
+      margin: 0 auto 12px auto;
+    }
+    .reader-settings-panel {
+      position: fixed !important;
+      top: auto !important;
+      left: 0 !important;
+      right: 0 !important;
+      bottom: 0 !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      max-height: 82dvh !important;
+      border-radius: 20px 20px 0 0 !important;
+      border-bottom: none !important;
+      border-left: none !important;
+      border-right: none !important;
+      z-index: 1001 !important;
+      padding: 12px 18px 24px 18px !important;
+      box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.85) !important;
+      animation: sheetSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    }
+  }
+
+  @keyframes sheetSlideUp {
+    from { transform: translateY(100%); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
   }
 
   .setting-btn {
@@ -238,11 +406,15 @@
   }
 
   /* Immersive Zen UI Hidden */
+  body.ui-hidden .site-header,
   body.ui-hidden .reader-toolbar,
   body.ui-hidden #reader-hint-bar,
   body.ui-hidden .reader-footer,
   body.ui-hidden .reader-bottom-dock,
-  body.ui-hidden #single-page-nav {
+  body.ui-hidden #single-page-nav,
+  body.ui-hidden .reader-settings-panel,
+  body.ui-hidden .reader-settings-track,
+  body.ui-hidden .reader-settings-backdrop {
     opacity: 0 !important;
     pointer-events: none !important;
     transform: translateY(-100%);
@@ -253,6 +425,9 @@
   }
   body.ui-hidden .reader-footer {
     transform: translateY(100%);
+  }
+  body.ui-hidden .reader-settings-panel {
+    transform: scale(0.95);
   }
 </style>
 <link rel="stylesheet" href="{{ asset('css/reader.css') }}">
@@ -306,80 +481,6 @@
         ⚙️ Cài đặt
       </button>
 
-      {{-- ── FLOATING SETTINGS PANEL (FE-04) ── --}}
-      <div class="reader-settings-panel" id="reader-settings-panel" style="width: 330px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px;">
-          <strong style="color: #fff; font-size: 14px;">⚙️ Tùy Chỉnh Chế Độ Đọc</strong>
-          <button type="button" onclick="toggleSettingsPanel()" style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 16px; line-height: 1;">✕</button>
-        </div>
-
-        <!-- Reading Mode (3 Chế độ: Cuộn dọc / Từng trang / Trang đôi) -->
-        <div style="margin-bottom: 14px;">
-          <label style="display: block; font-size: 11.5px; color: var(--text-muted); margin-bottom: 6px; font-weight: 700;">CHẾ ĐỘ ĐỌC (PHÍM M)</label>
-          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px;">
-            <button type="button" class="setting-btn active" id="btn-mode-vertical" onclick="setReadingLayout('vertical')">📜 Cuộn dọc</button>
-            <button type="button" class="setting-btn" id="btn-mode-single" onclick="setReadingLayout('single')">📄 Từng trang</button>
-            <button type="button" class="setting-btn" id="btn-mode-double" onclick="setReadingLayout('double')">📖 Trang đôi</button>
-          </div>
-        </div>
-
-        <!-- Reading Direction -->
-        <div style="margin-bottom: 14px;">
-          <label style="display: block; font-size: 11.5px; color: var(--text-muted); margin-bottom: 6px; font-weight: 700;">HƯỚNG ĐỌC</label>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
-            <button type="button" class="setting-btn active" id="btn-dir-ltr" onclick="setReadingDirection('ltr')">➡️ Trái qua Phải</button>
-            <button type="button" class="setting-btn" id="btn-dir-rtl" onclick="setReadingDirection('rtl')">⬅️ Phải qua Trái (Manga)</button>
-          </div>
-        </div>
-
-        <!-- Fit Mode & Width -->
-        <div style="margin-bottom: 14px;">
-          <label style="display: block; font-size: 11.5px; color: var(--text-muted); margin-bottom: 6px; font-weight: 700;">CĂN CHỈNH KHUNG ẢNH</label>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 6px;">
-            <button type="button" class="setting-btn" id="btn-fit-width" onclick="setFitMode('fit-width')">↔️ Vừa chiều rộng</button>
-            <button type="button" class="setting-btn" id="btn-fit-height" onclick="setFitMode('fit-height')">↕️ Vừa chiều cao</button>
-          </div>
-          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px;">
-            <button type="button" class="setting-btn" id="btn-w-680" onclick="setReaderWidth(680)">680px</button>
-            <button type="button" class="setting-btn active" id="btn-w-800" onclick="setReaderWidth(800)">800px</button>
-            <button type="button" class="setting-btn" id="btn-w-1000" onclick="setReaderWidth(1000)">1000px</button>
-            <button type="button" class="setting-btn" id="btn-w-full" onclick="setReaderWidth('100%')">100%</button>
-          </div>
-        </div>
-
-        <!-- Page Spacing -->
-        <div style="margin-bottom: 14px;">
-          <label style="display: block; font-size: 11.5px; color: var(--text-muted); margin-bottom: 6px; font-weight: 700;">KHOẢNG CÁCH TRANG</label>
-          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;">
-            <button type="button" class="setting-btn active" id="btn-space-0" onclick="setPageSpacing(0)">0px (Liền)</button>
-            <button type="button" class="setting-btn" id="btn-space-8" onclick="setPageSpacing(8)">8px</button>
-            <button type="button" class="setting-btn" id="btn-space-16" onclick="setPageSpacing(16)">16px</button>
-          </div>
-        </div>
-
-        <!-- Night Mode Toggle & Brightness Slider -->
-        <div style="margin-bottom: 14px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-            <label style="font-size: 11.5px; color: var(--text-muted); font-weight: 700;">🌙 CHẾ ĐỘ BAN ĐÊM & ĐỘ SÁNG</label>
-            <span id="brightness-val" style="font-size: 12px; color: var(--primary); font-weight: 700;">100%</span>
-          </div>
-          <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 6px;">
-            <button type="button" class="setting-btn" id="btn-toggle-night" onclick="toggleNightMode()" style="flex: 1;">🌙 Giảm chói mắt</button>
-          </div>
-          <input type="range" id="brightness-slider" min="30" max="100" value="100" oninput="setBrightness(this.value)" style="width: 100%; accent-color: var(--primary); cursor: pointer;">
-        </div>
-
-        <!-- Hotkey Reference -->
-        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 10px; font-size: 11px; color: var(--text-muted); line-height: 1.6;">
-          <div style="font-weight: 700; color: #fff; margin-bottom: 4px;">⌨️ Phím tắt nhanh:</div>
-          <div>• <code>←</code> / <code>→</code> hoặc <code>A</code> / <code>D</code>: Lật trang / Chap</div>
-          <div>• <code>M</code>: Đổi chế độ đọc (Webtoon / Single / Double)</div>
-          <div>• <code>H</code>: Ẩn/Hiện giao diện (Zen Mode)</div>
-          <div>• <code>F</code>: Bật/Tắt Toàn màn hình</div>
-          <div>• <code>J</code> / <code>K</code> hoặc <code>Space</code>: Cuộn mượt</div>
-        </div>
-      </div>
-
     </div>
   </div>
 
@@ -416,7 +517,8 @@
     </button>
   </div>
 
-  <!-- ── 2. CHAPTER IMAGE READER CONTAINER ── -->
+  <!-- ── 2. CHAPTER IMAGE READER CONTAINER & STICKY SETTINGS SIDEBAR ── -->
+  <div class="reader-main-wrapper" id="reader-main-wrapper">
   <div id="reader-container" style="
     max-width: 800px;
     margin: 0 auto;
@@ -486,6 +588,87 @@
       </div>
     @endif
   </div>
+
+  <!-- ── STICKY / FLOATING SETTINGS PANEL (FE-04) ── -->
+  <aside class="reader-settings-track" id="reader-settings-track">
+    <div class="reader-settings-panel" id="reader-settings-panel" role="dialog" aria-modal="false" aria-label="Tùy chỉnh chế độ đọc">
+      <div class="sheet-grab-handle"></div>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px;">
+        <strong style="color: #fff; font-size: 14px;">⚙️ Tùy Chỉnh Chế Độ Đọc</strong>
+        <button type="button" class="reader-settings-close-btn" onclick="toggleSettingsPanel(false)" aria-label="Đóng cài đặt" title="Đóng cài đặt (Phím Esc)">✕</button>
+      </div>
+
+      <!-- Reading Mode (3 Chế độ: Cuộn dọc / Từng trang / Trang đôi) -->
+      <div style="margin-bottom: 14px;">
+        <label style="display: block; font-size: 11.5px; color: var(--text-muted); margin-bottom: 6px; font-weight: 700;">CHẾ ĐỘ ĐỌC (PHÍM M)</label>
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px;">
+          <button type="button" class="setting-btn active" id="btn-mode-vertical" onclick="setReadingLayout('vertical')">📜 Cuộn dọc</button>
+          <button type="button" class="setting-btn" id="btn-mode-single" onclick="setReadingLayout('single')">📄 Từng trang</button>
+          <button type="button" class="setting-btn" id="btn-mode-double" onclick="setReadingLayout('double')">📖 Trang đôi</button>
+        </div>
+      </div>
+
+      <!-- Reading Direction -->
+      <div style="margin-bottom: 14px;">
+        <label style="display: block; font-size: 11.5px; color: var(--text-muted); margin-bottom: 6px; font-weight: 700;">HƯỚNG ĐỌC</label>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+          <button type="button" class="setting-btn active" id="btn-dir-ltr" onclick="setReadingDirection('ltr')">➡️ Trái qua Phải</button>
+          <button type="button" class="setting-btn" id="btn-dir-rtl" onclick="setReadingDirection('rtl')">⬅️ Phải qua Trái (Manga)</button>
+        </div>
+      </div>
+
+      <!-- Fit Mode & Width -->
+      <div style="margin-bottom: 14px;">
+        <label style="display: block; font-size: 11.5px; color: var(--text-muted); margin-bottom: 6px; font-weight: 700;">CĂN CHỈNH KHUNG ẢNH</label>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 6px;">
+          <button type="button" class="setting-btn" id="btn-fit-width" onclick="setFitMode('fit-width')">↔️ Vừa chiều rộng</button>
+          <button type="button" class="setting-btn" id="btn-fit-height" onclick="setFitMode('fit-height')">↕️ Vừa chiều cao</button>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px;">
+          <button type="button" class="setting-btn" id="btn-w-680" onclick="setReaderWidth(680)">680px</button>
+          <button type="button" class="setting-btn active" id="btn-w-800" onclick="setReaderWidth(800)">800px</button>
+          <button type="button" class="setting-btn" id="btn-w-1000" onclick="setReaderWidth(1000)">1000px</button>
+          <button type="button" class="setting-btn" id="btn-w-full" onclick="setReaderWidth('100%')">100%</button>
+        </div>
+      </div>
+
+      <!-- Page Spacing -->
+      <div style="margin-bottom: 14px;">
+        <label style="display: block; font-size: 11.5px; color: var(--text-muted); margin-bottom: 6px; font-weight: 700;">KHOẢNG CÁCH TRANG</label>
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;">
+          <button type="button" class="setting-btn active" id="btn-space-0" onclick="setPageSpacing(0)">0px (Liền)</button>
+          <button type="button" class="setting-btn" id="btn-space-8" onclick="setPageSpacing(8)">8px</button>
+          <button type="button" class="setting-btn" id="btn-space-16" onclick="setPageSpacing(16)">16px</button>
+        </div>
+      </div>
+
+      <!-- Night Mode Toggle & Brightness Slider -->
+      <div style="margin-bottom: 14px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+          <label style="font-size: 11.5px; color: var(--text-muted); font-weight: 700;">🌙 CHẾ ĐỘ BAN ĐÊM & ĐỘ SÁNG</label>
+          <span id="brightness-val" style="font-size: 12px; color: var(--primary); font-weight: 700;">100%</span>
+        </div>
+        <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 6px;">
+          <button type="button" class="setting-btn" id="btn-toggle-night" onclick="toggleNightMode()" style="flex: 1;">🌙 Giảm chói mắt</button>
+        </div>
+        <input type="range" id="brightness-slider" min="30" max="100" value="100" oninput="setBrightness(this.value)" style="width: 100%; accent-color: var(--primary); cursor: pointer;">
+      </div>
+
+      <!-- Hotkey Reference -->
+      <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 10px; font-size: 11px; color: var(--text-muted); line-height: 1.6;">
+        <div style="font-weight: 700; color: #fff; margin-bottom: 4px;">⌨️ Phím tắt nhanh:</div>
+        <div>• <code>←</code> / <code>→</code> hoặc <code>A</code> / <code>D</code>: Lật trang / Chap</div>
+        <div>• <code>M</code>: Đổi chế độ đọc (Webtoon / Single / Double)</div>
+        <div>• <code>H</code>: Ẩn/Hiện giao diện (Zen Mode)</div>
+        <div>• <code>F</code>: Bật/Tắt Toàn màn hình</div>
+        <div>• <code>J</code> / <code>K</code> hoặc <code>Space</code>: Cuộn mượt</div>
+        <div>• <code>Esc</code>: Đóng bảng cài đặt</div>
+      </div>
+    </div>
+  </aside>
+  </div>
+
+  <div class="reader-settings-backdrop" id="reader-settings-backdrop" onclick="toggleSettingsPanel(false)"></div>
 
   <!-- ── 3. BOTTOM NAVIGATION BAR ── -->
   <div class="reader-footer" style="
@@ -767,7 +950,8 @@
     width: 800,            // 680 | 800 | 1000 | '100%'
     spacing: 0,            // 0 | 8 | 16
     brightness: 100,       // 30..100
-    night: false           // true | false
+    night: false,          // true | false
+    panelOpen: false       // true | false
   };
 
   let currentSinglePageIndex = 0;
@@ -803,12 +987,45 @@
       document.body.classList.add('reader-night-mode');
       document.getElementById('btn-toggle-night')?.classList.add('active');
     }
+    // Restore settings panel open state across chapters
+    if (readerSettings.panelOpen) {
+      toggleSettingsPanel(true);
+    }
   }
 
-  function toggleSettingsPanel() {
+  function toggleSettingsPanel(forceState) {
     const panel = document.getElementById('reader-settings-panel');
-    if (panel) {
-      panel.style.display = (panel.style.display === 'block') ? 'none' : 'block';
+    const track = document.getElementById('reader-settings-track');
+    const backdrop = document.getElementById('reader-settings-backdrop');
+    if (!panel) return;
+
+    const isCurrentlyOpen = panel.classList.contains('is-open') || panel.style.display === 'block';
+    const shouldOpen = (forceState !== undefined) ? !!forceState : !isCurrentlyOpen;
+
+    if (shouldOpen) {
+      panel.classList.add('is-open');
+      panel.style.display = 'block';
+      document.body.classList.add('reader-panel-open');
+      if (track) track.style.display = 'block';
+      if (backdrop && window.innerWidth < 768) {
+        backdrop.classList.add('is-open');
+        backdrop.style.display = 'block';
+      }
+      readerSettings.panelOpen = true;
+      saveReaderSettings();
+    } else {
+      panel.classList.remove('is-open');
+      panel.style.display = 'none';
+      document.body.classList.remove('reader-panel-open');
+      if (track && window.innerWidth >= 1024) {
+        track.style.display = 'none';
+      }
+      if (backdrop) {
+        backdrop.classList.remove('is-open');
+        backdrop.style.display = 'none';
+      }
+      readerSettings.panelOpen = false;
+      saveReaderSettings();
     }
   }
 
@@ -816,9 +1033,11 @@
     const panel = document.getElementById('reader-settings-panel');
     const btn = document.getElementById('btn-open-settings');
     const dockBtn = document.querySelector('.reader-bottom-dock button[title*="Cài đặt"]');
-    if (panel && panel.style.display === 'block') {
-      if (!panel.contains(e.target) && !btn?.contains(e.target) && !dockBtn?.contains(e.target)) {
-        panel.style.display = 'none';
+    if (panel && (panel.classList.contains('is-open') || panel.style.display === 'block')) {
+      if (window.innerWidth < 1024) {
+        if (!panel.contains(e.target) && !btn?.contains(e.target) && !dockBtn?.contains(e.target)) {
+          toggleSettingsPanel(false);
+        }
       }
     }
   });
@@ -1068,7 +1287,7 @@
   }
 
   document.addEventListener('click', function(e) {
-    const isInteractive = e.target.closest('button, a, input, select, textarea, .reader-toolbar, .reader-settings-panel, .reader-bottom-dock, #single-page-nav, #resume-scroll-toast, .broken-image-box');
+    const isInteractive = e.target.closest('button, a, input, select, textarea, .reader-toolbar, .reader-settings-panel, .reader-settings-track, .reader-settings-backdrop, .reader-bottom-dock, #single-page-nav, #resume-scroll-toast, .broken-image-box');
     if (!isInteractive && e.target.closest('.reader-page-wrapper')) {
       toggleUI();
     }
@@ -1082,6 +1301,16 @@
     }
 
     const key = e.key;
+
+    // Phím Escape: Đóng panel cài đặt
+    if (key === 'Escape' || key === 'Esc') {
+      const panel = document.getElementById('reader-settings-panel');
+      if (panel && (panel.classList.contains('is-open') || panel.style.display === 'block')) {
+        e.preventDefault();
+        toggleSettingsPanel(false);
+        return;
+      }
+    }
 
     // Phím M: Đổi chế độ đọc
     if (key === 'm' || key === 'M') {
