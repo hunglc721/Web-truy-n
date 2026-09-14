@@ -563,11 +563,16 @@ svg {
 
   body.is-reader-page .reader-settings-panel {
     position: fixed !important;
-    top: 58px !important;
-    left: 8px !important;
-    right: 8px !important;
-    width: auto !important;
-    max-height: calc(100dvh - 70px);
+    top: auto !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    max-height: 82dvh !important;
+    border-radius: 20px 20px 0 0 !important;
+    border-bottom: none !important;
+    border-left: none !important;
+    border-right: none !important;
     overflow-y: auto;
   }
 

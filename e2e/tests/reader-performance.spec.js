@@ -58,13 +58,18 @@ for (const width of [360, 390, 400, 430]) {
     await page.evaluate(() => window.scrollTo(0, 0));
     await page.locator('#btn-open-settings').click();
     await page.locator('#btn-mode-single').click();
-    await page.locator('#btn-open-settings').click();
+    // The mobile sheet backdrop intentionally blocks controls behind it.
+    await page.getByRole('button', { name: 'Đóng cài đặt', exact: true }).click();
+    await expect(page.locator('#reader-settings-panel')).toBeHidden();
+    await expect(page.locator('#reader-settings-backdrop')).toBeHidden();
     await noOverlap(page);
     await page.locator('#dock-page-nav button').last().click();
     await expect(page.locator('#page-2')).toHaveClass(/active-page/);
     await page.locator('#btn-open-settings').click();
     await page.locator('#btn-mode-double').click();
-    await page.locator('#btn-open-settings').click();
+    await page.getByRole('button', { name: 'Đóng cài đặt', exact: true }).click();
+    await expect(page.locator('#reader-settings-panel')).toBeHidden();
+    await expect(page.locator('#reader-settings-backdrop')).toBeHidden();
     await expect(page.locator('.active-page')).toHaveCount(2);
     await noOverlap(page);
     expect(errors).toEqual([]);
