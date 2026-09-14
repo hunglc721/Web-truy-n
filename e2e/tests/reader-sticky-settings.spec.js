@@ -51,9 +51,8 @@ test.describe('Reader sticky/floating settings panel', () => {
     expect(scrolledBox.y).toBeLessThan(400);
 
     // 5. Test controls while scrolled mid-chapter
-    await page.locator('#btn-w-680').click();
-    const container = page.locator('#reader-container');
-    await expect(container).toHaveCSS('max-width', '680px');
+    await page.locator('#btn-fit-width').click();
+    await expect(page.locator('body')).toHaveClass(/reader-fit-width/);
 
     await page.locator('#btn-space-16').click();
     await expect(page.locator('#reader-container')).toHaveCSS('gap', '16px');

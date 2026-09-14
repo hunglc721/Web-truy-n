@@ -151,6 +151,10 @@ test.describe('Reader Modes & Settings Behavior', () => {
     await page.locator('#btn-open-settings').click();
     const container = page.locator('#reader-container');
 
+    // Open Advanced Modal to configure Width Presets in Tab Image
+    await page.locator('#btn-open-advanced-modal').click();
+    await page.locator('#tab-btn-image').click();
+
     // 680px
     await page.locator('#btn-w-680').click();
     await expect(page.locator('#btn-w-680')).toHaveAttribute('aria-pressed', 'true');
@@ -174,12 +178,12 @@ test.describe('Reader Modes & Settings Behavior', () => {
     await expect(container).toHaveCSS('max-width', '100%');
 
     // Fit Width
-    await page.locator('#btn-fit-width').click();
+    await page.locator('#adv-btn-fit-width').click();
     await expect(page.locator('body')).toHaveClass(/reader-fit-width/);
     await expect(page.locator('#btn-fit-width')).toHaveAttribute('aria-pressed', 'true');
 
     // Fit Height
-    await page.locator('#btn-fit-height').click();
+    await page.locator('#adv-btn-fit-height').click();
     await expect(page.locator('body')).toHaveClass(/reader-fit-height/);
     await expect(page.locator('#btn-fit-height')).toHaveAttribute('aria-pressed', 'true');
 
@@ -232,7 +236,10 @@ test.describe('Reader Modes & Settings Behavior', () => {
     // Configure settings: Single page, RTL, 680px, brightness 75%, night mode ON
     await page.locator('#btn-mode-single').click();
     await page.locator('#btn-dir-rtl').click();
+    await page.locator('#btn-open-advanced-modal').click();
+    await page.locator('#tab-btn-image').click();
     await page.locator('#btn-w-680').click();
+    await page.locator('#btn-close-advanced-modal').click();
     await page.locator('#btn-toggle-night').click();
     await page.locator('#brightness-slider').fill('75');
 
@@ -263,7 +270,7 @@ test.describe('Reader Modes & Settings Behavior', () => {
 
     // Navigate to chapter 2
     await page.locator('#btn-next-chap').click();
-    await page.waitForURL(/\/chapter-2(?:\?|$)/);
+    await page.waitForURL(/\/chapter-2(?:\?|#|$)/);
 
     // Settings must still remain applied on chapter 2
     await expect(page.locator('body')).toHaveClass(/reader-layout-single/);

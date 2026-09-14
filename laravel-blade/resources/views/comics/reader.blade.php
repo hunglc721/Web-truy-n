@@ -407,29 +407,95 @@
     cursor: pointer;
   }
 
-  /* Setting Tabs & Form Controls */
+  /* ── FULL / ADVANCED SETTINGS MODAL & TABS ── */
+  .reader-advanced-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    z-index: 1050;
+    display: none;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+  }
+  .reader-advanced-backdrop.is-open {
+    display: block;
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .reader-advanced-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.96);
+    width: 92%;
+    max-width: 680px;
+    max-height: 88vh;
+    background: #11141d;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 16px;
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.9);
+    z-index: 1060;
+    display: none;
+    flex-direction: column;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.22s ease, transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .reader-advanced-modal.is-open {
+    display: flex;
+    opacity: 1;
+    pointer-events: auto;
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  .reader-advanced-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.02);
+  }
+  .reader-advanced-close-btn {
+    background: rgba(255, 255, 255, 0.08);
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s ease;
+  }
+  .reader-advanced-close-btn:hover {
+    background: rgba(239, 68, 68, 0.8);
+  }
+
   .reader-tabs-nav {
-    position: sticky;
-    top: 0;
-    z-index: 20;
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(5, 1fr);
     gap: 4px;
-    margin-bottom: 14px;
-    background: rgba(19, 22, 30, 0.95);
-    backdrop-filter: blur(12px);
-    padding: 4px;
-    border-radius: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 10px 16px;
+    margin: 0;
+    background: rgba(255, 255, 255, 0.03);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   }
   .reader-tab-btn {
     background: transparent;
     border: none;
     color: var(--text-muted);
-    font-size: 11px;
+    font-size: 11.5px;
     font-weight: 700;
-    padding: 7px 2px;
-    border-radius: 7px;
+    padding: 8px 4px;
+    border-radius: 8px;
     cursor: pointer;
     transition: all 0.2s ease;
     text-align: center;
@@ -444,20 +510,50 @@
     color: #fff;
     box-shadow: 0 2px 8px rgba(255, 94, 54, 0.35);
   }
-  .reader-tab-pane {
-    display: block !important;
-    padding-bottom: 16px;
-    margin-bottom: 16px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    scroll-margin-top: 55px;
+
+  .reader-advanced-body {
+    padding: 20px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    flex: 1;
   }
-  .reader-tab-pane:last-child {
-    border-bottom: none;
+  .reader-advanced-body::-webkit-scrollbar {
+    width: 6px;
+  }
+  .reader-advanced-body::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+  }
+
+  .reader-advanced-modal .reader-tab-pane {
+    display: none !important;
+    padding-bottom: 0;
     margin-bottom: 0;
+    border-bottom: none;
+  }
+  .reader-advanced-modal .reader-tab-pane.active {
+    display: block !important;
+    animation: fadeIn 0.2s ease;
+  }
+
+  @media (max-width: 768px) {
+    .reader-advanced-modal {
+      top: 0 !important;
+      left: 0 !important;
+      transform: none !important;
+      width: 100% !important;
+      height: 100% !important;
+      max-height: 100vh !important;
+      border-radius: 0 !important;
+      border: none !important;
+    }
   }
 
   .setting-section {
     margin-bottom: 12px;
+  }
+  .reader-settings-panel .setting-section {
+    margin-bottom: 7px;
   }
   .setting-label {
     display: block;
@@ -908,61 +1004,144 @@
     @endif
   </div>
 
-  <!-- ── STICKY / FLOATING SETTINGS PANEL (FE-04) ── -->
+  <!-- ── 1. STICKY / FLOATING QUICK SETTINGS PANEL ── -->
   <aside class="reader-settings-track" id="reader-settings-track">
-    <div class="reader-settings-panel" id="reader-settings-panel" role="dialog" aria-modal="false" aria-label="Cài đặt trình đọc">
+    <div class="reader-settings-panel" id="reader-settings-panel" role="dialog" aria-modal="false" aria-label="Tùy chỉnh chế độ đọc">
       <div class="sheet-grab-handle"></div>
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px;">
-        <strong style="color: #fff; font-size: 14px;">⚙️ Cài Đặt Trình Đọc <span style="font-size:11px;opacity:0.75;font-weight:normal;">(Tùy Chỉnh Chế Độ Đọc)</span></strong>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 6px;">
+        <strong style="color: #fff; font-size: 13px; display: flex; align-items: center; gap: 6px;">
+          <span>⚙️</span>
+          <span>Cài Đặt Trình Đọc <span style="font-size:11px;opacity:0.75;font-weight:normal;">(Tùy Chỉnh Chế Độ Đọc)</span></span>
+        </strong>
         <button type="button" class="reader-settings-close-btn" onclick="toggleSettingsPanel(false)" aria-label="Đóng cài đặt" title="Đóng cài đặt (Phím Esc)">✕</button>
       </div>
 
-      <!-- 4 TABS NAVIGATION -->
-      <div class="reader-tabs-nav" role="tablist">
-        <button type="button" class="reader-tab-btn active" id="tab-btn-layout" role="tab" aria-selected="true" onclick="switchReaderTab('layout')">Bố cục</button>
-        <button type="button" class="reader-tab-btn" id="tab-btn-image" role="tab" aria-selected="false" onclick="switchReaderTab('image')">Ảnh</button>
-        <button type="button" class="reader-tab-btn" id="tab-btn-keybinds" role="tab" aria-selected="false" onclick="switchReaderTab('keybinds')">Phím tắt</button>
-        <button type="button" class="reader-tab-btn" id="tab-btn-behaviors" role="tab" aria-selected="false" onclick="switchReaderTab('behaviors')">Hành vi</button>
+      <!-- A. CHẾ ĐỘ ĐỌC (3 MODE) -->
+      <div class="setting-section" id="section-reading-mode">
+        <label class="setting-label">CHẾ ĐỘ ĐỌC (PHÍM M)</label>
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px;">
+          <button type="button" class="setting-btn active" id="btn-mode-vertical" onclick="setReadingLayout('vertical')" aria-pressed="true">📜 Cuộn dọc</button>
+          <button type="button" class="setting-btn" id="btn-mode-single" onclick="setReadingLayout('single')" aria-pressed="false" title="Từng trang">📄 Trang đơn <span style="font-size: 10px; opacity: 0.7;">(Từng trang)</span></button>
+          <button type="button" class="setting-btn" id="btn-mode-double" onclick="setReadingLayout('double')" aria-pressed="false">📖 Trang đôi</button>
+        </div>
       </div>
 
-      <!-- ── TAB 1: BỐ CỤC TRANG ── -->
+      <!-- B. HƯỚNG ĐỌC (Chỉ hiển thị khi Trang đơn hoặc Trang đôi, ẩn khi Cuộn dọc) -->
+      <div class="setting-section" style="display: none;" id="section-reading-direction">
+        <label class="setting-label">HƯỚNG ĐỌC</label>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+          <button type="button" class="setting-btn active" id="btn-dir-ltr" onclick="setReadingDirection('ltr')" aria-pressed="true">➡️ Trái → Phải</button>
+          <button type="button" class="setting-btn" id="btn-dir-rtl" onclick="setReadingDirection('rtl')" aria-pressed="false" title="Phải qua Trái">⬅️ Phải → Trái (Manga)<span style="display:none">Phải qua Trái</span></button>
+        </div>
+      </div>
+
+      <!-- C. HIỂN THỊ ẢNH -->
+      <div class="setting-section" id="section-quick-fit">
+        <label class="setting-label">HIỂN THỊ ẢNH</label>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+          <button type="button" class="setting-btn" id="btn-fit-width" onclick="setFitMode('fit-width')" aria-pressed="false">↔️ Vừa chiều rộng</button>
+          <button type="button" class="setting-btn" id="btn-fit-height" onclick="setFitMode('fit-height')" aria-pressed="false">↕️ Vừa chiều cao</button>
+        </div>
+      </div>
+
+      <!-- D. KHOẢNG CÁCH ẢNH (Ẩn khi Trang đơn, Hiện khi Cuộn dọc hoặc Trang đôi) -->
+      <div class="setting-section" id="section-page-spacing">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+          <label class="setting-label" id="label-page-spacing" style="margin-bottom: 0;">KHOẢNG CÁCH GIỮA ẢNH</label>
+          <span id="label-margin-val" style="font-size: 11px; color: var(--primary); font-weight: 700;">0px</span>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px;">
+          <button type="button" class="setting-btn active" id="btn-space-0" onclick="setPageSpacing(0)" aria-pressed="true">0px</button>
+          <button type="button" class="setting-btn" id="btn-space-8" onclick="setPageSpacing(8)" aria-pressed="false">8px</button>
+          <button type="button" class="setting-btn" id="btn-space-16" onclick="setPageSpacing(16)" aria-pressed="false">16px</button>
+        </div>
+      </div>
+
+      <!-- E & F. ĐỘ SÁNG & GIẢM CHÓI -->
+      <div class="setting-section" id="section-quick-brightness">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+          <label class="setting-label" style="margin-bottom: 0;">🌙 ĐỘ SÁNG & GIẢM CHÓI</label>
+          <span id="brightness-val" style="font-size: 11px; color: var(--primary); font-weight: 700;">Độ sáng: 100%</span>
+        </div>
+        <div style="margin-bottom: 6px;">
+          <button type="button" class="setting-btn" id="btn-toggle-night" onclick="toggleNightMode()" style="width: 100%; padding: 6px 10px;" aria-pressed="false">
+            🌙 Giảm chói mắt
+          </button>
+        </div>
+        <input type="range" id="brightness-slider" min="30" max="100" value="100" oninput="setBrightness(this.value)" style="width: 100%; accent-color: var(--primary); cursor: pointer;" aria-label="Độ sáng ảnh truyện">
+      </div>
+
+      <!-- G. NÚT MỞ FULL / ADVANCED SETTINGS -->
+      <div class="setting-section" style="margin-top: 10px; margin-bottom: 0; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.08);">
+        <button type="button" id="btn-open-advanced-modal" onclick="openAdvancedModal()" style="
+          width: 100%;
+          padding: 10px 14px;
+          background: linear-gradient(135deg, rgba(255,94,54,0.18), rgba(255,42,109,0.18));
+          border: 1px solid rgba(255,94,54,0.5);
+          border-radius: 8px;
+          color: #fff;
+          font-size: 12.5px;
+          font-weight: 700;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 6px;
+          transition: all 0.2s ease;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+        " onmouseover="this.style.background='var(--primary)';this.style.borderColor='var(--primary)'" onmouseout="this.style.background='linear-gradient(135deg, rgba(255,94,54,0.18), rgba(255,42,109,0.18))';this.style.borderColor='rgba(255,94,54,0.5)'">
+          <span>⚙️</span>
+          <span>Cài đặt nâng cao</span>
+        </button>
+      </div>
+    </div>
+  </aside>
+  </div>
+
+  <!-- ── 2. FULL / ADVANCED SETTINGS MODAL ── -->
+  <div class="reader-advanced-backdrop" id="reader-advanced-backdrop" onclick="closeAdvancedModal()"></div>
+  <div class="reader-advanced-modal" id="reader-advanced-modal" role="dialog" aria-modal="true" aria-label="Cài đặt trình đọc nâng cao">
+    <div class="reader-advanced-header">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span style="font-size: 18px;">⚙️</span>
+        <strong style="color: #fff; font-size: 15px; font-weight: 700;">Cài Đặt Trình Đọc Nâng Cao</strong>
+      </div>
+      <button type="button" class="reader-advanced-close-btn" id="btn-close-advanced-modal" onclick="closeAdvancedModal()" aria-label="Đóng cài đặt nâng cao" title="Đóng cài đặt nâng cao (Phím Esc)">✕</button>
+    </div>
+
+    <!-- 5 TABS NAVIGATION -->
+    <div class="reader-tabs-nav reader-advanced-tabs" role="tablist">
+      <button type="button" class="reader-tab-btn active" id="tab-btn-layout" role="tab" aria-selected="true" onclick="switchReaderTab('layout')">Bố cục</button>
+      <button type="button" class="reader-tab-btn" id="tab-btn-image" role="tab" aria-selected="false" onclick="switchReaderTab('image')">Hiển thị ảnh</button>
+      <button type="button" class="reader-tab-btn" id="tab-btn-keybinds" role="tab" aria-selected="false" onclick="switchReaderTab('keybinds')">Phím tắt</button>
+      <button type="button" class="reader-tab-btn" id="tab-btn-behaviors" role="tab" aria-selected="false" onclick="switchReaderTab('behaviors')">Hành vi</button>
+      <button type="button" class="reader-tab-btn" id="tab-btn-other" role="tab" aria-selected="false" onclick="switchReaderTab('other')">Khác</button>
+    </div>
+
+    <div class="reader-advanced-body">
+      <!-- ── TAB 1: BỐ CỤC ── -->
       <div class="reader-tab-pane active" id="tab-pane-layout" role="tabpanel">
-        <!-- 1.1. Kiểu hiển thị trang (3 Mode) -->
-        <div class="setting-section" id="section-reading-mode">
-          <label class="setting-label">KIỂU HIỂN THỊ TRANG (PHÍM M)</label>
-          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px;">
-            <button type="button" class="setting-btn active" id="btn-mode-vertical" onclick="setReadingLayout('vertical')" aria-pressed="true">📜 Cuộn dọc</button>
-            <button type="button" class="setting-btn" id="btn-mode-single" onclick="setReadingLayout('single')" aria-pressed="false" title="Từng trang">📄 Trang đơn <span style="font-size: 10px; opacity: 0.7;">(Từng trang)</span></button>
-            <button type="button" class="setting-btn" id="btn-mode-double" onclick="setReadingLayout('double')" aria-pressed="false">📖 Trang đôi</button>
+        <!-- Chế độ đọc -->
+        <div class="setting-section">
+          <label class="setting-label">KIỂU HIỂN THỊ TRANG</label>
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;">
+            <button type="button" class="setting-btn active" id="adv-btn-mode-vertical" onclick="setReadingLayout('vertical')" aria-pressed="true">📜 Cuộn dọc</button>
+            <button type="button" class="setting-btn" id="adv-btn-mode-single" onclick="setReadingLayout('single')" aria-pressed="false">📄 Trang đơn</button>
+            <button type="button" class="setting-btn" id="adv-btn-mode-double" onclick="setReadingLayout('double')" aria-pressed="false">📖 Trang đôi</button>
           </div>
         </div>
 
-        <!-- 1.2. Hướng đọc (Chỉ hiện khi Trang đơn hoặc Trang đôi, ẩn khi Cuộn dọc) -->
-        <div class="setting-section" style="display: none;" id="section-reading-direction">
+        <!-- Hướng đọc (Context-aware: ẩn khi cuộn dọc) -->
+        <div class="setting-section" id="adv-section-reading-direction" style="display: none;">
           <label class="setting-label">HƯỚNG ĐỌC</label>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
-            <button type="button" class="setting-btn active" id="btn-dir-ltr" onclick="setReadingDirection('ltr')" aria-pressed="true">➡️ Trái sang phải</button>
-            <button type="button" class="setting-btn" id="btn-dir-rtl" onclick="setReadingDirection('rtl')" aria-pressed="false" title="Phải qua Trái">⬅️ Phải sang trái (Manga)<span style="display:none">Phải qua Trái</span></button>
+            <button type="button" class="setting-btn active" id="adv-btn-dir-ltr" onclick="setReadingDirection('ltr')" aria-pressed="true">➡️ Trái sang phải</button>
+            <button type="button" class="setting-btn" id="adv-btn-dir-rtl" onclick="setReadingDirection('rtl')" aria-pressed="false">⬅️ Phải sang trái (Manga)</button>
           </div>
         </div>
 
-        <!-- 1.3. Lề / khoảng cách -->
-        <div class="setting-section" id="section-page-spacing">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
-            <label class="setting-label" id="label-page-spacing" style="margin-bottom: 0;">KHOẢNG CÁCH GIỮA ẢNH</label>
-            <span id="label-margin-val" style="font-size: 11px; color: var(--primary); font-weight: 700;">0px</span>
-          </div>
-          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-bottom: 6px;">
-            <button type="button" class="setting-btn active" id="btn-space-0" onclick="setPageSpacing(0)" aria-pressed="true">0px</button>
-            <button type="button" class="setting-btn" id="btn-space-8" onclick="setPageSpacing(8)" aria-pressed="false">8px</button>
-            <button type="button" class="setting-btn" id="btn-space-16" onclick="setPageSpacing(16)" aria-pressed="false">16px</button>
-            <button type="button" class="setting-btn" id="btn-space-24" onclick="setPageSpacing(24)" aria-pressed="false">24px</button>
-          </div>
-          <input type="range" id="margin-slider" min="0" max="40" value="0" oninput="setPageSpacing(this.value)" style="width: 100%; accent-color: var(--primary); cursor: pointer;" aria-label="Điều chỉnh lề dải ảnh">
-        </div>
-
-        <!-- 1.4. Hiển thị thanh đầu trang -->
-        <div class="setting-section" id="section-header-visibility">
+        <!-- Hiển thị đầu trang -->
+        <div class="setting-section">
           <label class="setting-label">HIỂN THỊ ĐẦU TRANG</label>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
             <button type="button" class="setting-btn active" id="btn-header-show" onclick="setHeaderVisibility('show')" aria-pressed="true">Hiện đầu trang</button>
@@ -970,20 +1149,20 @@
           </div>
         </div>
 
-        <!-- 1.5. Kiểu thanh tiến trình -->
-        <div class="setting-section" id="section-progress-style">
+        <!-- Kiểu thanh tiến trình -->
+        <div class="setting-section">
           <label class="setting-label">KIỂU THANH TIẾN TRÌNH</label>
-          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;">
             <button type="button" class="setting-btn" id="btn-progress-hidden" onclick="setProgressBarStyle('hidden')" aria-pressed="false">Ẩn thanh</button>
             <button type="button" class="setting-btn" id="btn-progress-light" onclick="setProgressBarStyle('light')" aria-pressed="false">Thanh mảnh</button>
             <button type="button" class="setting-btn active" id="btn-progress-normal" onclick="setProgressBarStyle('normal')" aria-pressed="true">Bình thường</button>
           </div>
         </div>
 
-        <!-- 1.6. Vị trí thanh tiến trình -->
-        <div class="setting-section" id="section-progress-pos">
+        <!-- Vị trí thanh tiến trình -->
+        <div class="setting-section">
           <label class="setting-label">VỊ TRÍ THANH TIẾN TRÌNH</label>
-          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px;">
+          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;">
             <button type="button" class="setting-btn active" id="btn-progress-pos-top" onclick="setProgressBarPosition('top')" aria-pressed="true">Trên</button>
             <button type="button" class="setting-btn" id="btn-progress-pos-bottom" onclick="setProgressBarPosition('bottom')" aria-pressed="false">Dưới</button>
             <button type="button" class="setting-btn" id="btn-progress-pos-left" onclick="setProgressBarPosition('left')" aria-pressed="false">Trái</button>
@@ -991,8 +1170,8 @@
           </div>
         </div>
 
-        <!-- 1.7. Kích thước thanh tiến trình -->
-        <div class="setting-section" id="section-progress-size">
+        <!-- Kích thước thanh tiến trình -->
+        <div class="setting-section">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
             <label class="setting-label" style="margin-bottom: 0;">KÍCH THƯỚC THANH TIẾN TRÌNH</label>
             <span id="progress-size-val" style="font-size: 11px; color: var(--primary); font-weight: 700;">4px</span>
@@ -1000,27 +1179,65 @@
           <input type="range" id="progress-size-slider" min="1" max="16" value="4" oninput="setProgressBarSize(this.value)" style="width: 100%; accent-color: var(--primary); cursor: pointer;" aria-label="Kích thước pixel thanh tiến trình">
         </div>
 
-        <!-- 1.8. Gợi ý thao tác con trỏ -->
-        <div class="setting-section" id="section-cursor-hints">
-          <label class="setting-label">GỢI Ý THAO TÁC CON TRỎ</label>
-          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px;">
-            <button type="button" class="setting-btn active" id="btn-cursor-none" onclick="setCursorHints('none')" aria-pressed="true">Không</button>
-            <button type="button" class="setting-btn" id="btn-cursor-overlay" onclick="setCursorHints('overlay')" aria-pressed="false">Lớp phủ</button>
-            <button type="button" class="setting-btn" id="btn-cursor-pointer" onclick="setCursorHints('pointer')" aria-pressed="false">Con trỏ</button>
+        <!-- Màu nền Reader -->
+        <div class="setting-section">
+          <label class="setting-label">MÀU NỀN TRÌNH ĐỌC</label>
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;">
+            <button type="button" class="setting-btn active" id="btn-bg-theme" onclick="setReaderBackground('theme')" aria-pressed="true">Theo giao diện</button>
+            <button type="button" class="setting-btn" id="btn-bg-white" onclick="setReaderBackground('white')" aria-pressed="false">Trắng</button>
+            <button type="button" class="setting-btn" id="btn-bg-black" onclick="setReaderBackground('black')" aria-pressed="false">Đen</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── TAB 2: HIỂN THỊ ẢNH ── -->
+      <div class="reader-tab-pane" id="tab-pane-image" role="tabpanel">
+        <!-- Căn chỉnh khung ảnh -->
+        <div class="setting-section">
+          <label class="setting-label">CĂN CHỈNH KHUNG ẢNH</label>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+            <button type="button" class="setting-btn" id="adv-btn-fit-width" onclick="setFitMode('fit-width')" aria-pressed="false">↔️ Vừa chiều rộng</button>
+            <button type="button" class="setting-btn" id="adv-btn-fit-height" onclick="setFitMode('fit-height')" aria-pressed="false">↕️ Vừa chiều cao</button>
           </div>
         </div>
 
-        <!-- 1.9. Tùy chọn bổ sung cho reader -->
-        <div class="setting-section" id="section-reader-extras">
-          <label class="setting-label">TÙY CHỌN BỔ SUNG</label>
-          <label class="setting-toggle-row">
-            <span>Hiện nút menu khi menu đang ghim và đầu trang bị ẩn</span>
-            <input type="checkbox" id="toggle-extra-menu-btn" onchange="setReaderExtra('menuBtn', this.checked)">
-          </label>
-          <label class="setting-toggle-row">
-            <span>Hiện số trang khi thanh tiến trình bị ẩn</span>
-            <input type="checkbox" id="toggle-extra-page-num" onchange="setReaderExtra('pageNum', this.checked)">
-          </label>
+        <!-- Kéo giãn ảnh nhỏ -->
+        <div class="setting-section">
+          <label class="setting-label">KÉO GIÃN ẢNH NHỎ</label>
+          <button type="button" class="setting-btn" id="btn-stretch-small" onclick="toggleStretchSmall()" style="width: 100%; text-align: left; padding: 8px 12px;" aria-pressed="false">
+            🔍 Phóng to ảnh nhỏ để vừa khung
+          </button>
+        </div>
+
+        <!-- Giới hạn chiều rộng tối đa -->
+        <div class="setting-section">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+            <label class="setting-label" style="margin-bottom: 0;">GIỚI HẠN CHIỀU RỘNG TỐI ĐA</label>
+            <span id="max-width-val" style="font-size: 11px; color: var(--primary); font-weight: 700;">800px</span>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px;">
+            <button type="button" class="setting-btn" id="btn-w-680" onclick="setReaderWidth(680)" aria-pressed="false">680px</button>
+            <button type="button" class="setting-btn active" id="btn-w-800" onclick="setReaderWidth(800)" aria-pressed="true">800px</button>
+            <button type="button" class="setting-btn" id="btn-w-1000" onclick="setReaderWidth(1000)" aria-pressed="false">1000px</button>
+            <button type="button" class="setting-btn" id="btn-w-full" onclick="setReaderWidth('100%')" aria-pressed="false">100%</button>
+            <button type="button" class="setting-btn" id="btn-w-none" onclick="setReaderWidth('none')" aria-pressed="false">Không</button>
+          </div>
+        </div>
+
+        <!-- Giới hạn chiều cao tối đa -->
+        <div class="setting-section">
+          <label class="setting-label">GIỚI HẠN CHIỀU CAO TỐI ĐA</label>
+          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;">
+            <button type="button" class="setting-btn active" id="btn-h-none" onclick="setMaxHeightLimit('none')" aria-pressed="true">Không</button>
+            <button type="button" class="setting-btn" id="btn-h-70vh" onclick="setMaxHeightLimit('70vh')" aria-pressed="false">70vh</button>
+            <button type="button" class="setting-btn" id="btn-h-85vh" onclick="setMaxHeightLimit('85vh')" aria-pressed="false">85vh</button>
+            <button type="button" class="setting-btn" id="btn-h-100vh" onclick="setMaxHeightLimit('100vh')" aria-pressed="false">100vh</button>
+          </div>
+        </div>
+
+        <!-- Bộ lọc ảnh: Thang xám & Làm mờ -->
+        <div class="setting-section">
+          <label class="setting-label">BỘ LỌC HÌNH ẢNH</label>
           <label class="setting-toggle-row">
             <span>Hiển thị trang ở chế độ thang xám</span>
             <input type="checkbox" id="toggle-extra-grayscale" onchange="setReaderExtra('grayscale', this.checked)">
@@ -1031,71 +1248,13 @@
           </label>
         </div>
 
-        <!-- 1.10. Màu nền reader -->
-        <div class="setting-section" id="section-reader-bg">
-          <label class="setting-label">MÀU NỀN TRÌNH ĐỌC</label>
-          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px;">
-            <button type="button" class="setting-btn active" id="btn-bg-theme" onclick="setReaderBackground('theme')" aria-pressed="true">Theo giao diện</button>
-            <button type="button" class="setting-btn" id="btn-bg-white" onclick="setReaderBackground('white')" aria-pressed="false">Trắng</button>
-            <button type="button" class="setting-btn" id="btn-bg-black" onclick="setReaderBackground('black')" aria-pressed="false">Đen</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- ── TAB 2: HIỂN THỊ ẢNH ── -->
-      <div class="reader-tab-pane" id="tab-pane-image" role="tabpanel">
-        <!-- 2.1. Căn chỉnh khung ảnh (Fit Mode) -->
-        <div class="setting-section" id="section-image-sizing">
-          <label class="setting-label">CĂN CHỈNH KHUNG ẢNH</label>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 6px;">
-            <button type="button" class="setting-btn" id="btn-fit-width" onclick="setFitMode('fit-width')" aria-pressed="false">↔️ Vừa chiều rộng</button>
-            <button type="button" class="setting-btn" id="btn-fit-height" onclick="setFitMode('fit-height')" aria-pressed="false">↕️ Vừa chiều cao</button>
-          </div>
-        </div>
-
-        <!-- 2.2. Kéo giãn ảnh nhỏ -->
-        <div class="setting-section" id="section-stretch-small">
-          <label class="setting-label">KÉO GIÃN ẢNH NHỎ</label>
-          <button type="button" class="setting-btn" id="btn-stretch-small" onclick="toggleStretchSmall()" style="width: 100%; text-align: left; padding: 8px 12px;" aria-pressed="false">
-            🔍 Phóng to ảnh nhỏ để vừa khung
-          </button>
-        </div>
-
-        <!-- 2.3. Giới hạn chiều rộng tối đa -->
-        <div class="setting-section" id="section-max-width">
+        <!-- Độ sáng trong modal -->
+        <div class="setting-section">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
-            <label class="setting-label" style="margin-bottom: 0;">GIỚI HẠN CHIỀU RỘNG TỐI ĐA</label>
-            <span id="max-width-val" style="font-size: 11px; color: var(--primary); font-weight: 700;">800px</span>
+            <label class="setting-label" style="margin-bottom: 0;">ĐỘ SÁNG TRÌNH ĐỌC</label>
+            <span id="adv-brightness-val" style="font-size: 11px; color: var(--primary); font-weight: 700;">100%</span>
           </div>
-          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-bottom: 6px;">
-            <button type="button" class="setting-btn" id="btn-w-680" onclick="setReaderWidth(680)" aria-pressed="false">680px</button>
-            <button type="button" class="setting-btn active" id="btn-w-800" onclick="setReaderWidth(800)" aria-pressed="true">800px</button>
-            <button type="button" class="setting-btn" id="btn-w-1000" onclick="setReaderWidth(1000)" aria-pressed="false">1000px</button>
-            <button type="button" class="setting-btn" id="btn-w-full" onclick="setReaderWidth('100%')" aria-pressed="false">100%</button>
-          </div>
-        </div>
-
-        <!-- 2.4. Giới hạn chiều cao tối đa -->
-        <div class="setting-section" id="section-max-height">
-          <label class="setting-label">GIỚI HẠN CHIỀU CAO TỐI ĐA</label>
-          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px;">
-            <button type="button" class="setting-btn active" id="btn-h-none" onclick="setMaxHeightLimit('none')" aria-pressed="true">Không</button>
-            <button type="button" class="setting-btn" id="btn-h-70vh" onclick="setMaxHeightLimit('70vh')" aria-pressed="false">70vh</button>
-            <button type="button" class="setting-btn" id="btn-h-85vh" onclick="setMaxHeightLimit('85vh')" aria-pressed="false">85vh</button>
-            <button type="button" class="setting-btn" id="btn-h-100vh" onclick="setMaxHeightLimit('100vh')" aria-pressed="false">100vh</button>
-          </div>
-        </div>
-
-        <!-- 2.5. Chế độ ban đêm & Độ sáng -->
-        <div class="setting-section" id="section-night-brightness">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-            <label class="setting-label" style="margin-bottom: 0;">🌙 CHẾ ĐỘ BAN ĐÊM & ĐỘ SÁNG</label>
-            <span id="brightness-val" style="font-size: 11px; color: var(--primary); font-weight: 700;">Độ sáng: 100%</span>
-          </div>
-          <button type="button" class="setting-btn" id="btn-toggle-night" onclick="toggleNightMode()" style="width: 100%; margin-bottom: 8px;" aria-pressed="false">
-            🌙 Giảm chói mắt
-          </button>
-          <input type="range" id="brightness-slider" min="50" max="100" value="100" oninput="setBrightness(this.value)" style="width: 100%; accent-color: var(--primary); cursor: pointer;" aria-label="Độ sáng ảnh truyện">
+          <input type="range" id="adv-brightness-slider" min="30" max="100" value="100" oninput="setBrightness(this.value)" style="width: 100%; accent-color: var(--primary); cursor: pointer;" aria-label="Độ sáng ảnh truyện">
         </div>
       </div>
 
@@ -1103,28 +1262,27 @@
       <div class="reader-tab-pane" id="tab-pane-keybinds" role="tabpanel">
         <div class="setting-section">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-            <label class="setting-label" style="margin-bottom: 0;">DANH SÁCH PHÍM TẮT</label>
-            <button type="button" onclick="resetAllKeybinds()" class="keybind-reset-row-btn" title="Đặt lại toàn bộ phím tắt mặc định" style="color: var(--primary); font-size: 11px; font-weight: 700;">
+            <label class="setting-label" style="margin-bottom: 0;">QUẢN LÝ PHÍM TẮT (10 HÀNH ĐỘNG)</label>
+            <button type="button" id="btn-reset-keybinds" onclick="resetAllKeybinds()" class="keybind-reset-row-btn" title="Đặt lại toàn bộ phím tắt mặc định" style="color: var(--primary); font-size: 11px; font-weight: 700; cursor: pointer; background: none; border: none;">
               ↺ Đặt lại mặc định
             </button>
           </div>
-          <div id="keybinds-list-container" style="background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; max-height: 280px; overflow-y: auto;">
-            <!-- Render động bằng JS -->
+          <div id="keybinds-list-container" style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; max-height: 320px; overflow-y: auto;">
+            <!-- Render bằng JS -->
           </div>
         </div>
 
-        <!-- Hướng dẫn phím tắt tóm tắt theo mode -->
-        <div id="reader-hotkey-box" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 8px 10px; font-size: 11px; color: var(--text-muted); line-height: 1.6;">
-          <div style="font-weight: 700; color: #fff; margin-bottom: 4px;">⌨️ Hướng dẫn thao tác nhanh:</div>
-          <div>• Bấm <strong>+</strong> để gán phím mới, bấm <strong>✕</strong> để xóa</div>
-          <div>• Nhấn <strong>Esc</strong> khi đang gán để hủy</div>
+        <div id="reader-hotkey-box" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 10px 12px; font-size: 11.5px; color: var(--text-muted); line-height: 1.6;">
+          <div style="font-weight: 700; color: #fff; margin-bottom: 4px;">⌨️ Hướng dẫn phím tắt:</div>
+          <div>• Bấm nút <strong>+</strong> để lắng nghe phím gán mới, bấm <strong>✕</strong> để xóa</div>
+          <div>• Nhấn <strong>Esc</strong> khi đang chờ gán để hủy bỏ</div>
         </div>
       </div>
 
-      <!-- ── TAB 4: HÀNH VI ĐỌC ── -->
+      <!-- ── TAB 4: HÀNH VI ── -->
       <div class="reader-tab-pane" id="tab-pane-behaviors" role="tabpanel">
-        <!-- 4.1. Tự động sang chap tiếp theo ở trang cuối -->
-        <div class="setting-section" id="section-auto-advance">
+        <!-- Tự động sang chap -->
+        <div class="setting-section">
           <label class="setting-label">TỰ ĐỘNG SANG CHAP TIẾP THEO Ở TRANG CUỐI</label>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
             <button type="button" class="setting-btn" id="btn-auto-advance-off" onclick="setAutoAdvanceChapter(false)" aria-pressed="false">Tắt</button>
@@ -1132,36 +1290,36 @@
           </div>
         </div>
 
-        <!-- 4.2. Chế độ lịch sử reader -->
-        <div class="setting-section" id="section-history-mode">
+        <!-- Chế độ lịch sử -->
+        <div class="setting-section">
           <label class="setting-label">CHẾ ĐỘ LỊCH SỬ READER</label>
-          <div style="display: flex; flex-direction: column; gap: 4px;">
-            <button type="button" class="setting-btn" id="btn-history-none" onclick="setHistoryMode('none')" style="text-align: left; padding: 6px 10px;" aria-pressed="false">
+          <div style="display: flex; flex-direction: column; gap: 5px;">
+            <button type="button" class="setting-btn" id="btn-history-none" onclick="setHistoryMode('none')" style="text-align: left; padding: 8px 12px;" aria-pressed="false">
               • Không cập nhật URL và tiêu đề
             </button>
-            <button type="button" class="setting-btn active" id="btn-history-replace" onclick="setHistoryMode('replace')" style="text-align: left; padding: 6px 10px;" aria-pressed="true">
+            <button type="button" class="setting-btn active" id="btn-history-replace" onclick="setHistoryMode('replace')" style="text-align: left; padding: 8px 12px;" aria-pressed="true">
               • Cập nhật URL và tiêu đề
             </button>
-            <button type="button" class="setting-btn" id="btn-history-push" onclick="setHistoryMode('push')" style="text-align: left; padding: 6px 10px;" aria-pressed="false">
+            <button type="button" class="setting-btn" id="btn-history-push" onclick="setHistoryMode('push')" style="text-align: left; padding: 8px 12px;" aria-pressed="false">
               • Cập nhật URL + hỗ trợ Back/Forward
             </button>
           </div>
         </div>
 
-        <!-- 4.3. Chuyển trang bằng chạm -->
-        <div class="setting-section" id="section-tap-turn">
+        <!-- Chuyển trang chạm -->
+        <div class="setting-section">
           <label class="setting-label">CHUYỂN TRANG BẰNG CHẠM</label>
-          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;">
             <button type="button" class="setting-btn active" id="btn-tap-directional" onclick="setTapTurnMode('directional')" aria-pressed="true">Hướng chạm</button>
             <button type="button" class="setting-btn" id="btn-tap-always" onclick="setTapTurnMode('always')" aria-pressed="false">Luôn tiến</button>
             <button type="button" class="setting-btn" id="btn-tap-none" onclick="setTapTurnMode('none')" aria-pressed="false">Tắt</button>
           </div>
         </div>
 
-        <!-- 4.4. Chuyển trang bằng cuộn -->
-        <div class="setting-section" id="section-scroll-turn">
+        <!-- Chuyển trang cuộn -->
+        <div class="setting-section">
           <label class="setting-label">CHUYỂN TRANG BẰNG CUỘN</label>
-          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px;">
+          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;">
             <button type="button" class="setting-btn" id="btn-scroll-none" onclick="setScrollTurnMode('none')" aria-pressed="false">Tắt</button>
             <button type="button" class="setting-btn" id="btn-scroll-wheel" onclick="setScrollTurnMode('wheel')" aria-pressed="false">Chuột</button>
             <button type="button" class="setting-btn" id="btn-scroll-keys" onclick="setScrollTurnMode('keys')" aria-pressed="false">Phím</button>
@@ -1169,8 +1327,17 @@
           </div>
         </div>
 
-        <!-- 4.5. Nhấp đúp để bật/tắt toàn màn hình -->
-        <div class="setting-section" id="section-dblclick-fs">
+        <!-- Vuốt swipe trên mobile -->
+        <div class="setting-section">
+          <label class="setting-label">VUỐT CHẠM (SWIPE) TRÊN THIẾT BỊ DI ĐỘNG</label>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+            <button type="button" class="setting-btn" id="btn-swipe-turn-off" onclick="setSwipeTurnMode(false)" aria-pressed="false">Tắt</button>
+            <button type="button" class="setting-btn active" id="btn-swipe-turn-on" onclick="setSwipeTurnMode(true)" aria-pressed="true">Bật</button>
+          </div>
+        </div>
+
+        <!-- Nhấp đúp toàn màn hình -->
+        <div class="setting-section">
           <label class="setting-label">NHẤP ĐÚP ĐỂ BẬT/TẮT TOÀN MÀN HÌNH</label>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
             <button type="button" class="setting-btn" id="btn-dblclick-fs-off" onclick="setDblClickFullscreen(false)" aria-pressed="false">Tắt</button>
@@ -1178,34 +1345,59 @@
           </div>
         </div>
 
-        <!-- 4.6. Tự cuộn lên đầu khi đổi chế độ ảnh -->
-        <div class="setting-section" id="section-autoscroll-fit">
+        <!-- Tự cuộn lên khi đổi chế độ ảnh -->
+        <div class="setting-section">
           <label class="setting-label">TỰ CUỘN LÊN KHI ĐỔI CHẾ ĐỘ ẢNH</label>
-          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;">
             <button type="button" class="setting-btn" id="btn-autoscroll-width" onclick="setAutoScrollFitMode('width')" aria-pressed="false">Chiều rộng</button>
             <button type="button" class="setting-btn" id="btn-autoscroll-height" onclick="setAutoScrollFitMode('height')" aria-pressed="false">Chiều cao</button>
             <button type="button" class="setting-btn active" id="btn-autoscroll-none" onclick="setAutoScrollFitMode('none')" aria-pressed="true">Không</button>
           </div>
         </div>
 
-        <!-- 4.7. Độ lệch tự cuộn -->
-        <div class="setting-section" id="section-scroll-offset">
+        <!-- Độ lệch tự cuộn -->
+        <div class="setting-section">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
             <label class="setting-label" style="margin-bottom: 0;">ĐỘ LỆCH TỰ CUỘN (PIXEL)</label>
             <span id="scroll-offset-val" style="font-size: 11px; color: var(--primary); font-weight: 700;">0px</span>
           </div>
-          <input type="number" id="input-scroll-offset" min="0" max="500" value="0" oninput="setAutoScrollOffset(this.value)" style="width: 100%; box-sizing: border-box; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15); color: #fff; padding: 6px 10px; border-radius: 8px; font-size: 12px;" aria-label="Độ lệch pixel khi tự cuộn">
+          <input type="number" id="input-scroll-offset" min="0" max="500" value="0" oninput="setAutoScrollOffset(this.value)" style="width: 100%; box-sizing: border-box; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15); color: #fff; padding: 7px 10px; border-radius: 8px; font-size: 13px;" aria-label="Độ lệch pixel khi tự cuộn">
         </div>
       </div>
 
-      <!-- ── PANEL FOOTER: RESET ALL TO DEFAULT ── -->
-      <div style="margin-top: 14px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.08); text-align: center;">
-        <button type="button" id="btn-reset-all-settings" onclick="resetAllSettingsToDefault()" class="setting-btn" style="width: 100%; padding: 8px; font-weight: 700; color: #ff8f70; background: rgba(255,94,54,0.08); border-color: rgba(255,94,54,0.25);">
-          🔄 Đặt lại toàn bộ mặc định
-        </button>
+      <!-- ── TAB 5: KHÁC ── -->
+      <div class="reader-tab-pane" id="tab-pane-other" role="tabpanel">
+        <!-- Gợi ý con trỏ -->
+        <div class="setting-section">
+          <label class="setting-label">GỢI Ý THAO TÁC CON TRỎ</label>
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;">
+            <button type="button" class="setting-btn active" id="btn-cursor-none" onclick="setCursorHints('none')" aria-pressed="true">Không</button>
+            <button type="button" class="setting-btn" id="btn-cursor-overlay" onclick="setCursorHints('overlay')" aria-pressed="false">Lớp phủ</button>
+            <button type="button" class="setting-btn" id="btn-cursor-pointer" onclick="setCursorHints('pointer')" aria-pressed="false">Con trỏ</button>
+          </div>
+        </div>
+
+        <!-- Tùy chọn bổ sung -->
+        <div class="setting-section">
+          <label class="setting-label">TÙY CHỌN BỔ SUNG (READER EXTRAS)</label>
+          <label class="setting-toggle-row">
+            <span>Hiện nút menu khi menu đang ghim và đầu trang bị ẩn</span>
+            <input type="checkbox" id="toggle-extra-menu-btn" onchange="setReaderExtra('menuBtn', this.checked)">
+          </label>
+          <label class="setting-toggle-row">
+            <span>Hiện số trang khi thanh tiến trình bị ẩn</span>
+            <input type="checkbox" id="toggle-extra-page-num" onchange="setReaderExtra('pageNum', this.checked)">
+          </label>
+        </div>
+
+        <!-- Khôi phục cài đặt mặc định -->
+        <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.08); text-align: center;">
+          <button type="button" id="btn-reset-all-settings" onclick="resetAllSettingsToDefault()" class="setting-btn" style="width: 100%; padding: 10px; font-weight: 700; color: #ff8f70; background: rgba(255,94,54,0.08); border-color: rgba(255,94,54,0.25);">
+            🔄 Khôi phục toàn bộ cài đặt mặc định
+          </button>
+        </div>
       </div>
     </div>
-  </aside>
   </div>
 
   <div class="reader-settings-backdrop" id="reader-settings-backdrop" onclick="toggleSettingsPanel(false)"></div>
@@ -1825,6 +2017,56 @@
     }
   });
 
+  // ── FULL / ADVANCED SETTINGS MODAL HANDLERS ──
+  function openAdvancedModal() {
+    const modal = document.getElementById('reader-advanced-modal');
+    const backdrop = document.getElementById('reader-advanced-backdrop');
+    if (!modal) return;
+    modal.classList.add('is-open');
+    if (backdrop) backdrop.classList.add('is-open');
+    document.body.classList.add('reader-modal-open');
+    loadReaderSettings();
+  }
+
+  function closeAdvancedModal() {
+    const modal = document.getElementById('reader-advanced-modal');
+    const backdrop = document.getElementById('reader-advanced-backdrop');
+    if (!modal) return;
+    modal.classList.remove('is-open');
+    if (backdrop) backdrop.classList.remove('is-open');
+    document.body.classList.remove('reader-modal-open');
+  }
+
+  function switchReaderTab(tabName) {
+    const tabs = ['layout', 'image', 'keybinds', 'behaviors', 'other'];
+    tabs.forEach(t => {
+      const btn = document.getElementById(`tab-btn-${t}`);
+      const pane = document.getElementById(`tab-pane-${t}`);
+      if (t === tabName) {
+        btn?.classList.add('active');
+        btn?.setAttribute('aria-selected', 'true');
+        pane?.classList.add('active');
+      } else {
+        btn?.classList.remove('active');
+        btn?.setAttribute('aria-selected', 'false');
+        pane?.classList.remove('active');
+      }
+    });
+  }
+
+  function setSwipeTurnMode(val, persist = true) {
+    readerSettings.swipeTurn = !!val;
+    const btnOff = document.getElementById('btn-swipe-turn-off');
+    const btnOn = document.getElementById('btn-swipe-turn-on');
+    if (btnOff && btnOn) {
+      btnOff.classList.toggle('active', !val);
+      btnOff.setAttribute('aria-pressed', !val ? 'true' : 'false');
+      btnOn.classList.toggle('active', !!val);
+      btnOn.setAttribute('aria-pressed', !!val ? 'true' : 'false');
+    }
+    if (persist) saveReaderSettings();
+  }
+
   // ── TAB 1: BỐ CỤC TRANG (Page Layout) ──
   function setReadingLayout(mode, persist = true) {
     readerSettings.layout = mode;
@@ -1832,38 +2074,46 @@
     const singleNav = document.getElementById('single-page-nav');
     const dockPageNav = document.getElementById('dock-page-nav');
     const btnVert = document.getElementById('btn-mode-vertical');
+    const advBtnVert = document.getElementById('adv-btn-mode-vertical');
     const btnSingle = document.getElementById('btn-mode-single');
+    const advBtnSingle = document.getElementById('adv-btn-mode-single');
     const btnDouble = document.getElementById('btn-mode-double');
+    const advBtnDouble = document.getElementById('adv-btn-mode-double');
     const dirSection = document.getElementById('section-reading-direction');
+    const advDirSection = document.getElementById('adv-section-reading-direction');
     const spacingSection = document.getElementById('section-page-spacing');
     const spacingLabel = document.getElementById('label-page-spacing');
 
     body.classList.remove('reader-layout-vertical', 'reader-layout-single', 'reader-layout-double');
-    btnVert?.classList.remove('active');
-    btnVert?.setAttribute('aria-pressed', 'false');
-    btnSingle?.classList.remove('active');
-    btnSingle?.setAttribute('aria-pressed', 'false');
-    btnDouble?.classList.remove('active');
-    btnDouble?.setAttribute('aria-pressed', 'false');
+    [btnVert, advBtnVert, btnSingle, advBtnSingle, btnDouble, advBtnDouble].forEach(b => {
+      b?.classList.remove('active');
+      b?.setAttribute('aria-pressed', 'false');
+    });
 
     if (mode === 'single') {
       body.classList.add('reader-layout-single');
       if (readerSettings.direction === 'rtl') body.classList.add('reader-dir-rtl');
-      btnSingle?.classList.add('active');
-      btnSingle?.setAttribute('aria-pressed', 'true');
+      [btnSingle, advBtnSingle].forEach(b => {
+        b?.classList.add('active');
+        b?.setAttribute('aria-pressed', 'true');
+      });
       if (singleNav) singleNav.style.display = 'inline-flex';
       if (dockPageNav) dockPageNav.style.display = 'inline-flex';
       if (dirSection) dirSection.style.display = 'block';
+      if (advDirSection) advDirSection.style.display = 'block';
       if (spacingSection) spacingSection.style.display = 'none';
       showPage(currentSinglePageIndex);
     } else if (mode === 'double') {
       body.classList.add('reader-layout-double');
       if (readerSettings.direction === 'rtl') body.classList.add('reader-dir-rtl');
-      btnDouble?.classList.add('active');
-      btnDouble?.setAttribute('aria-pressed', 'true');
+      [btnDouble, advBtnDouble].forEach(b => {
+        b?.classList.add('active');
+        b?.setAttribute('aria-pressed', 'true');
+      });
       if (singleNav) singleNav.style.display = 'inline-flex';
       if (dockPageNav) dockPageNav.style.display = 'inline-flex';
       if (dirSection) dirSection.style.display = 'block';
+      if (advDirSection) advDirSection.style.display = 'block';
       if (spacingSection) {
         spacingSection.style.display = 'block';
         if (spacingLabel) spacingLabel.textContent = 'KHOẢNG CÁCH GIỮA 2 TRANG';
@@ -1873,11 +2123,14 @@
       // vertical
       body.classList.add('reader-layout-vertical');
       body.classList.remove('reader-dir-rtl');
-      btnVert?.classList.add('active');
-      btnVert?.setAttribute('aria-pressed', 'true');
+      [btnVert, advBtnVert].forEach(b => {
+        b?.classList.add('active');
+        b?.setAttribute('aria-pressed', 'true');
+      });
       if (singleNav) singleNav.style.display = 'none';
       if (dockPageNav) dockPageNav.style.display = 'none';
       if (dirSection) dirSection.style.display = 'none';
+      if (advDirSection) advDirSection.style.display = 'none';
       if (spacingSection) {
         spacingSection.style.display = 'block';
         if (spacingLabel) spacingLabel.textContent = 'KHOẢNG CÁCH GIỮA ẢNH';
@@ -1894,22 +2147,32 @@
     readerSettings.direction = dir;
     const body = document.body;
     const btnLtr = document.getElementById('btn-dir-ltr');
+    const advBtnLtr = document.getElementById('adv-btn-dir-ltr');
     const btnRtl = document.getElementById('btn-dir-rtl');
+    const advBtnRtl = document.getElementById('adv-btn-dir-rtl');
 
     if (dir === 'rtl') {
       if (readerSettings.layout !== 'vertical') {
         body.classList.add('reader-dir-rtl');
       }
-      btnLtr?.classList.remove('active');
-      btnLtr?.setAttribute('aria-pressed', 'false');
-      btnRtl?.classList.add('active');
-      btnRtl?.setAttribute('aria-pressed', 'true');
+      [btnLtr, advBtnLtr].forEach(b => {
+        b?.classList.remove('active');
+        b?.setAttribute('aria-pressed', 'false');
+      });
+      [btnRtl, advBtnRtl].forEach(b => {
+        b?.classList.add('active');
+        b?.setAttribute('aria-pressed', 'true');
+      });
     } else {
       body.classList.remove('reader-dir-rtl');
-      btnLtr?.classList.add('active');
-      btnLtr?.setAttribute('aria-pressed', 'true');
-      btnRtl?.classList.remove('active');
-      btnRtl?.setAttribute('aria-pressed', 'false');
+      [btnLtr, advBtnLtr].forEach(b => {
+        b?.classList.add('active');
+        b?.setAttribute('aria-pressed', 'true');
+      });
+      [btnRtl, advBtnRtl].forEach(b => {
+        b?.classList.remove('active');
+        b?.setAttribute('aria-pressed', 'false');
+      });
     }
 
     updateHotkeyBox();
@@ -2138,20 +2401,28 @@
     readerSettings.fit = mode;
     const body = document.body;
     const btnWidth = document.getElementById('btn-fit-width');
+    const advBtnWidth = document.getElementById('adv-btn-fit-width');
     const btnHeight = document.getElementById('btn-fit-height');
+    const advBtnHeight = document.getElementById('adv-btn-fit-height');
     const btnFull = document.getElementById('btn-w-full') || document.getElementById('btn-maxw-full');
     const container = document.getElementById('reader-container');
 
     body.classList.remove('reader-fit-width', 'reader-fit-height');
-    btnWidth?.classList.remove('active');
-    btnWidth?.setAttribute('aria-pressed', 'false');
-    btnHeight?.classList.remove('active');
-    btnHeight?.setAttribute('aria-pressed', 'false');
+    [btnWidth, advBtnWidth].forEach(b => {
+      b?.classList.remove('active');
+      b?.setAttribute('aria-pressed', 'false');
+    });
+    [btnHeight, advBtnHeight].forEach(b => {
+      b?.classList.remove('active');
+      b?.setAttribute('aria-pressed', 'false');
+    });
 
     if (mode === 'fit-width') {
       body.classList.add('reader-fit-width');
-      btnWidth?.classList.add('active');
-      btnWidth?.setAttribute('aria-pressed', 'true');
+      [btnWidth, advBtnWidth].forEach(b => {
+        b?.classList.add('active');
+        b?.setAttribute('aria-pressed', 'true');
+      });
       readerSettings.width = '100%';
       if (container) {
         container.style.maxWidth = '100%';
@@ -2164,8 +2435,10 @@
       }
     } else if (mode === 'fit-height') {
       body.classList.add('reader-fit-height');
-      btnHeight?.classList.add('active');
-      btnHeight?.setAttribute('aria-pressed', 'true');
+      [btnHeight, advBtnHeight].forEach(b => {
+        b?.classList.add('active');
+        b?.setAttribute('aria-pressed', 'true');
+      });
       if (container) {
         container.style.maxWidth = '100%';
       }
@@ -2310,7 +2583,7 @@
 
   function toggleNightMode(persist = true) {
     readerSettings.night = !readerSettings.night;
-    const btn = document.getElementById('btn-toggle-night');
+    const btn = document.getElementById('btn-night-mode') || document.getElementById('btn-toggle-night');
     if (readerSettings.night) {
       document.body.classList.add('reader-night-mode');
       btn?.classList.add('active');
@@ -2326,7 +2599,7 @@
   }
 
   function setBrightness(val, persist = true) {
-    const num = Math.min(Math.max(parseInt(val, 10) || 100, 50), 100);
+    const num = Math.min(Math.max(parseInt(val, 10) || 100, 30), 100);
     readerSettings.brightness = num;
 
     const container = document.getElementById('reader-container');
@@ -2336,8 +2609,13 @@
 
     const slider = document.getElementById('brightness-slider');
     const valLabel = document.getElementById('brightness-val');
+    const advSlider = document.getElementById('adv-brightness-slider');
+    const advValLabel = document.getElementById('adv-brightness-val');
+
     if (slider) slider.value = num;
     if (valLabel) valLabel.textContent = `Độ sáng: ${num}%`;
+    if (advSlider) advSlider.value = num;
+    if (advValLabel) advValLabel.textContent = `${num}%`;
 
     if (persist) saveReaderSettings();
   }
@@ -2589,6 +2867,7 @@
     keybindSettings = JSON.parse(JSON.stringify(defaultKeybinds));
     saveReaderSettings();
     applyAllReaderSettings();
+    closeAdvancedModal();
   }
 
   function resetLocks() {
@@ -2879,8 +3158,14 @@
 
     const key = e.key;
 
-    // Phím Escape: Đóng bảng cài đặt
+    // Phím Escape: Đóng modal nâng cao hoặc bảng cài đặt
     if (key === 'Escape' || key === 'Esc') {
+      const modal = document.getElementById('reader-advanced-modal');
+      if (modal && modal.classList.contains('is-open')) {
+        e.preventDefault();
+        closeAdvancedModal();
+        return;
+      }
       const panel = document.getElementById('reader-settings-panel');
       if (panel && (panel.classList.contains('is-open') || panel.style.display === 'block')) {
         e.preventDefault();
