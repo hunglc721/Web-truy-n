@@ -87,7 +87,7 @@
 }
 @media (max-height: 500px) {
   #recommendation-chat-widget { bottom: calc(12px + env(safe-area-inset-bottom)); }
-  #recommendation-chat-panel { max-height: calc(100dvh - 88px - env(safe-area-inset-bottom)); }
+  #recommendation-chat-panel { max-height: calc(100dvh - 88px - var(--header-height, 72px) - env(safe-area-inset-bottom)); }
   .recommendation-chat-header { padding: 4px 12px; }
   #recommendation-chat-chips { max-height: 44px; padding: 4px 12px; }
   .recommendation-chat-input-label { display: none; }

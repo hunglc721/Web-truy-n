@@ -69,3 +69,27 @@ test('question, quick reply and reload reuse the guest conversation', async ({ p
   expect(body.preferences.character_traits).toEqual(['Overpowered MC']);
   await expect(panel.getByRole('heading', { name: 'Chatbot Comic A' })).toBeVisible();
 });
+
+test('chat stays usable below the real header on short viewports', async ({ page }) => {
+  const panel = page.getByRole('dialog', { name: 'Trợ lý tìm truyện' });
+  for (const viewport of [{ width: 667, height: 375 }, { width: 393, height: 350 }]) {
+    await page.setViewportSize(viewport);
+    const header = await page.locator('#site-header').boundingBox();
+    const box = await panel.boundingBox();
+    expect(box.y).toBeGreaterThanOrEqual(header.y + header.height);
+    expect(box.x).toBeGreaterThanOrEqual(0);
+    expect(box.x + box.width).toBeLessThanOrEqual(viewport.width);
+    await panel.getByRole('button', { name: 'Đóng trợ lý tìm truyện' }).click();
+    await expect(panel).toBeHidden();
+    await page.getByRole('button', { name: 'Mở trợ lý tìm truyện' }).click();
+    await panel.getByLabel('Bạn muốn đọc truyện gì?').fill('fantasy không harem');
+    const response = page.waitForResponse('**/api/recommendation/chat');
+    await panel.getByLabel('Bạn muốn đọc truyện gì?').press('Enter');
+    expect((await response).ok()).toBe(true);
+    await expect(panel.getByRole('status')).toBeHidden();
+    await expect(panel.getByRole('heading', { name: 'Chatbot Comic A' }).last()).toBeVisible();
+    await panel.getByRole('button', { name: 'Đóng trợ lý tìm truyện' }).click();
+    await expect(panel).toBeHidden();
+    await page.getByRole('button', { name: 'Mở trợ lý tìm truyện' }).click();
+  }
+});

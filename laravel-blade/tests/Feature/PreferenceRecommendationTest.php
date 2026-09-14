@@ -119,7 +119,7 @@ class PreferenceRecommendationTest extends TestCase
         foreach ($results as $result) {
             $this->assertTrue($result['comic']->relationLoaded('genres'));
             $this->assertTrue($result['comic']->relationLoaded('tags'));
-            $this->assertTrue($result['comic']->relationLoaded('authors'));
+            $this->assertFalse($result['comic']->relationLoaded('authors'), 'Unused authors must not be loaded.');
         }
         $this->assertCount(4, DB::getQueryLog());
         DB::disableQueryLog();

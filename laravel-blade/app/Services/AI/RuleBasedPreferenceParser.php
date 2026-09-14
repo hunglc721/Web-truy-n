@@ -21,9 +21,10 @@ class RuleBasedPreferenceParser
         ],
         'character_traits' => [
             'Overpowered MC' => ['main bá', 'main mạnh'],
-            'Weak to Strong' => ['yếu rồi mạnh', 'từ yếu thành mạnh'],
+            'Weak to Strong' => ['yếu rồi mạnh', 'từ yếu thành mạnh', 'yếu lên mạnh'],
             'Smart MC' => ['main thông minh'], 'Anti Hero' => ['anti hero', 'phản anh hùng'],
         ],
+        'settings' => ['Modern' => ['hiện đại'], 'School' => ['học đường']],
         'tones' => ['Dark' => ['dark', 'tối', 'tăm tối'], 'Comedy' => ['hài'], 'Emotional' => ['cảm động']],
     ];
 
@@ -33,19 +34,25 @@ class RuleBasedPreferenceParser
         $preferences = array_fill_keys(array_keys($allowed), []);
         $preferences += ['status' => null, 'exclude' => [], 'needs_more_info' => false, 'follow_up_question' => null];
         $message = mb_strtolower($message);
+        $originalMessage = $message;
 
-        // Consume these phrases before positive keyword matching, preserving negation.
-        foreach (['Harem' => 'không harem', 'Romance' => 'không romance'] as $value => $phrase) {
-            if ($this->contains($message, $phrase)) {
-                if (in_array($value, array_merge(...array_values($allowed)), true)) {
-                    $preferences['exclude'][] = $value;
-                }
-                $message = preg_replace($this->pattern($phrase), ' ', $message);
-            }
-        }
+        // Consume negated taxonomy aliases before any positive matching.
         foreach ($allowed as $field => $values) {
             foreach ($values as $value) {
-                $keywords = [...(self::KEYWORDS[$field][$value] ?? []), mb_strtolower($value)];
+                foreach ($this->keywords($field, $value) as $keyword) {
+                    $negative = '/(?<![\p{L}\p{N}])(?:không(?:\s+(?:cần|muốn|thích|có))?|bỏ|loại(?:\s+bỏ)?)\s+'
+                        .preg_quote($keyword, '/').'(?![\p{L}\p{N}])/u';
+                    if (preg_match($negative, $originalMessage)) {
+                        $preferences['exclude'][] = $value;
+                        $message = preg_replace($negative, ' ', $message);
+                    }
+                }
+            }
+        }
+        $preferences['exclude'] = array_values(array_unique($preferences['exclude']));
+        foreach ($allowed as $field => $values) {
+            foreach ($values as $value) {
+                $keywords = $this->keywords($field, $value);
                 foreach ($keywords as $keyword) {
                     if ($this->contains($message, $keyword) && ! in_array($value, $preferences['exclude'], true)) {
                         $preferences[$field][] = $value;
@@ -100,6 +107,11 @@ class RuleBasedPreferenceParser
         unset($allowed['statuses']);
 
         return $allowed;
+    }
+
+    private function keywords(string $field, string $value): array
+    {
+        return [...(self::KEYWORDS[$field][$value] ?? []), mb_strtolower($value)];
     }
 
     private function contains(string $message, string $keyword): bool

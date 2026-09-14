@@ -14,7 +14,7 @@ class PreferenceParser
      * The backend supplies a trusted user:<id>, conversation:<id>, or session:<id> scope.
      * source remains ai/fallback on cache hits; cached indicates no new provider call.
      */
-    public function parseNaturalLanguage(string $message, string $scopeKey): array
+    public function parseNaturalLanguage(string $message, string $scopeKey, array $quotaScopes = []): array
     {
         $normalized = mb_strtolower(trim(preg_replace('/\s+/u', ' ', $message) ?? ''));
         if ($normalized === '' || mb_strlen($message) > 4000 ||
@@ -27,14 +27,13 @@ class PreferenceParser
         if (($cached = Cache::get($cacheKey)) !== null) {
             return [...$cached, 'cached' => true];
         }
-        $rateKey = 'ai:calls:'.$scopeHash;
+        $rateKeys = array_map(fn (string $scope) => 'ai:calls:'.hash('sha256', $scope),
+            array_unique([$scopeKey, ...$quotaScopes]));
         if (! $enabled) {
             $result = ['success' => false, 'error' => 'ai_disabled'];
-        } elseif ((int) config('ai.max_calls') <= 0 || RateLimiter::tooManyAttempts($rateKey, (int) config('ai.max_calls'))) {
+        } elseif (! $this->reserveCall($rateKeys)) {
             $result = ['success' => false, 'error' => 'rate_limited'];
         } else {
-            // Reserve the call before contacting the provider, including failed calls.
-            RateLimiter::hit($rateKey, max(1, (int) config('ai.decay_seconds')));
             $result = $this->ai->parse($normalized);
         }
         if ($result['success']) {
@@ -65,5 +64,26 @@ class PreferenceParser
 
         return ['success' => $delta !== null, 'preferences' => $delta,
             'error' => $delta === null ? 'invalid_quick_reply' : null, 'source' => 'quick_reply'];
+    }
+
+    private function reserveCall(array $keys): bool
+    {
+        $maximum = (int) config('ai.max_calls');
+        if ($maximum <= 0) {
+            return false;
+        }
+        foreach ($keys as $key) {
+            if (RateLimiter::tooManyAttempts($key, $maximum)) {
+                return false;
+            }
+        }
+        foreach ($keys as $key) {
+            // Check the increment result too: concurrent requests must reserve a slot.
+            if (RateLimiter::hit($key, max(1, (int) config('ai.decay_seconds'))) > $maximum) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

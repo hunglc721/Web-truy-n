@@ -15,8 +15,8 @@ class RecommendationChatService
         private PreferenceRecommendationService $recommendations,
     ) {}
 
-    /** $user comes exclusively from backend authentication. */
-    public function reply(array $input, ?User $user): array
+    /** Identity and quota scopes come exclusively from the backend controller. */
+    public function reply(array $input, ?User $user, array $guestQuotaScopes = []): array
     {
         $token = $user === null ? ($input['conversation_token'] ?? null) : null;
         $conversation = $this->conversations->getOrCreate($user, $token);
@@ -24,7 +24,7 @@ class RecommendationChatService
         $isQuickReply = isset($input['quick_reply']);
         $parsed = $isQuickReply
             ? $this->parser->parseQuickReply($input['quick_reply'])
-            : $this->parser->parseNaturalLanguage($input['message'], $scope);
+            : $this->parser->parseNaturalLanguage($input['message'], $scope, $user === null ? $guestQuotaScopes : []);
         if (! $parsed['success']) {
             throw ValidationException::withMessages([
                 $isQuickReply ? 'quick_reply' : 'message' => 'Lựa chọn hoặc nội dung không hợp lệ.',
