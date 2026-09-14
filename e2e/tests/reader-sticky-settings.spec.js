@@ -58,6 +58,8 @@ test.describe('Reader sticky/floating settings panel', () => {
     await page.locator('#btn-space-16').click();
     await expect(page.locator('#reader-container')).toHaveCSS('gap', '16px');
 
+    // Switch to single mode to reveal direction control and verify RTL
+    await page.locator('#btn-mode-single').click();
     await page.locator('#btn-dir-rtl').click();
     await expect(page.locator('body')).toHaveClass(/reader-dir-rtl/);
 

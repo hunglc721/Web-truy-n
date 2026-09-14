@@ -327,14 +327,15 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    min-height: 85vh;
-    gap: 0;
+    min-height: 80vh;
+    gap: 0 !important;
   }
   .reader-layout-single .comic-page-wrapper {
     display: none !important;
     justify-content: center;
     align-items: center;
-    min-height: 80vh;
+    width: 100%;
+    min-height: auto;
   }
   .reader-layout-single .comic-page-wrapper.active-page {
     display: flex !important;
@@ -345,8 +346,8 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    min-height: 85vh;
-    gap: 10px;
+    min-height: 80vh;
+    gap: var(--page-spacing, 0px);
     flex-direction: row;
     max-width: 1200px !important;
   }
@@ -355,8 +356,8 @@
   }
   .reader-layout-double .comic-page-wrapper {
     display: none !important;
-    width: 49% !important;
-    flex: 1 1 49%;
+    width: calc(50% - (var(--page-spacing, 0px) / 2)) !important;
+    flex: 1 1 calc(50% - (var(--page-spacing, 0px) / 2));
     max-width: 50%;
   }
   .reader-layout-double .comic-page-wrapper.active-page {
@@ -364,12 +365,42 @@
     justify-content: center;
     align-items: center;
   }
+  .reader-layout-double .comic-page-wrapper.single-spread {
+    width: 100% !important;
+    max-width: 680px !important;
+    flex: 0 1 auto;
+    margin: 0 auto;
+  }
+  @media (max-width: 767.98px) {
+    .reader-layout-double #reader-container {
+      flex-direction: column !important;
+      gap: var(--page-spacing, 0px) !important;
+    }
+    .reader-layout-double .comic-page-wrapper {
+      width: 100% !important;
+      max-width: 100% !important;
+      flex: 1 1 100% !important;
+    }
+  }
 
   /* Fit Height Mode */
   .reader-fit-height img.comic-page-img {
-    max-height: calc(100vh - 110px) !important;
+    max-height: calc(100vh - 120px) !important;
     width: auto !important;
     object-fit: contain !important;
+  }
+  .reader-fit-height .comic-page-wrapper {
+    display: flex !important;
+    justify-content: center;
+    align-items: center;
+    aspect-ratio: auto !important;
+    height: auto !important;
+    max-height: calc(100vh - 120px) !important;
+    width: auto !important;
+  }
+  .reader-fit-height #reader-container {
+    max-width: 100% !important;
+    width: auto !important;
   }
 
   /* Fit Width Mode */
@@ -377,13 +408,29 @@
     max-width: 100% !important;
     width: 100% !important;
   }
+  .reader-fit-width .comic-page-wrapper {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  .reader-fit-width img.comic-page-img {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    max-height: none !important;
+  }
 
   /* Night Mode / Dimming Filter */
   body.reader-night-mode {
     background: #000 !important;
   }
+  body.reader-night-mode .reader-page-wrapper {
+    background: #000 !important;
+  }
+  body.reader-night-mode #reader-container {
+    background: #000 !important;
+  }
   body.reader-night-mode img.comic-page-img {
-    filter: brightness(0.8) contrast(1.05) !important;
+    filter: contrast(0.95) !important;
   }
 
   /* Sticky Bottom Dock */
@@ -598,70 +645,70 @@
         <button type="button" class="reader-settings-close-btn" onclick="toggleSettingsPanel(false)" aria-label="Đóng cài đặt" title="Đóng cài đặt (Phím Esc)">✕</button>
       </div>
 
-      <!-- Reading Mode (3 Chế độ: Cuộn dọc / Từng trang / Trang đôi) -->
-      <div style="margin-bottom: 14px;">
+      <!-- 1. Reading Mode (3 Chế độ: Cuộn dọc / Từng trang / Trang đôi) -->
+      <div style="margin-bottom: 14px;" id="section-reading-mode">
         <label style="display: block; font-size: 11.5px; color: var(--text-muted); margin-bottom: 6px; font-weight: 700;">CHẾ ĐỘ ĐỌC (PHÍM M)</label>
         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px;">
-          <button type="button" class="setting-btn active" id="btn-mode-vertical" onclick="setReadingLayout('vertical')">📜 Cuộn dọc</button>
-          <button type="button" class="setting-btn" id="btn-mode-single" onclick="setReadingLayout('single')">📄 Từng trang</button>
-          <button type="button" class="setting-btn" id="btn-mode-double" onclick="setReadingLayout('double')">📖 Trang đôi</button>
+          <button type="button" class="setting-btn active" id="btn-mode-vertical" onclick="setReadingLayout('vertical')" aria-pressed="true">📜 Cuộn dọc</button>
+          <button type="button" class="setting-btn" id="btn-mode-single" onclick="setReadingLayout('single')" aria-pressed="false">📄 Từng trang</button>
+          <button type="button" class="setting-btn" id="btn-mode-double" onclick="setReadingLayout('double')" aria-pressed="false">📖 Trang đôi</button>
         </div>
       </div>
 
-      <!-- Reading Direction -->
-      <div style="margin-bottom: 14px;">
+      <!-- 2. Reading Direction (Chỉ áp dụng cho Từng trang và Trang đôi) -->
+      <div style="margin-bottom: 14px; display: none;" id="section-reading-direction">
         <label style="display: block; font-size: 11.5px; color: var(--text-muted); margin-bottom: 6px; font-weight: 700;">HƯỚNG ĐỌC</label>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
-          <button type="button" class="setting-btn active" id="btn-dir-ltr" onclick="setReadingDirection('ltr')">➡️ Trái qua Phải</button>
-          <button type="button" class="setting-btn" id="btn-dir-rtl" onclick="setReadingDirection('rtl')">⬅️ Phải qua Trái (Manga)</button>
+          <button type="button" class="setting-btn active" id="btn-dir-ltr" onclick="setReadingDirection('ltr')" aria-pressed="true">➡️ Trái qua Phải</button>
+          <button type="button" class="setting-btn" id="btn-dir-rtl" onclick="setReadingDirection('rtl')" aria-pressed="false">⬅️ Phải qua Trái (Manga)</button>
         </div>
       </div>
 
-      <!-- Fit Mode & Width -->
-      <div style="margin-bottom: 14px;">
-        <label style="display: block; font-size: 11.5px; color: var(--text-muted); margin-bottom: 6px; font-weight: 700;">CĂN CHỈNH KHUNG ẢNH</label>
+      <!-- 3. Kích thước hiển thị (Fit Mode & Width) -->
+      <div style="margin-bottom: 14px;" id="section-image-sizing">
+        <label style="display: block; font-size: 11.5px; color: var(--text-muted); margin-bottom: 6px; font-weight: 700;">KÍCH THƯỚC HIỂN THỊ</label>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 6px;">
-          <button type="button" class="setting-btn" id="btn-fit-width" onclick="setFitMode('fit-width')">↔️ Vừa chiều rộng</button>
-          <button type="button" class="setting-btn" id="btn-fit-height" onclick="setFitMode('fit-height')">↕️ Vừa chiều cao</button>
+          <button type="button" class="setting-btn" id="btn-fit-width" onclick="setFitMode('fit-width')" aria-pressed="false">↔️ Vừa chiều rộng</button>
+          <button type="button" class="setting-btn" id="btn-fit-height" onclick="setFitMode('fit-height')" aria-pressed="false">↕️ Vừa chiều cao</button>
         </div>
         <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px;">
-          <button type="button" class="setting-btn" id="btn-w-680" onclick="setReaderWidth(680)">680px</button>
-          <button type="button" class="setting-btn active" id="btn-w-800" onclick="setReaderWidth(800)">800px</button>
-          <button type="button" class="setting-btn" id="btn-w-1000" onclick="setReaderWidth(1000)">1000px</button>
-          <button type="button" class="setting-btn" id="btn-w-full" onclick="setReaderWidth('100%')">100%</button>
+          <button type="button" class="setting-btn" id="btn-w-680" onclick="setReaderWidth(680)" aria-pressed="false">680px</button>
+          <button type="button" class="setting-btn active" id="btn-w-800" onclick="setReaderWidth(800)" aria-pressed="true">800px</button>
+          <button type="button" class="setting-btn" id="btn-w-1000" onclick="setReaderWidth(1000)" aria-pressed="false">1000px</button>
+          <button type="button" class="setting-btn" id="btn-w-full" onclick="setReaderWidth('100%')" aria-pressed="false">100%</button>
         </div>
       </div>
 
-      <!-- Page Spacing -->
-      <div style="margin-bottom: 14px;">
-        <label style="display: block; font-size: 11.5px; color: var(--text-muted); margin-bottom: 6px; font-weight: 700;">KHOẢNG CÁCH TRANG</label>
+      <!-- 4. Khoảng cách trang (Đổi tên động theo mode: Cuộn dọc -> Giữa ảnh; Trang đôi -> Giữa 2 trang; Từng trang -> Ẩn) -->
+      <div style="margin-bottom: 14px;" id="section-page-spacing">
+        <label id="label-page-spacing" style="display: block; font-size: 11.5px; color: var(--text-muted); margin-bottom: 6px; font-weight: 700;">KHOẢNG CÁCH GIỮA ẢNH</label>
         <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;">
-          <button type="button" class="setting-btn active" id="btn-space-0" onclick="setPageSpacing(0)">0px (Liền)</button>
-          <button type="button" class="setting-btn" id="btn-space-8" onclick="setPageSpacing(8)">8px</button>
-          <button type="button" class="setting-btn" id="btn-space-16" onclick="setPageSpacing(16)">16px</button>
+          <button type="button" class="setting-btn active" id="btn-space-0" onclick="setPageSpacing(0)" aria-pressed="true">0px (Liền)</button>
+          <button type="button" class="setting-btn" id="btn-space-8" onclick="setPageSpacing(8)" aria-pressed="false">8px</button>
+          <button type="button" class="setting-btn" id="btn-space-16" onclick="setPageSpacing(16)" aria-pressed="false">16px</button>
         </div>
       </div>
 
-      <!-- Night Mode Toggle & Brightness Slider -->
-      <div style="margin-bottom: 14px;">
+      <!-- 5. Chế độ ban đêm & Độ sáng (Tách bạch Night Mode và Brightness slider 50% - 100%) -->
+      <div style="margin-bottom: 14px;" id="section-night-brightness">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
           <label style="font-size: 11.5px; color: var(--text-muted); font-weight: 700;">🌙 CHẾ ĐỘ BAN ĐÊM & ĐỘ SÁNG</label>
-          <span id="brightness-val" style="font-size: 12px; color: var(--primary); font-weight: 700;">100%</span>
+          <span id="brightness-val" style="font-size: 12px; color: var(--primary); font-weight: 700;">Độ sáng: 100%</span>
         </div>
-        <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 6px;">
-          <button type="button" class="setting-btn" id="btn-toggle-night" onclick="toggleNightMode()" style="flex: 1;">🌙 Giảm chói mắt</button>
+        <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 8px;">
+          <button type="button" class="setting-btn" id="btn-toggle-night" onclick="toggleNightMode()" style="flex: 1;" aria-pressed="false">🌙 Giảm chói mắt</button>
         </div>
-        <input type="range" id="brightness-slider" min="30" max="100" value="100" oninput="setBrightness(this.value)" style="width: 100%; accent-color: var(--primary); cursor: pointer;">
+        <input type="range" id="brightness-slider" min="50" max="100" value="100" oninput="setBrightness(this.value)" style="width: 100%; accent-color: var(--primary); cursor: pointer;" aria-label="Độ sáng ảnh truyện">
       </div>
 
-      <!-- Hotkey Reference -->
-      <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 10px; font-size: 11px; color: var(--text-muted); line-height: 1.6;">
-        <div style="font-weight: 700; color: #fff; margin-bottom: 4px;">⌨️ Phím tắt nhanh:</div>
-        <div>• <code>←</code> / <code>→</code> hoặc <code>A</code> / <code>D</code>: Lật trang / Chap</div>
-        <div>• <code>M</code>: Đổi chế độ đọc (Webtoon / Single / Double)</div>
+      <!-- 6. Phím tắt nhanh (Cập nhật theo mode) -->
+      <div id="reader-hotkey-box" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 10px; font-size: 11px; color: var(--text-muted); line-height: 1.6;">
+        <div style="font-weight: 700; color: #fff; margin-bottom: 4px;">⌨️ Phím tắt (Cuộn dọc):</div>
+        <div>• <code>↑</code> / <code>↓</code> hoặc <code>Space</code>: Cuộn mượt trang</div>
+        <div>• <code>←</code> / <code>→</code>: Chuyển Chap trước / sau</div>
+        <div>• <code>M</code>: Đổi chế độ đọc</div>
         <div>• <code>H</code>: Ẩn/Hiện giao diện (Zen Mode)</div>
-        <div>• <code>F</code>: Bật/Tắt Toàn màn hình</div>
-        <div>• <code>J</code> / <code>K</code> hoặc <code>Space</code>: Cuộn mượt</div>
+        <div>• <code>F</code>: Toàn màn hình</div>
         <div>• <code>Esc</code>: Đóng bảng cài đặt</div>
       </div>
     </div>
@@ -713,9 +760,9 @@
     @endif
 
     <div id="dock-page-nav" style="display: none; align-items: center; gap: 6px;">
-      <button type="button" onclick="prevPage()" class="reader-controls-btn" style="padding: 5px 10px; border-radius: 20px;">◀</button>
+      <button type="button" id="dock-btn-page-prev" onclick="handleNavPrev()" class="reader-controls-btn" style="padding: 5px 10px; border-radius: 20px;" aria-label="Trang trước" title="Trang trước">◀</button>
       <span id="dock-page-counter" style="font-size: 12px; font-weight: 700; color: #fff; min-width: 50px; text-align: center;">1 / 1</span>
-      <button type="button" onclick="nextPage()" class="reader-controls-btn" style="padding: 5px 10px; border-radius: 20px;">▶</button>
+      <button type="button" id="dock-btn-page-next" onclick="handleNavNext()" class="reader-controls-btn" style="padding: 5px 10px; border-radius: 20px;" aria-label="Trang sau" title="Trang sau">▶</button>
     </div>
 
     <button type="button" class="reader-chapter-select" data-open-chapter-picker
@@ -947,9 +994,10 @@
   let readerSettings = {
     layout: 'vertical',    // 'vertical' | 'single' | 'double'
     direction: 'ltr',      // 'ltr' | 'rtl'
+    fit: 'custom',         // 'custom' | 'fit-width' | 'fit-height'
     width: 800,            // 680 | 800 | 1000 | '100%'
     spacing: 0,            // 0 | 8 | 16
-    brightness: 100,       // 30..100
+    brightness: 100,       // 50..100
     night: false,          // true | false
     panelOpen: false       // true | false
   };
@@ -963,6 +1011,18 @@
       const saved = localStorage.getItem('webcomics_reader_settings');
       if (saved) {
         readerSettings = { ...readerSettings, ...JSON.parse(saved) };
+      } else {
+        // Hỗ trợ fallback các key độc lập
+        if (localStorage.getItem('reader_mode')) readerSettings.layout = localStorage.getItem('reader_mode');
+        if (localStorage.getItem('reading_direction')) readerSettings.direction = localStorage.getItem('reading_direction');
+        if (localStorage.getItem('image_fit')) readerSettings.fit = localStorage.getItem('image_fit');
+        if (localStorage.getItem('image_width')) {
+          const w = localStorage.getItem('image_width');
+          readerSettings.width = (w === '100%') ? '100%' : (parseInt(w, 10) || 800);
+        }
+        if (localStorage.getItem('page_gap')) readerSettings.spacing = parseInt(localStorage.getItem('page_gap'), 10) || 0;
+        if (localStorage.getItem('night_mode')) readerSettings.night = localStorage.getItem('night_mode') === '1';
+        if (localStorage.getItem('brightness')) readerSettings.brightness = parseInt(localStorage.getItem('brightness'), 10) || 100;
       }
     } catch (e) {
       console.debug('Error reading reader settings:', e);
@@ -972,21 +1032,74 @@
   function saveReaderSettings() {
     try {
       localStorage.setItem('webcomics_reader_settings', JSON.stringify(readerSettings));
+      // Ghi đồng thời các key độc lập theo yêu cầu spec
+      localStorage.setItem('reader_mode', readerSettings.layout);
+      localStorage.setItem('reading_direction', readerSettings.direction);
+      localStorage.setItem('image_fit', readerSettings.fit || 'custom');
+      localStorage.setItem('image_width', String(readerSettings.width));
+      localStorage.setItem('page_gap', String(readerSettings.spacing));
+      localStorage.setItem('night_mode', readerSettings.night ? '1' : '0');
+      localStorage.setItem('brightness', String(readerSettings.brightness));
     } catch (e) {
       console.debug('Error saving reader settings:', e);
+    }
+  }
+
+  function updateHotkeyBox() {
+    const box = document.getElementById('reader-hotkey-box');
+    if (!box) return;
+
+    if (readerSettings.layout === 'single' || readerSettings.layout === 'double') {
+      const modeName = readerSettings.layout === 'single' ? 'Từng trang' : 'Trang đôi';
+      const isRtl = readerSettings.direction === 'rtl';
+      box.innerHTML = `
+        <div style="font-weight: 700; color: #fff; margin-bottom: 4px;">⌨️ Phím tắt (${modeName}):</div>
+        <div>• <code>←</code> / <code>→</code> hoặc <code>A</code> / <code>D</code>: Lật trang (${isRtl ? 'Phải qua Trái' : 'Trái qua Phải'})</div>
+        <div>• <code>PageUp</code> / <code>PageDown</code>: Trang trước / sau</div>
+        <div>• <code>Space</code> / <code>Shift+Space</code>: Trang sau / trước</div>
+        <div>• <code>R</code>: Đổi hướng đọc</div>
+        <div>• <code>M</code>: Đổi chế độ đọc</div>
+        <div>• <code>H</code>: Ẩn/Hiện giao diện</div>
+        <div>• <code>F</code>: Toàn màn hình • <code>Esc</code>: Đóng cài đặt</div>
+      `;
+    } else {
+      box.innerHTML = `
+        <div style="font-weight: 700; color: #fff; margin-bottom: 4px;">⌨️ Phím tắt (Cuộn dọc):</div>
+        <div>• <code>↑</code> / <code>↓</code> hoặc <code>Space</code>: Cuộn mượt trang</div>
+        <div>• <code>←</code> / <code>→</code>: Chuyển Chap trước / sau</div>
+        <div>• <code>M</code>: Đổi chế độ đọc</div>
+        <div>• <code>H</code>: Ẩn/Hiện giao diện (Zen Mode)</div>
+        <div>• <code>F</code>: Toàn màn hình</div>
+        <div>• <code>Esc</code>: Đóng bảng cài đặt</div>
+      `;
     }
   }
 
   function applyAllReaderSettings() {
     setReadingLayout(readerSettings.layout || 'vertical', false);
     setReadingDirection(readerSettings.direction || 'ltr', false);
-    setReaderWidth(readerSettings.width || 800, false);
+
+    if (readerSettings.fit === 'fit-height') {
+      setFitMode('fit-height', false);
+    } else if (readerSettings.fit === 'fit-width') {
+      setFitMode('fit-width', false);
+    } else {
+      setReaderWidth(readerSettings.width || 800, false);
+    }
+
     setPageSpacing(readerSettings.spacing || 0, false);
     setBrightness(readerSettings.brightness || 100, false);
+
     if (readerSettings.night) {
       document.body.classList.add('reader-night-mode');
-      document.getElementById('btn-toggle-night')?.classList.add('active');
+      const btnNight = document.getElementById('btn-toggle-night');
+      btnNight?.classList.add('active');
+      btnNight?.setAttribute('aria-pressed', 'true');
+      if (btnNight) btnNight.textContent = '🌙 Đang bật giảm chói';
     }
+
+    updateHotkeyBox();
+
     // Restore settings panel open state across chapters
     if (readerSettings.panelOpen) {
       toggleSettingsPanel(true);
@@ -1051,32 +1164,62 @@
     const btnVert = document.getElementById('btn-mode-vertical');
     const btnSingle = document.getElementById('btn-mode-single');
     const btnDouble = document.getElementById('btn-mode-double');
+    const dirSection = document.getElementById('section-reading-direction');
+    const spacingSection = document.getElementById('section-page-spacing');
+    const spacingLabel = document.getElementById('label-page-spacing');
 
     body.classList.remove('reader-layout-vertical', 'reader-layout-single', 'reader-layout-double');
     btnVert?.classList.remove('active');
+    btnVert?.setAttribute('aria-pressed', 'false');
     btnSingle?.classList.remove('active');
+    btnSingle?.setAttribute('aria-pressed', 'false');
     btnDouble?.classList.remove('active');
+    btnDouble?.setAttribute('aria-pressed', 'false');
 
     if (mode === 'single') {
       body.classList.add('reader-layout-single');
+      if (readerSettings.direction === 'rtl') {
+        body.classList.add('reader-dir-rtl');
+      }
       btnSingle?.classList.add('active');
+      btnSingle?.setAttribute('aria-pressed', 'true');
       if (singleNav) singleNav.style.display = 'inline-flex';
       if (dockPageNav) dockPageNav.style.display = 'inline-flex';
+      if (dirSection) dirSection.style.display = 'block';
+      if (spacingSection) spacingSection.style.display = 'none';
       showPage(currentSinglePageIndex);
     } else if (mode === 'double') {
       body.classList.add('reader-layout-double');
+      if (readerSettings.direction === 'rtl') {
+        body.classList.add('reader-dir-rtl');
+      }
       btnDouble?.classList.add('active');
+      btnDouble?.setAttribute('aria-pressed', 'true');
       if (singleNav) singleNav.style.display = 'inline-flex';
       if (dockPageNav) dockPageNav.style.display = 'inline-flex';
+      if (dirSection) dirSection.style.display = 'block';
+      if (spacingSection) {
+        spacingSection.style.display = 'block';
+        if (spacingLabel) spacingLabel.textContent = 'KHOẢNG CÁCH GIỮA 2 TRANG';
+      }
       showPage(currentSinglePageIndex);
     } else {
+      // vertical
       body.classList.add('reader-layout-vertical');
+      body.classList.remove('reader-dir-rtl');
       btnVert?.classList.add('active');
+      btnVert?.setAttribute('aria-pressed', 'true');
       if (singleNav) singleNav.style.display = 'none';
       if (dockPageNav) dockPageNav.style.display = 'none';
-      pageWrappers.forEach(w => w.classList.remove('active-page'));
+      if (dirSection) dirSection.style.display = 'none';
+      if (spacingSection) {
+        spacingSection.style.display = 'block';
+        if (spacingLabel) spacingLabel.textContent = 'KHOẢNG CÁCH GIỮA ẢNH';
+      }
+      pageWrappers.forEach(w => w.classList.remove('active-page', 'single-spread'));
     }
 
+    updateHotkeyBox();
     window.readerImages?.show(currentSinglePageIndex, mode);
     if (persist) saveReaderSettings();
   }
@@ -1085,17 +1228,30 @@
     if (totalPagesCount === 0) return;
 
     if (readerSettings.layout === 'double') {
-      // Làm tròn về số chẵn (0, 2, 4...)
       currentSinglePageIndex = Math.floor(Math.max(0, Math.min(index, totalPagesCount - 1)) / 2) * 2;
+      const secondPageIndex = currentSinglePageIndex + 1;
+      const hasSecondPage = secondPageIndex < totalPagesCount;
+
       pageWrappers.forEach((wrapper, idx) => {
-        if (idx === currentSinglePageIndex || idx === currentSinglePageIndex + 1) {
+        if (idx === currentSinglePageIndex) {
           wrapper.classList.add('active-page');
+          if (!hasSecondPage) {
+            wrapper.classList.add('single-spread');
+          } else {
+            wrapper.classList.remove('single-spread');
+          }
+        } else if (idx === secondPageIndex && hasSecondPage) {
+          wrapper.classList.add('active-page');
+          wrapper.classList.remove('single-spread');
         } else {
-          wrapper.classList.remove('active-page');
+          wrapper.classList.remove('active-page', 'single-spread');
         }
       });
-      const endIdx = Math.min(currentSinglePageIndex + 2, totalPagesCount);
-      const text = `${currentSinglePageIndex + 1}-${endIdx} / ${totalPagesCount}`;
+
+      const endIdx = hasSecondPage ? (currentSinglePageIndex + 2) : totalPagesCount;
+      const text = hasSecondPage
+        ? `${currentSinglePageIndex + 1}-${endIdx} / ${totalPagesCount}`
+        : `${totalPagesCount} / ${totalPagesCount}`;
       const singleCounter = document.getElementById('single-page-counter');
       const dockCounter = document.getElementById('dock-page-counter');
       if (singleCounter) singleCounter.textContent = text;
@@ -1105,8 +1261,9 @@
       pageWrappers.forEach((wrapper, idx) => {
         if (idx === currentSinglePageIndex) {
           wrapper.classList.add('active-page');
+          wrapper.classList.remove('single-spread');
         } else {
-          wrapper.classList.remove('active-page');
+          wrapper.classList.remove('active-page', 'single-spread');
         }
       });
       const text = `${currentSinglePageIndex + 1} / ${totalPagesCount}`;
@@ -1157,6 +1314,22 @@
     }
   }
 
+  function handleNavNext() {
+    if (readerSettings.direction === 'rtl') {
+      prevPage();
+    } else {
+      nextPage();
+    }
+  }
+
+  function handleNavPrev() {
+    if (readerSettings.direction === 'rtl') {
+      nextPage();
+    } else {
+      prevPage();
+    }
+  }
+
   // 2. HƯỚNG ĐỌC (LTR vs RTL Manga)
   function setReadingDirection(dir, persist = true) {
     readerSettings.direction = dir;
@@ -1165,43 +1338,105 @@
     const btnRtl = document.getElementById('btn-dir-rtl');
 
     if (dir === 'rtl') {
-      body.classList.add('reader-dir-rtl');
+      if (readerSettings.layout !== 'vertical') {
+        body.classList.add('reader-dir-rtl');
+      }
       btnLtr?.classList.remove('active');
+      btnLtr?.setAttribute('aria-pressed', 'false');
       btnRtl?.classList.add('active');
+      btnRtl?.setAttribute('aria-pressed', 'true');
     } else {
       body.classList.remove('reader-dir-rtl');
       btnLtr?.classList.add('active');
+      btnLtr?.setAttribute('aria-pressed', 'true');
       btnRtl?.classList.remove('active');
+      btnRtl?.setAttribute('aria-pressed', 'false');
     }
 
+    updateHotkeyBox();
     if (persist) saveReaderSettings();
   }
 
-  // 3. CĂN CHỈNH KHUNG ẢNH & ĐỘ RỘNG (Fit Mode / Width)
+  // 3. KÍCH THƯỚC HIỂN THỊ (Fit Mode / Width)
   function setFitMode(mode, persist = true) {
+    readerSettings.fit = mode;
     const body = document.body;
     const btnWidth = document.getElementById('btn-fit-width');
     const btnHeight = document.getElementById('btn-fit-height');
+    const btnFull = document.getElementById('btn-w-full');
+    const container = document.getElementById('reader-container');
 
     body.classList.remove('reader-fit-width', 'reader-fit-height');
+    btnWidth?.classList.remove('active');
+    btnWidth?.setAttribute('aria-pressed', 'false');
+    btnHeight?.classList.remove('active');
+    btnHeight?.setAttribute('aria-pressed', 'false');
 
     if (mode === 'fit-width') {
       body.classList.add('reader-fit-width');
       btnWidth?.classList.add('active');
-      btnHeight?.classList.remove('active');
+      btnWidth?.setAttribute('aria-pressed', 'true');
+      readerSettings.width = '100%';
+      if (container) {
+        container.style.maxWidth = '100%';
+        container.style.width = '100%';
+      }
+      const btns = {
+        '680': document.getElementById('btn-w-680'),
+        '800': document.getElementById('btn-w-800'),
+        '1000': document.getElementById('btn-w-1000'),
+        '100%': btnFull,
+      };
+      Object.values(btns).forEach(b => {
+        b?.classList.remove('active');
+        b?.setAttribute('aria-pressed', 'false');
+      });
+      btnFull?.classList.add('active');
+      btnFull?.setAttribute('aria-pressed', 'true');
     } else if (mode === 'fit-height') {
       body.classList.add('reader-fit-height');
-      btnWidth?.classList.remove('active');
       btnHeight?.classList.add('active');
-    } else {
-      btnWidth?.classList.remove('active');
-      btnHeight?.classList.remove('active');
+      btnHeight?.setAttribute('aria-pressed', 'true');
+      if (container) {
+        container.style.maxWidth = '100%';
+      }
+      const btns = {
+        '680': document.getElementById('btn-w-680'),
+        '800': document.getElementById('btn-w-800'),
+        '1000': document.getElementById('btn-w-1000'),
+        '100%': btnFull,
+      };
+      Object.values(btns).forEach(b => {
+        b?.classList.remove('active');
+        b?.setAttribute('aria-pressed', 'false');
+      });
     }
+
+    window.readerImages?.resize();
+    if (persist) saveReaderSettings();
   }
 
   function setReaderWidth(w, persist = true) {
     readerSettings.width = w;
-    setFitMode('custom', false);
+    readerSettings.fit = (w === '100%') ? 'fit-width' : 'custom';
+    const body = document.body;
+    body.classList.remove('reader-fit-height');
+
+    const btnWidth = document.getElementById('btn-fit-width');
+    const btnHeight = document.getElementById('btn-fit-height');
+    btnHeight?.classList.remove('active');
+    btnHeight?.setAttribute('aria-pressed', 'false');
+
+    if (w === '100%') {
+      body.classList.add('reader-fit-width');
+      btnWidth?.classList.add('active');
+      btnWidth?.setAttribute('aria-pressed', 'true');
+    } else {
+      body.classList.remove('reader-fit-width');
+      btnWidth?.classList.remove('active');
+      btnWidth?.setAttribute('aria-pressed', 'false');
+    }
+
     const container = document.getElementById('reader-container');
     const btns = {
       '680': document.getElementById('btn-w-680'),
@@ -1210,19 +1445,29 @@
       '100%': document.getElementById('btn-w-full'),
     };
 
-    Object.values(btns).forEach(b => b?.classList.remove('active'));
-    btns[String(w)]?.classList.add('active');
+    Object.entries(btns).forEach(([key, b]) => {
+      if (String(w) === key) {
+        b?.classList.add('active');
+        b?.setAttribute('aria-pressed', 'true');
+      } else {
+        b?.classList.remove('active');
+        b?.setAttribute('aria-pressed', 'false');
+      }
+    });
 
     if (container) {
       container.style.maxWidth = (w === '100%') ? '100%' : (w + 'px');
+      container.style.width = '100%';
     }
 
+    window.readerImages?.resize();
     if (persist) saveReaderSettings();
   }
 
   // 4. KHOẢNG CÁCH TRANG (Page Spacing)
   function setPageSpacing(spacing, persist = true) {
-    readerSettings.spacing = spacing;
+    const num = parseInt(spacing, 10) || 0;
+    readerSettings.spacing = num;
     const container = document.getElementById('reader-container');
     const btns = {
       '0': document.getElementById('btn-space-0'),
@@ -1230,12 +1475,19 @@
       '16': document.getElementById('btn-space-16'),
     };
 
-    Object.values(btns).forEach(b => b?.classList.remove('active'));
-    btns[String(spacing)]?.classList.add('active');
+    Object.entries(btns).forEach(([key, b]) => {
+      if (String(num) === key) {
+        b?.classList.add('active');
+        b?.setAttribute('aria-pressed', 'true');
+      } else {
+        b?.classList.remove('active');
+        b?.setAttribute('aria-pressed', 'false');
+      }
+    });
 
     if (container) {
-      container.style.gap = spacing + 'px';
-      document.documentElement.style.setProperty('--page-spacing', spacing + 'px');
+      container.style.gap = num + 'px';
+      document.documentElement.style.setProperty('--page-spacing', num + 'px');
     }
 
     if (persist) saveReaderSettings();
@@ -1248,26 +1500,30 @@
     if (readerSettings.night) {
       document.body.classList.add('reader-night-mode');
       btn?.classList.add('active');
+      btn?.setAttribute('aria-pressed', 'true');
+      if (btn) btn.textContent = '🌙 Đang bật giảm chói';
     } else {
       document.body.classList.remove('reader-night-mode');
       btn?.classList.remove('active');
+      btn?.setAttribute('aria-pressed', 'false');
+      if (btn) btn.textContent = '🌙 Giảm chói mắt';
     }
     if (persist) saveReaderSettings();
   }
 
   function setBrightness(val, persist = true) {
-    const num = Math.min(Math.max(parseInt(val, 10) || 100, 30), 100);
+    const num = Math.min(Math.max(parseInt(val, 10) || 100, 50), 100);
     readerSettings.brightness = num;
 
     const container = document.getElementById('reader-container');
     if (container) {
-      container.style.filter = `brightness(${num}%)`;
+      container.style.filter = (num < 100) ? `brightness(${num}%)` : 'none';
     }
 
     const slider = document.getElementById('brightness-slider');
     const valLabel = document.getElementById('brightness-val');
     if (slider) slider.value = num;
-    if (valLabel) valLabel.textContent = `${num}%`;
+    if (valLabel) valLabel.textContent = `Độ sáng: ${num}%`;
 
     if (persist) saveReaderSettings();
   }
@@ -1293,6 +1549,55 @@
     }
   });
 
+  // Touch swipe cho Single & Double Mode
+  let touchStartX = 0;
+  let touchStartY = 0;
+  const containerSwipeEl = document.getElementById('reader-container');
+  if (containerSwipeEl) {
+    containerSwipeEl.addEventListener('touchstart', function(e) {
+      if (readerSettings.layout === 'vertical') return;
+      if (e.touches.length === 1) {
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+      }
+    }, { passive: true });
+
+    containerSwipeEl.addEventListener('touchend', function(e) {
+      if (readerSettings.layout === 'vertical') return;
+      if (e.changedTouches.length === 1) {
+        const dx = e.changedTouches[0].clientX - touchStartX;
+        const dy = e.changedTouches[0].clientY - touchStartY;
+        if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
+          if (readerSettings.direction === 'rtl') {
+            if (dx > 0) nextPage(); else prevPage();
+          } else {
+            if (dx < 0) nextPage(); else prevPage();
+          }
+        }
+      }
+    }, { passive: true });
+  }
+
+  // Mouse wheel cho Single & Double Mode (không cuộn trang dài mà chuyển trang)
+  let wheelLock = false;
+  window.addEventListener('wheel', function(e) {
+    if (readerSettings.layout === 'vertical') return;
+    if (e.target.closest('#reader-settings-panel, #reader-chapter-picker, .comments-section, .reader-toolbar, .reader-footer')) return;
+
+    if (Math.abs(e.deltaY) > 25) {
+      e.preventDefault();
+      if (wheelLock) return;
+      wheelLock = true;
+      setTimeout(() => { wheelLock = false; }, 200);
+
+      if (e.deltaY > 0) {
+        if (readerSettings.direction === 'rtl') prevPage(); else nextPage();
+      } else {
+        if (readerSettings.direction === 'rtl') nextPage(); else prevPage();
+      }
+    }
+  }, { passive: false });
+
   // 8. BỘ PHÍM TẮT ĐIỀU HƯỚNG
   document.addEventListener('keydown', function(e) {
     const activeEl = document.activeElement;
@@ -1310,6 +1615,13 @@
         toggleSettingsPanel(false);
         return;
       }
+    }
+
+    // Phím R: Đổi hướng đọc khi ở single/double mode
+    if ((key === 'r' || key === 'R') && (readerSettings.layout === 'single' || readerSettings.layout === 'double')) {
+      e.preventDefault();
+      setReadingDirection(readerSettings.direction === 'ltr' ? 'rtl' : 'ltr');
+      return;
     }
 
     // Phím M: Đổi chế độ đọc
@@ -1332,6 +1644,28 @@
     if (key === 'f' || key === 'F') {
       e.preventDefault();
       toggleFullscreen();
+      return;
+    }
+
+    // PageDown
+    if (key === 'PageDown') {
+      e.preventDefault();
+      if (readerSettings.layout === 'single' || readerSettings.layout === 'double') {
+        if (readerSettings.direction === 'rtl') prevPage(); else nextPage();
+      } else {
+        window.scrollBy({ top: window.innerHeight * 0.8, behavior: 'smooth' });
+      }
+      return;
+    }
+
+    // PageUp
+    if (key === 'PageUp') {
+      e.preventDefault();
+      if (readerSettings.layout === 'single' || readerSettings.layout === 'double') {
+        if (readerSettings.direction === 'rtl') nextPage(); else prevPage();
+      } else {
+        window.scrollBy({ top: -window.innerHeight * 0.8, behavior: 'smooth' });
+      }
       return;
     }
 
