@@ -411,7 +411,16 @@
       startAutoPlay();
     }, { passive: true });
 
-    startAutoPlay();
+    const siteIntro = document.querySelector('[data-site-intro]');
+    if (siteIntro) {
+      const fallbackTimer = window.setTimeout(startAutoPlay, 5000);
+      document.addEventListener('comicx:site-intro-dismissed', () => {
+        window.clearTimeout(fallbackTimer);
+        startAutoPlay();
+      }, { once: true });
+    } else {
+      startAutoPlay();
+    }
   }
 
   async function loadPublicAnnouncements() {
