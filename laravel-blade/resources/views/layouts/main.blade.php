@@ -29,6 +29,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="{{ asset('css/style.css') }}?v=5" />
   <link rel="stylesheet" href="{{ asset('css/responsive.css') }}?v=5" />
+  @if(request()->routeIs('home'))
+    <link rel="stylesheet" href="{{ asset('css/site-intro.css') }}?v=1" />
+    <script src="{{ asset('js/site-intro.js') }}?v=1" defer></script>
+  @endif
   <style>
     :root{--card-bg:var(--bg-surface-1);--border:var(--border-color)}.footer-static-item{color:var(--text-muted);font-size:13px;display:block;padding:3px 0}
     /* Mobile Footer Accordion & Layout Critical Styles */
@@ -242,6 +246,9 @@
   @stack('styles')
 </head>
 <body class="dark-theme" data-auth-state="{{ auth()->check() ? (auth()->user()->canAccessAdmin() ? 'admin' : 'member') : 'guest' }}" data-notification-transport="{{ app()->environment('local') ? 'polling' : 'sse' }}">
+  @if(request()->routeIs('home'))
+    @include('partials.site-intro')
+  @endif
   <header class="site-header" id="site-header">
     <div class="header-inner">
       <div class="header-left">
