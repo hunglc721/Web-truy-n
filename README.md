@@ -1,96 +1,70 @@
-# Comicx
+<div align="center">
 
-Nền tảng đọc **Manga / Manhwa / Manhua** được xây dựng bằng **Laravel 11 + Blade**, tập trung vào Backend, quản lý nội dung, trải nghiệm đọc, cá nhân hoá và kiểm thử tự động.
+# 📚 Comicx
 
-> Dự án cá nhân của `hunglc721`, được phát triển theo hướng một sản phẩm thực tế thay vì chỉ dừng ở CRUD cơ bản.
+### Nền tảng đọc Manga · Manhwa · Manhua với Reader nâng cao và gợi ý truyện bằng AI
 
-## Tài khoản seed
+<p>
+  <img src="https://img.shields.io/badge/Laravel-11.x-FF2D20?logo=laravel&logoColor=white" alt="Laravel 11" />
+  <img src="https://img.shields.io/badge/PHP-8.3+-777BB4?logo=php&logoColor=white" alt="PHP 8.3+" />
+  <img src="https://img.shields.io/badge/MySQL-8.x-4479A1?logo=mysql&logoColor=white" alt="MySQL" />
+  <img src="https://img.shields.io/badge/Playwright-E2E-2EAD33?logo=playwright&logoColor=white" alt="Playwright" />
+  <img src="https://img.shields.io/badge/Reading-100%25%20Free-22C55E" alt="Free Reading" />
+</p>
 
-| Vai trò | Email | Mật khẩu |
-|---|---|---|
-| Admin | `admin@webcomics.com` | `12345678` |
-| Member | `user@webcomics.com` | `12345678` |
+<p>
+  <a href="https://github.com/hunglc721/Web-truy-n/actions/workflows/laravel-tests.yml">
+    <img src="https://github.com/hunglc721/Web-truy-n/actions/workflows/laravel-tests.yml/badge.svg?branch=main" alt="Laravel Tests" />
+  </a>
+</p>
 
-Seeder còn tạo thêm Editor, Moderator và một số Member mẫu phục vụ phát triển / kiểm thử.
+**Dự án cá nhân Backend-focused của [hunglc721](https://github.com/hunglc721)**  
+Xây dựng theo hướng một sản phẩm thực tế: có phân quyền, Reader chuyên sâu, AI recommendation, realtime notification, queue/cache, kiểm thử tự động và CI.
 
----
-
-## Mục tiêu dự án
-
-Comicx được xây dựng để áp dụng các kiến thức Backend vào một hệ thống hoàn chỉnh, bao gồm:
-
-- thiết kế và quản lý cơ sở dữ liệu;
-- xử lý nghiệp vụ đọc và quản lý truyện;
-- authentication, authorization và bảo mật tài khoản;
-- cache, queue, scheduler và tối ưu truy vấn;
-- tích hợp Backend với Blade/JavaScript;
-- realtime notification;
-- Unit / Feature / Browser E2E testing;
-- CI tự động bằng GitHub Actions.
-
-Toàn bộ chapter đã phát hành đều có thể đọc **miễn phí**, không sử dụng Coin, Wallet hay VIP để mở khoá nội dung.
+</div>
 
 ---
 
-## Công nghệ đã sử dụng
+## ✨ Tổng quan
 
-### Backend
+**Comicx** là website đọc truyện tranh trực tuyến được xây dựng bằng **Laravel + Blade**, phục vụ 3 nhóm chính:
 
-- PHP 8.3
-- Laravel 11
-- Laravel MVC
-- Eloquent ORM
-- MySQL
-- SQLite cho test/CI
-- REST-style JSON API
-- Laravel Cache
-- Laravel Queue
-- Laravel Scheduler
-- Server-Sent Events (SSE)
-- Rate Limiting
+- **Guest**: khám phá và đọc truyện miễn phí.
+- **Member**: lưu tiến độ, quản lý tủ truyện, tương tác và nhận thông báo.
+- **Admin / Staff**: quản trị nội dung, người dùng, phân quyền, báo cáo và vận hành hệ thống.
 
-### Frontend
+> Toàn bộ chapter đã phát hành đều có thể đọc **miễn phí**. Dự án không dùng Coin, Wallet hay VIP để khóa nội dung.
 
-- Blade
-- JavaScript
-- HTML5
-- CSS3
-- AJAX / Fetch API
+### Điểm nổi bật
 
-### Testing & DevOps
-
-- PHPUnit / Laravel Test Suite
-- Unit Test
-- Feature Test
-- Functional Smoke Test
-- Playwright E2E
-- Chromium Desktop + Mobile testing
-- Git / GitHub
-- GitHub Actions CI
+| Module | Điểm chính |
+|---|---|
+| 🤖 **AI Recommendation Chatbot** | Hiểu yêu cầu tự nhiên, giữ ngữ cảnh hội thoại, chỉ gợi ý truyện thật trong DB, có quota + fallback |
+| 📖 **Advanced Reader** | Preset khuyến nghị, quick settings, advanced settings, nhiều mode đọc, lưu cấu hình giữa các chapter |
+| 📚 **Comic Management** | Quản lý truyện, chapter, metadata, ảnh bìa, lịch phát hành, tác giả, thể loại, tag |
+| 🔔 **Realtime Notification** | SSE + fallback polling, notification center, admin broadcast |
+| 🛡️ **Security & RBAC** | Auth, 2FA, permission middleware, validation, rate limiting, upload protection |
+| ⚡ **Performance** | Cache, queue, optimized queries, image variants, N+1 prevention |
+| 🧪 **Quality** | Laravel tests + Playwright E2E + GitHub Actions CI |
 
 ---
 
-## Kiến trúc hệ thống
+## 🧱 Kiến trúc hệ thống
 
-Dự án sử dụng một ứng dụng Laravel duy nhất:
-
-```text
-Browser
-  ↓
-Blade + JavaScript
-  ↓
-Routes
-  ↓
-Controllers
-  ↓
-Services / Policies / Jobs
-  ↓
-Eloquent Models
-  ↓
-MySQL / SQLite
+```mermaid
+flowchart LR
+    A[Browser] --> B[Blade + JavaScript]
+    B --> C[Laravel Routes]
+    C --> D[Controllers]
+    D --> E[Services / Policies / Jobs]
+    E --> F[Eloquent Models]
+    F --> G[(MySQL)]
+    E --> H[(Cache / Queue)]
+    D --> I[AI Adapter]
+    I --> J[AI Provider]
 ```
 
-Thư mục ứng dụng chính:
+Ứng dụng chính nằm tại:
 
 ```text
 laravel-blade/
@@ -104,158 +78,248 @@ e2e/
 
 ---
 
-## Chức năng chính
+## 🤖 AI Recommendation Chatbot
 
-### Guest
+Chatbot không để AI tự bịa truyện rồi trả lời cho có vẻ thông minh. Kiến trúc được tách rõ:
+
+```text
+User message
+    ↓
+AI Intent Parser
+    ↓
+Conversation State
+    ↓
+RecommendationService
+    ↓
+MySQL / Taxonomy / Scoring
+    ↓
+Comic thật trong hệ thống
+    ↓
+Conversational Response
+```
+
+### Chatbot có thể
+
+- hiểu yêu cầu bằng tiếng Việt tự nhiên;
+- nhận biết genre, theme, setting, tính cách nhân vật, tone, status và điều kiện loại trừ;
+- ghi nhớ preference qua nhiều tin nhắn;
+- xử lý các câu như:
+  - “fantasy main yếu rồi mạnh”;
+  - “không harem”;
+  - “thôi bỏ dungeon”;
+  - “cho truyện hoàn thành rồi”;
+- hỏi thêm khi thông tin chưa đủ;
+- trả **3–5 truyện thật** từ database;
+- giải thích ngắn vì sao truyện phù hợp;
+- giữ guardrail để AI không tự tạo comic ID, slug, title hay score.
+
+### Quota & fallback
+
+- quota theo user / guest session / IP;
+- tạo conversation mới không reset ngân sách AI;
+- quick reply không cần gọi AI;
+- cache kết quả parse;
+- timeout / 429 / 5xx / JSON lỗi đều có fallback;
+- rule-based parser tiếp quản khi AI unavailable;
+- automated tests dùng fake/mock provider, không đốt quota thật.
+
+Cấu hình qua `.env`:
+
+```env
+AI_ENABLED=true
+AI_CONVERSATIONAL_RESPONSE=true
+AI_PROVIDER=openai_compatible
+AI_API_KEY=
+AI_MODEL=
+AI_BASE_URL=
+AI_TIMEOUT=15
+AI_RETRY_TIMES=1
+AI_MAX_CALLS=10
+AI_RATE_LIMIT_DECAY=60
+AI_PARSE_CACHE_TTL=600
+```
+
+---
+
+## 📖 Reader nâng cao
+
+Reader được xây dựng để user có thể **mở chapter và đọc ngay**, không phải cấu hình cả “buồng lái máy bay” trước khi lật trang đầu tiên.
+
+### ⭐ Preset mặc định: Khuyến nghị
+
+User mới được áp dụng cấu hình tối ưu sẵn.
+
+Nếu user thay đổi setting:
+
+```text
+⭐ Khuyến nghị
+      ↓
+User chỉnh một option
+      ↓
+⚙ Tùy chỉnh
+```
+
+Có thể quay lại preset bằng **“Dùng cài đặt khuyến nghị”**.
+
+### Quick Settings
+
+Chỉ giữ những thứ thường dùng khi đang đọc:
+
+- chế độ đọc;
+- hướng đọc khi phù hợp;
+- vừa chiều rộng / vừa chiều cao;
+- khoảng cách trang;
+- độ sáng / giảm chói;
+- mở **Cài đặt nâng cao**.
+
+### Advanced Settings
+
+Được chia riêng theo nhóm:
+
+- **Bố cục**
+- **Hiển thị ảnh**
+- **Phím tắt**
+- **Hành vi**
+- **Khác**
+
+Reader settings được giữ khi:
+
+- reload;
+- sang chapter tiếp;
+- quay chapter trước;
+- mở lại Reader.
+
+Ngoài ra hệ thống còn có:
+
+- reader image variants;
+- lazy loading;
+- reader performance tests;
+- hỗ trợ desktop + mobile;
+- reader settings E2E.
+
+Tài liệu chi tiết về image pipeline: [docs/READER_IMAGES.md](docs/READER_IMAGES.md).
+
+---
+
+## 👤 Guest / Member / Admin
+
+### 👀 Guest
 
 Không cần đăng nhập vẫn có thể:
 
-- xem trang chủ và các khu vực khám phá truyện;
-- xem thể loại, tag, tác giả và nhóm dịch;
-- xem lịch phát hành và truyện đã hoàn thành;
-- tìm kiếm truyện theo từ khoá;
+- xem trang chủ và danh sách truyện;
+- duyệt thể loại, tag, tác giả và nhóm dịch;
+- xem lịch phát hành;
+- tìm kiếm truyện;
 - tìm kiếm tiếng Việt không dấu;
-- xem chi tiết truyện và toàn bộ chapter đã phát hành;
-- đọc chapter miễn phí;
-- sử dụng các chế độ Reader và tuỳ chỉnh hiển thị;
-- xem bình luận, đánh giá và gợi ý truyện;
-- gửi báo cáo lỗi hình ảnh / DMCA / liên hệ.
+- xem chi tiết truyện;
+- đọc toàn bộ chapter đã phát hành;
+- sử dụng Reader;
+- sử dụng chatbot gợi ý truyện;
+- xem bình luận và đánh giá;
+- gửi liên hệ / báo cáo phù hợp.
 
-### Member
+### 👤 Member
 
-Sau khi đăng nhập, Member có thêm:
+Sau khi đăng nhập:
 
-- quản lý Tủ Truyện cá nhân;
-- theo dõi truyện;
-- hiển thị số chapter chưa đọc;
-- tự xác định chapter chưa đọc tiếp theo;
-- lưu lịch sử và tiến độ đọc;
-- khôi phục vị trí đọc theo `% scroll`;
-- tránh tụt tiến độ khi mở lại chapter cũ;
-- like truyện;
-- rating và viết nhận xét;
-- bình luận và trả lời bình luận;
-- tạo danh sách đọc riêng;
-- xem thống kê đọc cá nhân;
-- nhận thông báo chapter mới;
-- nhận thông báo trực tiếp từ Admin;
-- xem và quản lý Notification Center.
+- quản lý **Tủ Truyện**;
+- lưu lịch sử đọc;
+- lưu tiến độ chapter;
+- xác định chapter chưa đọc;
+- tiếp tục đọc đúng vị trí;
+- like và rating;
+- viết / trả lời bình luận;
+- tạo danh sách đọc;
+- xem thống kê cá nhân;
+- nhận notification chapter mới;
+- nhận thông báo từ Admin;
+- sử dụng Notification Center.
 
-### Admin / Staff roles
+### 🛡️ Admin / Staff
 
 Khu vực `/admin` hỗ trợ:
 
-- Dashboard và analytics;
-- quản lý truyện;
+- dashboard và analytics;
+- CRUD truyện;
 - quản lý chapter;
-- upload / xử lý ảnh chapter;
-- quản lý thể loại;
-- quản lý tag;
-- quản lý tác giả;
-- quản lý banner;
-- quản lý lịch phát hành;
-- quản lý thành viên;
-- khoá / mở khoá tài khoản;
-- RBAC và phân quyền chi tiết;
+- upload ảnh chapter;
+- quản lý thể loại / tag / tác giả;
+- quản lý banner và lịch phát hành;
+- quản lý user;
+- khóa / mở khóa tài khoản;
+- RBAC và permission;
 - kiểm duyệt bình luận;
 - xử lý báo cáo;
 - xử lý yêu cầu đăng truyện;
 - audit log;
 - cấu hình website;
+- đổi logo / favicon / branding;
 - maintenance mode;
-- gửi thông báo theo đối tượng người dùng.
+- admin notification / broadcast.
 
-Toàn bộ `/admin/*` được bảo vệ bằng authentication, middleware và permission backend. Giao diện chỉ là lớp hiển thị, không được dùng thay cho authorization.
-
----
-
-## Authentication & Security
-
-Hệ thống hiện có:
-
-- đăng ký / đăng nhập / đăng xuất;
-- email verification;
-- quên và đặt lại mật khẩu;
-- Two-Factor Authentication (2FA);
-- recovery code;
-- quản lý session;
-- đăng xuất các thiết bị khác;
-- kiểm tra user bị ban;
-- RBAC;
-- permission middleware;
-- validation dữ liệu;
-- secure image upload;
-- anti-spam / honeypot cho comment;
-- rate limiting;
-- anti-hotlink;
-- kiểm tra URL an toàn;
-- xử lý quyền truy cập Admin ở Backend.
+> Authorization được kiểm tra ở Backend bằng middleware / permission. UI không được dùng thay cho kiểm tra quyền.
 
 ---
 
-## Realtime Notification
+## 🔔 Realtime Notification
 
-Comicx sử dụng **Server-Sent Events (SSE)** cho thông báo realtime.
-
-Khi user đang đăng nhập:
+Comicx sử dụng **Server-Sent Events (SSE)** cho notification realtime.
 
 ```text
 Server tạo notification
         ↓
 SSE stream
         ↓
-Browser nhận snapshot mới
+Browser nhận snapshot
         ↓
-Badge chuông cập nhật
+Badge cập nhật
         ↓
-Dropdown refresh + Toast xuất hiện
+Dropdown refresh + Toast
 ```
 
-Các đặc điểm:
+Có:
 
-- không cần reload trang;
-- badge notification cập nhật realtime;
-- dropdown đang mở được refresh trực tiếp;
-- toast hiển thị khi có notification mới;
-- có heartbeat giữ kết nối;
-- EventSource tự reconnect;
-- fallback sang polling khoảng 15 giây nếu SSE lỗi liên tiếp;
-- JSON notification API cũ vẫn được giữ để tương thích.
-
-Realtime hiện được dùng cho các notification trong hệ thống như chapter mới và Admin broadcast.
+- heartbeat;
+- EventSource reconnect;
+- fallback polling khi SSE lỗi liên tiếp;
+- notification center;
+- admin broadcast;
+- browser E2E kiểm tra realtime giữa nhiều role.
 
 ---
 
-## Tủ Truyện & Reading Progress
+## 📚 Tủ Truyện & Reading Progress
 
-Tủ Truyện không chỉ lưu bookmark mà còn quản lý trạng thái đọc:
+Tủ Truyện không chỉ là bookmark.
 
-- `+X chưa đọc` cho từng bộ truyện;
-- trạng thái `Đã đọc hết`;
-- xác định chapter chưa đọc đầu tiên;
-- nút **Đọc tiếp** chuyển đến chapter phù hợp;
-- chapter lên lịch trong tương lai không bị tính là chưa đọc;
-- Reader tự đồng bộ `last_read_chapter_id`;
+Hệ thống theo dõi:
+
+- số chapter chưa đọc;
+- trạng thái đã đọc hết;
+- chapter tiếp theo nên đọc;
+- `last_read_chapter_id`;
+- vị trí đọc;
+- chapter tương lai không bị tính là chưa đọc;
 - đọc lại chapter cũ không làm lùi tiến độ;
-- xoá lịch sử đọc đồng thời reset tiến độ liên quan;
-- dữ liệu được batch query để tránh N+1 ở trang Library.
+- batch query để tránh N+1.
 
 ---
 
-## Search & Recommendation
+## 🔎 Search & Recommendation
 
 ### Search
 
-Search hỗ trợ:
+Hỗ trợ:
 
 - title;
-- partial / contains search;
+- partial / contains;
 - author;
 - genre;
 - country;
-- lọc loại trừ genre;
+- exclude genre;
 - sorting;
-- từ khoá tiếng Việt không dấu.
+- tiếng Việt không dấu.
 
 Ví dụ:
 
@@ -263,150 +327,147 @@ Ví dụ:
 thang cap
 ```
 
-vẫn có thể tìm được:
+vẫn có thể tìm:
 
 ```text
 Tôi Thăng Cấp Một Mình
 ```
 
-### Recommendation
+### Recommendation Engine
 
-Hệ thống recommendation sử dụng dữ liệu như:
+Recommendation không phụ thuộc hoàn toàn vào AI.
 
-- lịch sử đọc;
-- truyện trong Library;
-- genre người dùng quan tâm;
-- trending data;
-- similar comics;
-- cache kết quả recommendation;
-- invalidate cache khi hành vi đọc thay đổi.
+Backend có thể dùng:
 
----
+- genre;
+- taxonomy tags;
+- theme;
+- setting;
+- character traits;
+- tone;
+- relationship;
+- status;
+- explicit exclude;
+- lịch sử / hành vi người dùng khi phù hợp.
 
-## Performance
-
-Reader image variants, queue/backfill setup and production cache guidance: [docs/READER_IMAGES.md](docs/READER_IMAGES.md).
-
-Một số kỹ thuật đã áp dụng:
-
-1. **Counter Cache**  
-   Lưu sẵn các chỉ số thường dùng trên `comics` để giảm query tổng hợp khi render giao diện.
-
-2. **Read-layer Cache**  
-   Cache các dữ liệu đọc nhiều như banner, trending, latest, genre và schedule.
-
-3. **View Counter Buffering**  
-   Lượt xem được buffer và flush theo batch thay vì update database liên tục mỗi request.
-
-4. **Composite Indexes**  
-   Tối ưu các truy vấn lọc, tìm kiếm và phân trang.
-
-5. **Queue**  
-   Xử lý các tác vụ nền như ảnh chapter và notification.
-
-6. **N+1 Prevention**  
-   Dùng eager loading / batch query cho các trang có nhiều relation như Library và Comment.
+AI chỉ đóng vai trò **hiểu ý người dùng và diễn đạt phản hồi**, còn truyện được chọn bởi backend.
 
 ---
 
-## Automated Testing
+## ⚡ Performance & Backend Engineering
 
-Dự án có nhiều tầng kiểm thử.
+Một số kỹ thuật đang được áp dụng:
 
-### Laravel tests
+### Cache
 
-Chạy toàn bộ test:
+- cache dữ liệu đọc nhiều;
+- cache recommendation parsing;
+- invalidation khi dữ liệu liên quan thay đổi.
+
+### Queue / Background Jobs
+
+- xử lý ảnh;
+- notification;
+- tác vụ nền;
+- workflow upload dài hạn.
+
+### Query Optimization
+
+- eager loading;
+- batch query;
+- SQL ranking cho recommendation;
+- tránh hydrate toàn bộ thư viện chỉ để lấy top vài kết quả;
+- composite indexes cho truy vấn phổ biến.
+
+### Reader Image Pipeline
+
+- image variants;
+- responsive image loading;
+- queue/backfill;
+- performance-focused delivery.
+
+---
+
+## 🔐 Authentication & Security
+
+Hệ thống hiện có:
+
+- đăng ký / đăng nhập / đăng xuất;
+- email verification;
+- forgot/reset password;
+- Two-Factor Authentication;
+- recovery code;
+- session management;
+- logout thiết bị khác;
+- ban check;
+- RBAC;
+- permission middleware;
+- CSRF protection;
+- validation;
+- rate limiting;
+- secure image upload;
+- anti-spam;
+- URL safety checks;
+- guardrail cho AI input/output;
+- quota AI theo server identity;
+- không expose API key ra frontend.
+
+---
+
+## 🧪 Testing & CI
+
+Dự án sử dụng nhiều tầng kiểm thử thay vì chỉ “chạy được trên máy em”.
+
+### Laravel Test Suite
 
 ```bash
 cd laravel-blade
 php artisan test
 ```
 
-Trạng thái CI gần nhất:
-
-```text
-250 tests passed
-1097 assertions
-0 failed
-```
-
 Bao gồm:
 
-- Unit Tests;
-- Feature Tests;
-- auth / security tests;
-- Admin permission tests;
-- Search tests;
-- Recommendation tests;
-- Reader tests;
-- Library tests;
-- Notification tests;
-- Realtime SSE tests;
-- rate limiting tests;
-- regression tests.
+- Unit tests;
+- Feature tests;
+- auth / security;
+- permission;
+- search;
+- recommendation;
+- chatbot;
+- Reader;
+- Library;
+- notification;
+- rate limiting;
+- regression.
 
-### Critical Functional Smoke Test
-
-CI chạy riêng các luồng quan trọng trước full suite:
+### Critical User Journey
 
 ```bash
 php artisan test tests/Feature/CriticalUserJourneyTest.php --stop-on-failure
 ```
 
-Các journey chính gồm:
-
-- Guest khám phá → mở truyện → đọc chapter;
-- Member theo dõi truyện → lưu tiến độ → tiếp tục đọc;
-- Search partial / tiếng Việt không dấu;
-- các trang public và authenticated quan trọng không được crash.
-
-### Browser E2E bằng Playwright
-
-Cài đặt:
+### Playwright E2E
 
 ```bash
 cd e2e
 npm install
 npx playwright install chromium
-```
-
-Chạy:
-
-```bash
 npm test
 ```
 
-CI hiện chạy Playwright trên:
+CI chạy trên:
 
 - Desktop Chromium;
-- Mobile Chromium.
+- Mobile Chromium;
+- chatbot E2E với fixture riêng;
+- notification lifecycle;
+- Reader flows;
+- login / Library / Search;
+- responsive behavior.
 
-Browser tests kiểm tra trực tiếp:
+### GitHub Actions
 
-- responsive và horizontal overflow;
-- mobile menu;
-- comic detail;
-- Reader settings;
-- login bằng form thật;
-- Library;
-- live search;
-- realtime notification giữa Member và Admin mà không reload trang.
-
-Trạng thái CI gần nhất:
-
-```text
-9 browser tests passed
-3 skipped có chủ đích theo viewport
-0 failed
-```
-
-Nếu browser E2E thất bại, GitHub Actions lưu Playwright report / test result / Laravel server log để debug.
-
----
-
-## CI Pipeline
-
-GitHub Actions đang chạy pipeline:
+Pipeline chính:
 
 ```text
 Checkout
@@ -415,18 +476,18 @@ PHP 8.3 + Composer
    ↓
 Validate Routes
    ↓
-Critical Functional Smoke Test
+Critical Smoke Tests
    ↓
-Full Laravel Regression Suite
+Full Laravel Regression
    ↓
-Seed E2E Database
+Prepare isolated E2E DB
    ↓
 Start Laravel Server
    ↓
 Playwright Desktop + Mobile
+   ↓
+Chatbot E2E
 ```
-
-Các thay đổi code chính chỉ nên merge khi pipeline xanh.
 
 Workflow:
 
@@ -436,20 +497,46 @@ Workflow:
 
 ---
 
-## Cài đặt và chạy dự án
+## 🛠️ Tech Stack
+
+| Layer | Công nghệ |
+|---|---|
+| Backend | PHP 8.3+, Laravel 11, MVC, Eloquent ORM |
+| Database | MySQL, SQLite cho test/CI |
+| Frontend | Blade, HTML5, CSS3, JavaScript, Fetch/AJAX |
+| Realtime | Server-Sent Events |
+| Async | Laravel Queue, Scheduler |
+| Performance | Cache, optimized queries, image variants |
+| AI | OpenAI-compatible adapter + rule-based fallback |
+| Testing | PHPUnit / Laravel Test Suite, Playwright |
+| DevOps | Git, GitHub, GitHub Actions |
+
+---
+
+## 🚀 Cài đặt và chạy dự án
+
+> Các lệnh dưới đây dành cho môi trường dev mới. Không dùng lệnh reset database trên môi trường đang chứa dữ liệu thật.
 
 ### 1. Cài Backend
 
 ```bash
-cd laravel-blade
+git clone https://github.com/hunglc721/Web-truy-n.git
+cd Web-truy-n/laravel-blade
+
 composer install
 cp .env.example .env
 php artisan key:generate
 ```
 
-### 2. Cấu hình MySQL
+Trên Windows PowerShell nếu không dùng được `cp`:
 
-Ví dụ `.env`:
+```powershell
+Copy-Item .env.example .env
+```
+
+### 2. Cấu hình database
+
+Ví dụ:
 
 ```env
 DB_CONNECTION=mysql
@@ -466,7 +553,7 @@ QUEUE_CONNECTION=database
 ### 3. Khởi tạo database
 
 ```bash
-php artisan migrate:fresh --seed
+php artisan migrate --seed
 php artisan storage:link
 ```
 
@@ -482,105 +569,143 @@ Mặc định:
 http://127.0.0.1:8000
 ```
 
-### 5. Chạy Queue Worker
+### 5. Queue Worker
 
 ```bash
-php artisan queue:work --queue=notifications,chapter-images,default
+php artisan queue:work
 ```
 
-### 6. Chạy Scheduler
+### 6. Scheduler
 
 ```bash
 php artisan schedule:work
 ```
 
-Scheduler được dùng cho các tác vụ định kỳ như auto publish chapter và flush view counters.
+---
+
+## 🔑 Tài khoản seed
+
+| Vai trò | Email | Mật khẩu |
+|---|---|---|
+| Admin | `admin@webcomics.com` | `12345678` |
+| Member | `user@webcomics.com` | `12345678` |
+
+Seeder còn tạo một số role/user mẫu phục vụ phát triển và kiểm thử.
 
 ---
 
-## URL chính
+## 📁 Cấu trúc chính
+
+```text
+Web-truy-n/
+├── laravel-blade/
+│   ├── app/
+│   │   ├── Http/
+│   │   ├── Models/
+│   │   ├── Services/
+│   │   ├── Jobs/
+│   │   └── Policies/
+│   ├── database/
+│   ├── resources/
+│   ├── routes/
+│   ├── tests/
+│   └── public/
+├── e2e/
+├── docs/
+└── .github/workflows/
+```
+
+---
+
+<details>
+<summary><strong>🌐 Một số route chính</strong></summary>
 
 ### Public
 
-- `/` - Trang chủ
-- `/genres` - Thể loại
-- `/schedule` - Lịch phát hành
-- `/schedule/completed` - Truyện hoàn thành
-- `/originals` - Originals
-- `/tags/{slug}` - Truyện theo tag
-- `/authors/{slug}` - Trang tác giả
-- `/teams` - Danh sách nhóm
-- `/truyen/{slug}` - Chi tiết truyện
-- `/truyen/{comicSlug}/{chapterSlug}` - Reader
-- `/about` - Giới thiệu
-- `/contact` - Liên hệ
-- `/privacy` - Chính sách riêng tư
-- `/terms` - Điều khoản
-- `/sitemap.xml` - Sitemap
+```text
+/                                  Trang chủ
+/genres                            Thể loại
+/schedule                          Lịch phát hành
+/originals                         Originals
+/truyen/{slug}                     Chi tiết truyện
+/truyen/{comicSlug}/{chapterSlug}  Reader
+/about                             Giới thiệu
+/contact                           Liên hệ
+```
 
 ### Member
 
-- `/user` - Dashboard cá nhân
-- `/user/library` - Tủ Truyện
-- `/user/history` - Lịch sử đọc
-- `/user/likes` - Truyện yêu thích
-- `/user/comments` - Bình luận của tôi
-- `/user/ratings` - Đánh giá của tôi
-- `/user/notifications` - Notification Center
-- `/user/publishing-requests` - Yêu cầu đăng truyện
+```text
+/user
+/user/library
+/user/history
+/user/likes
+/user/comments
+/user/ratings
+/user/notifications
+```
 
 ### Admin
 
-- `/admin` - Dashboard
-- `/admin/analytics` - Analytics
-- `/admin/comics` - Quản lý truyện
-- `/admin/chapters` - Quản lý chapter
-- `/admin/genres` - Quản lý thể loại
-- `/admin/tags` - Quản lý tag
-- `/admin/authors` - Quản lý tác giả
-- `/admin/users` - Quản lý user
-- `/admin/comments` - Kiểm duyệt bình luận
-- `/admin/reports` - Báo cáo
-- `/admin/schedules` - Lịch phát hành
-- `/admin/banners` - Banner
-- `/admin/notifications` - Admin notification / broadcast
-- `/admin/logs` - Audit log
-- `/admin/permissions` - RBAC
-- `/admin/settings` - Cấu hình hệ thống
-- `/admin/story-requests` - Yêu cầu đăng truyện
-
----
-
-## Một số API chính
-
 ```text
-GET  /api/search/live
-GET  /api/search/advanced
-GET  /api/recommendations
-GET  /api/comics/{comic}/chapters
-GET  /api/comics/{comic}/release-meta
-POST /api/reading-history
-POST /api/comments
-POST /api/comics/{comic}/toggle-library
-POST /api/comics/{comicId}/ratings
-GET  /user/notifications/header
+/admin
+/admin/analytics
+/admin/comics
+/admin/chapters
+/admin/genres
+/admin/tags
+/admin/authors
+/admin/users
+/admin/comments
+/admin/reports
+/admin/schedules
+/admin/banners
+/admin/notifications
+/admin/logs
+/admin/permissions
+/admin/settings
 ```
 
-`/user/notifications/header` hỗ trợ cả JSON response và SSE stream cho realtime notification.
+</details>
 
 ---
 
-## Tài liệu kỹ thuật
+## 📚 Tài liệu kỹ thuật
 
-Xem thêm:
-
-- `docs/ARCHITECTURE.md`
-- `docs/PHASE_STATUS.md`
-- `.github/workflows/laravel-tests.yml`
-- `e2e/tests/core.spec.js`
+- [Architecture](docs/ARCHITECTURE.md)
+- [Reader Images](docs/READER_IMAGES.md)
+- [Phase Status](docs/PHASE_STATUS.md)
+- [GitHub Actions Workflow](.github/workflows/laravel-tests.yml)
+- [Playwright E2E](e2e/tests/)
 
 ---
 
-## Repository
+## 🎯 Mục tiêu dự án
 
-GitHub: `hunglc721/Web-truy-n`
+Dự án tập trung thể hiện khả năng xây dựng một hệ thống web Backend hoàn chỉnh:
+
+- thiết kế database;
+- xử lý business logic;
+- tổ chức service layer;
+- authentication / authorization;
+- cache / queue / scheduler;
+- tích hợp AI có guardrail;
+- realtime;
+- performance optimization;
+- automated testing;
+- CI;
+- kết nối Backend với UI thực tế.
+
+Không chỉ dừng ở CRUD, mục tiêu là xây dựng một sản phẩm có thể tiếp tục mở rộng và vận hành.
+
+---
+
+<div align="center">
+
+### ⭐ Repository
+
+**[github.com/hunglc721/Web-truy-n](https://github.com/hunglc721/Web-truy-n)**
+
+Nếu repo hữu ích, có thể để lại một ⭐. Con số thì vô tri, nhưng nhìn vẫn vui.
+
+</div>
