@@ -79,13 +79,13 @@
 @endpush
 
 @section('content')
-<main class="page-container">
-  <div class="container library-shell">
+<main class="page-container member-page">
+  <div class="container library-shell member-shell">
     <section class="library-hero">
       <div>
-        <span class="library-kicker">📚 Không gian đọc cá nhân</span>
+        <span class="library-kicker">Không gian đọc cá nhân</span>
         <h1 class="library-title">Tủ Truyện</h1>
-        <p class="library-subtitle">Theo dõi truyện, nhớ chương đã đọc và ưu tiên những bộ đang có nội dung mới để m không phải tự nhớ bằng sức mạnh tinh thần.</p>
+        <p class="library-subtitle">Theo dõi truyện, nhớ chương đã đọc và ưu tiên những bộ đang có nội dung mới.</p>
       </div>
       <span id="library-total-label" class="library-total-pill" data-total="{{ $libraries->total() }}">{{ $libraries->total() }} bộ truyện</span>
     </section>

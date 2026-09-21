@@ -1,12 +1,12 @@
 @extends('layouts.main')
 @section('title','Bình luận của tôi - WebComics')
 @section('content')
-<main class="page-container"><div class="container" style="padding-top:32px;padding-bottom:56px;">
-    <h1 style="margin-bottom:8px;">💬 Bình luận của tôi</h1><p style="color:var(--text-sub);margin-top:0;">Theo dõi những gì m đã viết và trạng thái kiểm duyệt của từng bình luận.</p>
+<main class="page-container member-page"><div class="container member-shell">
+    <h1 class="member-title">Bình luận của tôi</h1><p class="member-subtitle">Theo dõi nội dung đã viết và trạng thái kiểm duyệt.</p>
     @include('user._nav')
-    <div style="display:grid;gap:12px;">
+    <div class="member-list">
         @forelse($comments as $comment)
-            <article style="background:var(--card-bg);border:1px solid var(--border);border-radius:14px;padding:16px;">
+            <article class="member-list-card member-comment-card">
                 <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;">
                     <div>
                         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
@@ -22,7 +22,7 @@
                 <div style="font-size:11px;color:var(--text-sub);">❤️ {{ number_format($comment->likes_count ?? 0) }} · {{ $comment->created_at?->diffForHumans() }}</div>
             </article>
         @empty
-            <div style="padding:42px;text-align:center;border:1px dashed var(--border);border-radius:14px;color:var(--text-sub);">M chưa viết bình luận nào.</div>
+            <div class="empty-state"><span aria-hidden="true">💬</span><strong>Chưa có bình luận</strong><p>Bình luận của bạn tại trang truyện sẽ xuất hiện ở đây.</p></div>
         @endforelse
     </div>
     <div style="margin-top:22px;">{{ $comments->links() }}</div>

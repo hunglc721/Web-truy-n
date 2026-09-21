@@ -2,8 +2,8 @@
 @section('title', 'Đơn Đăng Ký Đăng Truyện Của Tôi - WebComics')
 
 @section('content')
-<main class="page-container">
-  <div class="container" style="padding-top: 32px; padding-bottom: 56px;">
+<main class="page-container member-page">
+  <div class="container member-shell">
     <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:12px;">
       <div>
         <h1 style="margin-bottom: 6px;">📝 Đơn Đăng Ký Đăng Truyện Của Tôi</h1>

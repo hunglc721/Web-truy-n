@@ -9,14 +9,14 @@
 @endpush
 
 @section('content')
-<main class="notification-page">
-  <div class="container">
+<main class="notification-page member-page">
+  <div class="container member-shell">
     @include('user._nav')
 
     <div class="notification-head">
       <div>
-        <h1 style="font-size:26px;font-weight:900;color:var(--text-main)">🔔 Thông báo</h1>
-        <p style="color:var(--text-sub);margin-top:4px">Chapter mới, thông báo hệ thống và cảnh báo dành cho tài khoản của bạn.</p>
+        <h1 class="member-title">Thông báo</h1>
+        <p class="member-subtitle">Chapter mới, thông báo hệ thống và cảnh báo dành cho tài khoản của bạn.</p>
       </div>
       @if(auth()->user()->unreadNotifications()->exists())
       <form method="POST" action="{{ route('user.notifications.readAll') }}">
@@ -45,7 +45,7 @@
           </div>
         </article>
       @empty
-        <div class="empty-notification">Chưa có thông báo nào. Một khoảnh khắc hiếm hoi internet chịu im lặng.</div>
+        <div class="empty-state"><span aria-hidden="true">🔔</span><strong>Chưa có thông báo</strong><p>Khi có chapter mới hoặc cập nhật tài khoản, bạn sẽ thấy ở đây.</p></div>
       @endforelse
     </div>
 

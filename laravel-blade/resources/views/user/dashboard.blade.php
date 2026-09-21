@@ -14,12 +14,12 @@
 @endpush
 
 @section('content')
-<main class="page-container">
-    <div class="container" style="padding-top:32px;padding-bottom:56px;">
+<main class="page-container member-page">
+    <div class="container member-shell">
         <div class="page-header" style="margin-bottom:18px;">
             <div>
-                <h1 style="font-size:28px;margin:0 0 6px;">👋 Xin chào, {{ $user->name }}</h1>
-                <p style="margin:0;color:var(--text-sub);">Tất cả hoạt động đọc truyện của m được gom về một chỗ, cuối cùng cũng đỡ phải đi săn từng nút như chơi trốn tìm.</p>
+                <h1 class="member-title">Xin chào, {{ $user->name }}</h1>
+                <p class="member-subtitle">Tiếp tục những bộ đang đọc và xem nhanh hoạt động gần đây của bạn.</p>
             </div>
         </div>
 
@@ -27,17 +27,13 @@
 
         <section class="user-dashboard-stats" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:12px;margin-bottom:24px;">
             @foreach([
-                ['📚','Tủ truyện',$overview['total_library_comics']],
-                ['📖','Chương đã đọc',$overview['total_chapters_read']],
-                ['❤️','Truyện đã thích',$overview['total_likes']],
-                ['💬','Bình luận',$overview['total_comments']],
-                ['⭐','Đánh giá',$overview['total_ratings']],
-                ['🔥','Chuỗi ngày đọc',$overview['reading_streak_days']],
-            ] as [$icon,$label,$value])
-                <div style="background:var(--card-bg);border:1px solid var(--border);border-radius:14px;padding:16px;">
-                    <div style="font-size:22px;">{{ $icon }}</div>
-                    <div style="font-size:25px;font-weight:900;margin:8px 0 2px;">{{ number_format($value) }}</div>
-                    <div style="font-size:12px;color:var(--text-sub);font-weight:600;">{{ $label }}</div>
+                ['Tủ truyện',$overview['total_library_comics']],
+                ['Chương đã đọc',$overview['total_chapters_read']],
+                ['Bình luận',$overview['total_comments']],
+            ] as [$label,$value])
+                <div class="member-stat">
+                    <div class="member-stat-value">{{ number_format($value) }}</div>
+                    <div class="member-stat-label">{{ $label }}</div>
                 </div>
             @endforeach
         </section>
