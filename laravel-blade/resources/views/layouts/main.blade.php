@@ -359,9 +359,6 @@
 
   @yield('content')
 
-  @if(request()->routeIs('home'))
-    @include('partials.home-discovery')
-  @endif
   @if(request()->routeIs('originals'))
     @include('partials.originals-discovery')
   @endif

@@ -12,6 +12,12 @@
   const chips = document.getElementById('recommendation-chat-chips');
   const loading = document.getElementById('recommendation-chat-loading');
   const error = document.getElementById('recommendation-chat-error');
+  document.querySelectorAll('[data-open-recommendation-chat]').forEach(button => {
+    button.addEventListener('click', () => {
+      if (panel && !panel.classList.contains('open')) toggle?.click();
+      input?.focus();
+    });
+  });
   const storageKey = 'comicx.recommendation.conversation';
   const historyKey = `comicx.recommendation.history:${widget.dataset.historyScope || 'guest'}`;
   let history = [];
