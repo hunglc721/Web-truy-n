@@ -19,7 +19,7 @@
 @endpush
 
 @section('content')
-<main class="page-container">
+<main class="page-container discovery-page">
   <div class="container">
 
     {{-- Breadcrumb & Page Title --}}
@@ -34,9 +34,9 @@
 
       <h1 class="page-title">
         @if(!$activeGenres->isEmpty())
-          📖 Truyện Thể Loại: {{ $activeGenres->pluck('name')->join(' + ') }}
+          Truyện thể loại: {{ $activeGenres->pluck('name')->join(' + ') }}
         @else
-          🔍 Khám Phá Kho Truyện Tranh
+          Khám phá kho truyện
         @endif
       </h1>
       <p class="page-subtitle">
@@ -202,61 +202,11 @@
     </p>
 
     {{-- BROWSE GRID TRUYỆN --}}
-    <div class="browse-grid">
+    <div class="comics-grid discovery-results-grid">
       @forelse($comics as $comic)
-        @php
-          $primaryTag   = $comic->tags->firstWhere('slug', 'hot')
-                       ?? $comic->tags->firstWhere('slug', 'popular')
-                       ?? $comic->tags->first();
-          $primaryGenre = $comic->genres->firstWhere('pivot.is_primary', true)
-                       ?? $comic->genres->first();
-          $secondGenre  = $comic->genres->skip(1)->first();
-        @endphp
-
-        <div class="browse-card">
-          <div class="browse-cover">
-            <a href="{{ route('comics.show', $comic->slug) }}">
-              <img src="{{ $comic->cover_url }}"
-                   alt="{{ $comic->title }}"
-                   class="cover-img"
-                   loading="lazy" />
-            </a>
-
-            @if($primaryTag)
-              <span class="badge-tag {{ in_array($primaryTag->slug, ['hot']) ? 'hot' : 'new' }}">
-                {{ strtoupper($primaryTag->name) }}
-              </span>
-            @endif
-
-            <span class="rating-tag">★ {{ number_format($comic->avg_rating, 1) }}</span>
-          </div>
-
-          <div class="browse-info">
-            <h3 class="browse-title">
-              <a href="{{ route('comics.show', $comic->slug) }}">{{ $comic->title }}</a>
-            </h3>
-            <p class="browse-author">
-              Tác giả: {{ $comic->authors->pluck('name')->join(' · ') ?: 'Đang cập nhật' }}
-            </p>
-            <p class="browse-meta">
-              <span>{{ $primaryGenre?->name }}</span>
-              @if($secondGenre)
-                &middot; <span>{{ $secondGenre->name }}</span>
-              @endif
-              &middot;
-              <span>{{ $comic->chapters_count }} Chapter</span>
-            </p>
-            <p class="browse-desc">{{ Str::limit($comic->description, 100) }}</p>
-          </div>
-        </div>
+        @include('partials.comic-card', ['comic' => $comic])
       @empty
-        <div style="grid-column: 1 / -1; text-align: center; padding: 60px; color: var(--text-sub); background: var(--bg-surface-1); border-radius: var(--radius-lg); border: 1px solid var(--border-color);">
-          <p style="font-size: 48px; margin-bottom: 16px;">📭</p>
-          <p style="font-size: 16px; font-weight: 600;">Không tìm thấy bộ truyện nào phù hợp với bộ lọc đã chọn.</p>
-          <a href="{{ route('genres') }}" class="btn btn-login" style="margin-top: 16px; display: inline-block; text-decoration: none;">
-            ✖ Xóa bộ lọc và xem tất cả
-          </a>
-        </div>
+        <div class="empty-state"><span aria-hidden="true">📚</span><strong>Không tìm thấy truyện phù hợp</strong><p>Thử bỏ bớt bộ lọc hoặc tìm bằng từ khóa khác.</p><a href="{{ route('genres') }}" class="btn btn-login">Xóa bộ lọc</a></div>
       @endforelse
     </div>
 

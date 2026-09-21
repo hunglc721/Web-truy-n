@@ -37,7 +37,7 @@
   </div>
 </div>
 
-<main class="page-container" style="padding-top:32px;">
+<main class="page-container discovery-page originals-page">
   <div class="container">
     @if($spotlight)
       @php
@@ -97,29 +97,11 @@
         <span class="results-count">{{ $originals->count() }} bộ truyện độc quyền{{ !empty($selectedGenre) ? ' trong thể loại đã chọn' : '' }}</span>
       </div>
 
-      <div class="originals-full-grid">
+      <div class="comics-grid discovery-results-grid">
         @forelse($originals as $comic)
-          @php $chapter = $comic->latestChapter; @endphp
-          <article class="orig-full-card">
-            <div class="of-cover">
-              <a href="{{ route('comics.show', $comic->slug) }}" aria-label="Xem {{ $comic->title }}">
-                <img src="{{ $comic->cover_url }}" alt="{{ $comic->title }}" class="cover-img" loading="lazy" />
-              </a>
-              <span class="of-badge">ĐỘC QUYỀN</span>
-              <span class="of-rating">★ {{ number_format($comic->avg_rating, 1) }}</span>
-            </div>
-
-            <div class="of-body">
-              <h3 class="of-title"><a href="{{ route('comics.show', $comic->slug) }}">{{ $comic->title }}</a></h3>
-              <p class="of-genre">{{ $comic->genres->pluck('name')->join(' · ') ?: 'Đang cập nhật' }}</p>
-              <p class="of-stats">👥 {{ $comic->formatted_views }} Lượt Đọc @if($chapter)&middot; {{ $chapter->label }} mới nhất @endif</p>
-            </div>
-          </article>
+          @include('partials.comic-card', ['comic' => $comic])
         @empty
-          <div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--text-sub);">
-            <p style="font-size:44px;margin-bottom:12px;">✨</p>
-            <p>Chưa có truyện độc quyền nào phù hợp bộ lọc.</p>
-          </div>
+          <div class="empty-state"><span aria-hidden="true">✦</span><strong>Chưa có Originals phù hợp</strong><p>Thử chọn một thể loại khác.</p></div>
         @endforelse
       </div>
     </div>

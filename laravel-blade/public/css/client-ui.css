@@ -215,3 +215,98 @@ a, button, input, textarea, select { -webkit-tap-highlight-color: transparent; }
   .ai-cta-inner .btn { width: 100%; justify-content: center; }
   .discovery-zone .discovery-feature:nth-of-type(n + 3), .discovery-zone .discovery-genre-block { display: none; }
 }
+
+/* Phase 3: comic detail and discovery pages. */
+.page-container { padding: 28px 0 56px; }
+.page-header { margin-bottom: 24px; }
+.breadcrumb { color: var(--text-muted); font-size: 12px; }
+.breadcrumb a:hover { color: var(--primary); }
+.page-title { margin-top: 10px; font-size: clamp(26px, 3vw, 36px); font-weight: 800; letter-spacing: -.035em; }
+.page-subtitle { max-width: 720px; color: var(--text-secondary); }
+
+.discovery-page .filter-panel { gap: 14px !important; margin-bottom: 24px !important; padding: 18px !important; border-radius: var(--radius-lg) !important; background: var(--bg-surface-1) !important; box-shadow: none; }
+.discovery-page .filter-group { gap: 12px !important; }
+.discovery-page .filter-label { min-width: 82px !important; color: var(--text-secondary) !important; font-size: 12px; }
+.discovery-page .form-control { min-height: 42px; border-radius: var(--radius-md) !important; background: var(--bg-main) !important; }
+.chip { min-height: 36px; padding: 7px 11px; border-radius: var(--radius-full); background: var(--bg-surface-2); color: var(--text-secondary); font-size: 12px; }
+.chip:hover { color: var(--text-main); border-color: rgba(255, 94, 54, .4); }
+.chip.active { background: rgba(255, 94, 54, .12); border-color: rgba(255, 94, 54, .48); color: var(--text-main); box-shadow: none; }
+.results-bar { color: var(--text-muted); font-size: 12px; }
+.discovery-results-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 14px; }
+.discovery-results-grid .empty-state .btn { display: inline-flex; justify-content: center; margin-top: 16px; }
+
+.schedule-day-bar { gap: 8px; margin-bottom: 28px; padding: 6px; border: 1px solid var(--border-color); border-radius: var(--radius-lg); background: var(--bg-surface-1); }
+.sched-day-item { min-height: 64px; border: 1px solid transparent; border-radius: var(--radius-md); background: transparent; }
+.sched-day-item:hover { background: var(--bg-surface-2); border-color: var(--border-color); }
+.sched-day-item.active { background: rgba(255, 94, 54, .1); border-color: rgba(255, 94, 54, .45); box-shadow: none; }
+.day-name { font-size: 12px; }
+.day-count { color: var(--text-muted); font-size: 10px; }
+.sched-current-title { align-items: center; margin: 26px 0 16px; }
+.badge-status-live { border-radius: var(--radius-full); background: rgba(34, 197, 94, .1); box-shadow: none; }
+
+.orig-hero-section { padding: 58px 0 44px; background: var(--bg-surface-1); border-bottom: 1px solid var(--border-color); }
+.orig-hero-glow { display: none; }
+.orig-hero-badge { color: var(--primary); }
+.orig-hero-title { max-width: 760px; font-size: clamp(34px, 5vw, 56px); letter-spacing: -.05em; }
+.purple-gradient-text { color: var(--primary); background: none; -webkit-text-fill-color: currentColor; }
+.orig-spotlight-card { gap: 28px; padding: 24px; border-radius: var(--radius-lg); background: var(--bg-surface-1); box-shadow: none; }
+.spotlight-cover { width: 210px; aspect-ratio: 2 / 3; border-radius: var(--radius-md); }
+.spotlight-title { font-size: clamp(28px, 4vw, 42px); letter-spacing: -.04em; }
+.spotlight-desc { max-width: 760px; color: var(--text-secondary); }
+.btn-spotlight-read { border-radius: var(--radius-md); background: var(--primary); box-shadow: none; }
+.btn-spotlight-read:hover { background: var(--primary-hover); box-shadow: none; transform: none; }
+.btn-spotlight-sub { border-radius: var(--radius-md); background: var(--bg-surface-2); border-color: var(--border-color); }
+
+.comic-detail-page .page-header { margin-bottom: 14px; }
+.comic-detail-hero { margin-bottom: 24px; }
+.comic-detail-hero .spotlight-details { min-width: 0; }
+.comic-detail-hero .spotlight-tags { max-height: 72px; overflow: hidden; }
+.mature-tag { background: rgba(239, 68, 68, .12); border-color: rgba(239, 68, 68, .45); color: #fca5a5; font-weight: 800; }
+.detail-credit-link { color: var(--primary); font-weight: 700; }
+.comic-detail-stats { display: flex; flex-wrap: wrap; gap: 16px; margin: 10px 0 14px; color: var(--text-secondary); font-size: 13px; }
+.comic-detail-stats strong { color: var(--text-main); }
+.comic-detail-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+.comic-detail-actions .btn-spotlight-read, .comic-detail-actions .btn-spotlight-sub { display: inline-flex; min-height: 42px; align-items: center; justify-content: center; padding: 10px 15px; text-decoration: none; cursor: pointer; }
+.comic-detail-actions .is-saved { background: rgba(34, 197, 94, .13); border-color: rgba(34, 197, 94, .45); color: #86efac; }
+.comic-detail-actions .is-liked { background: rgba(239, 68, 68, .12); border-color: rgba(239, 68, 68, .42); color: #fca5a5; }
+.action-toast { display: none; margin-top: 12px; padding: 10px 14px; border-radius: var(--radius-md); font-size: 13px; font-weight: 700; }
+.detail-nav-tabs { position: sticky; top: calc(var(--header-height) + 8px); z-index: 20; margin: 22px 0 20px; padding: 5px; border: 1px solid var(--border-color); border-radius: var(--radius-md); background: rgba(18, 21, 28, .96); }
+.dtab-btn { min-height: 40px; padding: 8px 14px; border: 0; border-radius: 8px; background: transparent; color: var(--text-secondary); }
+.dtab-btn.active { background: var(--bg-hover); color: var(--text-main); }
+.chapter-list-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.chapter-list-toolbar .section-title { margin: 0; }
+.chapter-sort { display: flex; gap: 6px; }
+.chapter-list { display: flex; flex-direction: column; border-top: 1px solid var(--border-color); }
+.chapter-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 64px; padding: 12px 4px; border-bottom: 1px solid var(--border-color); text-decoration: none; }
+.chapter-row:hover { background: var(--bg-surface-1); padding-inline: 12px; }
+.chapter-row .browse-info { padding: 0; }
+.chapter-row .browse-title { margin: 0; font-size: 14px; }
+.chapter-row .browse-meta { margin: 3px 0 0; }
+.chapter-read-label { flex: 0 0 auto; color: var(--primary); font-size: 12px; font-weight: 750; }
+.detail-comments-card, .detail-rating-card { border-radius: var(--radius-lg); background: var(--bg-surface-1); box-shadow: none; }
+
+@media (max-width: 1100px) { .discovery-results-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+@media (max-width: 900px) { .discovery-results-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media (max-width: 700px) {
+  .page-container { padding-top: 20px; }
+  .page-title { font-size: 28px; }
+  .discovery-page .filter-panel { padding: 12px !important; }
+  .discovery-page .filter-group { align-items: stretch !important; flex-direction: column; }
+  .discovery-page .filter-label { min-width: 0 !important; padding-top: 0 !important; }
+  .discovery-page .filter-chips { flex-wrap: nowrap !important; margin-inline: -12px; padding-inline: 12px; overflow-x: auto; }
+  .discovery-page .filter-chips .chip { flex: 0 0 auto; }
+  .discovery-results-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .schedule-day-bar { display: flex; margin-inline: -12px; padding-inline: 12px; overflow-x: auto; border-inline: 0; border-radius: 0; }
+  .schedule-day-bar .sched-day-item { flex: 0 0 92px; min-height: 58px; }
+  .orig-hero-section { padding: 38px 0 30px; }
+  .orig-spotlight-card, .comic-detail-hero { align-items: flex-start; display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 16px; padding: 14px; }
+  .spotlight-cover { width: 112px; }
+  .comic-detail-hero .spotlight-title { font-size: 23px; }
+  .comic-detail-hero .spotlight-author { font-size: 11px; }
+  .comic-detail-hero .spotlight-desc { grid-column: 1 / -1; display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 4; }
+  .comic-detail-hero .spotlight-actions, .comic-detail-hero .comic-detail-stats { grid-column: 1 / -1; }
+  .comic-detail-actions .btn-spotlight-read { order: -1; width: 100%; }
+  .detail-nav-tabs { flex-wrap: nowrap; overflow-x: auto; }
+  .dtab-btn { flex: 0 0 auto; }
+  .chapter-row { min-height: 58px; }
+}

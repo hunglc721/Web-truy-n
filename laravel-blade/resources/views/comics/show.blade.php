@@ -16,11 +16,11 @@
 @endpush
 
 @section('content')
-<main class="page-container">
+<main class="page-container comic-detail-page">
   <div class="container">
     <div class="page-header"><div class="breadcrumb"><a href="{{ route('home') }}">Trang Chủ</a> &rsaquo; <a href="{{ route('genres') }}">Truyện</a> &rsaquo; <span>{{ $comic->title }}</span></div></div>
 
-    <section class="orig-spotlight-card" style="margin-bottom:30px;">
+    <section class="orig-spotlight-card comic-detail-hero">
       <div class="spotlight-cover">
         <img src="{{ $comic->cover_url }}" alt="{{ $comic->title }}" class="cover-img" />
         @if($comic->is_original)<span class="spotlight-badge">ORIGINAL</span>@endif
@@ -28,7 +28,7 @@
       <div class="spotlight-details">
         <div class="spotlight-tags">
           @if($comic->is_mature || $comic->age_rating === '18+')
-            <span class="genre-tag" style="background: rgba(239,68,68,0.2); color: #f87171; border: 1px solid #ef4444; font-weight: 800;">🔞 18+</span>
+            <span class="genre-tag mature-tag">18+</span>
           @endif
           @foreach($comic->genres as $genre)
             <a href="{{ route('genres', ['genre' => $genre->slug]) }}" class="genre-tag">{{ $genre->name }}</a>
@@ -41,66 +41,67 @@
         <p class="spotlight-author">
           Tác giả: 
           @forelse($comic->authors as $author)
-            <a href="{{ route('authors.show', $author->slug) }}" style="color: var(--primary); text-decoration: none; font-weight: 700;">{{ $author->name }}</a>@if(!$loop->last), @endif
+            <a href="{{ route('authors.show', $author->slug) }}" class="detail-credit-link">{{ $author->name }}</a>@if(!$loop->last), @endif
           @empty
             <span>Chưa cập nhật</span>
           @endforelse
           @if($comic->teams->isNotEmpty())
             · Nhóm dịch:
             @foreach($comic->teams as $team)
-              <a href="{{ route('teams.show', $team->slug) }}" style="color: #38bdf8; text-decoration: none; font-weight: 700;">{{ $team->name }}</a>@if(!$loop->last), @endif
+              <a href="{{ route('teams.show', $team->slug) }}" class="detail-credit-link">{{ $team->name }}</a>@if(!$loop->last), @endif
             @endforeach
           @endif
           · ⭐ {{ number_format($comic->avg_rating,1) }} · 👁 {{ $comic->formatted_views }} · {{ ucfirst($comic->status) }}
         </p>
 
 
-        <div style="display:flex;gap:18px;flex-wrap:wrap;margin:10px 0 14px;color:var(--text-sub);font-size:13px;">
-          <span>❤️ <strong id="like-count">{{ number_format($likeCount) }}</strong> lượt thích</span>
-          <span>📖 <strong>{{ number_format($comic->chapters_count) }}</strong> chương</span>
-          <span>⭐ <strong>{{ number_format($comic->total_ratings) }}</strong> đánh giá</span>
+        <div class="comic-detail-stats">
+          <span><strong id="like-count">{{ number_format($likeCount) }}</strong> lượt thích</span>
+          <span><strong>{{ number_format($comic->chapters_count) }}</strong> chương</span>
+          <span><strong>{{ number_format($comic->total_ratings) }}</strong> đánh giá</span>
         </div>
         <p class="spotlight-desc">{{ $comic->description }}</p>
 
-        <div class="spotlight-actions" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:16px;">
+        <div class="spotlight-actions comic-detail-actions">
           @if($lastChapter)
             <a href="{{ route('chapters.show', [$comic->slug ?: ('comic-'.$comic->id), $lastChapter->slug ?: ('chapter-'.($lastChapter->chapter_number ?? 1))]) }}" class="btn-spotlight-read">📖 Đọc Tiếp (Ch.{{ $lastChapter->chapter_number }}{{ ($lastHistory->scroll_percent ?? 0) > 0 ? ' - ' . round($lastHistory->scroll_percent) . '%' : '' }})</a>
           @elseif($firstChapter)
             <a href="{{ route('chapters.show', [$comic->slug ?: ('comic-'.$comic->id), $firstChapter->slug ?: ('chapter-'.($firstChapter->chapter_number ?? 1))]) }}" class="btn-spotlight-read">🚀 Đọc Từ Chương {{ $firstChapter->chapter_number }}</a>
           @endif
           @if($latestChapter && (!$lastChapter || $latestChapter->id !== $lastChapter->id))
-            <a href="{{ route('chapters.show', [$comic->slug ?: ('comic-'.$comic->id), $latestChapter->slug ?: ('chapter-'.($latestChapter->chapter_number ?? 1))]) }}" class="btn-spotlight-sub" style="text-decoration:none;">Chương Mới Nhất {{ $latestChapter->chapter_number }}</a>
+            <a href="{{ route('chapters.show', [$comic->slug ?: ('comic-'.$comic->id), $latestChapter->slug ?: ('chapter-'.($latestChapter->chapter_number ?? 1))]) }}" class="btn-spotlight-sub">Chương mới nhất {{ $latestChapter->chapter_number }}</a>
           @endif
 
           @auth
-          <button type="button" id="btn-toggle-library" data-comic="{{ $comic->id }}" data-saved="{{ $isSaved ? '1':'0' }}" class="btn-spotlight-sub" style="cursor:pointer;{{ $isSaved?'background:#16a34a;color:#fff;border-color:#16a34a;':'' }}"><span id="lib-label">{{ $isSaved?'✓ Đã Theo Dõi':'📚 Theo Dõi Truyện' }}</span></button>
-          <button type="button" id="btn-toggle-like" data-comic="{{ $comic->id }}" data-liked="{{ $isLiked ? '1':'0' }}" class="btn-spotlight-sub" style="cursor:pointer;{{ $isLiked?'background:#ef4444;color:#fff;border-color:#ef4444;':'' }}"><span id="like-label">{{ $isLiked?'❤️ Đã Thích':'🤍 Yêu Thích' }}</span></button>
+          <button type="button" id="btn-toggle-library" data-comic="{{ $comic->id }}" data-saved="{{ $isSaved ? '1':'0' }}" class="btn-spotlight-sub {{ $isSaved ? 'is-saved' : '' }}"><span id="lib-label">{{ $isSaved?'✓ Đã Theo Dõi':'Theo Dõi Truyện' }}</span></button>
+          <button type="button" id="btn-toggle-like" data-comic="{{ $comic->id }}" data-liked="{{ $isLiked ? '1':'0' }}" class="btn-spotlight-sub {{ $isLiked ? 'is-liked' : '' }}"><span id="like-label">{{ $isLiked?'Đã Thích':'Yêu Thích' }}</span></button>
           @else
-          <a href="{{ route('login') }}" class="btn-spotlight-sub" style="text-decoration:none;">📚 Theo Dõi Truyện</a><a href="{{ route('login') }}" class="btn-spotlight-sub" style="text-decoration:none;">🤍 Yêu Thích</a>
+          <a href="{{ route('login') }}" class="btn-spotlight-sub">Theo Dõi Truyện</a><a href="{{ route('login') }}" class="btn-spotlight-sub">Yêu Thích</a>
           @endauth
         </div>
-        <div id="action-toast" style="display:none;margin-top:12px;padding:10px 14px;border-radius:9px;font-size:13px;font-weight:700;"></div>
+        <div id="action-toast" class="action-toast" role="status"></div>
       </div>
     </section>
 
     <div class="detail-nav-tabs">
-      <button class="dtab-btn active" data-detail-tab="chapters">📖 Danh Sách Chương ({{ $comic->chapters_count }})</button>
-      <button class="dtab-btn" data-detail-tab="community">💬 Bình Luận & Đánh Giá</button>
+      <button class="dtab-btn active" data-detail-tab="chapters">Danh sách chương ({{ $comic->chapters_count }})</button>
+      <button class="dtab-btn" data-detail-tab="community">Bình luận & đánh giá</button>
     </div>
 
     <section id="detail-tab-chapters" class="detail-tab-pane active">
-      <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:12px;"><h2 class="section-title" style="margin:0;">Danh sách chapter</h2><div style="display:flex;gap:6px;"><button type="button" class="comment-sort active" id="chap-sort-desc">Mới nhất</button><button type="button" class="comment-sort" id="chap-sort-asc">Cũ nhất</button></div></div>
-      <div id="chapter-list" style="display:flex;flex-direction:column;gap:8px;">
+      <div class="chapter-list-toolbar"><h2 class="section-title">Danh sách chapter</h2><div class="chapter-sort"><button type="button" class="comment-sort active" id="chap-sort-desc">Mới nhất</button><button type="button" class="comment-sort" id="chap-sort-asc">Cũ nhất</button></div></div>
+      <div id="chapter-list" class="chapter-list">
         @forelse($comic->chapters as $chapter)
-          <a href="{{ route('chapters.show', [$comic->slug ?: ('comic-'.$comic->id), $chapter->slug ?: ('chapter-'.($chapter->chapter_number ?? 1))]) }}" class="browse-card chapter-row" data-chapter="{{ $chapter->chapter_number }}" style="padding:16px 20px;text-decoration:none;align-items:center;">
-            <div class="browse-info" style="padding:0;">
-              <h3 class="browse-title" style="font-size:15px;">
+          <a href="{{ route('chapters.show', [$comic->slug ?: ('comic-'.$comic->id), $chapter->slug ?: ('chapter-'.($chapter->chapter_number ?? 1))]) }}" class="chapter-row" data-chapter="{{ $chapter->chapter_number }}">
+            <div class="browse-info">
+              <h3 class="browse-title">
                 Chương {{ $chapter->chapter_number }} @if($chapter->title) — {{ $chapter->title }} @endif
               </h3>
-              <p class="browse-meta" style="margin:4px 0 0;">
+              <p class="browse-meta">
                 {{ $chapter->time_ago }}
               </p>
             </div>
+            <span class="chapter-read-label">Đọc</span>
           </a>
         @empty
           <div style="padding:35px;text-align:center;border:1px dashed var(--border);border-radius:12px;color:var(--text-sub);">Chưa có chương nào được phát hành.</div>
@@ -166,10 +167,7 @@
         <div class="section-header"><h2 class="section-title">👥 Người Đọc Truyện Này Cũng Đọc</h2></div>
         <div class="comics-grid">
           @foreach($suggested as $item)
-            <a href="{{ route('comics.show', $item->slug) }}" class="comic-card-sm">
-              <div class="sm-cover"><img src="{{ $item->cover_url }}" alt="{{ $item->title }}" class="cover-img" loading="lazy"><span class="sm-badge">★ {{ number_format($item->avg_rating,1) }}</span></div>
-              <p class="sm-title">{{ $item->title }}</p>
-            </a>
+            @include('partials.comic-card', ['comic' => $item])
           @endforeach
         </div>
       </section>
@@ -178,10 +176,7 @@
         <div class="section-header"><h2 class="section-title">🔗 Truyện Bạn Có Thể Thích</h2></div>
         <div class="comics-grid">
           @foreach($relatedComics as $item)
-            <a href="{{ route('comics.show', $item->slug) }}" class="comic-card-sm">
-              <div class="sm-cover"><img src="{{ $item->cover_url }}" alt="{{ $item->title }}" class="cover-img" loading="lazy"><span class="sm-badge">★ {{ number_format($item->avg_rating,1) }}</span></div>
-              <p class="sm-title">{{ $item->title }}</p>
-            </a>
+            @include('partials.comic-card', ['comic' => $item])
           @endforeach
         </div>
       </section>

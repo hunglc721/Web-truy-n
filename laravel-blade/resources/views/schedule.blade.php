@@ -31,7 +31,7 @@
 @endpush
 
 @section('content')
-<main class="page-container">
+<main class="page-container discovery-page schedule-page">
   <div class="container">
     <div class="page-header">
       <div class="breadcrumb">
@@ -66,48 +66,11 @@
       @endif
     </div>
 
-    <div class="browse-grid">
+    <div class="comics-grid discovery-results-grid">
       @forelse($comics as $comic)
-        @php
-          $chapter = $comic->latestChapter;
-          $primaryTag = $comic->tags->firstWhere('slug', 'hot') ?? $comic->tags->first();
-          $primaryGenre = $comic->genres->first();
-        @endphp
-
-        <article class="browse-card">
-          <div class="browse-cover">
-            <a href="{{ route('comics.show', $comic->slug) }}" aria-label="Xem {{ $comic->title }}">
-              <img src="{{ $comic->cover_url }}" alt="{{ $comic->title }}" class="cover-img" loading="lazy" />
-            </a>
-
-            @if($chapter)
-              <span class="badge-tag {{ $primaryTag?->slug === 'hot' ? 'hot' : 'new' }}">
-                MỚI {{ $chapter->label }}
-              </span>
-            @endif
-
-            <span class="rating-tag">★ {{ number_format($comic->avg_rating, 1) }}</span>
-          </div>
-
-          <div class="browse-info">
-            <h3 class="browse-title">
-              <a href="{{ route('comics.show', $comic->slug) }}">{{ $comic->title }}</a>
-            </h3>
-            <p class="browse-author">Cập nhật: {{ $chapter?->time_ago ?? 'Hôm nay' }}</p>
-            <p class="browse-meta">
-              <span>{{ $primaryGenre?->name ?? 'Đang cập nhật' }}</span>
-              @if($chapter)
-                &middot; <span>{{ $chapter->label }}</span>
-              @endif
-            </p>
-            <p class="browse-desc">{{ Str::limit($comic->description, 90) }}</p>
-          </div>
-        </article>
+        @include('partials.comic-card', ['comic' => $comic])
       @empty
-        <div style="grid-column:1/-1;text-align:center;padding:80px;color:var(--text-sub);">
-          <p style="font-size:48px;margin-bottom:16px;">📅</p>
-          <p>Chưa có truyện nào được xếp lịch vào {{ $selectedDayLabel }}.</p>
-        </div>
+        <div class="empty-state"><span aria-hidden="true">📅</span><strong>Chưa có lịch phát hành</strong><p>Hiện chưa có truyện nào được xếp lịch vào {{ $selectedDayLabel }}.</p></div>
       @endforelse
     </div>
   </div>

@@ -7,7 +7,7 @@
 @endsection
 
 @section('content')
-<main class="page-container">
+<main class="page-container discovery-page">
   <div class="container">
     <div class="page-header">
       <div class="breadcrumb"><a href="{{ route('home') }}">Trang Chủ</a> &rsaquo; <span>Tag</span> &rsaquo; <strong>#{{ $tag->name }}</strong></div>
@@ -16,23 +16,9 @@
     </div>
 
     @if($comics->count())
-      <div class="comics-grid">
+      <div class="comics-grid discovery-results-grid">
         @foreach($comics as $comic)
-          @php($chapter = $comic->latestChapter)
-          <a href="{{ route('comics.show', $comic->slug) }}" class="comic-card-sm">
-            <div class="sm-cover">
-              <img src="{{ $comic->cover_url }}" alt="{{ $comic->title }}" class="cover-img" loading="lazy">
-              @if($chapter)<span class="sm-badge">{{ $chapter->label }}</span>@endif
-              <span class="sm-rating">★ {{ number_format($comic->avg_rating, 1) }}</span>
-            </div>
-            <div class="sm-info">
-              <h2 class="sm-title">{{ $comic->title }}</h2>
-              <div class="sm-meta">
-                <span class="sm-genre">{{ $comic->genres->first()?->name ?? 'Truyện' }}</span>
-                <span class="sm-time">{{ $chapter?->time_ago ?? 'Mới' }}</span>
-              </div>
-            </div>
-          </a>
+          @include('partials.comic-card', ['comic' => $comic])
         @endforeach
       </div>
 

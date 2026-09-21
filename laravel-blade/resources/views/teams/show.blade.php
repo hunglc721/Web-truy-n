@@ -3,7 +3,7 @@
 @section('title', 'Nhóm dịch: ' . $team->name . ' - WebComics')
 
 @section('content')
-<main class="page-container">
+<main class="page-container discovery-page profile-discovery-page">
   <div class="container">
     <div class="page-header">
       <div class="breadcrumb">
@@ -94,15 +94,9 @@
     </div>
 
     @if($team->comics->isNotEmpty())
-      <div class="comics-grid">
+      <div class="comics-grid discovery-results-grid">
         @foreach($team->comics as $comic)
-          <a href="{{ route('comics.show', $comic->slug) }}" class="comic-card-sm">
-            <div class="sm-cover">
-              <img src="{{ $comic->cover_url }}" alt="{{ $comic->title }}" class="cover-img" loading="lazy">
-              <span class="sm-badge">★ {{ number_format($comic->avg_rating, 1) }}</span>
-            </div>
-            <p class="sm-title">{{ $comic->title }}</p>
-          </a>
+          @include('partials.comic-card', ['comic' => $comic])
         @endforeach
       </div>
     @else
