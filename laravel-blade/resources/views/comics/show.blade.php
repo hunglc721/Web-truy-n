@@ -28,7 +28,7 @@
       <div class="spotlight-details">
         <div class="spotlight-tags">
           @if($comic->is_mature || $comic->age_rating === '18+')
-            <span class="genre-tag mature-tag">18+</span>
+            <span class="genre-tag mature-tag">🔞 18+</span>
           @endif
           @foreach($comic->genres as $genre)
             <a href="{{ route('genres', ['genre' => $genre->slug]) }}" class="genre-tag">{{ $genre->name }}</a>

@@ -374,3 +374,41 @@ body .member-page .library-action.primary { background: var(--primary); box-shad
   .user-history-card .history-read-button { width: 100%; }
   .notification-head { align-items: flex-start; flex-direction: column; }
 }
+
+/* Phase 5: focused authentication surfaces. */
+.auth-page { min-height: calc(100vh - var(--header-height)); padding: 48px 0 !important; place-items: center; }
+.auth-page .auth-container { width: min(100%, 492px); padding: 0 16px !important; }
+.auth-page-wide .auth-container { width: min(100%, 652px); }
+body .auth-page .auth-card {
+  padding: 28px !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: var(--radius-lg) !important;
+  background: var(--bg-surface-1) !important;
+  box-shadow: var(--shadow-sm) !important;
+}
+body .auth-page .auth-logo { background: var(--primary) !important; box-shadow: none !important; }
+.auth-page h1 { letter-spacing: -.025em; }
+.auth-page label { color: var(--text-main) !important; }
+.auth-page input:not([type="hidden"]),
+.auth-page textarea,
+.auth-page select {
+  min-height: 44px;
+  border-color: var(--border-color) !important;
+  border-radius: var(--radius-md) !important;
+  background: var(--bg-main) !important;
+  color: var(--text-main) !important;
+}
+.auth-page input:focus-visible,
+.auth-page textarea:focus-visible,
+.auth-page select:focus-visible { border-color: var(--primary) !important; box-shadow: var(--focus-ring) !important; outline: none; }
+.auth-page input[readonly] { color: var(--text-secondary) !important; }
+.auth-page button, .auth-page .btn, .auth-page a[style*="display:flex"] { min-height: 44px; }
+.auth-page .auth-role-note { border-color: rgba(255, 94, 54, .24); background: rgba(255, 94, 54, .07); }
+.auth-page .auth-role-note strong { color: var(--primary); }
+
+@media (max-width: 700px) {
+  .auth-page { min-height: auto; padding: 24px 0 40px !important; }
+  body .auth-page .auth-card { padding: 22px 18px !important; }
+  .auth-page-wide form > div[style*="display: flex"] { align-items: stretch !important; flex-direction: column; }
+  .auth-page-wide form button { width: 100%; }
+}

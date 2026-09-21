@@ -318,7 +318,7 @@
         @else
           @if(auth()->user()->canAccessAdmin())<a href="{{ route('admin.dashboard') }}" class="btn btn-login" style="background:linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%);color:#fff;border-color:transparent">🛡️ Quản Trị</a>@endif
           <a href="{{ route('user.dashboard') }}" class="btn btn-login account-button" title="Khu vực thành viên của {{ auth()->user()->name }}"><span class="account-avatar" aria-hidden="true">{{ mb_strtoupper(mb_substr(auth()->user()->name, 0, 1)) }}</span><span class="account-name">{{ auth()->user()->name }}</span></a>
-          <form action="{{ route('logout') }}" method="POST" class="header-logout-form">@csrf<button type="submit" class="btn btn-download">Đăng xuất</button></form>
+          <form action="{{ route('logout') }}" method="POST" class="header-logout-form">@csrf<button type="submit" class="btn btn-download">Đăng Xuất</button></form>
         @endguest
       </div>
     </div>
@@ -345,7 +345,7 @@
         <a href="{{ route('user.likes') }}">Yêu thích</a>
         <a href="{{ route('user.dashboard') }}">Tài khoản</a>
         @if(auth()->user()->canAccessAdmin())<a href="{{ route('admin.dashboard') }}">Quản trị</a>@endif
-        <form action="{{ route('logout') }}" method="POST">@csrf<button type="submit">Đăng xuất</button></form>
+        <form action="{{ route('logout') }}" method="POST">@csrf<button type="submit">Đăng Xuất</button></form>
       @else
         <span class="mobile-nav-label">Tài khoản</span>
         <a href="{{ route('login') }}">Đăng nhập</a>

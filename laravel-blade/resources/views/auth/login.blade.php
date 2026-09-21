@@ -13,8 +13,8 @@
 @endpush
 
 @section('content')
-<main class="page-container" style="padding:60px 0;min-height:75vh;display:flex;align-items:center;justify-content:center;">
-  <div class="container" style="max-width:460px;">
+<main class="page-container auth-page" style="padding:60px 0;min-height:75vh;display:flex;align-items:center;justify-content:center;">
+  <div class="container auth-container" style="max-width:460px;">
     <div class="auth-card">
       <div style="text-align:center;margin-bottom:22px;">
         <div class="auth-logo">WC</div>

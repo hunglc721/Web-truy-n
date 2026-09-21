@@ -4,10 +4,10 @@
 @section('title', 'Đăng Ký Tài Khoản — WebComics')
 
 @section('content')
-<main class="page-container" style="padding: 60px 0; min-height: 75vh; display: flex; align-items: center; justify-content: center;">
-  <div class="container" style="max-width: 460px;">
+<main class="page-container auth-page" style="padding: 60px 0; min-height: 75vh; display: flex; align-items: center; justify-content: center;">
+  <div class="container auth-container" style="max-width: 460px;">
 
-    <div style="
+    <div class="auth-card" style="
       background: var(--bg-surface-1);
       border: 1px solid var(--border-color);
       border-radius: var(--radius-lg);

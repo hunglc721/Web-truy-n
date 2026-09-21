@@ -3,9 +3,9 @@
 @section('title', 'Cài Đặt Xác Thực 2 Bước (2FA) - WebComics')
 
 @section('content')
-<main class="page-container">
-  <div class="container" style="max-width: 620px; padding: 40px 16px;">
-    <div style="
+<main class="page-container auth-page auth-page-wide">
+  <div class="container auth-container" style="max-width: 620px; padding: 40px 16px;">
+    <div class="auth-card" style="
       background: rgba(19, 22, 30, 0.95);
       border: 1px solid var(--border);
       border-radius: 16px;
