@@ -29,21 +29,25 @@ php artisan storage:link || true
 
 # 6. Ensure valid Laravel APP_KEY (must start with base64:)
 if [[ ! "$APP_KEY" =~ ^base64: ]]; then
-    php artisan key:generate --force
+    if ! grep -q '^APP_KEY=base64:' .env 2>/dev/null; then
+        php artisan key:generate --force
+    fi
+    APP_KEY=$(grep '^APP_KEY=' .env | head -n 1 | cut -d '=' -f2-)
+    export APP_KEY
 fi
 
 # 7. Run database migrations and seed default data
 php artisan migrate --force
 php artisan db:seed --force || true
 
-# 8. Set final ownership and permissions for Apache (www-data)
-chown -R www-data:www-data /var/www/html/laravel-blade/database /var/www/html/laravel-blade/storage /var/www/html/laravel-blade/bootstrap/cache
-chmod -R 775 /var/www/html/laravel-blade/database /var/www/html/laravel-blade/storage /var/www/html/laravel-blade/bootstrap/cache
-
-# 9. Cache configurations, routes, and views
+# 8. Cache configurations, routes, and views
 php artisan config:cache || true
 php artisan route:cache || true
 php artisan view:cache || true
+
+# 9. Set final ownership and permissions for Apache (www-data)
+chown -R www-data:www-data /var/www/html/laravel-blade/database /var/www/html/laravel-blade/storage /var/www/html/laravel-blade/bootstrap/cache
+chmod -R 775 /var/www/html/laravel-blade/database /var/www/html/laravel-blade/storage /var/www/html/laravel-blade/bootstrap/cache
 
 echo "==> Comicx application is ready on port ${PORT}!"
 exec apache2-foreground

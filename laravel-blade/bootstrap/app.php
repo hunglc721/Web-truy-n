@@ -177,16 +177,18 @@ return Application::configure(basePath: dirname(__DIR__))
             ]);
 
             if ($request->expectsJson()) {
+                $hideDetails = (app()->isProduction() && !config('app.debug')) || $request->is('api/recommendation/chat');
+
                 return response()->json([
                     'status'  => 'error',
-                    'message' => (app()->isProduction() || $request->is('api/recommendation/chat'))
+                    'message' => $hideDetails
                         ? 'Hệ thống gặp sự cố. Vui lòng thử lại sau.'
                         : $e->getMessage(),
                     'code'    => 500,
                 ], 500);
             }
 
-            if (app()->isProduction()) {
+            if (app()->isProduction() && !config('app.debug')) {
                 return response()->view('errors.500', [], 500);
             }
 
