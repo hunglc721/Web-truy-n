@@ -20,68 +20,77 @@
   <div class="container">
     <div class="page-header"><div class="breadcrumb"><a href="{{ route('home') }}">Trang Chủ</a> &rsaquo; <a href="{{ route('genres') }}">Truyện</a> &rsaquo; <span>{{ $comic->title }}</span></div></div>
 
-    <section class="orig-spotlight-card" style="margin-bottom:30px;">
-      <div class="spotlight-cover">
-        <img src="{{ $comic->cover_url }}" alt="{{ $comic->title }}" class="cover-img" />
-        @if($comic->is_original)<span class="spotlight-badge">ORIGINAL</span>@endif
+    {{-- ── BACKDROP CINEMA HERO ── --}}
+    <div class="detail-backdrop-wrap" style="position:relative;margin:-10px 0 32px 0;padding:36px 32px;overflow:hidden;border-radius:24px;background:rgba(17,24,39,0.6);border:1px solid rgba(255,255,255,0.08);box-shadow:0 20px 50px rgba(0,0,0,0.5);">
+      <div class="detail-backdrop-bg" style="background-image:url('{{ $comic->cover_url }}');position:absolute;inset:0;background-size:cover;background-position:center;filter:blur(50px) brightness(0.22) saturate(200%);transform:scale(1.2);z-index:0;pointer-events:none;" aria-hidden="true"></div>
+      <div class="detail-backdrop-overlay" style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,13,20,0.2) 0%,rgba(10,13,20,0.85) 100%);z-index:1;pointer-events:none;" aria-hidden="true"></div>
+      
+      <div style="position:relative;z-index:2;">
+        <section class="orig-spotlight-card" style="margin-bottom:0;background:transparent;border:none;box-shadow:none;padding:0;">
+          <div class="spotlight-cover" style="box-shadow:0 16px 36px rgba(0,0,0,0.6),0 0 24px rgba(139,92,246,0.3);border:2px solid rgba(255,255,255,0.12);border-radius:16px;overflow:hidden;">
+            <img src="{{ $comic->cover_url }}" alt="{{ $comic->title }}" class="cover-img" />
+            @if($comic->is_original)<span class="spotlight-badge" style="background:linear-gradient(135deg,#8B5CF6,#EC4899);color:#fff;">ORIGINAL</span>@endif
+          </div>
+          <div class="spotlight-details">
+            <div class="spotlight-tags">
+              @if($comic->is_mature || $comic->age_rating === '18+')
+                <span class="genre-tag" style="background: rgba(239,68,68,0.2); color: #f87171; border: 1px solid #ef4444; font-weight: 800;">🔞 18+</span>
+              @endif
+              @foreach($comic->genres as $genre)
+                <a href="{{ route('genres', ['genre' => $genre->slug]) }}" class="genre-tag" style="background:rgba(139,92,246,0.15);color:#c4b5fd;border:1px solid rgba(139,92,246,0.35);">{{ $genre->name }}</a>
+              @endforeach
+              @foreach($comic->tags as $tag)
+                <span class="orig-tag">{{ $tag->name }}</span>
+              @endforeach
+            </div>
+            <h1 class="spotlight-title" style="font-size:clamp(26px,3.5vw,38px);font-weight:900;letter-spacing:-0.5px;color:#fff;">{{ $comic->title }}</h1>
+            <p class="spotlight-author" style="margin-top:6px;">
+              Tác giả: 
+              @forelse($comic->authors as $author)
+                <a href="{{ route('authors.show', $author->slug) }}" style="color: #a78bfa; text-decoration: none; font-weight: 700;">{{ $author->name }}</a>@if(!$loop->last), @endif
+              @empty
+                <span>Chưa cập nhật</span>
+              @endforelse
+              @if($comic->teams->isNotEmpty())
+                · Nhóm dịch:
+                @foreach($comic->teams as $team)
+                  <a href="{{ route('teams.show', $team->slug) }}" style="color: #38bdf8; text-decoration: none; font-weight: 700;">{{ $team->name }}</a>@if(!$loop->last), @endif
+                @endforeach
+              @endif
+              · ⭐ {{ number_format($comic->avg_rating,1) }} · 👁 {{ $comic->formatted_views }} · {{ ucfirst($comic->status) }}
+            </p>
+
+            <div class="detail-stats-bar" style="display:flex;gap:18px;flex-wrap:wrap;margin:14px 0 16px;background:rgba(17,24,39,0.7);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.08);padding:10px 18px;border-radius:12px;width:fit-content;">
+              <span style="display:flex;align-items:center;gap:6px;">❤️ <strong id="like-count" style="color:#fff;">{{ number_format($likeCount) }}</strong> <span style="color:var(--text-sub);">lượt thích</span></span>
+              <span style="display:flex;align-items:center;gap:6px;">📖 <strong style="color:#fff;">{{ number_format($comic->chapters_count) }}</strong> <span style="color:var(--text-sub);">chương</span></span>
+              <span style="display:flex;align-items:center;gap:6px;">⭐ <strong style="color:#f59e0b;">{{ number_format($comic->total_ratings) }}</strong> <span style="color:var(--text-sub);">đánh giá</span></span>
+              <span style="display:flex;align-items:center;gap:6px;">👁 <strong style="color:#38bdf8;">{{ $comic->formatted_views }}</strong> <span style="color:var(--text-sub);">lượt xem</span></span>
+            </div>
+            
+            <p class="spotlight-desc" style="color:var(--text-sub);line-height:1.65;font-size:14px;max-width:850px;">{{ $comic->description }}</p>
+
+            <div class="spotlight-actions" style="display:flex;flex-wrap:wrap;gap:12px;margin-top:20px;">
+              @if($lastChapter)
+                <a href="{{ route('chapters.show', [$comic->slug ?: ('comic-'.$comic->id), $lastChapter->slug ?: ('chapter-'.($lastChapter->chapter_number ?? 1))]) }}" class="btn-spotlight-read btn-neon-primary" style="padding:12px 24px;text-decoration:none;">📖 Đọc Tiếp (Ch.{{ $lastChapter->chapter_number }}{{ ($lastHistory->scroll_percent ?? 0) > 0 ? ' - ' . round($lastHistory->scroll_percent) . '%' : '' }})</a>
+              @elseif($firstChapter)
+                <a href="{{ route('chapters.show', [$comic->slug ?: ('comic-'.$comic->id), $firstChapter->slug ?: ('chapter-'.($firstChapter->chapter_number ?? 1))]) }}" class="btn-spotlight-read btn-neon-primary" style="padding:12px 24px;text-decoration:none;">🚀 Đọc Từ Chương {{ $firstChapter->chapter_number }}</a>
+              @endif
+              @if($latestChapter && (!$lastChapter || $latestChapter->id !== $lastChapter->id))
+                <a href="{{ route('chapters.show', [$comic->slug ?: ('comic-'.$comic->id), $latestChapter->slug ?: ('chapter-'.($latestChapter->chapter_number ?? 1))]) }}" class="btn-spotlight-sub" style="text-decoration:none;padding:12px 20px;">Chương Mới Nhất {{ $latestChapter->chapter_number }}</a>
+              @endif
+
+              @auth
+              <button type="button" id="btn-toggle-library" data-comic="{{ $comic->id }}" data-saved="{{ $isSaved ? '1':'0' }}" class="btn-spotlight-sub" style="cursor:pointer;padding:12px 20px;{{ $isSaved?'background:linear-gradient(135deg, #10b981, #059669);color:#fff;border-color:transparent;box-shadow:0 0 14px rgba(16,185,129,0.4);':'' }}"><span id="lib-label">{{ $isSaved?'✓ Đã Theo Dõi':'📚 Theo Dõi Truyện' }}</span></button>
+              <button type="button" id="btn-toggle-like" data-comic="{{ $comic->id }}" data-liked="{{ $isLiked ? '1':'0' }}" class="btn-spotlight-sub" style="cursor:pointer;padding:12px 20px;{{ $isLiked?'background:linear-gradient(135deg, #ef4444, #dc2626);color:#fff;border-color:transparent;box-shadow:0 0 14px rgba(239,68,68,0.4);':'' }}"><span id="like-label">{{ $isLiked?'❤️ Đã Thích':'🤍 Yêu Thích' }}</span></button>
+              @else
+              <a href="{{ route('login') }}" class="btn-spotlight-sub" style="text-decoration:none;padding:12px 20px;">📚 Theo Dõi Truyện</a><a href="{{ route('login') }}" class="btn-spotlight-sub" style="text-decoration:none;padding:12px 20px;">🤍 Yêu Thích</a>
+              @endauth
+            </div>
+            <div id="action-toast" style="display:none;margin-top:14px;padding:10px 16px;border-radius:10px;font-size:13px;font-weight:700;"></div>
+          </div>
+        </section>
       </div>
-      <div class="spotlight-details">
-        <div class="spotlight-tags">
-          @if($comic->is_mature || $comic->age_rating === '18+')
-            <span class="genre-tag" style="background: rgba(239,68,68,0.2); color: #f87171; border: 1px solid #ef4444; font-weight: 800;">🔞 18+</span>
-          @endif
-          @foreach($comic->genres as $genre)
-            <a href="{{ route('genres', ['genre' => $genre->slug]) }}" class="genre-tag">{{ $genre->name }}</a>
-          @endforeach
-          @foreach($comic->tags as $tag)
-            <span class="orig-tag">{{ $tag->name }}</span>
-          @endforeach
-        </div>
-        <h1 class="spotlight-title">{{ $comic->title }}</h1>
-        <p class="spotlight-author">
-          Tác giả: 
-          @forelse($comic->authors as $author)
-            <a href="{{ route('authors.show', $author->slug) }}" style="color: var(--primary); text-decoration: none; font-weight: 700;">{{ $author->name }}</a>@if(!$loop->last), @endif
-          @empty
-            <span>Chưa cập nhật</span>
-          @endforelse
-          @if($comic->teams->isNotEmpty())
-            · Nhóm dịch:
-            @foreach($comic->teams as $team)
-              <a href="{{ route('teams.show', $team->slug) }}" style="color: #38bdf8; text-decoration: none; font-weight: 700;">{{ $team->name }}</a>@if(!$loop->last), @endif
-            @endforeach
-          @endif
-          · ⭐ {{ number_format($comic->avg_rating,1) }} · 👁 {{ $comic->formatted_views }} · {{ ucfirst($comic->status) }}
-        </p>
-
-
-        <div style="display:flex;gap:18px;flex-wrap:wrap;margin:10px 0 14px;color:var(--text-sub);font-size:13px;">
-          <span>❤️ <strong id="like-count">{{ number_format($likeCount) }}</strong> lượt thích</span>
-          <span>📖 <strong>{{ number_format($comic->chapters_count) }}</strong> chương</span>
-          <span>⭐ <strong>{{ number_format($comic->total_ratings) }}</strong> đánh giá</span>
-        </div>
-        <p class="spotlight-desc">{{ $comic->description }}</p>
-
-        <div class="spotlight-actions" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:16px;">
-          @if($lastChapter)
-            <a href="{{ route('chapters.show', [$comic->slug ?: ('comic-'.$comic->id), $lastChapter->slug ?: ('chapter-'.($lastChapter->chapter_number ?? 1))]) }}" class="btn-spotlight-read">📖 Đọc Tiếp (Ch.{{ $lastChapter->chapter_number }}{{ ($lastHistory->scroll_percent ?? 0) > 0 ? ' - ' . round($lastHistory->scroll_percent) . '%' : '' }})</a>
-          @elseif($firstChapter)
-            <a href="{{ route('chapters.show', [$comic->slug ?: ('comic-'.$comic->id), $firstChapter->slug ?: ('chapter-'.($firstChapter->chapter_number ?? 1))]) }}" class="btn-spotlight-read">🚀 Đọc Từ Chương {{ $firstChapter->chapter_number }}</a>
-          @endif
-          @if($latestChapter && (!$lastChapter || $latestChapter->id !== $lastChapter->id))
-            <a href="{{ route('chapters.show', [$comic->slug ?: ('comic-'.$comic->id), $latestChapter->slug ?: ('chapter-'.($latestChapter->chapter_number ?? 1))]) }}" class="btn-spotlight-sub" style="text-decoration:none;">Chương Mới Nhất {{ $latestChapter->chapter_number }}</a>
-          @endif
-
-          @auth
-          <button type="button" id="btn-toggle-library" data-comic="{{ $comic->id }}" data-saved="{{ $isSaved ? '1':'0' }}" class="btn-spotlight-sub" style="cursor:pointer;{{ $isSaved?'background:#16a34a;color:#fff;border-color:#16a34a;':'' }}"><span id="lib-label">{{ $isSaved?'✓ Đã Theo Dõi':'📚 Theo Dõi Truyện' }}</span></button>
-          <button type="button" id="btn-toggle-like" data-comic="{{ $comic->id }}" data-liked="{{ $isLiked ? '1':'0' }}" class="btn-spotlight-sub" style="cursor:pointer;{{ $isLiked?'background:#ef4444;color:#fff;border-color:#ef4444;':'' }}"><span id="like-label">{{ $isLiked?'❤️ Đã Thích':'🤍 Yêu Thích' }}</span></button>
-          @else
-          <a href="{{ route('login') }}" class="btn-spotlight-sub" style="text-decoration:none;">📚 Theo Dõi Truyện</a><a href="{{ route('login') }}" class="btn-spotlight-sub" style="text-decoration:none;">🤍 Yêu Thích</a>
-          @endauth
-        </div>
-        <div id="action-toast" style="display:none;margin-top:12px;padding:10px 14px;border-radius:9px;font-size:13px;font-weight:700;"></div>
-      </div>
-    </section>
+    </div>
 
     <div class="detail-nav-tabs">
       <button class="dtab-btn active" data-detail-tab="chapters">📖 Danh Sách Chương ({{ $comic->chapters_count }})</button>
@@ -89,7 +98,16 @@
     </div>
 
     <section id="detail-tab-chapters" class="detail-tab-pane active">
-      <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:12px;"><h2 class="section-title" style="margin:0;">Danh sách chapter</h2><div style="display:flex;gap:6px;"><button type="button" class="comment-sort active" id="chap-sort-desc">Mới nhất</button><button type="button" class="comment-sort" id="chap-sort-asc">Cũ nhất</button></div></div>
+      <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:14px;flex-wrap:wrap;">
+        <h2 class="section-title" style="margin:0;">Danh sách chapter</h2>
+        <div style="display:flex;gap:10px;align-items:center;">
+          <input type="text" id="chap-search-input" placeholder="🔍 Tìm số chương..." style="background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:999px;padding:6px 14px;color:#fff;font-size:12.5px;outline:none;width:150px;" />
+          <div style="display:flex;gap:6px;">
+            <button type="button" class="comment-sort active" id="chap-sort-desc">Mới nhất</button>
+            <button type="button" class="comment-sort" id="chap-sort-asc">Cũ nhất</button>
+          </div>
+        </div>
+      </div>
       <div id="chapter-list" style="display:flex;flex-direction:column;gap:8px;">
         @forelse($comic->chapters as $chapter)
           <a href="{{ route('chapters.show', [$comic->slug ?: ('comic-'.$comic->id), $chapter->slug ?: ('chapter-'.($chapter->chapter_number ?? 1))]) }}" class="browse-card chapter-row" data-chapter="{{ $chapter->chapter_number }}" style="padding:16px 20px;text-decoration:none;align-items:center;">
@@ -215,6 +233,15 @@
   const sortChapterRows = asc => { const box=document.getElementById('chapter-list'); if(!box)return; const rows=[...box.querySelectorAll('.chapter-row')]; rows.sort((a,b)=>(Number(a.dataset.chapter)-Number(b.dataset.chapter))*(asc?1:-1)); rows.forEach(r=>box.appendChild(r)); };
   document.getElementById('chap-sort-desc')?.addEventListener('click',function(){sortChapterRows(false);this.classList.add('active');document.getElementById('chap-sort-asc')?.classList.remove('active');});
   document.getElementById('chap-sort-asc')?.addEventListener('click',function(){sortChapterRows(true);this.classList.add('active');document.getElementById('chap-sort-desc')?.classList.remove('active');});
+
+  document.getElementById('chap-search-input')?.addEventListener('input', function() {
+    const q = this.value.trim().toLowerCase();
+    document.querySelectorAll('#chapter-list .chapter-row').forEach(row => {
+      const chap = (row.dataset.chapter || '').toLowerCase();
+      const txt = row.textContent.toLowerCase();
+      row.style.display = (!q || chap.includes(q) || txt.includes(q)) ? 'flex' : 'none';
+    });
+  });
 
   const withLoading = async (btn, fn) => {
     if(btn) { btn.disabled=true; btn.style.opacity='0.6'; btn.style.cursor='wait'; }

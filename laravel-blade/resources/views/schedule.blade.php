@@ -21,7 +21,50 @@
 
 @push('styles')
 <style>
-  .schedule-day-bar { grid-template-columns: repeat(8, minmax(0, 1fr)); overflow-x:auto; }
+  .schedule-day-bar {
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+    overflow-x: auto;
+    background: rgba(17, 24, 39, 0.7);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 10px;
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+  .sched-day-item {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .sched-day-item:hover {
+    background: rgba(139, 92, 246, 0.15);
+    border-color: rgba(139, 92, 246, 0.4);
+    transform: translateY(-2px);
+  }
+  .sched-day-item.active {
+    background: linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%) !important;
+    border-color: transparent !important;
+    color: #fff !important;
+    box-shadow: 0 4px 16px rgba(139, 92, 246, 0.45);
+  }
+  .badge-status-live {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(16, 185, 129, 0.15);
+    color: #34d399;
+    border: 1px solid rgba(16, 185, 129, 0.4);
+    box-shadow: 0 0 12px rgba(16, 185, 129, 0.3);
+    padding: 5px 14px;
+    border-radius: 9999px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
   @media (max-width: 900px) {
     .schedule-day-bar { display:flex; gap:8px; padding-bottom:6px; scrollbar-width:none; -webkit-overflow-scrolling:touch; }
     .schedule-day-bar::-webkit-scrollbar { display:none; }
@@ -59,8 +102,8 @@
       </a>
     </div>
 
-    <div class="sched-current-title">
-      <h2>Lịch Ra Truyện {{ $selectedDayLabel }}</h2>
+    <div class="sched-current-title" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;">
+      <h2 style="margin:0;">Lịch Ra Truyện {{ $selectedDayLabel }}</h2>
       @if($selectedDay === now()->dayOfWeek)
         <span class="badge-status-live">● ĐANG CẬP NHẬT HÔM NAY</span>
       @endif
@@ -74,7 +117,7 @@
           $primaryGenre = $comic->genres->first();
         @endphp
 
-        <article class="browse-card">
+        <article class="browse-card card-shine-effect">
           <div class="browse-cover">
             <a href="{{ route('comics.show', $comic->slug) }}" aria-label="Xem {{ $comic->title }}">
               <img src="{{ $comic->cover_url }}" alt="{{ $comic->title }}" class="cover-img" loading="lazy" />

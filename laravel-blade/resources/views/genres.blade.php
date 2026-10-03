@@ -9,10 +9,37 @@
 
 @push('styles')
 <style>
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    border-radius: 9999px;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-sub);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .chip:hover {
+    background: rgba(139, 92, 246, 0.15);
+    border-color: rgba(139, 92, 246, 0.4);
+    color: #fff;
+    transform: translateY(-1px);
+  }
+  .chip.active {
+    background: linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%);
+    border-color: transparent;
+    color: #fff;
+    font-weight: 700;
+    box-shadow: 0 2px 12px rgba(139, 92, 246, 0.4);
+  }
   .chip.excluded {
-    background: rgba(239, 68, 68, 0.1);
-    color: #ef4444;
-    border-color: rgba(239, 68, 68, 0.3);
+    background: rgba(239, 68, 68, 0.15);
+    color: #f87171;
+    border-color: rgba(239, 68, 68, 0.4);
     text-decoration: line-through;
   }
 </style>
@@ -48,14 +75,17 @@
     <form action="{{ route('genres') }}" method="GET" id="filter-form">
 
       <div class="filter-panel" style="
-        background: var(--bg-surface-1);
-        border: 1px solid var(--border-color);
-        border-radius: var(--radius-lg);
+        background: rgba(17, 24, 39, 0.75);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 18px;
         padding: 24px;
         margin-bottom: 30px;
         display: flex;
         flex-direction: column;
         gap: 18px;
+        box-shadow: 0 12px 36px rgba(0, 0, 0, 0.4);
       ">
 
         {{-- 0. Tìm kiếm từ khoá (Search Query) --}}
@@ -213,7 +243,7 @@
           $secondGenre  = $comic->genres->skip(1)->first();
         @endphp
 
-        <div class="browse-card">
+        <div class="browse-card card-shine-effect">
           <div class="browse-cover">
             <a href="{{ route('comics.show', $comic->slug) }}">
               <img src="{{ $comic->cover_url }}"

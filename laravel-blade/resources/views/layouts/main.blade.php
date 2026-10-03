@@ -282,13 +282,14 @@
       </div>
       <div class="header-right">
         <div class="search-wrap">
-          <input id="search-input" type="search" placeholder="Tìm kiếm truyện..." aria-label="Tìm kiếm truyện tranh" class="search-input" autocomplete="off" />
+          <input id="search-input" type="search" placeholder="Tìm kiếm truyện... (Ctrl + K)" aria-label="Tìm kiếm truyện tranh" class="search-input" autocomplete="off" />
           <span class="search-icon" aria-hidden="true">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
               <circle cx="11" cy="11" r="8"/>
               <line x1="21" y1="21" x2="16.65" y2="16.65"/>
             </svg>
           </span>
+          <span class="search-shortcut" title="Phím tắt Ctrl + K" aria-hidden="true"><kbd>Ctrl</kbd><kbd>K</kbd></span>
           <div class="search-dropdown" id="search-dropdown">
             <div class="search-recent-title">Tìm kiếm thịnh hành</div>
           </div>
@@ -308,12 +309,52 @@
           </a>
         </div>
         @guest
-          <a href="{{ route('login') }}" class="btn btn-login">Đăng Nhập</a>
-          <a href="{{ route('register') }}" class="btn btn-download">Đăng Ký</a>
+          <a href="{{ route('login') }}" class="btn btn-login btn-neon-ghost">Đăng Nhập</a>
+          <a href="{{ route('register') }}" class="btn btn-download btn-neon-primary">Đăng Ký</a>
         @else
-          @if(auth()->user()->canAccessAdmin())<a href="{{ route('admin.dashboard') }}" class="btn btn-login" style="background:linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%);color:#fff;border-color:transparent">🛡️ Quản Trị</a>@endif
-          <a href="{{ route('user.dashboard') }}" class="btn btn-login" style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="Khu vực thành viên của {{ auth()->user()->name }}">👤 {{ auth()->user()->name }}</a>
-          <form action="{{ route('logout') }}" method="POST" style="margin:0">@csrf<button type="submit" class="btn btn-download">Đăng Xuất</button></form>
+          @if(auth()->user()->canAccessAdmin())<a href="{{ route('admin.dashboard') }}" class="btn btn-login btn-admin-badge" style="background:linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%);color:#fff;border-color:transparent;box-shadow:0 2px 10px rgba(139,92,246,0.35)">🛡️ Quản Trị</a>@endif
+          <div class="user-dropdown-wrap">
+            <button type="button" class="user-avatar-btn btn btn-login" id="user-menu-btn" aria-expanded="false" aria-haspopup="true" style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-flex;align-items:center;gap:7px;" title="Khu vực thành viên của {{ auth()->user()->name }}">
+              <span class="user-avatar-circle">{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}</span>
+              <span class="user-name-text">{{ auth()->user()->name }}</span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="user-dropdown-menu" id="user-dropdown-menu">
+              <div class="user-dropdown-header">
+                <div class="user-dropdown-name">{{ auth()->user()->name }}</div>
+                <div class="user-dropdown-email">{{ auth()->user()->email }}</div>
+              </div>
+              <div class="user-dropdown-divider"></div>
+              <a href="{{ route('user.dashboard') }}" class="user-dropdown-item">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                <span>Tài khoản của tôi</span>
+              </a>
+              <a href="{{ route('user.library') }}" class="user-dropdown-item">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                <span>Tủ truyện đã lưu</span>
+              </a>
+              <a href="{{ route('user.history') }}" class="user-dropdown-item">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                <span>Lịch sử đọc</span>
+              </a>
+              @if(auth()->user()->canAccessAdmin())
+                <div class="user-dropdown-divider"></div>
+                <a href="{{ route('admin.dashboard') }}" class="user-dropdown-item admin-item">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                  <span>Bảng điều khiển Admin</span>
+                </a>
+              @endif
+              <div class="user-dropdown-divider"></div>
+              <form action="{{ route('logout') }}" method="POST" style="margin:0;padding:2px 4px;">
+                @csrf
+                <button type="submit" class="user-dropdown-item" style="color:#f87171">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                  <span>Đăng Xuất</span>
+                </button>
+              </form>
+            </div>
+          </div>
+          <form action="{{ route('logout') }}" method="POST" style="margin:0" class="header-logout-form">@csrf<button type="submit" class="btn btn-download">Đăng Xuất</button></form>
         @endguest
         <button type="button" class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Mở menu" aria-expanded="false" aria-controls="mobile-menu">☰</button>
       </div>
@@ -481,9 +522,65 @@
       </div>
     </div>
   </footer>
+
+  {{-- Mobile Bottom Navigation Bar (App-like UX) --}}
+  <nav class="mobile-bottom-nav" aria-label="Điều hướng nhanh di động">
+    <a href="{{ route('home') }}" class="bottom-nav-item {{ request()->routeIs('home') ? 'active' : '' }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+      <span>Trang Chủ</span>
+      @if(request()->routeIs('home'))<span class="bottom-nav-indicator"></span>@endif
+    </a>
+    <a href="{{ route('genres') }}" class="bottom-nav-item {{ request()->routeIs('genres') ? 'active' : '' }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"></path><path d="M6 6h10"></path><path d="M6 10h10"></path></svg>
+      <span>Thể Loại</span>
+      @if(request()->routeIs('genres'))<span class="bottom-nav-indicator"></span>@endif
+    </a>
+    <a href="{{ auth()->check() ? route('user.library') : route('login') }}" class="bottom-nav-item {{ request()->routeIs('user.library') ? 'active' : '' }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
+      <span>Tủ Sách</span>
+      @if(request()->routeIs('user.library'))<span class="bottom-nav-indicator"></span>@endif
+    </a>
+    <button type="button" class="bottom-nav-item" id="mobile-bottom-search-trigger" onclick="document.getElementById('mobile-menu-btn')?.click();">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      <span>Tìm Kiếm</span>
+    </button>
+    <a href="{{ auth()->check() ? route('user.dashboard') : route('login') }}" class="bottom-nav-item {{ request()->routeIs('user.dashboard') ? 'active' : '' }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+      <span>{{ auth()->check() ? 'Cá Nhân' : 'Tài Khoản' }}</span>
+      @if(request()->routeIs('user.dashboard'))<span class="bottom-nav-indicator"></span>@endif
+    </a>
+  </nav>
+
   <script src="{{ asset('js/app.js') }}?v=6"></script>
   <script src="{{ asset('js/roadmap.js') }}?v=6"></script>
   <script>
+    // Desktop Ctrl+K Shortcut Handler for Instant Live Search Focus
+    document.addEventListener('keydown', function(e) {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        var searchInput = document.getElementById('search-input');
+        if (searchInput) {
+          searchInput.focus();
+          searchInput.select();
+        }
+      }
+    });
+
+    // User Profile Dropdown Toggle
+    document.addEventListener('click', function(e) {
+      var userBtn = e.target.closest('#user-menu-btn');
+      var userMenu = document.getElementById('user-dropdown-menu');
+      if (userBtn && userMenu) {
+        e.stopPropagation();
+        var isOpen = userMenu.classList.contains('active');
+        userMenu.classList.toggle('active', !isOpen);
+        userBtn.setAttribute('aria-expanded', !isOpen ? 'true' : 'false');
+      } else if (userMenu && !e.target.closest('#user-dropdown-menu')) {
+        userMenu.classList.remove('active');
+        var btn = document.getElementById('user-menu-btn');
+        if (btn) btn.setAttribute('aria-expanded', 'false');
+      }
+    });
     // Inline Mobile Footer Accordion Handler (Guarded against double execution)
     (function() {
       document.addEventListener('click', function(e) {

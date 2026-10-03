@@ -22,22 +22,24 @@
     position: sticky;
     top: var(--header-height, 72px);
     z-index: 900;
-    background: rgba(19, 22, 30, 0.95);
-    backdrop-filter: blur(10px);
+    background: rgba(10, 13, 20, 0.88);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
     padding: 12px 24px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     border-bottom: 1px solid rgba(255,255,255,0.08);
-    box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.6);
+    transition: transform 0.25s ease, background 0.25s ease;
   }
 
   .reader-controls-btn {
-    background: rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.06);
     color: #fff;
     border: 1px solid rgba(255,255,255,0.12);
-    padding: 7px 16px;
-    border-radius: 8px;
+    padding: 8px 18px;
+    border-radius: 10px;
     font-size: 13px;
     font-weight: 700;
     cursor: pointer;
@@ -45,26 +47,35 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    transition: all 0.2s ease;
+    transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .reader-controls-btn:hover {
-    background: var(--primary);
-    border-color: var(--primary);
+    background: linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%);
+    border-color: transparent;
     color: #fff;
+    box-shadow: 0 4px 16px rgba(139, 92, 246, 0.4);
+    transform: translateY(-1px);
   }
 
   .reader-chapter-select {
-    background: rgba(255,255,255,0.08);
+    background: rgba(17, 24, 39, 0.85);
+    backdrop-filter: blur(12px);
     color: #fff;
     border: 1px solid rgba(255,255,255,0.15);
-    padding: 8px 16px;
-    border-radius: 20px;
+    padding: 8px 18px;
+    border-radius: 9999px;
     font-size: 13.5px;
     font-weight: 700;
     outline: none;
     cursor: pointer;
     max-width: 240px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .reader-chapter-select:focus {
+    border-color: #8B5CF6;
+    box-shadow: 0 0 12px rgba(139, 92, 246, 0.4);
   }
 
   .comment-item-card {

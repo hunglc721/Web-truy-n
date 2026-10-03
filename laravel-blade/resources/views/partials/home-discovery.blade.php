@@ -35,18 +35,21 @@
   .discovery-title-icon{display:grid;place-items:center;width:34px;height:34px;border-radius:11px;background:rgba(255,94,54,.11);border:1px solid rgba(255,94,54,.18);font-size:16px}
   .discovery-description{margin:6px 0 0;color:var(--text-sub);font-size:12px;line-height:1.55}
   .discovery-see-all{display:inline-flex;align-items:center;gap:6px;flex:0 0 auto;min-height:36px;padding:7px 12px;border-radius:999px;border:1px solid var(--border-color);background:var(--bg-surface-1);color:var(--text-main);font-size:11px;font-weight:850;text-decoration:none;transition:.2s}
-  .discovery-see-all:hover{color:var(--primary);border-color:rgba(255,94,54,.42);transform:translateY(-1px)}
+  .discovery-see-all:hover{color:#fff;border-color:rgba(139,92,246,.5);background:linear-gradient(135deg,rgba(139,92,246,.2),rgba(236,72,153,.2));transform:translateY(-1px)}
   .discovery-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:14px}
-  .discovery-card{position:relative;min-width:0;text-decoration:none;color:inherit;border-radius:15px;background:var(--bg-surface-1);border:1px solid var(--border-color);overflow:hidden;transition:.22s}
-  .discovery-card:hover{transform:translateY(-4px);border-color:rgba(255,94,54,.34);box-shadow:0 14px 28px rgba(0,0,0,.24)}
+  .discovery-card{position:relative;min-width:0;text-decoration:none;color:inherit;border-radius:15px;background:rgba(17,24,39,0.75);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.08);overflow:hidden;transition:.22s cubic-bezier(0.4, 0, 0.2, 1)}
+  .discovery-card:hover{transform:translateY(-4px);border-color:rgba(139,92,246,.45);box-shadow:0 14px 28px rgba(0,0,0,.45),0 0 16px rgba(139,92,246,.25)}
   .discovery-cover{position:relative;aspect-ratio:3/4;overflow:hidden;background:#0d1015}
-  .discovery-cover::after{content:'';position:absolute;inset:auto 0 0;height:40%;background:linear-gradient(to top,rgba(7,9,13,.72),transparent)}
+  .discovery-cover::after{content:'';position:absolute;inset:auto 0 0;height:45%;background:linear-gradient(to top,rgba(7,9,13,.8),transparent)}
   .discovery-cover img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .35s ease}
-  .discovery-card:hover .discovery-cover img{transform:scale(1.04)}
+  .discovery-card:hover .discovery-cover img{transform:scale(1.05)}
   .discovery-chapter,.discovery-rating,.discovery-rank{position:absolute;z-index:2;font-size:9.5px;font-weight:900;border-radius:999px;backdrop-filter:blur(8px)}
-  .discovery-chapter{left:8px;bottom:8px;padding:5px 8px;background:rgba(255,94,54,.9);color:#fff}
-  .discovery-rating{right:8px;top:8px;padding:5px 7px;background:rgba(7,9,13,.75);color:#fbbf24}
-  .discovery-rank{left:8px;top:8px;width:29px;height:29px;display:grid;place-items:center;background:rgba(7,9,13,.8);color:#fff;border:1px solid rgba(255,255,255,.12);font-size:11px}
+  .discovery-chapter{left:8px;bottom:8px;padding:4px 9px;background:linear-gradient(135deg,#8B5CF6,#EC4899);color:#fff;box-shadow:0 2px 8px rgba(139,92,246,0.5)}
+  .discovery-rating{right:8px;top:8px;padding:4px 8px;background:rgba(7,9,13,.8);color:#fbbf24;border:1px solid rgba(251,191,36,.25)}
+  .discovery-rank{left:8px;top:8px;width:30px;height:30px;display:grid;place-items:center;background:rgba(7,9,13,.85);color:#fff;border:1px solid rgba(255,255,255,.14);font-size:11px}
+  .discovery-rank.rank-1{background:linear-gradient(135deg,#F59E0B,#D97706);border-color:rgba(245,158,11,.6);box-shadow:0 0 12px rgba(245,158,11,.5)}
+  .discovery-rank.rank-2{background:linear-gradient(135deg,#94A3B8,#64748B);border-color:rgba(148,163,184,.6)}
+  .discovery-rank.rank-3{background:linear-gradient(135deg,#D97706,#78350F);border-color:rgba(217,119,6,.6)}
   .discovery-body{padding:11px 11px 12px}
   .discovery-card-title{margin:0;font-size:12.5px;line-height:1.45;font-weight:850;color:#fff;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:36px}
   .discovery-meta{display:flex;justify-content:space-between;gap:7px;margin-top:7px;color:var(--text-sub);font-size:9.5px;white-space:nowrap;overflow:hidden}
@@ -140,7 +143,7 @@
               <a href="{{ route('comics.show', $comic->slug) }}" class="discovery-card">
                 <div class="discovery-cover">
                   <img src="{{ $comic->cover_url }}" alt="{{ $comic->title }}" loading="lazy">
-                  <span class="discovery-rank">{{ $loop->iteration }}</span>
+                  <span class="discovery-rank {{ $loop->iteration <= 3 ? 'rank-' . $loop->iteration : '' }}">{{ $loop->iteration }}</span>
                   @if($chapter)<span class="discovery-chapter">{{ $chapter->label }}</span>@endif
                   <span class="discovery-rating">★ {{ number_format($comic->avg_rating, 1) }}</span>
                 </div>
