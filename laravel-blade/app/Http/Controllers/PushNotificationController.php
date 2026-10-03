@@ -19,9 +19,8 @@ class PushNotificationController extends Controller
         $userId = auth()->id();
 
         PushSubscription::updateOrCreate(
-            ['endpoint' => $request->endpoint],
+            ['endpoint' => $request->endpoint, 'user_id' => $userId],
             [
-                'user_id'          => $userId,
                 'public_key'       => $request->public_key,
                 'auth_token'       => $request->auth_token,
                 'content_encoding' => $request->content_encoding ?? 'aesgcm',
@@ -40,7 +39,10 @@ class PushNotificationController extends Controller
             'endpoint' => 'required|string',
         ]);
 
-        PushSubscription::where('endpoint', $request->endpoint)->delete();
+        // Chỉ xóa subscription thuộc về user hiện tại, tránh xóa nhầm subscription của người khác.
+        PushSubscription::where('endpoint', $request->endpoint)
+            ->where('user_id', auth()->id())
+            ->delete();
 
         return response()->json([
             'status' => 'success',

@@ -73,7 +73,10 @@ class ChapterController extends Controller
                 ->get()
         );
 
-        $comments = Comment::with(['user', 'replies.user'])
+        $comments = Comment::with([
+                'user',
+                'replies' => fn ($q) => $q->approved()->with('user')->orderBy('created_at'),
+            ])
             ->where('comic_id', $comic->id)
             ->where('chapter_id', $chapter->id)
             ->whereNull('parent_id')

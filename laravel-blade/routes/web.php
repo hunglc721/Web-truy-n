@@ -68,10 +68,10 @@ Route::post('/api/lists/{id}/toggle-like', [\App\Http\Controllers\ReadingListCon
 Route::get('/api/wallet/balance', [\App\Http\Controllers\WalletController::class, 'balance'])->middleware(['auth', '2fa'])->name('api.wallet.balance');
 Route::post('/api/wallet/deposit', [\App\Http\Controllers\WalletController::class, 'deposit'])->middleware(['auth', '2fa'])->name('api.wallet.deposit');
 Route::post('/api/chapters/{chapterId}/unlock', [\App\Http\Controllers\WalletController::class, 'unlockChapter'])->middleware(['auth', '2fa'])->name('api.chapters.unlock');
-Route::post('/api/authors/{id}/follow', [\App\Http\Controllers\AuthorController::class, 'follow'])->name('api.authors.follow');
-Route::post('/api/teams/{id}/follow', [\App\Http\Controllers\TeamController::class, 'follow'])->name('api.teams.follow');
-Route::post('/api/push/subscribe', [\App\Http\Controllers\PushNotificationController::class, 'subscribe'])->name('api.push.subscribe');
-Route::post('/api/push/unsubscribe', [\App\Http\Controllers\PushNotificationController::class, 'unsubscribe'])->name('api.push.unsubscribe');
+Route::post('/api/authors/{id}/follow', [\App\Http\Controllers\AuthorController::class, 'follow'])->middleware('auth')->name('api.authors.follow');
+Route::post('/api/teams/{id}/follow', [\App\Http\Controllers\TeamController::class, 'follow'])->middleware('auth')->name('api.teams.follow');
+Route::post('/api/push/subscribe', [\App\Http\Controllers\PushNotificationController::class, 'subscribe'])->middleware('auth')->name('api.push.subscribe');
+Route::post('/api/push/unsubscribe', [\App\Http\Controllers\PushNotificationController::class, 'unsubscribe'])->middleware('auth')->name('api.push.unsubscribe');
 
 Route::get('/auth/{provider}/redirect', [\App\Http\Controllers\SocialAuthController::class, 'redirect'])->name('auth.social.redirect');
 Route::get('/auth/{provider}/callback', [\App\Http\Controllers\SocialAuthController::class, 'callback'])->name('auth.social.callback');
