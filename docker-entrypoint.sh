@@ -36,6 +36,14 @@ if [[ ! "$APP_KEY" =~ ^base64: ]]; then
     export APP_KEY
 fi
 
+# Always synchronize APP_KEY into .env
+sed -i "s|^APP_KEY=.*|APP_KEY=${APP_KEY}|" .env
+
+# Pass APP_KEY and critical environment variables to Apache and PHP
+echo "export APP_KEY='${APP_KEY}'" >> /etc/apache2/envvars
+echo "SetEnv APP_KEY \"${APP_KEY}\"" > /etc/apache2/conf-available/app-env.conf
+a2enconf app-env || true
+
 # 7. Run database migrations and seed default data
 php artisan migrate --force
 php artisan db:seed --force || true
@@ -46,8 +54,9 @@ php artisan route:cache || true
 php artisan view:cache || true
 
 # 9. Set final ownership and permissions for Apache (www-data)
-chown -R www-data:www-data /var/www/html/laravel-blade/database /var/www/html/laravel-blade/storage /var/www/html/laravel-blade/bootstrap/cache
+chown -R www-data:www-data /var/www/html/laravel-blade/database /var/www/html/laravel-blade/storage /var/www/html/laravel-blade/bootstrap/cache /var/www/html/laravel-blade/.env
 chmod -R 775 /var/www/html/laravel-blade/database /var/www/html/laravel-blade/storage /var/www/html/laravel-blade/bootstrap/cache
+chmod 664 /var/www/html/laravel-blade/.env
 
 echo "==> Comicx application is ready on port ${PORT}!"
 exec apache2-foreground
