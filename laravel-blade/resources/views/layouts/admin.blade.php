@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="csrf-token" content="{{ csrf_token() }}" />
+  <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests" />
   <title>@yield('title', 'Admin Panel') — {{ $siteSettings['site_name'] }}</title>
   <link rel="icon" href="{{ $siteSettings['favicon_url'] }}" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />

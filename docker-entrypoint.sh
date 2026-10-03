@@ -39,6 +39,17 @@ fi
 # Always synchronize APP_KEY into .env
 sed -i "s|^APP_KEY=.*|APP_KEY=${APP_KEY}|" .env
 
+if [ -n "$APP_URL" ]; then
+    sed -i "s|^APP_URL=.*|APP_URL=${APP_URL}|" .env
+fi
+if [ -n "$ASSET_URL" ]; then
+    if grep -q '^ASSET_URL=' .env; then
+        sed -i "s|^ASSET_URL=.*|ASSET_URL=${ASSET_URL}|" .env
+    else
+        echo "ASSET_URL=${ASSET_URL}" >> .env
+    fi
+fi
+
 # Pass APP_KEY and critical environment variables to Apache and PHP
 echo "export APP_KEY='${APP_KEY}'" >> /etc/apache2/envvars
 echo "SetEnv APP_KEY \"${APP_KEY}\"" > /etc/apache2/conf-available/app-env.conf

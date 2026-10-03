@@ -10,6 +10,10 @@ services:
     envVars:
       - key: APP_ENV
         value: production
+      - key: APP_URL
+        value: https://comicx-web.onrender.com
+      - key: ASSET_URL
+        value: https://comicx-web.onrender.com
       - key: APP_DEBUG
         value: "true"
       - key: APP_KEY
