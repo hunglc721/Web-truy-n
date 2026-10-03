@@ -1,0 +1,10 @@
+.git
+.github
+e2e/node_modules
+laravel-blade/vendor
+laravel-blade/.env
+laravel-blade/storage/logs/*.log
+laravel-blade/storage/framework/cache/*
+laravel-blade/storage/framework/sessions/*
+laravel-blade/storage/framework/views/*
+.phpunit.result.cache
