@@ -15,7 +15,7 @@
       <div class="banner-track" id="banner-track">
         @foreach($banners as $index => $banner)
         <div class="banner-slide {{ $index === 0 ? 'active' : '' }}" data-slide-index="{{ $index }}">
-          <div class="banner-ambient-glow" style="background-image: url('{{ $banner->display_image }}');" aria-hidden="true"></div>
+          <div class="banner-ambient-glow ambient-glow" style="background-image: url('{{ $banner->display_image }}');" aria-hidden="true"></div>
           <a href="{{ route('banners.click', $banner) }}" class="banner-link">
             <div class="banner-img-container">
               <img src="{{ $banner->display_image }}" alt="{{ $banner->title }}" class="banner-hero-img" loading="{{ $index === 0 ? 'eager' : 'lazy' }}">
@@ -133,9 +133,9 @@
         <div class="trending-list" id="trending-list">
           @forelse($trendingComics as $comic)
           <a href="{{ route('comics.show',$comic->slug) }}" class="trending-card card-shine-effect" aria-label="{{ $comic->title }}">
-            <div class="tcard-cover">
+            <div class="tcard-cover comic-card-poster">
               <img src="{{ $comic->cover_url }}" alt="Bìa {{ $comic->title }}" class="cover-img" loading="lazy">
-              <div class="rank-num rank-badge-medal {{ $loop->iteration === 1 ? 'rank-badge-gold r1' : ($loop->iteration === 2 ? 'rank-badge-silver r2' : ($loop->iteration === 3 ? 'rank-badge-bronze r3' : ($loop->iteration <= 3 ? 'r'.$loop->iteration : ''))) }}">{{ $comic->trending_rank ?? $loop->iteration }}</div>
+              <div class="rank-num rank-badge-medal rank-num-{{ $loop->iteration }} {{ $loop->iteration === 1 ? 'rank-badge-gold r1' : ($loop->iteration === 2 ? 'rank-badge-silver r2' : ($loop->iteration === 3 ? 'rank-badge-bronze r3' : ($loop->iteration <= 3 ? 'r'.$loop->iteration : ''))) }}">{{ $comic->trending_rank ?? $loop->iteration }}</div>
               <span class="badge-chip-glow badge-chip-rating" style="position: absolute; bottom: 8px; right: 8px; z-index: 2;">★ {{ number_format($comic->avg_rating, 1) }}</span>
             </div>
             <p class="tcard-title">{{ $comic->title }}</p>
@@ -184,7 +184,7 @@
           @php($chapter=$comic->latestChapter)
           @php($primaryTag=$comic->tags->first())
           <a href="{{ route('comics.show',$comic->slug) }}" class="comic-card-sm card-shine-effect" data-genre="{{ $comic->genres->first()?->slug }}">
-            <div class="sm-cover">
+            <div class="sm-cover comic-card-poster">
               <img src="{{ $comic->cover_url }}" alt="{{ $comic->title }}" class="cover-img" loading="lazy">
               @if($chapter)
                 <span class="sm-badge {{ $primaryTag?->slug==='hot'?'hot-badge badge-chip-hot':($primaryTag?->slug==='new'?'new-badge badge-chip-new':'') }}">
@@ -240,3 +240,23 @@
   @endauth
 </main>
 @endsection
+
+@push('scripts')
+<script>
+  document.querySelectorAll('.rank-tab').forEach(tab => {
+    tab.addEventListener('click', function() {
+      document.querySelectorAll('.rank-tab').forEach(t => t.classList.remove('active'));
+      this.classList.add('active');
+      const list = document.getElementById('trending-list');
+      if (list) {
+        list.style.opacity = '0.5';
+        list.style.transition = 'opacity 0.2s ease';
+        setTimeout(() => {
+          list.style.opacity = '1';
+        }, 120);
+      }
+    });
+  });
+</script>
+@endpush
+

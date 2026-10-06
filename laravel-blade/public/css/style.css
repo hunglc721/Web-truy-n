@@ -9,39 +9,75 @@
 }
 
 :root {
-  /* Vibrant & Eye-Pleasing Color System */
-  --primary:        #FF5E36;
-  --primary-glow:   #FF2A6D;
-  --primary-hover:  #E04822;
-  --accent-purple:  #8B5CF6;
-  --accent-blue:    #3B82F6;
-  --accent-green:   #10B981;
-  --accent-gold:    #F59E0B;
+  /* Fonts */
+  --font-sans:      'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-display:   'Bebas Neue', 'Inter', sans-serif;
+  --font-title:     'Cinzel', serif;
 
-  /* Surfaces - Rich Dark Mode */
-  --bg-body:        #0B0E14;
-  --bg-surface-1:   #131822;
-  --bg-surface-2:   #1A202C;
-  --bg-surface-3:   #232B3B;
-  --header-bg:      rgba(11, 14, 20, 0.92);
+  /* MangaKai Brand Colors */
+  --brand-50:       #f5f3ff;
+  --brand-100:      #ede9fe;
+  --brand-300:      #c4b5fd;
+  --brand-400:      #a78bfa;
+  --brand-500:      #8b5cf6;
+  --brand-600:      #7c3aed;
+  --brand-700:      #6d28d9;
+  --brand-800:      #5b21b6;
+  --brand-900:      #4c1d95;
+
+  /* MangaKai Neon Colors */
+  --neon-cyan:      #00f5d4;
+  --neon-orange:    #ff6b35;
+  --neon-purple:    #b026ff;
+  --neon-pink:      #ff007f;
+  --neon-amber:     #fbbf24;
+
+  /* MangaKai Dark Surfaces */
+  --dark-base:      #070a13;
+  --dark-card:      #0e1526;
+  --dark-surface:   #151e34;
+  --dark-border:    #1e293f;
+  --dark-muted:     #283552;
+
+  /* Glow Shadows */
+  --shadow-glow-brand:  0 0 25px -4px rgba(139, 92, 246, 0.45);
+  --shadow-glow-cyan:   0 0 25px -4px rgba(0, 245, 212, 0.4);
+  --shadow-glow-orange: 0 0 25px -4px rgba(255, 107, 53, 0.45);
+  --shadow-glow-pink:   0 0 25px -4px rgba(255, 0, 127, 0.4);
+
+  /* Primary Theme Tokens */
+  --primary:        #ff6b35;
+  --primary-glow:   #ff007f;
+  --primary-hover:  #e04822;
+  --accent-purple:  #8b5cf6;
+  --accent-blue:    #3b82f6;
+  --accent-green:   #00f5d4;
+  --accent-gold:    #fbbf24;
+
+  /* Surfaces */
+  --bg-body:        #070a13;
+  --bg-surface-1:   #0e1526;
+  --bg-surface-2:   #151e34;
+  --bg-surface-3:   #1e293f;
+  --header-bg:      rgba(7, 10, 19, 0.85);
 
   /* Typography */
-  --text-main:      #F1F5F9;
-  --text-sub:       #94A3B8;
-  --text-muted:     #64748B;
+  --text-main:      #f1f5f9;
+  --text-sub:       #94a3b8;
+  --text-muted:     #64748b;
 
   /* Borders & Shadows */
   --border-color:   rgba(255, 255, 255, 0.08);
-  --border-active:  rgba(255, 94, 54, 0.4);
-  --radius-sm:      6px;
-  --radius-md:      12px;
-  --radius-lg:      18px;
+  --border-active:  rgba(139, 92, 246, 0.5);
+  --radius-sm:      8px;
+  --radius-md:      14px;
+  --radius-lg:      20px;
   --radius-full:    9999px;
 
-  --shadow-card:    0 8px 24px rgba(0, 0, 0, 0.35);
-  --shadow-glow:    0 0 20px rgba(255, 94, 54, 0.25);
+  --shadow-card:    0 8px 30px rgba(0, 0, 0, 0.45);
+  --shadow-glow:    0 0 25px rgba(139, 92, 246, 0.35);
   
-  --transition:     0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition:     0.22s cubic-bezier(0.4, 0, 0.2, 1);
   --header-height:  72px;
 }
 
@@ -51,7 +87,7 @@ html {
 }
 
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: var(--font-sans);
   background-color: var(--bg-body);
   color: var(--text-main);
   line-height: 1.6;
@@ -3670,18 +3706,23 @@ nav[role="navigation"] svg {
   text-overflow: ellipsis;
 }
 
-.user-dropdown-panel {
+.user-dropdown-wrap {
+  position: relative;
+}
+
+.user-dropdown-panel,
+.user-dropdown-menu {
   position: absolute;
-  top: calc(100% + 12px);
+  top: calc(100% + 10px);
   right: 0;
-  width: 240px;
+  width: 250px;
   background: rgba(13, 17, 26, 0.95);
   backdrop-filter: blur(24px) saturate(180%);
   -webkit-backdrop-filter: blur(24px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 16px;
   padding: 8px;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6), 0 0 20px rgba(139, 92, 246, 0.12);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.65), 0 0 20px rgba(139, 92, 246, 0.15);
   z-index: 1100;
   display: none;
   flex-direction: column;
@@ -3689,9 +3730,35 @@ nav[role="navigation"] svg {
 }
 
 .user-menu-wrap:hover .user-dropdown-panel,
-.user-dropdown-panel.open {
-  display: flex;
-  animation: userFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+.user-menu-wrap:hover .user-dropdown-menu,
+.user-dropdown-panel.open,
+.user-dropdown-menu.active,
+#user-dropdown-menu.active {
+  display: flex !important;
+  animation: userFadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.user-dropdown-header {
+  padding: 8px 10px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 4px;
+}
+
+.user-dropdown-name {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.user-dropdown-email {
+  font-size: 11.5px;
+  color: var(--text-sub);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 @keyframes userFadeIn {
@@ -4127,6 +4194,286 @@ nav[role="navigation"] svg {
   color: #fff !important;
   box-shadow: 0 4px 16px rgba(139, 92, 246, 0.4) !important;
 }
+
+/* ==========================================================================
+   CYBER GLASSMORPHISM & NEON MANGA PORTAL DESIGN SYSTEM
+   ========================================================================== */
+
+/* ── 3:4 Ratio Manga/Webtoon Cards ── */
+.comic-card-sm,
+.trending-card {
+  position: relative;
+  border-radius: 14px;
+  background: rgba(17, 24, 39, 0.75);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), border-color 0.25s ease, box-shadow 0.25s ease;
+  overflow: hidden;
+}
+
+.comic-card-sm:hover,
+.trending-card:hover {
+  transform: translateY(-5px);
+  border-color: rgba(139, 92, 246, 0.45);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.55), 0 0 20px rgba(139, 92, 246, 0.2);
+}
+
+.sm-cover,
+.tcard-cover {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  border-radius: 12px 12px 6px 6px;
+  background: #0f141e;
+}
+
+.sm-cover .cover-img,
+.tcard-cover .cover-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.comic-card-sm:hover .cover-img,
+.trending-card:hover .cover-img {
+  transform: scale(1.05);
+}
+
+/* ── Specular Light Shine Beam on Hover ── */
+.card-shine-effect {
+  position: relative;
+  overflow: hidden;
+}
+
+.card-shine-effect::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -120%;
+  width: 80%;
+  height: 200%;
+  background: linear-gradient(
+    60deg,
+    transparent 20%,
+    rgba(255, 255, 255, 0.16) 50%,
+    transparent 80%
+  );
+  transform: rotate(25deg);
+  transition: none;
+  pointer-events: none;
+  z-index: 6;
+}
+
+.card-shine-effect:hover::after {
+  left: 150%;
+  transition: left 0.75s ease-in-out;
+}
+
+/* ── Glowing Badges & Chips ── */
+.badge-chip-rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 800;
+  background: rgba(10, 13, 20, 0.88) !important;
+  backdrop-filter: blur(8px);
+  color: #F59E0B !important;
+  border: 1px solid rgba(245, 158, 11, 0.35) !important;
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.25);
+}
+
+.badge-chip-hot {
+  background: linear-gradient(135deg, #EC4899, #EF4444) !important;
+  color: #fff !important;
+  border: none !important;
+  box-shadow: 0 0 12px rgba(236, 72, 153, 0.5) !important;
+}
+
+.badge-chip-new {
+  background: linear-gradient(135deg, #06B6D4, #3B82F6) !important;
+  color: #fff !important;
+  border: none !important;
+  box-shadow: 0 0 12px rgba(6, 182, 212, 0.5) !important;
+}
+
+/* ── Live Search Shortcut Badge ── */
+.search-shortcut {
+  position: absolute;
+  right: 40px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  pointer-events: none;
+}
+
+.search-shortcut kbd {
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 5px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #94A3B8;
+}
+
+.search-wrap:focus-within .search-shortcut {
+  display: none;
+}
+
+/* ── Mobile Safe Area Padding ── */
+@media (max-width: 767.98px) {
+  body:not(.ui-hidden) {
+    padding-bottom: calc(68px + env(safe-area-inset-bottom)) !important;
+  }
+}
+
+/* ==========================================================================
+   MANGAKAI CYBER-GLASSMORPHISM DESIGN SYSTEM ENHANCEMENTS
+   ========================================================================== */
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #070a13;
+}
+::-webkit-scrollbar-thumb {
+  background: #1e293f;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #8b5cf6;
+}
+
+/* Glassmorphism Navigation & Panels */
+.glass-nav {
+  background: rgba(7, 10, 19, 0.85) !important;
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+.glass-panel {
+  background: rgba(14, 21, 38, 0.75) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+}
+
+/* Metallic Rank Numbers */
+.rank-num-1 {
+  background: linear-gradient(135deg, #ffd700 0%, #ff8800 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  filter: drop-shadow(0 2px 10px rgba(255, 170, 0, 0.5));
+  font-family: var(--font-display, 'Bebas Neue', sans-serif);
+}
+.rank-num-2 {
+  background: linear-gradient(135deg, #f1f5f9 0%, #94a3b8 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  filter: drop-shadow(0 2px 8px rgba(148, 163, 184, 0.4));
+  font-family: var(--font-display, 'Bebas Neue', sans-serif);
+}
+.rank-num-3 {
+  background: linear-gradient(135deg, #fb923c 0%, #b45309 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  filter: drop-shadow(0 2px 8px rgba(249, 115, 22, 0.4));
+  font-family: var(--font-display, 'Bebas Neue', sans-serif);
+}
+
+/* Comic Card Poster & Specular Hover Light Beam */
+.comic-card-poster {
+  position: relative;
+  overflow: hidden;
+}
+.comic-card-poster::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -60%;
+  width: 25%;
+  height: 200%;
+  background: linear-gradient(60deg, transparent 20%, rgba(255, 255, 255, 0.35) 50%, transparent 80%);
+  transform: rotate(25deg);
+  transition: all 0.75s ease;
+  opacity: 0;
+  pointer-events: none;
+}
+.comic-card-poster:hover::after {
+  left: 140%;
+  opacity: 1;
+}
+
+/* Reader Theme Modes */
+.reader-theme-amoled {
+  background-color: #000000 !important;
+  color: #e2e8f0 !important;
+}
+.reader-theme-dark {
+  background-color: #0b0f19 !important;
+  color: #cbd5e1 !important;
+}
+.reader-theme-sepia {
+  background-color: #26211a !important;
+  color: #f1e7d0 !important;
+}
+
+/* Hide Scrollbar Helper */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Ambient Glow Keyframe Animation */
+@keyframes pulseGlow {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.05); }
+}
+.ambient-glow {
+  animation: pulseGlow 6s ease-in-out infinite;
+}
+
+/* Typography Utilities */
+.font-display {
+  font-family: var(--font-display, 'Bebas Neue', sans-serif) !important;
+}
+.font-title {
+  font-family: var(--font-title, 'Cinzel', serif) !important;
+}
+.font-sans {
+  font-family: var(--font-sans, 'Plus Jakarta Sans', sans-serif) !important;
+}
+
+/* Shadow Glow Tokens */
+.shadow-glow-brand {
+  box-shadow: 0 0 25px -4px rgba(139, 92, 246, 0.45) !important;
+}
+.shadow-glow-cyan {
+  box-shadow: 0 0 25px -4px rgba(0, 245, 212, 0.4) !important;
+}
+.shadow-glow-orange {
+  box-shadow: 0 0 25px -4px rgba(255, 107, 53, 0.45) !important;
+}
+.shadow-glow-pink {
+  box-shadow: 0 0 25px -4px rgba(255, 0, 127, 0.4) !important;
+}
+
+
 
 
 

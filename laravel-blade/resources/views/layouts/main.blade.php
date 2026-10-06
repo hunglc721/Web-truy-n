@@ -28,8 +28,8 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="{{ asset('css/style.css') }}?v=5" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Bebas+Neue&family=Cinzel:wght@700&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{{ asset('css/style.css') }}?v=6" />
   <link rel="stylesheet" href="{{ asset('css/responsive.css') }}?v=5" />
   @if(request()->routeIs('home'))
     <link rel="stylesheet" href="{{ asset('css/site-intro.css') }}?v=1" />
@@ -524,6 +524,7 @@
   </footer>
 
   {{-- Mobile Bottom Navigation Bar (App-like UX) --}}
+  @unless(request()->routeIs('chapters.show'))
   <nav class="mobile-bottom-nav" aria-label="Điều hướng nhanh di động">
     <a href="{{ route('home') }}" class="bottom-nav-item {{ request()->routeIs('home') ? 'active' : '' }}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
@@ -550,6 +551,7 @@
       @if(request()->routeIs('user.dashboard'))<span class="bottom-nav-indicator"></span>@endif
     </a>
   </nav>
+  @endunless
 
   <script src="{{ asset('js/app.js') }}?v=6"></script>
   <script src="{{ asset('js/roadmap.js') }}?v=6"></script>
