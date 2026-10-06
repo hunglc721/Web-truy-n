@@ -118,7 +118,7 @@
         @endphp
 
         <article class="browse-card card-shine-effect">
-          <div class="browse-cover">
+          <div class="browse-cover comic-card-poster">
             <a href="{{ route('comics.show', $comic->slug) }}" aria-label="Xem {{ $comic->title }}">
               <img src="{{ $comic->cover_url }}" alt="{{ $comic->title }}" class="cover-img" loading="lazy" />
             </a>

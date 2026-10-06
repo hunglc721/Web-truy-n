@@ -244,7 +244,7 @@
         @endphp
 
         <div class="browse-card card-shine-effect">
-          <div class="browse-cover">
+          <div class="browse-cover comic-card-poster">
             <a href="{{ route('comics.show', $comic->slug) }}">
               <img src="{{ $comic->cover_url }}"
                    alt="{{ $comic->title }}"
