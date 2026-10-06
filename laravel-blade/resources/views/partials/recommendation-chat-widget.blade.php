@@ -1,15 +1,15 @@
 <link rel="stylesheet" href="{{ asset('css/recommendation-chat-widget.css') }}?v=9">
 <aside id="recommendation-chat-widget" aria-label="Trợ lý tìm truyện" data-history-scope="{{ auth()->check() ? 'user:'.auth()->id() : 'guest' }}" data-endpoint="{{ route('recommendation.chat') }}" data-placeholder="{{ asset('images/default-brand.svg') }}">
-  <button id="recommendation-chat-toggle" type="button" aria-label="Mở trợ lý tìm truyện" aria-expanded="false" aria-controls="recommendation-chat-panel">
+  <button id="recommendation-chat-toggle" type="button" aria-label="Mở Trợ Lý Comics" aria-expanded="false" aria-controls="recommendation-chat-panel" title="Trợ Lý Comics">
     <span class="recommendation-toggle-icon">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <rect width="18" height="12" x="3" y="6" rx="3"></rect>
         <circle cx="9" cy="12" r="1.5" fill="currentColor"></circle>
         <circle cx="15" cy="12" r="1.5" fill="currentColor"></circle>
         <path d="M12 2v4"></path>
       </svg>
     </span>
-    <span>Trợ Lý Comics</span>
+    <span class="recommendation-fab-tooltip">Trợ Lý Comics</span>
   </button>
 
   <section id="recommendation-chat-panel" role="dialog" aria-labelledby="recommendation-chat-title" hidden>

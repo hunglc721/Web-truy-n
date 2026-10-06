@@ -37,7 +37,7 @@
             $comic = null;
             if ($isBanner) {
               $title = $banner->title;
-              $posterUrl = $banner->display_image;
+              $posterUrl = $banner->display_image ?: asset('images/default-cover.jpg');
               $linkUrl = route('banners.click', $banner);
               if (!empty($banner->link_url)) {
                 $slug = basename(rtrim(parse_url($banner->link_url, PHP_URL_PATH) ?? '', '/'));
@@ -51,7 +51,7 @@
             } else {
               $comic = $item;
               $title = $comic->title;
-              $posterUrl = $comic->cover_url;
+              $posterUrl = $comic->cover_url ?: asset('images/default-cover.jpg');
               $linkUrl = route('comics.show', $comic->slug);
               $chap = $comic->latestChapter;
               $readUrl = $chap ? route('chapters.show', [$comic->slug, $chap->slug ?: 'chapter-' . $chap->chapter_number]) : $linkUrl;
@@ -134,7 +134,7 @@
               <div class="mangakai-hero-poster-col">
                 <a href="{{ $detailUrl }}" class="mangakai-hero-poster-card banner-link">
                   <div class="mangakai-hero-poster-img-wrap banner-img-container">
-                    <img src="{{ $posterUrl }}" alt="{{ $title }}" class="mangakai-hero-poster-img banner-hero-img" loading="{{ $index === 0 ? 'eager' : 'lazy' }}">
+                    <img src="{{ $posterUrl ?: asset('images/default-cover.jpg') }}" alt="{{ $title }}" class="mangakai-hero-poster-img banner-hero-img" onerror="this.onerror=null;this.src='{{ asset('images/default-cover.jpg') }}';" loading="{{ $index === 0 ? 'eager' : 'lazy' }}">
                     <div class="mangakai-hero-poster-overlay">
                       <span class="mangakai-overlay-update">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
@@ -174,16 +174,13 @@
   @endif
 
   {{-- ================= SECTION 2: QUICK GENRE BADGES RIBBON ================= --}}
-  <section style="max-width: 1320px; margin: 0 auto; padding: 10px 20px 24px;">
-    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+  <section style="max-width: 1320px; margin: 0 auto; padding: 10px 20px 20px;">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
       <h2 style="font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; color: #94a3b8; display: flex; align-items: center; gap: 6px; margin: 0;">
         <span style="color: #ff6b35;">🔥</span> THỂ LOẠI ĐANG SỐT
       </h2>
-      <a href="{{ route('genres') }}" style="font-size: 12.5px; font-weight: 700; color: #a78bfa; text-decoration: none; display: flex; align-items: center; gap: 4px;">
-        Xem tất cả thể loại &rarr;
-      </a>
     </div>
-    <div class="mangakai-genre-ribbon" id="genre-tabs" role="tablist">
+    <div class="mangakai-genre-ribbon flex items-center gap-2 overflow-x-auto whitespace-nowrap hide-scrollbar py-2" id="genre-tabs" role="tablist">
       <a href="{{ route('genres') }}" class="mangakai-genre-chip {{ !request('genre') ? 'active' : '' }}">
         ✨ Tất Cả
       </a>
@@ -192,6 +189,9 @@
           {{ $genre->icon ?? '#' }} {{ $genre->name }}
         </a>
       @endforeach
+      <a href="{{ route('genres') }}" class="mangakai-genre-chip mangakai-genre-chip-more" style="background: rgba(139, 92, 246, 0.15); color: #c4b5fd; border-color: rgba(139, 92, 246, 0.35);">
+        Xem tất cả thể loại &rarr;
+      </a>
     </div>
   </section>
 
@@ -215,8 +215,8 @@
             @endphp
             @if($comic && $chapter)
               <div class="continue-reading-card card-shine-effect">
-                <a href="{{ route('chapters.show', [$comic->slug, $chapter->slug ?: 'chapter-' . $chapter->chapter_number]) }}" style="flex-shrink: 0;" class="comic-card-poster">
-                  <img src="{{ $comic->cover_url }}" alt="{{ $comic->title }}" class="continue-reading-cover" loading="lazy" />
+                <a href="{{ route('chapters.show', [$comic->slug, $chapter->slug ?: 'chapter-' . $chapter->chapter_number]) }}" class="continue-reading-cover-wrap comic-card-cover comic-card-poster">
+                  <img src="{{ $comic->cover_url ?: asset('images/default-cover.jpg') }}" alt="{{ $comic->title }}" class="continue-reading-cover" onerror="this.onerror=null;this.src='{{ asset('images/default-cover.jpg') }}';" loading="lazy" />
                 </a>
                 <div style="flex: 1; min-width: 0;">
                   <h3 style="font-size: 14.5px; font-weight: 700; color: #fff; margin: 0 0 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
@@ -285,8 +285,8 @@
               @php($chapter = $comic->latestChapter)
               @php($primaryTag = $comic->tags->first())
               <a href="{{ route('comics.show', $comic->slug) }}" class="comic-card-sm card-shine-effect" data-genre="{{ $comic->genres->first()?->slug }}">
-                <div class="sm-cover comic-card-poster">
-                  <img src="{{ $comic->cover_url }}" alt="{{ $comic->title }}" class="cover-img" loading="lazy">
+                <div class="sm-cover comic-card-cover comic-card-poster">
+                  <img src="{{ $comic->cover_url ?: asset('images/default-cover.jpg') }}" alt="{{ $comic->title }}" class="cover-img" onerror="this.onerror=null;this.src='{{ asset('images/default-cover.jpg') }}';" loading="lazy">
                   @if($chapter)
                     <span class="sm-badge {{ $primaryTag?->slug === 'hot' ? 'hot-badge badge-chip-hot' : ($primaryTag?->slug === 'new' ? 'new-badge badge-chip-new' : '') }}">
                       {{ $chapter->label }}
@@ -321,8 +321,8 @@
           <div class="comics-grid" style="grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 16px;">
             @foreach($dailyPicks->take(6) as $comic)
               <a href="{{ route('comics.show', $comic->slug) }}" class="comic-card-sm card-shine-effect">
-                <div class="sm-cover comic-card-poster">
-                  <img src="{{ $comic->cover_url }}" alt="{{ $comic->title }}" class="cover-img" loading="lazy">
+                <div class="sm-cover comic-card-cover comic-card-poster">
+                  <img src="{{ $comic->cover_url ?: asset('images/default-cover.jpg') }}" alt="{{ $comic->title }}" class="cover-img" onerror="this.onerror=null;this.src='{{ asset('images/default-cover.jpg') }}';" loading="lazy">
                   <span class="sm-rating badge-chip-glow badge-chip-rating">★ {{ number_format($comic->avg_rating, 1) }}</span>
                 </div>
                 <div class="sm-info">
@@ -351,8 +351,8 @@
           <div class="comics-grid" style="grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 16px;">
             @foreach($newArrivals->take(6) as $comic)
               <a href="{{ route('comics.show', $comic->slug) }}" class="comic-card-sm card-shine-effect">
-                <div class="sm-cover comic-card-poster">
-                  <img src="{{ $comic->cover_url }}" alt="{{ $comic->title }}" class="cover-img" loading="lazy">
+                <div class="sm-cover comic-card-cover comic-card-poster">
+                  <img src="{{ $comic->cover_url ?: asset('images/default-cover.jpg') }}" alt="{{ $comic->title }}" class="cover-img" onerror="this.onerror=null;this.src='{{ asset('images/default-cover.jpg') }}';" loading="lazy">
                   <span class="sm-badge badge-chip-new">MỚI</span>
                   <span class="sm-rating badge-chip-glow badge-chip-rating">★ {{ number_format($comic->avg_rating, 1) }}</span>
                 </div>
@@ -401,7 +401,7 @@
                 <span class="mangakai-rank-num rank-num rank-num-{{ $rank }} {{ $rank === 1 ? 'rank-num-1' : ($rank === 2 ? 'rank-num-2' : ($rank === 3 ? 'rank-num-3' : '')) }}" style="position: static; padding: 0; background: transparent; border: none;">
                   {{ $rank < 10 ? '0' . $rank : $rank }}
                 </span>
-                <img src="{{ $comic->cover_url }}" alt="{{ $comic->title }}" class="mangakai-rank-thumb tcard-cover" style="width: 44px; height: 58px;" loading="lazy">
+                <img src="{{ $comic->cover_url ?: asset('images/default-cover.jpg') }}" alt="{{ $comic->title }}" class="mangakai-rank-thumb tcard-cover comic-thumbnail" onerror="this.onerror=null;this.src='{{ asset('images/default-cover.jpg') }}';" style="width: 44px; height: 58px;" loading="lazy">
                 <div class="mangakai-rank-info">
                   <div class="mangakai-rank-title tcard-title" style="margin: 0 0 3px;">{{ $comic->title }}</div>
                   <div class="mangakai-rank-meta tcard-genre" style="margin: 0;">

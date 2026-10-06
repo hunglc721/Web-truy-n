@@ -103,8 +103,8 @@
             @foreach($section['items'] as $comic)
               @php($chapter = $comic->latestChapter)
               <a href="{{ route('comics.show', $comic->slug) }}" class="discovery-card">
-                <div class="discovery-cover">
-                  <img src="{{ $comic->cover_url }}" alt="{{ $comic->title }}" loading="lazy">
+                <div class="discovery-cover comic-card-cover">
+                  <img src="{{ $comic->cover_url ?: asset('images/default-cover.jpg') }}" alt="{{ $comic->title }}" onerror="this.onerror=null;this.src='{{ asset('images/default-cover.jpg') }}';" loading="lazy">
                   @if($chapter)<span class="discovery-chapter">{{ $chapter->label }}</span>@endif
                   <span class="discovery-rating">★ {{ number_format($comic->avg_rating, 1) }}</span>
                 </div>
@@ -141,8 +141,8 @@
             @foreach($items as $comic)
               @php($chapter = $comic->latestChapter)
               <a href="{{ route('comics.show', $comic->slug) }}" class="discovery-card">
-                <div class="discovery-cover">
-                  <img src="{{ $comic->cover_url }}" alt="{{ $comic->title }}" loading="lazy">
+                <div class="discovery-cover comic-card-cover">
+                  <img src="{{ $comic->cover_url ?: asset('images/default-cover.jpg') }}" alt="{{ $comic->title }}" onerror="this.onerror=null;this.src='{{ asset('images/default-cover.jpg') }}';" loading="lazy">
                   <span class="discovery-rank {{ $loop->iteration <= 3 ? 'rank-' . $loop->iteration : '' }}">{{ $loop->iteration }}</span>
                   @if($chapter)<span class="discovery-chapter">{{ $chapter->label }}</span>@endif
                   <span class="discovery-rating">★ {{ number_format($comic->avg_rating, 1) }}</span>

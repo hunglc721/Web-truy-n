@@ -295,10 +295,6 @@
           </div>
         </div>
         <button type="button" class="header-action-link" id="pwa-install-btn" style="display:none;background:rgba(255,94,54,.15);color:var(--primary);border:1px solid rgba(255,94,54,.3);border-radius:999px;padding:6px 14px;font-weight:700;cursor:pointer;align-items:center;gap:6px;">📲 Cài App</button>
-        <a href="{{ route('publish.create') }}" class="header-action-link" id="publish-link" title="Đăng truyện cho tác giả & nhóm dịch">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-          <span>Đăng Truyện</span>
-        </a>
         <div class="header-divider"></div>
         <div class="nav-icon-group">
           <a class="icon-btn" id="library-btn" aria-label="Tủ truyện" title="Tủ truyện của bạn" href="{{ auth()->check() ? route('user.library') : route('login') }}">
@@ -312,7 +308,6 @@
           <a href="{{ route('login') }}" class="btn btn-login btn-neon-ghost">Đăng Nhập</a>
           <a href="{{ route('register') }}" class="btn btn-download btn-neon-primary">Đăng Ký</a>
         @else
-          @if(auth()->user()->canAccessAdmin())<a href="{{ route('admin.dashboard') }}" class="btn btn-login btn-admin-badge" style="background:linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%);color:#fff;border-color:transparent;box-shadow:0 2px 10px rgba(139,92,246,0.35)">🛡️ Quản Trị</a>@endif
           <div class="user-dropdown-wrap">
             <button type="button" class="user-avatar-btn btn btn-login" id="user-menu-btn" aria-expanded="false" aria-haspopup="true" style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-flex;align-items:center;gap:7px;" title="Khu vực thành viên của {{ auth()->user()->name }}">
               <span class="user-avatar-circle">{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}</span>
@@ -327,11 +322,15 @@
               <div class="user-dropdown-divider"></div>
               <a href="{{ route('user.dashboard') }}" class="user-dropdown-item">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-                <span>Tài khoản của tôi</span>
+                <span>Trang cá nhân</span>
               </a>
               <a href="{{ route('user.library') }}" class="user-dropdown-item">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
                 <span>Tủ truyện đã lưu</span>
+              </a>
+              <a href="{{ route('publish.create') }}" class="user-dropdown-item" id="publish-link">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                <span>Đăng truyện mới</span>
               </a>
               <a href="{{ route('user.history') }}" class="user-dropdown-item">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
@@ -341,20 +340,19 @@
                 <div class="user-dropdown-divider"></div>
                 <a href="{{ route('admin.dashboard') }}" class="user-dropdown-item admin-item">
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-                  <span>Bảng điều khiển Admin</span>
+                  <span>🛡️ Quản Trị</span>
                 </a>
               @endif
               <div class="user-dropdown-divider"></div>
               <form action="{{ route('logout') }}" method="POST" style="margin:0;padding:2px 4px;">
                 @csrf
-                <button type="submit" class="user-dropdown-item" style="color:#f87171">
+                <button type="submit" class="user-dropdown-item" style="color:#f87171;width:100%;text-align:left;background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:8px;">
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
                   <span>Đăng Xuất</span>
                 </button>
               </form>
             </div>
           </div>
-          <form action="{{ route('logout') }}" method="POST" style="margin:0" class="header-logout-form">@csrf<button type="submit" class="btn btn-download">Đăng Xuất</button></form>
         @endguest
         <button type="button" class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Mở menu" aria-expanded="false" aria-controls="mobile-menu">☰</button>
       </div>
