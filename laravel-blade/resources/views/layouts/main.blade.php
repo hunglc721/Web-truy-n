@@ -282,7 +282,7 @@
       </div>
       <div class="header-right">
         <div class="search-wrap">
-          <input id="search-input" type="search" placeholder="Tìm kiếm truyện... (Ctrl + K)" aria-label="Tìm kiếm truyện tranh" class="search-input" autocomplete="off" />
+          <input id="search-input" type="search" placeholder="Tìm kiếm truyện, tác giả..." aria-label="Tìm kiếm truyện tranh" class="search-input" autocomplete="off" />
           <span class="search-icon" aria-hidden="true">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
               <circle cx="11" cy="11" r="8"/>
