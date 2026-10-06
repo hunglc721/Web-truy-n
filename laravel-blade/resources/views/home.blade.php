@@ -133,7 +133,6 @@
               <!-- Cột phải: Glowing Poster Card -->
               <div class="mangakai-hero-poster-col">
                 <a href="{{ $detailUrl }}" class="mangakai-hero-poster-card banner-link">
-                  <div class="mangakai-hero-poster-glow"></div>
                   <div class="mangakai-hero-poster-img-wrap banner-img-container">
                     <img src="{{ $posterUrl }}" alt="{{ $title }}" class="mangakai-hero-poster-img banner-hero-img" loading="{{ $index === 0 ? 'eager' : 'lazy' }}">
                     <div class="mangakai-hero-poster-overlay">

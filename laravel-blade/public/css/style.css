@@ -4729,18 +4729,17 @@ nav[role="navigation"] svg {
 
 .mangakai-hero-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(260px, 340px);
+  grid-template-columns: minmax(0, 1.35fr) 290px;
   gap: 36px;
   align-items: center;
-  padding: 38px 44px 28px;
-  min-height: 420px;
+  padding: 30px 42px 22px;
 }
 
 @media (max-width: 960px) {
   .mangakai-hero-grid {
     grid-template-columns: 1fr;
-    gap: 26px;
-    padding: 24px 20px 20px;
+    gap: 24px;
+    padding: 24px 20px 18px;
   }
 }
 
@@ -4799,7 +4798,7 @@ nav[role="navigation"] svg {
 }
 
 .mangakai-hero-title {
-  font-size: clamp(24px, 3.8vw, 38px);
+  font-size: clamp(22px, 3.5vw, 36px);
   font-weight: 900;
   color: #fff;
   line-height: 1.15;
@@ -4853,7 +4852,7 @@ nav[role="navigation"] svg {
   gap: 20px;
   font-size: 12.5px;
   color: #94a3b8;
-  margin-bottom: 22px;
+  margin-bottom: 20px;
 }
 
 .mangakai-stat-views {
@@ -4932,13 +4931,16 @@ nav[role="navigation"] svg {
 .mangakai-hero-poster-col {
   display: flex;
   justify-content: center;
+  align-items: center;
 }
 
 .mangakai-hero-poster-card {
   position: relative;
   display: block;
   text-decoration: none;
-  border-radius: 20px;
+  width: 260px;
+  margin: 0 auto;
+  border-radius: 18px;
   transition: transform 0.3s ease;
 }
 
@@ -4946,37 +4948,23 @@ nav[role="navigation"] svg {
   transform: scale(1.02);
 }
 
-.mangakai-hero-poster-glow {
-  position: absolute;
-  inset: -6px;
-  background: linear-gradient(135deg, #00f5d4 0%, #8b5cf6 100%);
-  border-radius: 24px;
-  filter: blur(18px);
-  opacity: 0.65;
-  transition: opacity 0.3s ease;
-  z-index: 0;
-}
-
-.mangakai-hero-poster-card:hover .mangakai-hero-poster-glow {
-  opacity: 0.85;
-}
-
 .mangakai-hero-poster-img-wrap {
   position: relative;
   z-index: 1;
-  width: 270px;
-  height: 360px;
+  width: 260px;
+  height: 345px;
   border-radius: 18px;
   overflow: hidden;
-  border: 2px solid rgba(255, 255, 255, 0.15);
+  border: 2px solid rgba(255, 255, 255, 0.16);
   background: #070a13;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 0 35px -2px rgba(0, 245, 212, 0.55), 0 0 55px -4px rgba(139, 92, 246, 0.4), 0 20px 40px rgba(0, 0, 0, 0.7);
 }
 
 @media (max-width: 960px) {
+  .mangakai-hero-poster-card,
   .mangakai-hero-poster-img-wrap {
     width: 220px;
-    height: 300px;
+    height: 295px;
   }
 }
 
@@ -4996,7 +4984,7 @@ nav[role="navigation"] svg {
   align-items: center;
   justify-content: space-between;
   padding: 8px 12px;
-  background: rgba(0, 0, 0, 0.72);
+  background: rgba(0, 0, 0, 0.75);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   border-top: 1px solid rgba(255, 255, 255, 0.08);
@@ -5019,17 +5007,18 @@ nav[role="navigation"] svg {
 
 .mangakai-hero-controls {
   position: relative;
-  z-index: 1;
+  z-index: 2;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 44px;
+  padding: 12px 42px;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(14, 21, 38, 0.5);
 }
 
 @media (max-width: 960px) {
   .mangakai-hero-controls {
-    padding: 12px 20px;
+    padding: 10px 20px;
   }
 }
 

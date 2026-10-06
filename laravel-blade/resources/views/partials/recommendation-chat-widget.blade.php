@@ -1,4 +1,4 @@
-<link rel="stylesheet" href="{{ asset('css/recommendation-chat-widget.css') }}?v=8">
+<link rel="stylesheet" href="{{ asset('css/recommendation-chat-widget.css') }}?v=9">
 <aside id="recommendation-chat-widget" aria-label="Trợ lý tìm truyện" data-history-scope="{{ auth()->check() ? 'user:'.auth()->id() : 'guest' }}" data-endpoint="{{ route('recommendation.chat') }}" data-placeholder="{{ asset('images/default-brand.svg') }}">
   <button id="recommendation-chat-toggle" type="button" aria-label="Mở trợ lý tìm truyện" aria-expanded="false" aria-controls="recommendation-chat-panel">
     <span class="recommendation-toggle-icon">
@@ -9,7 +9,7 @@
         <path d="M12 2v4"></path>
       </svg>
     </span>
-    <span>Trợ Lý MangaKai AI</span>
+    <span>Trợ Lý Comics</span>
   </button>
 
   <section id="recommendation-chat-panel" role="dialog" aria-labelledby="recommendation-chat-title" hidden>
@@ -27,7 +27,7 @@
         </div>
         <div>
           <h2 id="recommendation-chat-title">
-            Trợ Lý MangaKai AI
+            Trợ Lý Comics
             <span class="recommendation-chat-online-dot"></span>
           </h2>
           <span class="recommendation-chat-subtitle">Gợi ý truyện theo cảm xúc &amp; gu đọc</span>
@@ -51,7 +51,7 @@
         </div>
         <div class="recommendation-chat-bot-inner">
           <div class="recommendation-chat-bubble recommendation-chat-bot">
-            <p style="margin: 0 0 8px;">Xin chào! Mình là trợ lý ảo MangaKai. Bạn đang muốn tìm kiếm truyện tranh thuộc thể loại nào hôm nay?</p>
+            <p style="margin: 0 0 8px;">Xin chào! Mình là trợ lý ảo Comics. Bạn đang muốn tìm kiếm truyện tranh thuộc thể loại nào hôm nay?</p>
             <div class="recommendation-chat-quick-tags">
               <button type="button" class="recommendation-quick-chip" onclick="window.sendChatQuickPrompt('Tìm truyện Manhwa hệ thống bá đạo')">⚔️ Manhwa Bá Đạo</button>
               <button type="button" class="recommendation-quick-chip" onclick="window.sendChatQuickPrompt('Gợi ý truyện Tu Tiên hài hước võ mõm')">🧘 Tu Tiên Hài Hước</button>
