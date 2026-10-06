@@ -339,7 +339,7 @@
     const nextBtn = $('#banner-next', bannerCarousel);
     let currentIndex = 0;
     let autoPlayTimer = null;
-    const intervalMs = 2000;
+    const intervalMs = 5000;
 
     const goToSlide = (newIndex) => {
       if (!slides.length) return;

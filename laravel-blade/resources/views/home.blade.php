@@ -15,8 +15,10 @@
     $heroItems = collect();
     if (isset($banners) && $banners->isNotEmpty()) {
       $heroItems = $banners;
+    } elseif (isset($featuredComics) && $featuredComics->isNotEmpty()) {
+      $heroItems = $featuredComics->take(5);
     } elseif (isset($trendingComics) && $trendingComics->isNotEmpty()) {
-      $heroItems = $trendingComics->take(3);
+      $heroItems = $trendingComics->take(5);
     }
   @endphp
 
@@ -25,8 +27,8 @@
     <div class="mangakai-hero-wrapper banner-carousel" id="banner-carousel">
       
       <!-- Backing ambient glows -->
-      <div class="mangakai-hero-glow-purple ambient-glow"></div>
-      <div class="mangakai-hero-glow-cyan"></div>
+      <div class="mangakai-hero-glow-purple ambient-glow" aria-hidden="true"></div>
+      <div class="mangakai-hero-glow-cyan" aria-hidden="true"></div>
 
       <!-- Slides Track -->
       <div class="mangakai-hero-track banner-track" id="banner-track">
@@ -51,11 +53,11 @@
             } else {
               $comic = $item;
               $title = $comic->title;
-              $posterUrl = $comic->cover_url ?: asset('images/default-cover.jpg');
-              $linkUrl = route('comics.show', $comic->slug);
-              $chap = $comic->latestChapter;
-              $readUrl = $chap ? route('chapters.show', [$comic->slug, $chap->slug ?: 'chapter-' . $chap->chapter_number]) : $linkUrl;
-              $detailUrl = $linkUrl;
+              $posterUrl = $comic->cover_image ? (Str::startsWith($comic->cover_image, ['http://', 'https://']) ? $comic->cover_image : asset('storage/' . $comic->cover_image)) : ($comic->cover_url ?: asset('images/default-cover.jpg'));
+              $detailUrl = route('comics.show', $comic->slug);
+              $chap = $comic->latestChapter ?? $comic->chapters()->published()->orderByDesc('chapter_number')->first();
+              $chapSlug = $comic->latest_chapter_slug ?? ($chap?->slug ?: ($chap ? 'chapter-' . $chap->chapter_number : null));
+              $readUrl = $chapSlug ? route('chapters.show', [$comic->slug, $chapSlug]) : $detailUrl;
             }
 
             $chapNum = $comic?->latestChapter?->chapter_number ?? 562;
@@ -64,16 +66,16 @@
             $descText = $comic?->description ?: 'Ma Hoàng Trác Nhất Phàm bị chính đồ đệ ruột phản bội hãm hại sau khi đoạt được Cửu U Bí Lục. Linh hồn ông trùng sinh vào thể xác của Trác Phàm - một quản gia nhu nhược của Lạc Gia tàn lụi. Dùng trí tuệ và thủ đoạn ma đạo, ông đưa gia tộc bước lên đỉnh cao.';
             $viewsText = $comic?->formatted_views ?? ($comic ? number_format($comic->views) : '28.4M');
             $followsText = $comic?->formatted_follows ?? '910K';
-            $timeText = $comic?->latestChapter?->time_ago ?? '12 phút trước';
+            $timeText = $comic?->latestChapter?->time_ago ?? '5 phút trước';
           @endphp
 
           <div class="mangakai-hero-slide banner-slide {{ $index === 0 ? 'active' : '' }}" data-slide-index="{{ $index }}">
             <div class="mangakai-hero-grid">
               
-              <!-- Cột trái: Thông tin truyện & Nút hành động -->
+              <!-- Cột trái: Phân cấp nội dung (60-65%) -->
               <div class="mangakai-hero-info">
                 
-                <!-- Badges Row -->
+                <!-- 1. Hàng Badges -->
                 <div class="mangakai-hero-badges">
                   <span class="mangakai-badge-trend banner-badge">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
@@ -87,63 +89,69 @@
                   </span>
                 </div>
 
-                <!-- Title -->
+                <!-- 2. Tiêu đề Truyện -->
                 <h1 class="mangakai-hero-title banner-title">
                   <a href="{{ $detailUrl }}">{{ $title }}</a>
                 </h1>
 
-                <!-- Genres Tags -->
+                <!-- 3. Hàng Thể Loại Tags -->
                 <div class="mangakai-hero-genres">
                   @foreach($genresList as $g)
                     <span class="mangakai-genre-tag">{{ $g }}</span>
                   @endforeach
                 </div>
 
-                <!-- Synopsis Description -->
+                <!-- 4. Tóm tắt nội dung (giới hạn 3 dòng) -->
                 <p class="mangakai-hero-desc">
                   {{ $descText }}
                 </p>
 
-                <!-- Stats Line -->
+                <!-- 5. Chỉ số thống kê -->
                 <div class="mangakai-hero-stats">
                   <div class="mangakai-stat-views">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
                     <strong>{{ $viewsText }}</strong> lượt xem
                   </div>
                   <div class="mangakai-stat-follows">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
                     <strong>{{ $followsText }}</strong> theo dõi
                   </div>
                 </div>
 
-                <!-- Action CTAs -->
+                <!-- 6. Cặp nút hành động (CTA) -->
                 <div class="mangakai-hero-actions banner-actions">
                   <a href="{{ $readUrl }}" class="mangakai-btn-read banner-btn-explore btn-neon-primary">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 3 20 12 6 21 6 3"/></svg>
                     Đọc Ngay Ch.{{ $chapNum }}
                   </a>
                   <a href="{{ $detailUrl }}" class="mangakai-btn-detail">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
                     Thông Tin Chi Tiết
                   </a>
                 </div>
 
               </div>
 
-              <!-- Cột phải: Glowing Poster Card -->
+              <!-- Cột phải: Poster với Ambient Glow Effect (35-40%) -->
               <div class="mangakai-hero-poster-col">
-                <a href="{{ $detailUrl }}" class="mangakai-hero-poster-card banner-link">
-                  <div class="mangakai-hero-poster-img-wrap banner-img-container">
-                    <img src="{{ $posterUrl ?: asset('images/default-cover.jpg') }}" alt="{{ $title }}" class="mangakai-hero-poster-img banner-hero-img" onerror="this.onerror=null;this.src='{{ asset('images/default-cover.jpg') }}';" loading="{{ $index === 0 ? 'eager' : 'lazy' }}">
-                    <div class="mangakai-hero-poster-overlay">
-                      <span class="mangakai-overlay-update">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-                        Cập nhật mới
-                      </span>
-                      <span class="mangakai-overlay-time">{{ $timeText }}</span>
+                <div class="mangakai-hero-poster-wrapper">
+                  <!-- Lớp đèn nền cực quang (Ambient Glow) -->
+                  <div class="mangakai-hero-ambient-glow" aria-hidden="true"></div>
+
+                  <!-- Khung poster chính -->
+                  <a href="{{ $detailUrl }}" class="mangakai-hero-poster-card banner-link">
+                    <div class="mangakai-hero-poster-img-wrap banner-img-container">
+                      <img src="{{ $posterUrl }}" alt="{{ $title }}" class="mangakai-hero-poster-img banner-hero-img" onerror="this.onerror=null;this.src='{{ asset('images/default-cover.jpg') }}';" loading="{{ $index === 0 ? 'eager' : 'lazy' }}">
+                      <!-- Dải tag đáy poster kính mờ -->
+                      <div class="mangakai-hero-poster-overlay">
+                        <span class="mangakai-overlay-update">
+                          ⚡ Cập nhật mới
+                        </span>
+                        <span class="mangakai-overlay-time">{{ $timeText }}</span>
+                      </div>
                     </div>
-                  </div>
-                </a>
+                  </a>
+                </div>
               </div>
 
             </div>
@@ -161,10 +169,10 @@
 
         <div class="mangakai-hero-arrows">
           <button type="button" class="mangakai-hero-nav-btn banner-nav-btn banner-prev" id="banner-prev" aria-label="Slide trước">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+            ❮
           </button>
           <button type="button" class="mangakai-hero-nav-btn banner-nav-btn banner-next" id="banner-next" aria-label="Slide kế tiếp">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+            ❯
           </button>
         </div>
       </div>
