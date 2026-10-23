@@ -22,6 +22,11 @@ class RecommendationChatRequest extends FormRequest
             'message' => ['required_without:quick_reply', 'prohibits:quick_reply', 'nullable', 'string', 'max:4000'],
             'quick_reply' => ['required_without:message', 'prohibits:message', 'nullable', 'string', 'max:100'],
             'conversation_token' => ['nullable', 'string', 'regex:/\A[a-f0-9]{64}\z/'],
+            // Short client-held history. Untrusted: role whitelist, capped length, never stored.
+            'turns' => ['nullable', 'array', 'max:6'],
+            'turns.*' => ['array:role,content'],
+            'turns.*.role' => ['required', 'string', 'in:user,assistant'],
+            'turns.*.content' => ['required', 'string', 'max:500'],
         ];
     }
 }
