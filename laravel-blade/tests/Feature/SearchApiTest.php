@@ -97,6 +97,39 @@ class SearchApiTest extends TestCase
         ]);
     }
 
+    public function test_clearing_description_clears_normalized_text_and_stops_matching_search(): void
+    {
+        $comic = Comic::factory()->create([
+            'title'       => 'Kiem Hiep Ky Duyen',
+            'description' => 'Hành trình phiêu lưu của một kiếm khách.',
+        ]);
+
+        $this->assertSame('hanh trinh phieu luu cua mot kiem khach', $comic->fresh()->description_normalized);
+
+        $comic->update(['description' => null]);
+
+        $this->assertNull($comic->fresh()->description_normalized);
+
+        $response = $this->getJson('/api/search/advanced?q='.urlencode('phieu luu').'&per_page=10');
+
+        $response->assertOk();
+        $response->assertJsonPath('data.total', 0);
+    }
+
+    public function test_clearing_alt_titles_clears_normalized_text(): void
+    {
+        $comic = Comic::factory()->create([
+            'title'      => 'Kiem Hiep Ky Duyen',
+            'alt_titles' => 'Thanh Kiếm Phiêu Lưu',
+        ]);
+
+        $this->assertSame('thanh kiem phieu luu', $comic->fresh()->alt_titles_normalized);
+
+        $comic->update(['alt_titles' => null]);
+
+        $this->assertNull($comic->fresh()->alt_titles_normalized);
+    }
+
     public function test_live_search_endpoint_hides_unpublished_comics(): void
     {
         $published = Comic::factory()->create(['title' => 'Public Ragnarok']);

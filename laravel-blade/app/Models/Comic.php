@@ -69,15 +69,16 @@ class Comic extends Model
     protected static function booted(): void
     {
         static::saving(function (Comic $comic) {
-            if (!empty($comic->title)) {
-                $comic->title_normalized = \App\Helpers\VietnameseHelper::removeAccents($comic->title);
-            }
-            if (!empty($comic->alt_titles)) {
-                $comic->alt_titles_normalized = \App\Helpers\VietnameseHelper::removeAccents($comic->alt_titles);
-            }
-            if (!empty($comic->description)) {
-                $comic->description_normalized = \App\Helpers\VietnameseHelper::removeAccents($comic->description);
-            }
+            $normalize = static fn (mixed $value): ?string => ($value === null || $value === '')
+                ? null
+                : \App\Helpers\VietnameseHelper::removeAccents((string) $value);
+
+            // Always overwrite the normalized columns, including when the source
+            // field is cleared. Otherwise stale accent-insensitive text keeps
+            // matching search after an admin removes a description or alt title.
+            $comic->title_normalized = $normalize($comic->title);
+            $comic->alt_titles_normalized = $normalize($comic->alt_titles);
+            $comic->description_normalized = $normalize($comic->description);
             if (empty($comic->slug)) {
                 $comic->slug = Str::slug($comic->title ?: 'comic-' . ($comic->id ?? time()));
             }
