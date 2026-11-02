@@ -35,6 +35,8 @@ class ComicController extends Controller
 
         $comic = Cache::remember($cacheKey, 1800, function () use ($slug, $isAdmin) {
             return Comic::where('slug', $slug)
+                // Drafts and scheduled comics are only reachable in admin preview.
+                ->when(!$isAdmin, fn ($query) => $query->published())
                 ->with([
                     'genres',
                     'authors',
@@ -69,6 +71,7 @@ class ComicController extends Controller
                 }
 
                 return Comic::with(['genres', 'latestChapter'])
+                    ->published()
                     ->byGenre($firstGenreSlug)
                     ->whereHas('chapters', fn ($query) => $query->published())
                     ->where('id', '!=', $comic->id)
