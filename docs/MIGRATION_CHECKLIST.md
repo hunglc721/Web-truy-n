@@ -49,7 +49,8 @@ Target: `main`
 | Coin Store | ⏸ Out of scope | Deferred intentionally. |
 | Download App | ⏸ Out of scope | Fake app-download promo removed; real app deferred. |
 | Creator Publishing | ⏸ Out of scope | Existing external creator link may remain. |
-| Automated regression tests | 🟡 Added, not executed here | Added role/permission, authors, schedules and user-role tests in addition to existing suite. |
+| Automated regression tests | ✅ Passing | `php artisan test`: 610 passed (3,289 assertions); Playwright: 63 passed, 37 skipped, 0 failed. |
+| Production readiness | ✅ Verified | MySQL migration, authorization/publication filtering, rate limiting, error handling, logging/cache config and deployment notes verified; see `docs/PRODUCTION_READINESS.md`. |
 
 ## Acceptance checks
 
@@ -62,4 +63,4 @@ Target: `main`
 7. Schedule changes in Admin are read by the public schedule page from DB.
 8. Audit logs use real request IP and cannot be wiped completely from the UI.
 9. Laravel has no runtime dependency on prototype mock/localStorage/Node APIs.
-10. Run `php artisan migrate`, `php artisan route:list` and `php artisan test` locally before declaring regression verification complete.
+10. `php artisan migrate`, `php artisan route:list` and `php artisan test` have been run locally; regression verification is complete. Keep `docs/PRODUCTION_READINESS.md` updated when deployment configuration changes.

@@ -45,19 +45,38 @@
 - Added User role/ban safety coverage.
 - Updated AdminMiddleware coverage for DB-backed staff roles.
 
-## Remaining verification
+### Quality, performance, and production readiness (P7–P10)
+- Reviewed the complete P1–P6 diff and added focused follow-up fixes instead of rewriting pushed history.
+- Added reproducible benchmark commands for recommendation and search, with JSON reports under `docs/benchmarks/`.
+- Verified the `description_normalized` migration on MySQL (existing DB, fresh DB, rollback, re-apply).
+- Closed a draft/scheduled publication leak in comic detail and chapter reader for non-admin users.
+- Cleared stale normalized search text when description/alt titles are removed.
+- Fixed SQLite ambiguous-column failure in `Comic::latestChapter()`.
+- Made the HTTPS-upgrade CSP production-only and set `APP_DEBUG=false` in the Render manifest.
+- Full details: `docs/BACKEND_QUALITY_P7_REVIEW.md`, `docs/PERFORMANCE_BENCHMARKS.md`, `docs/PRODUCTION_READINESS.md`.
 
-Implementation work for the agreed migration scope is complete. The remaining step is environment verification:
+## Verification status
+
+Environment verification completed:
 
 ```bash
 cd laravel-blade
-php artisan migrate
-php artisan optimize:clear
-php artisan route:list
+php artisan migrate --force
 php artisan test
 ```
 
-The full suite has **not** been executed through the current GitHub-only editing environment, so regression status must remain unverified until those commands are run locally.
+```text
+Tests: 610 passed (3,289 assertions)
+Duration: ~31.2s
+```
+
+Playwright E2E (clean SQLite fixture, single worker):
+
+```text
+63 passed, 37 skipped, 0 failed
+```
+
+The isolated `admin-comic-cover.spec.js` rerun is also green after one transient login-timing failure. Production deployment notes and residual risks are in `docs/PRODUCTION_READINESS.md`.
 
 ## Deferred intentionally
 
