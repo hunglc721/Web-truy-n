@@ -60,10 +60,12 @@
     list.addEventListener('scroll', updateButtons, { passive: true });
     window.addEventListener('resize', updateButtons, { passive: true });
 
-    // Scroll active item into view
+    // Centre the active item inside the horizontal strip only. scrollIntoView
+    // also scrolls the window, which made the homepage jump down on load.
     const activeTab = $('.genre-tab.active', list);
     if (activeTab) {
-      activeTab.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      const targetLeft = activeTab.offsetLeft - (list.clientWidth - activeTab.offsetWidth) / 2;
+      list.scrollTo({ left: Math.max(0, targetLeft), behavior: 'smooth' });
     }
 
     setTimeout(updateButtons, 80);

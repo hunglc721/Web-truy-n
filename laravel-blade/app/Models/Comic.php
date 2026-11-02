@@ -27,6 +27,7 @@ class Comic extends Model
         'slug',
         'cover_image',
         'description',
+        'description_normalized',
         'status',
         'country',
         'released_year',
@@ -73,6 +74,9 @@ class Comic extends Model
             }
             if (!empty($comic->alt_titles)) {
                 $comic->alt_titles_normalized = \App\Helpers\VietnameseHelper::removeAccents($comic->alt_titles);
+            }
+            if (!empty($comic->description)) {
+                $comic->description_normalized = \App\Helpers\VietnameseHelper::removeAccents($comic->description);
             }
             if (empty($comic->slug)) {
                 $comic->slug = Str::slug($comic->title ?: 'comic-' . ($comic->id ?? time()));
@@ -246,6 +250,16 @@ class Comic extends Model
     // ─────────────────────────────────────────────────────────────
     // SCOPES — dùng trong Controller như: Comic::trending()->get()
     // ─────────────────────────────────────────────────────────────
+
+    /**
+     * Chỉ lấy truyện đã phát hành (published_at <= now()).
+     * Truyện có published_at null hoặc ở tương lai không phải ứng viên công khai.
+     */
+    public function scopePublished($query)
+    {
+        return $query->whereNotNull('published_at')
+                     ->where('published_at', '<=', now());
+    }
 
     /** Chỉ lấy truyện đang trending (có rank) */
     public function scopeTrending($query)

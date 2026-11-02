@@ -25,6 +25,70 @@ class RecommendationServiceTest extends TestCase
         $this->service = new RecommendationService();
     }
 
+    public function test_for_guest_excludes_unpublished_trending_comics(): void
+    {
+        $published = Comic::factory()->trending()->create(['title' => 'Public Trending']);
+        $draft = Comic::factory()->trending()->create(['title' => 'Draft Trending', 'published_at' => null]);
+        $scheduled = Comic::factory()->trending()->create(['title' => 'Scheduled Trending', 'published_at' => now()->addDay()]);
+
+        $ids = $this->service->forGuest(6)->pluck('id')->toArray();
+
+        $this->assertContains($published->id, $ids);
+        $this->assertNotContains($draft->id, $ids);
+        $this->assertNotContains($scheduled->id, $ids);
+    }
+
+    public function test_for_user_excludes_unpublished_candidates(): void
+    {
+        $user = User::factory()->create();
+        $genre = Genre::create(['name' => 'Genre Published', 'slug' => 'genre-published']);
+
+        $historyComic = Comic::factory()->create();
+        $historyComic->genres()->attach($genre->id);
+        $historyChapter = \App\Models\Chapter::factory()->create(['comic_id' => $historyComic->id]);
+        ReadingHistory::create([
+            'user_id'      => $user->id,
+            'comic_id'     => $historyComic->id,
+            'chapter_id'   => $historyChapter->id,
+            'last_read_at' => now(),
+        ]);
+
+        $published = Comic::factory()->create(['avg_rating' => 5.0]);
+        $published->genres()->attach($genre->id);
+
+        $draft = Comic::factory()->create(['avg_rating' => 5.0, 'published_at' => null]);
+        $draft->genres()->attach($genre->id);
+
+        $scheduled = Comic::factory()->create(['avg_rating' => 5.0, 'published_at' => now()->addDay()]);
+        $scheduled->genres()->attach($genre->id);
+
+        $ids = $this->service->forUser($user, 4)->pluck('id')->toArray();
+
+        $this->assertContains($published->id, $ids);
+        $this->assertNotContains($draft->id, $ids);
+        $this->assertNotContains($scheduled->id, $ids);
+    }
+
+    public function test_for_comic_excludes_unpublished_similar_comics(): void
+    {
+        $genre = Genre::create(['name' => 'Genre Similar', 'slug' => 'genre-similar']);
+
+        $mainComic = Comic::factory()->create(['title' => 'Main Comic']);
+        $mainComic->genres()->attach($genre->id);
+
+        $published = Comic::factory()->create(['title' => 'Published Similar', 'avg_rating' => 5.0]);
+        $published->genres()->attach($genre->id);
+
+        $draft = Comic::factory()->create(['title' => 'Draft Similar', 'avg_rating' => 5.0, 'published_at' => null]);
+        $draft->genres()->attach($genre->id);
+
+        $ids = $this->service->forComic($mainComic, 4)->pluck('id')->toArray();
+
+        $this->assertContains($published->id, $ids);
+        $this->assertNotContains($draft->id, $ids);
+        $this->assertNotContains($mainComic->id, $ids);
+    }
+
     public function test_for_guest_returns_trending_and_caches_result(): void
     {
         Comic::factory(6)->trending()->create();

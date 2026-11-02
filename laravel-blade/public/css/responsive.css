@@ -189,81 +189,75 @@ svg {
   border-color: var(--primary);
 }
 
+/* The header keeps every action visible on laptops: tighten spacing and let
+   the search field shrink before anything gets clipped at the right edge. */
+@media (max-width: 1600px) {
+  .header-user-link {
+    max-width: 130px;
+  }
+}
+
+@media (max-width: 1400px) {
+  .header-inner {
+    gap: 12px;
+  }
+
+  .header-left {
+    gap: 18px;
+  }
+
+  .header-right {
+    gap: 8px;
+  }
+
+  .search-wrap {
+    width: 200px;
+  }
+
+  .search-wrap:focus-within {
+    width: 230px;
+  }
+
+  .nav-link {
+    padding: 7px 12px;
+    font-size: 13.5px;
+  }
+
+  .header-user-link {
+    max-width: 120px;
+  }
+}
+
 @media (max-width: 1200px) {
   .header-left {
     gap: 16px;
   }
 
-  .search-wrap {
-    width: 180px;
+  .header-right {
+    gap: 6px;
   }
-}
 
-@media (max-width: 1024px) {
+  .search-wrap {
+    width: 160px;
+  }
+
+  .search-wrap:focus-within {
+    width: 190px;
+  }
+
+  .header-user-link {
+    max-width: 110px;
+  }
+
   .header-action-link#publish-link,
   .header-divider {
     display: none;
   }
 
-  .footer-main-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 768px) {
-  :root {
-    --header-height: 64px;
-  }
-
-  .container,
-  .hero-content-wrap {
-    width: 100%;
-    padding-left: 14px;
-    padding-right: 14px;
-  }
-
-  .site-header {
-    height: var(--header-height);
-  }
-
-  .header-inner {
-    padding: 0 12px;
-    gap: 8px;
-  }
-
-  .header-left {
-    min-width: 0;
-    gap: 8px;
-  }
-
-  .logo-icon svg {
-    width: 34px;
-    height: 34px;
-  }
-
-  .logo-text {
-    font-size: 17px;
-    max-width: 145px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .main-nav,
-  .header-right > .search-wrap,
-  .header-right > .header-action-link,
-  .header-right > .btn,
-  .header-right > form,
-  .header-divider {
-    display: none !important;
-  }
-
-  .header-right {
-    margin-left: auto;
-    gap: 6px;
-  }
-
-  .nav-icon-group {
-    gap: 5px;
+  /* The full desktop bar needs ~1200px; below that the nav moves into the
+     off-canvas menu so the header actions never overflow the viewport. */
+  .main-nav {
+    display: none;
   }
 
   .icon-btn,
@@ -360,6 +354,76 @@ svg {
 
   body.mobile-menu-open {
     overflow: hidden;
+  }
+}
+
+@media (max-width: 1024px) {
+  .footer-main-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  /* Account links live in the menu at this width. */
+  .header-user-link {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  :root {
+    --header-height: 64px;
+  }
+
+  .container,
+  .hero-content-wrap {
+    width: 100%;
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .site-header {
+    height: var(--header-height);
+  }
+
+  .header-inner {
+    padding: 0 12px;
+    gap: 8px;
+  }
+
+  .header-left {
+    min-width: 0;
+    gap: 8px;
+  }
+
+  .logo-icon svg {
+    width: 34px;
+    height: 34px;
+  }
+
+  .logo-text {
+    font-size: 17px;
+    max-width: 145px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .main-nav,
+  .header-right > .search-wrap,
+  .header-right > .header-action-link,
+  .header-right > .btn,
+  .header-right > form,
+  .header-divider {
+    display: none !important;
+  }
+
+  .header-right {
+    margin-left: auto;
+    gap: 6px;
+  }
+
+  .nav-icon-group {
+    gap: 5px;
   }
 
   .banner-slider-section {

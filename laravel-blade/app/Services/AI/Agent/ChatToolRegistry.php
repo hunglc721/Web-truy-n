@@ -40,8 +40,9 @@ final class ChatToolRegistry
     public function definitions(): array
     {
         return [
-            ['name' => 'search_comics', 'description' => 'Find published comics by taste or title. Returns only the best few matches (not the whole catalogue) with id, title, score and matched reasons.', 'arguments' => [
+            ['name' => 'search_comics', 'description' => 'Find published comics by taste, title or free-text description. query and keywords are matched against title, alt titles, description, genre names and tag names; structured filters are applied on top. Returns only the best few matches (not the whole catalogue) with id, title, score and matched reasons.', 'arguments' => [
                 'query' => 'optional string, title or keyword',
+                'keywords' => 'optional string[] of 2-5 short Vietnamese keywords/synonyms (2-40 chars each) matched against title, description, genres and tags',
                 'genres' => 'optional string[] of allowed genre names',
                 'themes' => 'optional string[] of allowed theme tags',
                 'character_traits' => 'optional string[] of allowed character tags',
@@ -110,6 +111,8 @@ final class ChatToolRegistry
     {
         $data = $this->validate($args, [
             'query' => ['nullable', 'string', 'max:80'],
+            'keywords' => ['nullable', 'array', 'max:5'],
+            'keywords.*' => ['string', 'min:2', 'max:40', 'distinct', 'regex:/^[\pL\pN\s]+$/u'],
             'genres' => ['nullable', 'array', 'max:5'],
             'genres.*' => ['string', 'max:60', 'distinct'],
             'themes' => ['nullable', 'array', 'max:5'],
@@ -127,7 +130,7 @@ final class ChatToolRegistry
         ]);
 
         $limit = (int) ($data['limit'] ?? 5);
-        $query = AgentText::normalize($data['query'] ?? '');
+        $terms = $this->terms($data);
         $filters = [
             'genres' => $data['genres'] ?? [],
             'themes' => $data['themes'] ?? [],
@@ -137,7 +140,7 @@ final class ChatToolRegistry
             'status' => $data['status'] ?? null,
             'exclude' => $data['exclude'] ?? [],
         ];
-        $hasFilters = $query !== '' || $filters['status'] !== null || $filters['exclude'] !== [];
+        $hasFilters = $terms !== [] || $filters['status'] !== null || $filters['exclude'] !== [];
         foreach (['genres', 'themes', 'character_traits', 'settings', 'tones'] as $field) {
             $hasFilters = $hasFilters || $filters[$field] !== [];
         }
@@ -145,10 +148,8 @@ final class ChatToolRegistry
             throw new ChatToolException('invalid_arguments');
         }
 
-        if ($query !== '' && $filters['status'] === null && $filters['exclude'] === []
-            && $filters['genres'] === [] && $filters['themes'] === [] && $filters['character_traits'] === []
-            && $filters['settings'] === [] && $filters['tones'] === []) {
-            return $this->searchByTitle($query, $limit);
+        if ($terms !== []) {
+            return $this->searchByTerms($terms, $filters, $limit);
         }
 
         $preference = RecommendationPreference::fromArray($filters);
@@ -157,44 +158,122 @@ final class ChatToolRegistry
         $comics = $this->comicQuery()->whereIn('id', $ids)->get()->keyBy('id');
 
         return $ranked
-            ->map(function (array $result) use ($comics, $query) {
+            ->map(function (array $result) use ($comics) {
                 $comic = $comics->get($result['comic']->id);
-                if ($comic === null) {
-                    return null;
-                }
-                if ($query !== '' && ! $this->matchesQuery($comic, $query)) {
-                    return null;
-                }
 
-                return $this->comicRow($comic, $result['score'], $result['matched_reasons']);
+                return $comic === null ? null : $this->comicRow($comic, $result['score'], $result['matched_reasons']);
             })
             ->filter()
             ->values()
             ->all();
     }
 
-    private function searchByTitle(string $query, int $limit): array
+    /**
+     * Free-text terms come from the model, so wildcards are stripped before LIKE.
+     *
+     * @return list<string>
+     */
+    private function terms(array $data): array
     {
-        $like = '%'.$query.'%';
+        $terms = [];
+        $query = trim((string) ($data['query'] ?? ''));
+        if ($query !== '') {
+            $terms[] = $this->cleanTerm($query);
+        }
+        foreach ($data['keywords'] ?? [] as $keyword) {
+            $terms[] = $this->cleanTerm((string) $keyword);
+        }
 
-        return $this->comicQuery()
-            ->where(fn (Builder $builder) => $builder
-                ->where('title_normalized', 'like', $like)
-                ->orWhere('alt_titles_normalized', 'like', $like)
-                ->orWhereHas('genres', fn (Builder $genres) => $genres->where('name', 'like', $like))
-                ->orWhereHas('tags', fn (Builder $tags) => $tags->where('name', 'like', $like)))
+        return array_values(array_unique(array_filter($terms, fn (string $term) => $term !== '')));
+    }
+
+    private function cleanTerm(string $term): string
+    {
+        $term = preg_replace('/[%_]+/u', ' ', $term) ?? '';
+
+        return trim(preg_replace('/\s+/u', ' ', $term) ?? '');
+    }
+
+    /** Matches a free-text term against title, description, genres and tags. */
+    private function searchByTerms(array $terms, array $filters, int $limit): array
+    {
+        $query = $this->comicQuery();
+        $query->where(function (Builder $outer) use ($terms) {
+            $outer->whereRaw('1 = 0');
+            foreach ($terms as $term) {
+                $like = '%'.$term.'%';
+                $normalized = AgentText::normalize($term);
+                $outer->orWhere(function (Builder $inner) use ($like, $normalized) {
+                    $inner->where('title', 'like', $like)
+                        ->orWhere('alt_titles', 'like', $like)
+                        ->orWhere('description', 'like', $like)
+                        ->orWhereHas('genres', fn (Builder $genres) => $genres->where('name', 'like', $like))
+                        ->orWhereHas('tags', fn (Builder $tags) => $tags->where('name', 'like', $like));
+                    // Accent-free titles are stored normalized, so "truyen thu" still matches "Truyện Thử".
+                    if ($normalized !== '') {
+                        $inner->orWhere('title_normalized', 'like', '%'.$normalized.'%')
+                            ->orWhere('alt_titles_normalized', 'like', '%'.$normalized.'%');
+                    }
+                });
+            }
+        });
+        $this->applyFilters($query, $filters);
+
+        return $query
             ->orderByDesc('views_count')
             ->orderByDesc('avg_rating')
             ->limit($limit)
             ->get()
-            ->map(fn (Comic $comic) => $this->comicRow($comic, null, ['Khớp tên truyện']))
+            ->map(fn (Comic $comic) => $this->comicRow($comic, null, $this->termReasons($comic, $terms)))
             ->all();
     }
 
-    private function matchesQuery(Comic $comic, string $query): bool
+    /** Structured filters stay AND-ed on top of a free-text match. */
+    private function applyFilters(Builder $query, array $filters): void
     {
-        return str_contains(AgentText::normalize($comic->title), $query)
-            || str_contains(AgentText::normalize((string) $comic->alt_titles), $query);
+        if ($filters['status'] !== null) {
+            $query->where('status', $filters['status']);
+        }
+        if ($filters['genres'] !== []) {
+            $query->whereHas('genres', fn (Builder $genres) => $genres->whereIn('name', $filters['genres']));
+        }
+        foreach (RecommendationTaxonomyService::CATEGORIES as $category => $field) {
+            if (($filters[$field] ?? []) !== []) {
+                $query->whereHas('tags', fn (Builder $tags) => $tags
+                    ->where('category', $category)->whereIn('name', $filters[$field]));
+            }
+        }
+        if ($filters['exclude'] !== []) {
+            $query->whereDoesntHave('genres', fn (Builder $genres) => $genres->whereIn('name', $filters['exclude']))
+                ->whereDoesntHave('tags', fn (Builder $tags) => $tags
+                    ->whereIn('category', array_keys(RecommendationTaxonomyService::CATEGORIES))
+                    ->whereIn('name', $filters['exclude']))
+                ->whereNotIn('status', $filters['exclude']);
+        }
+    }
+
+    /** @return list<string> */
+    private function termReasons(Comic $comic, array $terms): array
+    {
+        $haystacks = [
+            AgentText::normalize($comic->title),
+            AgentText::normalize((string) $comic->alt_titles),
+            AgentText::normalize((string) $comic->description),
+            ...$comic->genres->map(fn ($genre) => AgentText::normalize($genre->name))->all(),
+            ...$comic->tags->map(fn ($tag) => AgentText::normalize($tag->name))->all(),
+        ];
+        $reasons = [];
+        foreach ($terms as $term) {
+            $needle = AgentText::normalize($term);
+            foreach ($haystacks as $haystack) {
+                if ($needle !== '' && $haystack !== '' && str_contains($haystack, $needle)) {
+                    $reasons[] = 'Khớp "'.$term.'"';
+                    break;
+                }
+            }
+        }
+
+        return array_values(array_unique($reasons));
     }
 
     private function getComic(array $args): array

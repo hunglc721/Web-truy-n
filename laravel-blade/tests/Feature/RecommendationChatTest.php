@@ -102,6 +102,28 @@ class RecommendationChatTest extends TestCase
         }
     }
 
+    public function test_unaccented_fallback_excludes_harem_end_to_end(): void
+    {
+        config(['ai.provider' => 'openai_compatible', 'ai.api_key' => 'test-only', 'ai.model' => 'test',
+            'ai.base_url' => 'https://ai.example/v1', 'ai.retry_times' => 0]);
+        Http::fake(['*' => Http::response([], 500)]);
+        $comics = Comic::factory()->count(7)->create(['published_at' => now()->subDay()]);
+        foreach ($comics as $comic) {
+            $comic->genres()->attach(Genre::first()->id);
+        }
+        $blocked = $comics->last();
+        $blocked->tags()->attach(Tag::where('name', 'Harem')->value('id'));
+
+        $response = $this->postJson('/api/recommendation/chat', ['message' => 'fantasy main ba khong harem'])
+            ->assertOk()->assertJsonPath('type', 'recommendations')
+            ->assertJsonPath('preferences.exclude', ['Harem'])
+            ->assertJsonCount(5, 'recommendations');
+
+        $ids = array_column($response->json('recommendations'), 'id');
+        $this->assertNotContains($blocked->id, $ids);
+        $this->assertSame(['Harem'], RecommendationConversation::first()->preferences_json['exclude']);
+    }
+
     public function test_invalid_inputs_and_unknown_tokens_are_controlled(): void
     {
         $this->mock(AIClientInterface::class)->shouldNotReceive('complete');

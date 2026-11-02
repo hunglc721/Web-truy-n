@@ -1,0 +1,816 @@
+{
+  "version": 1,
+  "description": "Synthetic, self-contained NLP/search evaluation set for ComicX. Corpus comics are fictional and contain no personal data.",
+  "k": 8,
+  "corpus": {
+    "genres": [
+      "Action",
+      "Adventure",
+      "Comedy",
+      "Detective",
+      "Drama",
+      "Fantasy",
+      "Horror",
+      "Martial Arts",
+      "Mystery",
+      "Romance",
+      "School Life",
+      "Sci-Fi",
+      "Slice of Life",
+      "Sports",
+      "Supernatural",
+      "Tragedy"
+    ],
+    "comics": [
+      {
+        "key": "solo",
+        "title": "Solo Leveling: Ragnarok",
+        "alt_titles": "Solo Leveling 2",
+        "author": "Chugong",
+        "description": "Thợ săn yếu nhất Hàn Quốc trở thành bóng vua sau khi thức tỉnh hệ thống.",
+        "status": "completed",
+        "genres": ["Action", "Fantasy"],
+        "tags": {
+          "theme": ["System"],
+          "character": ["Overpowered MC", "Weak to Strong"]
+        },
+        "published_offset_days": -400,
+        "views": 90000
+      },
+      {
+        "key": "vo_luyen",
+        "title": "Võ Luyện Đỉnh Phong",
+        "alt_titles": "Đỉnh Phong Võ Đạo",
+        "author": "Mặc Tử",
+        "description": "Thiếu niên phế vật tu luyện từ yếu thành mạnh, chinh phục đỉnh cao võ đạo.",
+        "status": "ongoing",
+        "genres": ["Action", "Fantasy"],
+        "tags": {
+          "theme": ["Cultivation"],
+          "character": ["Weak to Strong"],
+          "tone": ["Serious"]
+        },
+        "published_offset_days": -300,
+        "views": 70000
+      },
+      {
+        "key": "harem_academy",
+        "title": "Học Viện Hậu Cung",
+        "alt_titles": "Harem Academy",
+        "author": "Lan Tử",
+        "description": "Nam chính được nhiều mỹ nữ vây quanh trong học viện.",
+        "status": "ongoing",
+        "genres": ["Romance", "School Life", "Comedy"],
+        "tags": {
+          "setting": ["School"],
+          "tone": ["Comedy"],
+          "relationship": ["Harem"]
+        },
+        "published_offset_days": -200,
+        "views": 50000
+      },
+      {
+        "key": "romance_nhe",
+        "title": "Ngôn Tình Nhẹ Nhàng",
+        "alt_titles": "Chuyện Tình Nhẹ Nhàng",
+        "author": "Mộc Miên",
+        "description": "Chuyện tình nhẹ nhàng không bi kịch giữa hai người bạn thời thơ ấu.",
+        "status": "completed",
+        "genres": ["Romance", "Slice of Life"],
+        "tags": {
+          "relationship": ["Low Romance"],
+          "tone": ["Emotional"]
+        },
+        "published_offset_days": -250,
+        "views": 40000
+      },
+      {
+        "key": "trinh_tham",
+        "title": "Trinh Thám Đêm Mưa",
+        "alt_titles": "Đêm Mưa Phá Án",
+        "author": "Hoàng Nam",
+        "description": "Thám tử phá án trong thành phố hiện đại, đối mặt với những vụ án bí ẩn.",
+        "status": "completed",
+        "genres": ["Mystery", "Drama", "Detective"],
+        "tags": {
+          "setting": ["Modern"],
+          "character": ["Smart MC"],
+          "tone": ["Dark"]
+        },
+        "published_offset_days": -150,
+        "views": 30000
+      },
+      {
+        "key": "hac_am",
+        "title": "Hắc Ám Chi Thành",
+        "alt_titles": "Thành Phố Tăm Tối",
+        "author": "Vũ Khúc",
+        "description": "Thành phố tăm tối, nhân vật chính phản anh hùng chiến đấu để sinh tồn.",
+        "status": "ongoing",
+        "genres": ["Horror", "Supernatural"],
+        "tags": {
+          "tone": ["Dark"],
+          "character": ["Anti Hero"],
+          "setting": ["Post Apocalypse"]
+        },
+        "published_offset_days": -100,
+        "views": 20000
+      },
+      {
+        "key": "harem_dungeon",
+        "title": "Mê Cung Hậu Cung",
+        "alt_titles": "Dungeon Harem",
+        "author": "Tử Nguyệt",
+        "description": "Chinh phục hầm ngục cùng nhiều bạn gái và hệ thống hỗ trợ.",
+        "status": "ongoing",
+        "genres": ["Fantasy", "Action", "Romance"],
+        "tags": {
+          "theme": ["Dungeon", "System"],
+          "relationship": ["Harem", "Romance"]
+        },
+        "published_offset_days": -90,
+        "views": 15000
+      },
+      {
+        "key": "dungeon_survival",
+        "title": "Sinh Tồn Trong Hầm Ngục",
+        "alt_titles": "Dungeon Survival",
+        "author": "Bạch Dạ",
+        "description": "Sinh tồn hậu tận thế trong mê cung đầy quái vật.",
+        "status": "hiatus",
+        "genres": ["Action", "Horror"],
+        "tags": {
+          "theme": ["Dungeon", "Survival"],
+          "setting": ["Post Apocalypse"],
+          "tone": ["Dark"]
+        },
+        "published_offset_days": -80,
+        "views": 12000
+      },
+      {
+        "key": "system_revenge",
+        "title": "Hệ Thống Trả Thù",
+        "alt_titles": "Revenge System",
+        "author": "Hắc Long",
+        "description": "Nhân vật chính bị phản bội rồi trả thù bằng hệ thống.",
+        "status": "completed",
+        "genres": ["Action", "Fantasy"],
+        "tags": {
+          "theme": ["System", "Revenge"],
+          "character": ["Cold MC", "Smart MC"]
+        },
+        "published_offset_days": -70,
+        "views": 11000
+      },
+      {
+        "key": "isekai_cultivation",
+        "title": "Xuyên Không Tu Tiên",
+        "alt_titles": "Isekai Cultivation",
+        "author": "Thanh Phong",
+        "description": "Chuyển sinh dị giới và tu tiên xuyên không qua nhiều thế giới.",
+        "status": "ongoing",
+        "genres": ["Fantasy", "Adventure"],
+        "tags": {
+          "theme": ["Isekai", "Cultivation"]
+        },
+        "published_offset_days": -60,
+        "views": 10000
+      },
+      {
+        "key": "hai_huoc",
+        "title": "Hài Hước Học Đường",
+        "alt_titles": "School Comedy",
+        "author": "Tiểu Hà",
+        "description": "Truyện hài hước học đường vui vẻ, không có chuyện tình cảm.",
+        "status": "completed",
+        "genres": ["Comedy", "School Life"],
+        "tags": {
+          "setting": ["School"],
+          "tone": ["Comedy"]
+        },
+        "published_offset_days": -50,
+        "views": 9000
+      },
+      {
+        "key": "unpublished",
+        "title": "Bí Mật Chưa Xuất Bản",
+        "alt_titles": "Unpublished Secret",
+        "author": "Ẩn Danh",
+        "description": "Truyện fantasy hệ thống chưa phát hành.",
+        "status": "ongoing",
+        "genres": ["Fantasy"],
+        "tags": {
+          "theme": ["System"],
+          "relationship": ["Harem"]
+        },
+        "published_offset_days": 30,
+        "views": 0
+      },
+      {
+        "key": "draft_null",
+        "title": "Bản Thảo Không Ngày",
+        "alt_titles": "Undated Draft",
+        "author": "Ẩn Danh",
+        "description": "Truyện nháp chưa có ngày xuất bản.",
+        "status": "ongoing",
+        "genres": ["Fantasy"],
+        "tags": {
+          "theme": ["Dungeon"]
+        },
+        "published_offset_days": null,
+        "views": 0
+      },
+      {
+        "key": "school_no_romance",
+        "title": "Học Đường Không Tình Cảm",
+        "alt_titles": "School No Romance",
+        "author": "An Nhiên",
+        "description": "Học sinh chiến đấu bảo vệ trường học, không romance.",
+        "status": "completed",
+        "genres": ["School Life", "Action"],
+        "tags": {
+          "setting": ["School"],
+          "relationship": ["No Romance"],
+          "character": ["Smart MC"]
+        },
+        "published_offset_days": -40,
+        "views": 8000
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "lookup-title-accented",
+      "group": "lookup",
+      "query": "Võ Luyện Đỉnh Phong",
+      "expected": {
+        "intent": "lookup",
+        "needs_more_info": true,
+        "genres": [], "themes": [], "settings": [], "character_traits": [], "tones": [], "relationships": [],
+        "status": null,
+        "exclude": []
+      },
+      "search": { "engine": "live", "relevant": ["vo_luyen"] }
+    },
+    {
+      "id": "lookup-title-unaccented",
+      "group": "lookup",
+      "query": "vo luyen dinh phong",
+      "expected": {
+        "intent": "lookup",
+        "needs_more_info": true,
+        "genres": [], "themes": [], "settings": [], "character_traits": [], "tones": [], "relationships": [],
+        "status": null,
+        "exclude": []
+      },
+      "search": { "engine": "live", "relevant": ["vo_luyen"] }
+    },
+    {
+      "id": "lookup-title-partial",
+      "group": "lookup",
+      "query": "ragnarok",
+      "expected": {
+        "intent": "lookup",
+        "needs_more_info": true,
+        "genres": [], "themes": [], "settings": [], "character_traits": [], "tones": [], "relationships": [],
+        "status": null,
+        "exclude": []
+      },
+      "search": { "engine": "live", "relevant": ["solo"] }
+    },
+    {
+      "id": "lookup-author",
+      "group": "lookup",
+      "query": "Chugong",
+      "expected": {
+        "intent": "lookup",
+        "needs_more_info": true,
+        "genres": [], "themes": [], "settings": [], "character_traits": [], "tones": [], "relationships": [],
+        "status": null,
+        "exclude": []
+      },
+      "search": { "engine": "live", "relevant": ["solo"] }
+    },
+    {
+      "id": "lookup-author-unaccented",
+      "group": "lookup",
+      "query": "mac tu",
+      "expected": {
+        "intent": "lookup",
+        "needs_more_info": true,
+        "genres": [], "themes": [], "settings": [], "character_traits": [], "tones": [], "relationships": [],
+        "status": null,
+        "exclude": []
+      },
+      "search": { "engine": "live", "relevant": ["vo_luyen"] }
+    },
+    {
+      "id": "lookup-description",
+      "group": "lookup",
+      "query": "thám tử phá án trong thành phố",
+      "expected": {
+        "intent": "lookup",
+        "needs_more_info": true,
+        "genres": [], "themes": [], "settings": [], "character_traits": [], "tones": [], "relationships": [],
+        "status": null,
+        "exclude": []
+      },
+      "search": { "engine": "advanced", "relevant": ["trinh_tham"] }
+    },
+    {
+      "id": "lookup-description-unaccented",
+      "group": "lookup",
+      "query": "tham tu pha an trong thanh pho",
+      "expected": {
+        "intent": "lookup",
+        "needs_more_info": true,
+        "genres": [], "themes": [], "settings": [], "character_traits": [], "tones": [], "relationships": [],
+        "status": null,
+        "exclude": []
+      },
+      "search": { "engine": "advanced", "relevant": ["trinh_tham"] }
+    },
+    {
+      "id": "lookup-unpublished-hidden",
+      "group": "lookup",
+      "query": "Bí Mật Chưa Xuất Bản",
+      "expected": {
+        "intent": "lookup",
+        "needs_more_info": true,
+        "genres": [], "themes": [], "settings": [], "character_traits": [], "tones": [], "relationships": [],
+        "status": null,
+        "exclude": []
+      },
+      "search": { "engine": "live", "relevant": [], "expect_empty": true }
+    },
+
+    {
+      "id": "accented-op-disguised",
+      "group": "accented",
+      "query": "Tìm truyện main bá nhưng giả yếu",
+      "expected": {
+        "intent": "preferences",
+        "needs_more_info": false,
+        "genres": [], "themes": [], "settings": [],
+        "character_traits": ["Overpowered MC"], "tones": [], "relationships": [],
+        "status": null,
+        "exclude": []
+      },
+      "search": { "engine": "recommendation", "relevant": ["solo"] }
+    },
+    {
+      "id": "accented-system-no-harem",
+      "group": "accented",
+      "query": "Có hệ thống, không harem",
+      "expected": {
+        "intent": "preferences",
+        "needs_more_info": false,
+        "genres": [], "themes": ["System"], "settings": [],
+        "character_traits": [], "tones": [], "relationships": [],
+        "status": null,
+        "exclude": ["Harem"]
+      },
+      "search": { "engine": "recommendation", "relevant": ["solo", "system_revenge"] }
+    },
+    {
+      "id": "accented-completed-no-dungeon",
+      "group": "accented",
+      "query": "Cho truyện hoàn thành rồi, bỏ dungeon",
+      "expected": {
+        "intent": "preferences",
+        "needs_more_info": false,
+        "genres": [], "themes": [], "settings": [],
+        "character_traits": [], "tones": [], "relationships": [],
+        "status": "completed",
+        "exclude": ["Dungeon"]
+      },
+      "search": {
+        "engine": "recommendation",
+        "relevant": ["solo", "romance_nhe", "trinh_tham", "system_revenge", "hai_huoc", "school_no_romance"]
+      }
+    },
+    {
+      "id": "accented-dung-negation",
+      "group": "accented",
+      "query": "Truyện nhân vật chính từ yếu thành mạnh, đừng có romance",
+      "expected": {
+        "intent": "preferences",
+        "needs_more_info": false,
+        "genres": [], "themes": [], "settings": [],
+        "character_traits": ["Weak to Strong"], "tones": [], "relationships": [],
+        "status": null,
+        "exclude": ["Romance"]
+      },
+      "search": { "engine": "recommendation", "relevant": ["solo", "vo_luyen"] }
+    },
+
+    {
+      "id": "unaccented-op-disguised",
+      "group": "unaccented",
+      "query": "tim truyen main ba nhung gia yeu",
+      "expected": {
+        "intent": "preferences",
+        "needs_more_info": false,
+        "genres": [], "themes": [], "settings": [],
+        "character_traits": ["Overpowered MC"], "tones": [], "relationships": [],
+        "status": null,
+        "exclude": []
+      },
+      "search": { "engine": "recommendation", "relevant": ["solo"] }
+    },
+    {
+      "id": "unaccented-system-no-harem",
+      "group": "unaccented",
+      "query": "co he thong khong harem",
+      "expected": {
+        "intent": "preferences",
+        "needs_more_info": false,
+        "genres": [], "themes": ["System"], "settings": [],
+        "character_traits": [], "tones": [], "relationships": [],
+        "status": null,
+        "exclude": ["Harem"]
+      },
+      "search": { "engine": "recommendation", "relevant": ["solo", "system_revenge"] }
+    },
+    {
+      "id": "unaccented-completed-no-dungeon",
+      "group": "unaccented",
+      "query": "cho truyen hoan thanh roi bo dungeon",
+      "expected": {
+        "intent": "preferences",
+        "needs_more_info": false,
+        "genres": [], "themes": [], "settings": [],
+        "character_traits": [], "tones": [], "relationships": [],
+        "status": "completed",
+        "exclude": ["Dungeon"]
+      },
+      "search": {
+        "engine": "recommendation",
+        "relevant": ["solo", "romance_nhe", "trinh_tham", "system_revenge", "hai_huoc", "school_no_romance"]
+      }
+    },
+
+    {
+      "id": "slang-sang-van",
+      "group": "colloquial",
+      "query": "truyện sảng văn main ngầu",
+      "expected": {
+        "intent": "preferences",
+        "needs_more_info": false,
+        "genres": [], "themes": [], "settings": [],
+        "character_traits": ["Overpowered MC"], "tones": [], "relationships": [],
+        "status": null,
+        "exclude": []
+      },
+      "search": { "engine": "recommendation", "relevant": ["solo"] }
+    },
+    {
+      "id": "slang-main-op-abbreviation",
+      "group": "colloquial",
+      "query": "truyện main op",
+      "expected": {
+        "intent": "preferences",
+        "needs_more_info": false,
+        "genres": [], "themes": [], "settings": [],
+        "character_traits": ["Overpowered MC"], "tones": [], "relationships": [],
+        "status": null,
+        "exclude": []
+      },
+      "search": { "engine": "recommendation", "relevant": ["solo"] }
+    },
+    {
+      "id": "slang-trinh-tham",
+      "group": "colloquial",
+      "query": "truyện trinh thám",
+      "expected": {
+        "intent": "preferences",
+        "needs_more_info": false,
+        "genres": ["Detective"], "themes": [], "settings": [],
+        "character_traits": [], "tones": [], "relationships": [],
+        "status": null,
+        "exclude": []
+      },
+      "search": { "engine": "recommendation", "relevant": ["trinh_tham"] }
+    },
+    {
+      "id": "slang-tu-tien-xuyen-khong",
+      "group": "colloquial",
+      "query": "truyện tu tiên xuyên không",
+      "expected": {
+        "intent": "preferences",
+        "needs_more_info": false,
+        "genres": [], "themes": ["Cultivation", "Isekai"], "settings": [],
+        "character_traits": [], "tones": [], "relationships": [],
+        "status": null,
+        "exclude": []
+      },
+      "search": { "engine": "recommendation", "relevant": ["isekai_cultivation"] }
+    },
+    {
+      "id": "slang-cold-smart",
+      "group": "colloquial",
+      "query": "truyện lạnh lùng mưu kế",
+      "expected": {
+        "intent": "preferences",
+        "needs_more_info": false,
+        "genres": [], "themes": [], "settings": [],
+        "character_traits": ["Cold MC", "Smart MC"], "tones": [], "relationships": [],
+        "status": null,
+        "exclude": []
+      },
+      "search": { "engine": "recommendation", "relevant": ["system_revenge"] }
+    },
+    {
+      "id": "slang-ngon-tinh-no-tragedy",
+      "group": "colloquial",
+      "query": "truyện ngôn tình nhẹ nhàng không bi kịch",
+      "expected": {
+        "intent": "preferences",
+        "needs_more_info": false,
+        "genres": ["Romance"], "themes": [], "settings": [],
+        "character_traits": [], "tones": [], "relationships": ["Romance"],
+        "status": null,
+        "exclude": ["Tragedy"]
+      }
+    },
+
+    {
+      "id": "taxonomy-genre-horror",
+      "group": "taxonomy",
+      "query": "truyện kinh dị",
+      "expected": {
+        "intent": "preferences",
+        "needs_more_info": false,
+        "genres": ["Horror"], "themes": [], "settings": [],
+        "character_traits": [], "tones": [], "relationships": [],
+        "status": null,
+        "exclude": []
+      },
+      "search": { "engine": "recommendation", "relevant": ["hac_am", "dungeon_survival"] }
+    },
+    {
+      "id": "taxonomy-tag-system",
+      "group": "taxonomy",
+      "query": "truyện hệ thống",
+      "expected": {
+        "intent": "preferences",
+        "needs_more_info": false,
+        "genres": [], "themes": ["System"], "settings": [],
+        "character_traits": [], "tones": [], "relationships": [],
+        "status": null,
+        "exclude": []
+      },
+      "search": { "engine": "recommendation", "relevant": ["solo", "harem_dungeon", "system_revenge"] }
+    },
+    {
+      "id": "taxonomy-status-completed",
+      "group": "taxonomy",
+      "query": "truyện hoàn thành",
+      "expected": {
+        "intent": "preferences",
+        "needs_more_info": false,
+        "genres": [], "themes": [], "settings": [],
+        "character_traits": [], "tones": [], "relationships": [],
+        "status": "completed",
+        "exclude": []
+      },
+      "search": {
+        "engine": "recommendation",
+        "relevant": ["solo", "romance_nhe", "trinh_tham", "system_revenge", "hai_huoc", "school_no_romance"]
+      }
+    },
+    {
+      "id": "taxonomy-status-hiatus",
+      "group": "taxonomy",
+      "query": "truyện tạm ngưng",
+      "expected": {
+        "intent": "preferences",
+        "needs_more_info": false,
+        "genres": [], "themes": [], "settings": [],
+        "character_traits": [], "tones": [], "relationships": [],
+        "status": "hiatus",
+        "exclude": []
+      },
+      "search": { "engine": "recommendation", "relevant": ["dungeon_survival"] }
+    },
+    {
+      "id": "taxonomy-status-ongoing",
+      "group": "taxonomy",
+      "query": "truyện đang ra",
+      "expected": {
+        "intent": "preferences",
+        "needs_more_info": false,
+        "genres": [], "themes": [], "settings": [],
+        "character_traits": [], "tones": [], "relationships": [],
+        "status": "ongoing",
+        "exclude": []
+      },
+      "search": {
+        "engine": "recommendation",
+        "relevant": ["vo_luyen", "harem_academy", "hac_am", "harem_dungeon", "isekai_cultivation"]
+      }
+    },
+    {
+      "id": "taxonomy-tag-smart",
+      "group": "taxonomy",
+      "query": "truyện main thông minh",
+      "expected": {
+        "intent": "preferences",
+        "needs_more_info": false,
+        "genres": [], "themes": [], "settings": [],
+        "character_traits": ["Smart MC"], "tones": [], "relationships": [],
+        "status": null,
+        "exclude": []
+      },
+      "search": { "engine": "recommendation", "relevant": ["trinh_tham", "system_revenge", "school_no_romance"] }
+    },
+
+    {
+      "id": "negation-comedy-no-romance",
+      "group": "negation",
+      "query": "Truyện hài nhưng không có tình cảm",
+      "expected": {
+        "intent": "preferences",
+        "needs_more_info": false,
+        "genres": ["Comedy"], "themes": [], "settings": [],
+        "character_traits": [], "tones": ["Comedy"], "relationships": [],
+        "status": null,
+        "exclude": ["Romance"]
+      },
+      "search": { "engine": "recommendation", "relevant": ["hai_huoc"] }
+    },
+    {
+      "id": "negation-revenge-no-dark",
+      "group": "negation",
+      "query": "Tìm truyện kiểu trả thù nhưng không quá dark",
+      "expected": {
+        "intent": "preferences",
+        "needs_more_info": false,
+        "genres": [], "themes": ["Revenge"], "settings": [],
+        "character_traits": [], "tones": [], "relationships": [],
+        "status": null,
+        "exclude": ["Dark"]
+      },
+      "search": { "engine": "recommendation", "relevant": ["system_revenge"] }
+    },
+    {
+      "id": "negation-weak-no-romance",
+      "group": "negation",
+      "query": "Truyện main yếu rồi mạnh, không romance",
+      "expected": {
+        "intent": "preferences",
+        "needs_more_info": false,
+        "genres": [], "themes": [], "settings": [],
+        "character_traits": ["Weak to Strong"], "tones": [], "relationships": [],
+        "status": null,
+        "exclude": ["Romance"]
+      },
+      "search": { "engine": "recommendation", "relevant": ["solo", "vo_luyen"] }
+    },
+    {
+      "id": "negation-exclusion-only",
+      "group": "negation",
+      "query": "không harem",
+      "expected": {
+        "intent": "preferences",
+        "needs_more_info": false,
+        "genres": [], "themes": [], "settings": [],
+        "character_traits": [], "tones": [], "relationships": [],
+        "status": null,
+        "exclude": ["Harem"]
+      }
+    },
+    {
+      "id": "negation-unaccented-comedy-no-romance",
+      "group": "negation",
+      "query": "truyen hai nhung khong co tinh cam",
+      "expected": {
+        "intent": "preferences",
+        "needs_more_info": false,
+        "genres": ["Comedy"], "themes": [], "settings": [],
+        "character_traits": [], "tones": ["Comedy"], "relationships": [],
+        "status": null,
+        "exclude": ["Romance"]
+      },
+      "search": { "engine": "recommendation", "relevant": ["hai_huoc"] }
+    },
+
+    {
+      "id": "multi-fantasy-completed-op-no-harem",
+      "group": "multi",
+      "query": "Tìm truyện fantasy hoàn thành, main mạnh, không harem",
+      "expected": {
+        "intent": "preferences",
+        "needs_more_info": false,
+        "genres": ["Fantasy"], "themes": [], "settings": [],
+        "character_traits": ["Overpowered MC"], "tones": [], "relationships": [],
+        "status": "completed",
+        "exclude": ["Harem"]
+      },
+      "search": { "engine": "recommendation", "relevant": ["solo"] }
+    },
+    {
+      "id": "multi-school-comedy-no-romance",
+      "group": "multi",
+      "query": "Truyện học đường hài, không tình cảm",
+      "expected": {
+        "intent": "preferences",
+        "needs_more_info": false,
+        "genres": ["Comedy", "School Life"], "themes": [], "settings": ["School"],
+        "character_traits": [], "tones": ["Comedy"], "relationships": [],
+        "status": null,
+        "exclude": ["Romance"]
+      },
+      "search": { "engine": "recommendation", "relevant": ["hai_huoc"] }
+    },
+
+    {
+      "id": "vague-hay",
+      "group": "vague",
+      "query": "tìm truyện hay",
+      "expected": {
+        "intent": "clarify",
+        "needs_more_info": true,
+        "genres": [], "themes": [], "settings": [], "character_traits": [], "tones": [], "relationships": [],
+        "status": null,
+        "exclude": []
+      }
+    },
+    {
+      "id": "vague-single",
+      "group": "vague",
+      "query": "truyện",
+      "expected": {
+        "intent": "clarify",
+        "needs_more_info": true,
+        "genres": [], "themes": [], "settings": [], "character_traits": [], "tones": [], "relationships": [],
+        "status": null,
+        "exclude": []
+      }
+    },
+    {
+      "id": "vague-no-results",
+      "group": "vague",
+      "query": "truyện thể thao",
+      "expected": {
+        "intent": "preferences",
+        "needs_more_info": false,
+        "genres": ["Sports"], "themes": [], "settings": [],
+        "character_traits": [], "tones": [], "relationships": [],
+        "status": null,
+        "exclude": []
+      },
+      "search": { "engine": "recommendation", "relevant": [], "expect_empty": true }
+    },
+
+    {
+      "id": "invalid-empty",
+      "group": "invalid",
+      "query": "",
+      "expected": {
+        "intent": "invalid",
+        "needs_more_info": false,
+        "genres": [], "themes": [], "settings": [], "character_traits": [], "tones": [], "relationships": [],
+        "status": null,
+        "exclude": []
+      }
+    },
+    {
+      "id": "invalid-oversized",
+      "group": "invalid",
+      "query_fixture": { "repeat": "a", "times": 4001 },
+      "expected": {
+        "intent": "invalid",
+        "needs_more_info": false,
+        "genres": [], "themes": [], "settings": [], "character_traits": [], "tones": [], "relationships": [],
+        "status": null,
+        "exclude": []
+      }
+    },
+
+    {
+      "id": "outside-invented-tag",
+      "group": "outside_taxonomy",
+      "query": "truyện super ultra god",
+      "expected": {
+        "intent": "clarify",
+        "needs_more_info": true,
+        "genres": [], "themes": [], "settings": [], "character_traits": [], "tones": [], "relationships": [],
+        "status": null,
+        "exclude": []
+      }
+    },
+    {
+      "id": "outside-josei-genre",
+      "group": "outside_taxonomy",
+      "query": "truyện josei",
+      "expected": {
+        "intent": "clarify",
+        "needs_more_info": true,
+        "genres": [], "themes": [], "settings": [], "character_traits": [], "tones": [], "relationships": [],
+        "status": null,
+        "exclude": []
+      }
+    }
+  ]
+}

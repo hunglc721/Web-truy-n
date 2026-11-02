@@ -162,6 +162,8 @@ final class ChatAgentService
             .'If a filter name is unclear, call get_taxonomy first. If information is missing, ask one short question instead of guessing. '
             .'When a tool result has truncated=true, never imply the list is complete; use its total/total_published fields for counts. '
             .'search_comics only returns the best few matches, so never claim it is the whole catalogue. '
+            .'search_comics matches query/keywords against comic titles, descriptions, genre names and tag names, so when the user describes content in free words pass 2-5 short Vietnamese keywords or synonyms (for example "nhân vật bá" -> "mạnh nhất", "bá đạo", "vô địch") instead of inventing a filter name. '
+            .'When the user asks for a summary or what a comic is about, call get_comic first and summarise only its description, tags, status and chapter count; never invent plot details or numbers. '
             .'Reply in Vietnamese with 1-3 short sentences, no markdown, no HTML, no URLs, no emoji. '
             .'Return exactly ONE JSON object per step and nothing else: '
             .'{"action":"tool","tool":"<tool name>","args":{...}} or '

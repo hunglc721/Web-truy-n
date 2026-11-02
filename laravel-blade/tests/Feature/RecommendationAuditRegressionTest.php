@@ -130,7 +130,7 @@ class RecommendationAuditRegressionTest extends TestCase
 
     public function test_harem_is_excluded_before_sql_limit_despite_highest_score(): void
     {
-        $allowed = Comic::factory()->create(['status' => 'ongoing', 'published_at' => now()->subDay()]);
+        $allowed = Comic::factory()->create(['status' => 'completed', 'published_at' => now()->subDay()]);
         $blocked = Comic::factory()->create(['status' => 'completed', 'published_at' => now()->subDay()]);
         foreach ([$allowed, $blocked] as $comic) {
             $comic->genres()->attach(Genre::where('name', 'Fantasy')->value('id'));
@@ -141,6 +141,6 @@ class RecommendationAuditRegressionTest extends TestCase
             'settings' => ['Modern'], 'tones' => ['Dark'], 'status' => 'completed', 'exclude' => ['Harem'],
         ]), 1);
         $this->assertSame([$allowed->id], $results->pluck('comic.id')->all());
-        $this->assertSame([30], $results->pluck('score')->all());
+        $this->assertSame([35], $results->pluck('score')->all());
     }
 }

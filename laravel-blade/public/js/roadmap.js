@@ -37,7 +37,9 @@
       if (event.key === 'Escape') setOpen(false);
     });
     window.addEventListener('resize', () => {
-      if (window.innerWidth > 768) setOpen(false);
+      // Matches the header breakpoint in responsive.css where the nav is
+      // replaced by the menu button.
+      if (window.innerWidth > 1200) setOpen(false);
     }, { passive: true });
   }
 

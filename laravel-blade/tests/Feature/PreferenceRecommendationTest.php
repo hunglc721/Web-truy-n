@@ -42,13 +42,15 @@ class PreferenceRecommendationTest extends TestCase
 
     public function test_weights_reasons_and_dimension_scores_are_bounded(): void
     {
-        $genreOnly = $this->comic();
-        $full = $this->comic(['Fantasy', 'Action'], ['System', 'Dungeon', 'Overpowered MC', 'Modern', 'Dark'], ['status' => 'completed']);
+        $genreOnly = $this->comic(attributes: ['status' => 'completed']);
+        $closest = $this->comic(['Fantasy', 'Action'], ['System', 'Dungeon', 'Overpowered MC', 'Modern', 'Dark'], ['status' => 'completed']);
         $unrelated = $this->comic(['Horror']);
+        // No fixture has the Serious tone, so this exercises the partial
+        // fallback while still checking the documented dimension weights.
         $results = $this->results(['genres' => ['Fantasy', 'Action', 'Fantasy'], 'themes' => ['System', 'Dungeon'],
-            'character_traits' => ['Overpowered MC'], 'settings' => ['Modern'], 'tones' => ['Dark'], 'status' => 'completed']);
-        $this->assertSame([$full->id, $genreOnly->id], $results->pluck('comic.id')->all());
-        $this->assertSame([105, 30], $results->pluck('score')->all());
+            'character_traits' => ['Overpowered MC'], 'settings' => ['Modern'], 'tones' => ['Dark', 'Serious'], 'status' => 'completed']);
+        $this->assertSame([$closest->id, $genreOnly->id], $results->pluck('comic.id')->all());
+        $this->assertSame([105, 35], $results->pluck('score')->all());
         $this->assertEqualsCanonicalizing(['Fantasy', 'Action', 'System', 'Dungeon', 'Overpowered MC', 'Modern', 'Dark', 'completed'], $results[0]['matched_reasons']);
         $this->assertNotContains($unrelated->id, $results->pluck('comic.id')->all());
     }
@@ -93,11 +95,67 @@ class PreferenceRecommendationTest extends TestCase
         $ongoing = $this->comic();
         $data = ['genres' => ['Fantasy'], 'status' => 'completed'];
         $results = $this->results($data);
-        $this->assertSame([$newer->id, $older->id, $ongoing->id], $results->pluck('comic.id')->all());
-        $this->assertSame([35, 35, 30], $results->pluck('score')->all());
+        $this->assertSame([$newer->id, $older->id], $results->pluck('comic.id')->all());
+        $this->assertSame([35, 35], $results->pluck('score')->all());
+        $this->assertNotContains($ongoing->id, $results->pluck('comic.id')->all());
         $this->assertSame($results->pluck('comic.id')->all(), $this->results($data)->pluck('comic.id')->all());
         $this->assertSame([$newer->id], $this->results($data, 1)->pluck('comic.id')->all());
         $this->assertSame([5, 5], $this->results(['status' => 'completed'])->pluck('score')->all());
+    }
+
+    public function test_multi_condition_query_returns_only_full_matches(): void
+    {
+        $full = $this->comic(['Fantasy'], ['System', 'Overpowered MC'], ['status' => 'completed']);
+        $genreOnly = $this->comic(['Fantasy'], [], ['status' => 'completed']);
+        $tagOnly = $this->comic(['Action'], ['System', 'Overpowered MC'], ['status' => 'completed']);
+
+        $results = $this->results([
+            'genres' => ['Fantasy'], 'themes' => ['System'],
+            'character_traits' => ['Overpowered MC'], 'status' => 'completed',
+        ]);
+
+        $this->assertSame([$full->id], $results->pluck('comic.id')->all());
+        $this->assertSame([80], $results->pluck('score')->all());
+        $this->assertNotContains($genreOnly->id, $results->pluck('comic.id')->all());
+        $this->assertNotContains($tagOnly->id, $results->pluck('comic.id')->all());
+    }
+
+    public function test_status_is_a_hard_constraint_before_partial_ranking(): void
+    {
+        // The ongoing comic has every positive signal, but the user asked for
+        // completed stories. Status must win over score and matched values.
+        $completedPartial = $this->comic(['Fantasy'], [], ['status' => 'completed']);
+        $this->comic(['Fantasy'], ['System', 'Overpowered MC', 'Modern', 'Dark'], ['status' => 'ongoing']);
+
+        $results = $this->results([
+            'genres' => ['Fantasy'], 'themes' => ['System'],
+            'character_traits' => ['Overpowered MC'], 'settings' => ['Modern'],
+            'tones' => ['Dark'], 'status' => 'completed',
+        ]);
+
+        $this->assertSame([$completedPartial->id], $results->pluck('comic.id')->all());
+        $this->assertSame([35], $results->pluck('score')->all());
+    }
+
+    public function test_partial_fallback_ranks_by_matched_conditions_and_keeps_hard_constraints(): void
+    {
+        // No comic has both Fantasy and Horror, so the fallback must return
+        // partial matches ranked by how many requested values they satisfy.
+        $twoMatches = $this->comic(['Fantasy'], ['System'], ['status' => 'completed']);
+        $oneMatch = $this->comic(['Horror'], [], ['status' => 'completed']);
+        $excluded = $this->comic(['Fantasy'], ['System'], ['status' => 'completed']);
+        $excluded->tags()->attach(Tag::where('name', 'Harem')->value('id'));
+        $this->comic(['Fantasy'], ['System'], ['status' => 'ongoing']);
+        $this->comic(['Fantasy'], ['System'], ['status' => 'completed', 'published_at' => null]);
+
+        $results = $this->results([
+            'genres' => ['Fantasy', 'Horror'], 'themes' => ['System'],
+            'status' => 'completed', 'exclude' => ['Harem'],
+        ], 10);
+
+        $this->assertSame([$twoMatches->id, $oneMatch->id], $results->pluck('comic.id')->all());
+        $this->assertSame([60, 35], $results->pluck('score')->all());
+        $this->assertNotContains($excluded->id, $results->pluck('comic.id')->all());
     }
 
     public function test_empty_preferences_and_zero_limit_do_not_return_random_comics(): void

@@ -4,8 +4,10 @@ namespace Tests\Feature;
 
 use App\Models\Comic;
 use App\Models\Genre;
+use App\Models\Tag;
 use App\Models\User;
 use App\Services\AI\Agent\AgentPolicy;
+use App\Services\AI\Agent\ChatToolRegistry;
 use App\Services\AI\AIClientInterface;
 use App\Services\AI\RuleBasedPreferenceParser;
 use Database\Seeders\RecommendationTaxonomySeeder;
@@ -330,5 +332,87 @@ class ChatAgentTest extends TestCase
             ->assertUnprocessable();
         $this->postJson('/api/recommendation/chat', ['message' => 'fantasy', 'turns' => [['role' => 'user', 'content' => 'ok', 'extra' => 'x']]])
             ->assertUnprocessable();
+    }
+
+    public function test_keyword_search_matches_description_tags_and_genres(): void
+    {
+        $described = $this->comic('Truyện Mô Tả', ['description' => 'Nhân vật chính mạnh nhất ngay từ chương đầu.']);
+        $tagged = $this->comic('Truyện Gắn Tag', ['description' => 'Một câu chuyện khác.']);
+        $tagged->tags()->attach(Tag::where('name', 'Overpowered MC')->value('id'));
+        $this->comic('Truyện Không Khớp', ['description' => 'Một câu chuyện tình cảm nhẹ nhàng.']);
+
+        $registry = app(ChatToolRegistry::class);
+
+        $byDescription = $registry->execute('search_comics', ['keywords' => ['mạnh nhất']], null);
+        $this->assertTrue($byDescription['ok']);
+        $this->assertSame(['Truyện Mô Tả'], array_column($byDescription['data'], 'title'));
+        $this->assertSame(['Khớp "mạnh nhất"'], $byDescription['data'][0]['matched_reasons']);
+
+        $byTag = $registry->execute('search_comics', ['keywords' => ['Overpowered MC']], null);
+        $this->assertSame(['Truyện Gắn Tag'], array_column($byTag['data'], 'title'));
+
+        $byGenre = $registry->execute('search_comics', ['keywords' => ['Fantasy']], null);
+        $this->assertCount(3, $byGenre['data']);
+        $this->assertContains($described->id, array_column($byGenre['data'], 'id'));
+    }
+
+    public function test_keyword_search_only_returns_public_comics_and_respects_exclusions(): void
+    {
+        $this->comic('Truyện Công Khai', ['description' => 'Nhân vật mạnh nhất.', 'status' => 'ongoing']);
+        Comic::factory()->create(['title' => 'Truyện Tương Lai', 'description' => 'Nhân vật mạnh nhất.', 'published_at' => now()->addDay()]);
+        Comic::factory()->create(['title' => 'Truyện Nháp', 'description' => 'Nhân vật mạnh nhất.', 'published_at' => null]);
+
+        $registry = app(ChatToolRegistry::class);
+
+        $titles = array_column($registry->execute('search_comics', ['keywords' => ['mạnh nhất']], null)['data'], 'title');
+        $this->assertSame(['Truyện Công Khai'], $titles);
+
+        $excluded = $registry->execute('search_comics', ['keywords' => ['mạnh nhất'], 'exclude' => ['Fantasy']], null);
+        $this->assertSame([], $excluded['data']);
+
+        $completed = $registry->execute('search_comics', ['keywords' => ['mạnh nhất'], 'status' => 'completed'], null);
+        $this->assertSame([], $completed['data']);
+    }
+
+    public function test_keyword_search_rejects_invalid_terms(): void
+    {
+        $this->comic('Truyện Thử');
+        $registry = app(ChatToolRegistry::class);
+
+        foreach ([['keywords' => ['a']], ['keywords' => ['100%']], ['keywords' => []], []] as $args) {
+            $result = $registry->execute('search_comics', $args, null);
+            $this->assertFalse($result['ok'], json_encode($args));
+            $this->assertSame('invalid_arguments', $result['error']);
+        }
+    }
+
+    public function test_agent_searches_free_text_then_summarises_backend_description(): void
+    {
+        $comic = $this->comic('Truyện Mô Tả', [
+            'description' => 'Nhân vật chính là thợ săn yếu nhất, sau đó thức tỉnh và trở thành người mạnh nhất.',
+        ]);
+        $client = $this->mock(AIClientInterface::class);
+        $client->shouldReceive('complete')->once()->ordered()
+            ->andReturn(['success' => true, 'error' => null, 'content' => $this->intent('tóm tắt truyện mô tả')]);
+        $client->shouldReceive('complete')->once()->ordered()
+            ->andReturn($this->tool('search_comics', ['keywords' => ['mạnh nhất']]));
+        $client->shouldReceive('complete')->once()->ordered()
+            ->andReturn($this->tool('get_comic', ['comic_id' => $comic->id]));
+        $client->shouldReceive('complete')->once()->ordered()->andReturnUsing(function ($instruction, $payload) use ($comic) {
+            $data = json_decode($payload, true);
+            $this->assertSame($comic->title, $data['tool_results'][0]['data'][0]['title']);
+            $this->assertStringContainsString('yếu nhất', $data['tool_results'][1]['data']['description']);
+            $this->assertStringContainsString('keywords', $instruction);
+
+            return $this->final(
+                'Truyện Mô Tả kể về một thợ săn yếu nhất thức tỉnh và trở thành người mạnh nhất.',
+                [$comic->title]
+            );
+        });
+
+        $response = $this->postJson('/api/recommendation/chat', ['message' => 'tóm tắt truyện mô tả'])
+            ->assertOk()->assertJsonPath('type', 'answer');
+
+        $this->assertStringContainsString('thợ săn yếu nhất', $response->json('message'));
     }
 }
