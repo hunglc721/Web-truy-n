@@ -92,11 +92,15 @@ class DatabaseSeeder extends Seeder
         // ─────────────────────────────────────────────────────────────
         // 2. USERS
         // ─────────────────────────────────────────────────────────────
+        $isProd        = app()->isProduction();
+        $adminPassword = $isProd ? (env('ADMIN_PASSWORD') ?: Str::random(40)) : '12345678';
+        $otherPassword = $isProd ? Str::random(40) : '12345678';
+
         $admin = User::firstOrCreate(
             ['email' => 'admin@webcomics.com'],
             [
                 'name'     => 'Super Admin',
-                'password' => Hash::make('12345678'),
+                'password' => Hash::make($adminPassword),
                 'is_admin' => true,
                 'role_id'  => $roleAdmin->id,
             ]
@@ -106,7 +110,7 @@ class DatabaseSeeder extends Seeder
             ['email' => 'editor@webcomics.com'],
             [
                 'name'     => 'Biên Tập Viên Hoàng',
-                'password' => Hash::make('12345678'),
+                'password' => Hash::make($otherPassword),
                 'is_admin' => false,
                 'role_id'  => $roleEditor->id,
             ]
@@ -116,7 +120,7 @@ class DatabaseSeeder extends Seeder
             ['email' => 'mod@webcomics.com'],
             [
                 'name'     => 'Mod Kiểm Duyệt',
-                'password' => Hash::make('12345678'),
+                'password' => Hash::make($otherPassword),
                 'is_admin' => false,
                 'role_id'  => $roleModerator->id,
             ]
@@ -139,7 +143,7 @@ class DatabaseSeeder extends Seeder
                 ['email' => $u['email']],
                 [
                     'name'     => $u['name'],
-                    'password' => Hash::make('12345678'),
+                    'password' => Hash::make($otherPassword),
                     'is_admin' => false,
                     'role_id'  => $roleMember->id,
                 ]

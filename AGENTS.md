@@ -305,14 +305,14 @@ Scheduler:
 php artisan schedule:work
 ```
 
-Seed accounts commonly used in development/E2E:
+Seed accounts for **local development and E2E only** (passwords are randomised in production):
 
 ```text
-Admin:  admin@webcomics.com / 12345678
-Member: user@webcomics.com  / 12345678
+Admin:  admin@webcomics.com / 12345678  (local only)
+Member: user@webcomics.com  / 12345678  (local only)
 ```
 
-Do not hardcode these credentials into production logic.
+In production, set the `ADMIN_PASSWORD` environment variable. Sample accounts receive random passwords and cannot be logged into.
 
 ---
 

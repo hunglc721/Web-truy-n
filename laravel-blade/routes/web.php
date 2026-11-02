@@ -78,14 +78,14 @@ Route::get('/auth/{provider}/callback', [\App\Http\Controllers\SocialAuthControl
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-    Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:login-ip');
     Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
-    Route::post('/register', [AuthController::class, 'register']);
+    Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:register');
 
     Route::get('/forgot-password', [\App\Http\Controllers\PasswordResetController::class, 'showForgotForm'])->name('password.request');
-    Route::post('/forgot-password', [\App\Http\Controllers\PasswordResetController::class, 'sendResetLink'])->name('password.email');
+    Route::post('/forgot-password', [\App\Http\Controllers\PasswordResetController::class, 'sendResetLink'])->middleware('throttle:password-reset')->name('password.email');
     Route::get('/reset-password/{token}', [\App\Http\Controllers\PasswordResetController::class, 'showResetForm'])->name('password.reset');
-    Route::post('/reset-password', [\App\Http\Controllers\PasswordResetController::class, 'reset'])->name('password.update');
+    Route::post('/reset-password', [\App\Http\Controllers\PasswordResetController::class, 'reset'])->middleware('throttle:password-reset')->name('password.update');
 });
 
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->name('logout');
@@ -143,9 +143,9 @@ Route::middleware(['auth', '2fa'])->group(function () {
 
 Route::get('/api/comics/{comicId}/ratings/summary', [RatingController::class, 'summary'])->middleware('throttle:api')->name('comics.ratings.summary');
 Route::get('/api/comics/{comicId}/ratings/reviews', [RatingController::class, 'reviews'])->middleware('throttle:api')->name('comics.ratings.reviews');
-Route::get('/api/search/live', [SearchController::class, 'live'])->middleware('throttle:api')->name('search.live');
-Route::get('/api/search/hot', [SearchController::class, 'hot'])->middleware('throttle:api')->name('search.hot');
-Route::get('/api/search/advanced', [SearchController::class, 'advanced'])->middleware('throttle:api')->name('search.advanced');
+Route::get('/api/search/live', [SearchController::class, 'live'])->middleware('throttle:search')->name('search.live');
+Route::get('/api/search/hot', [SearchController::class, 'hot'])->middleware('throttle:search')->name('search.hot');
+Route::get('/api/search/advanced', [SearchController::class, 'advanced'])->middleware('throttle:search')->name('search.advanced');
 Route::get('/api/comments', [CommentController::class, 'index'])->middleware('throttle:api')->name('comments.index');
 Route::get('/api/recommendations', [RecommendationController::class, 'index'])->middleware('throttle:api')->name('recommendations.index');
 Route::post('/api/recommendation/chat', \App\Http\Controllers\RecommendationChatController::class)->middleware('throttle:api')->name('recommendation.chat');

@@ -55,6 +55,14 @@
           <span>Ghi nhớ đăng nhập</span>
         </label>
 
+        @if(config('services.turnstile.site_key'))
+          <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+          <div class="cf-turnstile" data-sitekey="{{ config('services.turnstile.site_key') }}" style="margin-bottom:16px;"></div>
+          @error('cf-turnstile-response')
+            <div style="color:#f87171;font-size:13px;margin-bottom:12px;">{{ $message }}</div>
+          @enderror
+        @endif
+
         <button type="submit" class="btn btn-login" style="width:100%;padding:13px;font-weight:800;font-size:15px;justify-content:center;margin-bottom:20px;">🔐 Đăng Nhập</button>
       </form>
 

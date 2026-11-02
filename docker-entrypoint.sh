@@ -50,6 +50,11 @@ if [ -n "$ASSET_URL" ]; then
     fi
 fi
 
+# Force APP_DEBUG=false in production to prevent accidental exposure
+if [ "$APP_ENV" = "production" ]; then
+    sed -i 's/^APP_DEBUG=.*/APP_DEBUG=false/' .env
+fi
+
 # Pass APP_KEY and critical environment variables to Apache and PHP
 echo "export APP_KEY='${APP_KEY}'" >> /etc/apache2/envvars
 echo "SetEnv APP_KEY \"${APP_KEY}\"" > /etc/apache2/conf-available/app-env.conf

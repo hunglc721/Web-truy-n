@@ -15,13 +15,29 @@ services:
       - key: ASSET_URL
         value: https://comicx-web.onrender.com
       - key: APP_DEBUG
-        value: "true"
+        value: "false"
       - key: APP_KEY
-        value: base64:4roYxAVol109c7QdQ7zdsZg5bHgKxwLLtZ7WKDn9FKM=
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: TURNSTILE_SITE_KEY
+        value: <your-turnstile-site-key>
+      - key: TURNSTILE_SECRET_KEY
+        sync: false
       - key: DB_CONNECTION
-        value: sqlite
+        value: mysql
+      - key: DB_HOST
+        value: <your-mysql-host>
+      - key: DB_PORT
+        value: "3306"
       - key: DB_DATABASE
-        value: /var/www/html/laravel-blade/database/database.sqlite
+        value: <your-database-name>
+      - key: DB_USERNAME
+        value: <your-database-user>
+      - key: DB_PASSWORD
+        sync: false
+      - key: MYSQL_ATTR_SSL_CA
+        value: /etc/ssl/certs/ca-certificates.crt
       - key: SESSION_DRIVER
         value: database
       - key: CACHE_STORE

@@ -45,6 +45,14 @@
           @enderror
         </div>
 
+        @if(config('services.turnstile.site_key'))
+          <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+          <div class="cf-turnstile" data-sitekey="{{ config('services.turnstile.site_key') }}" style="margin-bottom:16px;"></div>
+          @error('cf-turnstile-response')
+            <div style="color:#f87171;font-size:13px;margin-bottom:12px;">{{ $message }}</div>
+          @enderror
+        @endif
+
         <button type="submit" class="btn-spotlight-read" style="width: 100%; padding: 12px; font-size: 14px; font-weight: 800; border-radius: 8px; cursor: pointer; margin-bottom: 16px;">
           📨 Gửi Liên Kết Đặt Lại Mật Khẩu
         </button>

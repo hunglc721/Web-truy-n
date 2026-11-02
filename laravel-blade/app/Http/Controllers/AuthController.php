@@ -28,6 +28,11 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
+        $request->validate(
+            ['cf-turnstile-response' => \App\Rules\Turnstile::rules()],
+            ['cf-turnstile-response.required' => 'Vui lòng xác minh bạn không phải robot.']
+        );
+
         $credentials = $request->validate([
             'email' => 'required|email',
             'password' => 'required|string',
@@ -114,14 +119,16 @@ class AuthController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
-            'password' => ['required', 'confirmed', Password::min(6)],
+            'password' => ['required', 'confirmed', Password::min(8)->letters()->numbers()->uncompromised()],
+            'cf-turnstile-response' => \App\Rules\Turnstile::rules(),
         ], [
             'name.required' => 'Vui lòng nhập họ tên của bạn.',
             'email.required' => 'Vui lòng nhập địa chỉ Email.',
             'email.unique' => 'Email này đã được sử dụng.',
             'password.required' => 'Vui lòng nhập mật khẩu.',
             'password.confirmed' => 'Mật khẩu xác nhận không khớp.',
-            'password.min' => 'Mật khẩu tối thiểu phải từ 6 ký tự.',
+            'password.min' => 'Mật khẩu tối thiểu 8 ký tự, phải có chữ cái và chữ số.',
+            'cf-turnstile-response.required' => 'Vui lòng xác minh bạn không phải robot.',
         ]);
 
         $memberRoleId = Role::where('slug', 'member')->value('id');

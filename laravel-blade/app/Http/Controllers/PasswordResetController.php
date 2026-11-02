@@ -21,9 +21,11 @@ class PasswordResetController extends Controller
     {
         $request->validate([
             'email' => 'required|email',
+            'cf-turnstile-response' => \App\Rules\Turnstile::rules(),
         ], [
             'email.required' => 'Vui lòng nhập địa chỉ Email.',
             'email.email'    => 'Email không đúng định dạng.',
+            'cf-turnstile-response.required' => 'Vui lòng xác minh bạn không phải robot.',
         ]);
 
         $status = Password::sendResetLink(
@@ -50,12 +52,12 @@ class PasswordResetController extends Controller
         $request->validate([
             'token'    => 'required',
             'email'    => 'required|email',
-            'password' => ['required', 'confirmed', PasswordRule::min(6)],
+            'password' => ['required', 'confirmed', PasswordRule::min(8)->letters()->numbers()->uncompromised()],
         ], [
             'email.required'     => 'Vui lòng nhập địa chỉ Email.',
             'password.required'  => 'Vui lòng nhập mật khẩu mới.',
             'password.confirmed' => 'Mật khẩu xác nhận không khớp.',
-            'password.min'       => 'Mật khẩu tối thiểu phải từ 6 ký tự.',
+            'password.min'       => 'Mật khẩu tối thiểu 8 ký tự, phải có chữ cái và chữ số.',
         ]);
 
         $status = Password::reset(

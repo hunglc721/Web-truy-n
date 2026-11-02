@@ -583,12 +583,15 @@ php artisan schedule:work
 
 ---
 
-## 🔑 Tài khoản seed
+## 🔑 Tài khoản seed (chỉ dùng cho môi trường local)
 
 | Vai trò | Email | Mật khẩu |
 |---|---|---|
 | Admin | `admin@webcomics.com` | `12345678` |
 | Member | `user@webcomics.com` | `12345678` |
+
+> **Chú ý:** Các tài khoản và mật khẩu này **chỉ áp dụng khi chạy seeder trên môi trường local (development)**.
+> Trên production, admin dùng mật khẩu từ biến môi trường `ADMIN_PASSWORD`; các tài khoản mẫu khác được gán mật khẩu ngẫu nhiên — không ai đăng nhập được.
 
 Seeder còn tạo một số role/user mẫu phục vụ phát triển và kiểm thử.
 

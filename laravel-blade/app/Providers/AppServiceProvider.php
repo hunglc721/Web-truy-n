@@ -124,5 +124,17 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('api', function (Request $request) {
             return Limit::perMinute(120)->by($request->user()?->id ?? $request->ip());
         });
+
+        RateLimiter::for('register', fn (Request $r) => Limit::perHour(5)->by('ip:'.$r->ip()));
+
+        // Chống thử mật khẩu hàng loạt bằng nhiều email khác nhau từ cùng một IP
+        RateLimiter::for('login-ip', fn (Request $r) => Limit::perMinute(20)->by('ip:'.$r->ip()));
+
+        RateLimiter::for('password-reset', fn (Request $r) => [
+            Limit::perMinute(3)->by('ip:'.$r->ip()),
+            Limit::perHour(5)->by('email:'.strtolower((string) $r->input('email'))),
+        ]);
+
+        RateLimiter::for('search', fn (Request $r) => Limit::perMinute(30)->by($r->user()?->id ?? 'ip:'.$r->ip()));
     }
 }
