@@ -48,7 +48,11 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        if ($this->app->environment('production') || request()->header('X-Forwarded-Proto') === 'https') {
+        // Providers boot before the TrustProxies middleware resolves forwarded
+        // headers, so isSecure() here reflects the server's own HTTPS flag, not
+        // a client-supplied X-Forwarded-Proto. Production always forces HTTPS;
+        // behind a proxy the middleware resolves the real scheme later.
+        if ($this->app->environment('production') || request()->isSecure()) {
             \Illuminate\Support\Facades\URL::forceScheme('https');
         }
 
