@@ -4,6 +4,8 @@ Date: 2026-11-02
 Branch: `feat/chatbot-bounded-agent` (base commit `f8d60f4`)
 Scope: verify migrations, authorization/publication filtering, validation/rate limiting/error handling, logging/cache/production configuration, regression tests, and E2E before preparing the review PR.
 
+P11 addendum (2026-11-03): trusted reverse-proxy hardening documented in §5.4. `TRUSTED_PROXIES` is now configurable; the Render manifest uses `REMOTE_ADDR` instead of a wildcard.
+
 ## 1. Environment used for verification
 
 | Component | Version / setting |
@@ -170,6 +172,116 @@ Chatbot failures are logged as metadata only (exception class, no SQL/bindings/p
 | `QUEUE_CONNECTION` | `sync` | Acceptable for current small jobs; see residual risks |
 | `APP_KEY` | Hardcoded in `render.yaml` | **Residual risk**; should move to a platform secret |
 
+### 5.4 Trusted reverse proxies (P11)
+
+#### Verified deployment topology
+
+- `render.yaml` declares a Render **web service** using the Docker runtime.
+- `Dockerfile` serves the app with Apache and exposes port 80; `docker-entrypoint.sh` rebinds Apache to Render's `$PORT`.
+- Render documents that its load balancer terminates TLS and forwards requests to the service over HTTP, and that the bound service port is **not directly reachable from the public internet** (`https://render.com/docs/web-services#port-binding`).
+- Therefore the immediate TCP peer (`REMOTE_ADDR`) is Render's ingress proxy. Render does **not** publish a stable list of ingress proxy IPs/CIDRs, so no explicit proxy range can be derived from the repository or the platform documentation. Do not invent one.
+- `TRUSTED_PROXIES=REMOTE_ADDR` in `render.yaml` therefore trusts only the immediate caller, which is the least-privilege setting for this topology.
+
+`app/Http/Middleware/TrustProxies.php` complements Symfony rather than
+replacing its resolution rules:
+
+- Symfony resolves the client IP from the **right-most untrusted**
+  `X-Forwarded-For` entry once the immediate peer is a trusted proxy.
+- The middleware first keeps only the right-most `TRUSTED_PROXY_HOPS` entries.
+  When the hop count matches the real chain, caller-supplied left-most values
+  never enter Symfony's walk.
+- For `X-Forwarded-Proto`, `X-Forwarded-Host`, and `X-Forwarded-Port`, Symfony
+  reads the **left-most** value. The middleware keeps only the right-most
+  value for those headers, i.e. the value written by the nearest trusted proxy.
+- It also drops `Forwarded`, `X-Forwarded-Prefix`, `X-Original-URL`, and
+  `X-Rewrite-URL`.
+
+This assumes the standard proxy contract: append the peer address to
+`X-Forwarded-For`, and set/append the scheme, host, and port actually served.
+It prevents a caller-prepended value from rotating rate-limit buckets, but it
+is **defence in depth, not a substitute for firewall isolation**. If the proxy
+passes a caller-controlled header through unchanged, no application code can
+recover the real client IP.
+
+#### Configuration
+
+```dotenv
+# Local development, tests, or a directly exposed app: trust nobody.
+TRUSTED_PROXIES=
+
+# Single reverse proxy whose address is not stable (trust the TCP peer only).
+TRUSTED_PROXIES=REMOTE_ADDR
+
+# Explicit proxy list. Replace these documentation-only example ranges with
+# the addresses/CIDRs published by your platform or network team.
+TRUSTED_PROXIES=192.0.2.10,198.51.100.0/24,2001:db8::/32
+
+# X-Forwarded-For entries added by the local chain (client + inner proxies).
+TRUSTED_PROXY_HOPS=1
+```
+
+- Entries are comma/whitespace separated and may be IPv4/IPv6 addresses or CIDR ranges.
+- `REMOTE_ADDR`, and Laravel's legacy `*`/`**`, mean “trust only the peer that opened the TCP connection”.
+- Invalid entries are ignored. If nothing valid remains, no proxy is trusted and forwarded headers are ignored (fail closed).
+- `TRUSTED_PROXY_HOPS` must equal the number of `X-Forwarded-For` entries added by your local proxy chain: the client entry written by the first proxy, plus one entry per inner proxy. A single load balancer uses `1`.
+- When `REMOTE_ADDR` is the only configured proxy, the middleware always uses exactly one hop and ignores a larger `TRUSTED_PROXY_HOPS` value.
+- Too few hops discards the real client and resolves to the nearest proxy, so all clients behind that proxy can share a rate-limit bucket. Too many hops leaves caller-supplied entries in the chain and can expose a forged value when the real client IP also falls inside a trusted range.
+- Never put client-controlled ranges in `TRUSTED_PROXIES`. Prefer the narrowest proxy addresses/CIDRs the platform or network team can provide.
+
+#### How to determine the proxy IP/CIDR
+
+1. Read the platform's own documentation/dashboard first (for Render, see the link above). If it does not publish a stable ingress range, keep `REMOTE_ADDR`.
+2. For self-managed deployments, take the address from the load balancer/ingress configuration (Nginx `proxy_pass`, HAProxy, Kubernetes ingress, cloud LB), not from request headers.
+3. Confirm the application port is firewalled so only that proxy can reach it. If clients can reach the app directly, even `REMOTE_ADDR` is spoofable: the attacker becomes the immediate caller.
+4. Re-check the list after any platform migration or proxy scaling change.
+
+#### Warning: direct exposure
+
+If the container port is published directly (`docker run -p ...`), the host
+firewall allows direct access, or a second ingress path bypasses the proxy,
+`TRUSTED_PROXIES=REMOTE_ADDR` (or `*`) lets any direct client set its own
+`X-Forwarded-For`, `X-Forwarded-Proto`, and `X-Forwarded-Host`. In that case:
+
+- set `TRUSTED_PROXIES` to the real proxy list and block direct access at the firewall; **or**
+- set `TRUSTED_PROXIES=` so forwarded headers are ignored until the network path is fixed.
+
+Never rely on the proxy to strip client-supplied forwarded headers.
+
+#### Post-deploy verification
+
+> The repository checks below verify the middleware and tests only. They do
+> **not** prove what the live Render ingress actually sends. Runtime
+> verification must be repeated after every deploy that changes the proxy,
+> platform, or `TRUSTED_PROXIES` setting.
+
+| Check | Expected result |
+|---|---|
+| HTTPS | Public URL serves HTTPS; `APP_URL`/asset URLs are `https://`; no redirect loop |
+| Client IP | `auth.login_failed.ip` / activity log shows the real client IP, not a Render-internal address |
+| Forged `X-Forwarded-For` | A caller-supplied value never appears as the logged client IP |
+| Rate limit | Same client with different forged headers shares one bucket; different clients get separate buckets |
+| Direct access | App port is not reachable except through the Render ingress |
+
+1. Confirm the deployed configuration is the intended one:
+
+   ```bash
+   php artisan tinker --execute="dump(config('trustedproxy.proxies'), config('trustedproxy.hops'));"
+   ```
+
+2. Trigger a failed login through the public URL and inspect the `auth.login_failed` log entry. Its `ip` must be the real client IP, not Render's internal address and not a forged value:
+
+   ```bash
+   curl -s -o /dev/null -X POST https://<app-host>/login \
+     -H 'X-Forwarded-For: 203.0.113.99' \
+     --data 'email=probe@example.invalid&password=wrong'
+   ```
+
+   Then check `stderr`/security logs. If the logged `ip` equals `203.0.113.99` (the forged value), forwarded headers are being trusted from an untrusted peer; stop and fix the topology/config.
+
+3. Repeat the same request without the forged header. The logged IP must stay the client's real address.
+4. Verify HTTPS URL generation (`APP_URL` starts with `https://`) and that the app does not issue an HTTP redirect loop behind the proxy.
+5. Send two requests from different real clients and confirm they receive separate rate-limit buckets; send two requests from the same client with different forged `X-Forwarded-For` values and confirm they share one bucket.
+
 ## 6. Regression evidence
 
 ### 6.1 Laravel suite
@@ -178,16 +290,17 @@ Chatbot failures are logged as metadata only (exception class, no SQL/bindings/p
 cd laravel-blade
 php artisan test
 
-Tests:    610 passed (3289 assertions)
-Duration: ~31.2s
+Tests:    623 passed (3329 assertions)
+Duration: ~35s
 ```
 
-This includes the new P7–P10 coverage:
+This includes the new P7–P11 coverage:
 
 - `tests/Feature/BenchmarkCommandsTest.php`
 - `tests/Feature/PublicationVisibilityTest.php`
 - `tests/Feature/ComicReleaseMetaTest.php`
 - new cases in `tests/Feature/SearchApiTest.php` and `tests/Feature/PwaBehaviorTest.php`
+- `tests/Feature/TrustedProxySecurityTest.php` (13 cases, including hop/ordering review)
 
 ### 6.2 Playwright E2E
 
@@ -258,7 +371,7 @@ The failure was environmental (server/login timing), not a product regression. M
 | Risk | Impact | Recommendation |
 |---|---|---|
 | `APP_KEY` is hardcoded in `render.yaml` | Key rotation and repo exposure risk | Move to platform secret; rotate if the repo was ever public |
-| `trustProxies(at: '*')` | Spoofed `X-Forwarded-*` if the origin is reachable directly | Make `TRUSTED_PROXIES` configurable; keep the origin firewalled |
+| Trusted proxies | Render does not publish a stable ingress CIDR; `REMOTE_ADDR` trusts the immediate peer. If the origin becomes directly reachable, forwarded headers can be spoofed | Keep the origin firewalled. On other platforms, list the real proxy IPs/CIDRs in `TRUSTED_PROXIES`; leave it empty for direct access. See §5.4 |
 | SQLite on Render | Concurrency/write contention; single instance only | Move to managed MySQL/Postgres before traffic grows |
 | `QUEUE_CONNECTION=sync` | Slow requests when image/notification jobs run | Enable a queue worker for image and notification jobs |
 | Live search TTL-only | New/edited comics stale for up to 5 minutes | Add catalogue-version cache keys or shorten TTL |
