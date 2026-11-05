@@ -1,4 +1,4 @@
-<div align="center">
+﻿<div align="center">
 
 # 📚 Comicx
 
@@ -22,8 +22,57 @@
 Xây dựng theo hướng một sản phẩm thực tế: có phân quyền, Reader chuyên sâu, AI recommendation, realtime notification, queue/cache, kiểm thử tự động và CI.
 
 </div>
-
 ---
+
+## ⚡ TL;DR
+
+> **EN** — Comicx is a free online comic-reading platform (Manga / Manhwa / Manhua) built with **Laravel 11 + Blade**. All published chapters are free to read — no coins, no paywall.  
+> **VI** — Comicx là website đọc truyện tranh (Manga / Manhwa / Manhua) xây dựng bằng **Laravel 11 + Blade**. Mọi chapter đã phát hành đều miễn phí, không Coin, không khóa nội dung.
+
+### 🛠 Công nghệ / Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Backend | PHP 8.3+, Laravel 11, Eloquent ORM |
+| Frontend | Blade, HTML/CSS/JS (no SPA framework) |
+| Database | MySQL (SQLite for tests) |
+| Realtime | Server-Sent Events (SSE) |
+| AI | OpenAI-compatible adapter + rule-based fallback |
+| Queue/Cache | Laravel Queue, Scheduler, File/DB Cache |
+| Testing | PHPUnit, Playwright E2E |
+| CI | GitHub Actions |
+
+### ✨ Chức năng chính / Key Features
+
+- 📖 **Reader nâng cao** — nhiều chế độ đọc, preset, quick/advanced settings, lưu tiến độ
+- 🤖 **AI Chatbot** — gợi ý truyện theo yêu cầu tự nhiên tiếng Việt, chỉ trả truyện thật trong DB
+- 📚 **Tủ truyện & Reading Progress** — lịch sử, chapter chưa đọc, tiếp tục đọc
+- 🔔 **Realtime Notification** — SSE + fallback polling, notification center
+- 🛡️ **Security & RBAC** — Auth, 2FA, permission middleware, rate limiting, CSRF
+- 🔎 **Search** — tìm kiếm tiếng Việt không dấu, partial match, lọc theo genre/author
+- 🏛️ **Admin Panel** — quản trị truyện, chapter, user, comment, báo cáo, audit log
+
+### 🚀 Chạy nhanh / Quick Start
+
+```bash
+# Clone & install
+git clone https://github.com/hunglc721/Web-truy-n.git
+cd Web-truy-n/laravel-blade
+composer install
+cp .env.example .env          # Windows: Copy-Item .env.example .env
+php artisan key:generate
+
+# Configure DB in .env, then:
+php artisan migrate --seed
+php artisan storage:link
+php artisan serve              # → http://127.0.0.1:8000
+
+# (Optional) Background workers
+php artisan queue:work
+php artisan schedule:work
+```
+
+**Seed accounts:** `admin@webcomics.com` / `user@webcomics.com` — password `12345678`\n\n---
 
 ## ✨ Tổng quan
 
