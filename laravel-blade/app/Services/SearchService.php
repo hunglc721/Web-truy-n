@@ -11,6 +11,7 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 
 class SearchService
 {
@@ -33,20 +34,25 @@ class SearchService
         }
 
         $normalized = VietnameseHelper::removeAccents($cleanKeyword);
+        $normalizedSlug = Str::slug($normalized);
         $cacheKey = 'search.live.' . md5($normalized) . '.' . $limit;
 
-        $results = Cache::remember($cacheKey, self::TTL_LIVE_SEARCH, function () use ($cleanKeyword, $normalized, $limit) {
+        $results = Cache::remember($cacheKey, self::TTL_LIVE_SEARCH, function () use ($cleanKeyword, $normalized, $normalizedSlug, $limit) {
             $escapedOriginal   = $this->escapeLikeString($cleanKeyword);
             $escapedNormalized = $this->escapeLikeString($normalized);
 
             return Comic::query()
-                ->where(function (Builder $query) use ($escapedOriginal, $escapedNormalized) {
+                ->published()
+                ->where(function (Builder $query) use ($escapedOriginal, $escapedNormalized, $normalizedSlug) {
                     $query->where('title', 'like', "%{$escapedOriginal}%")
                         ->orWhere('title_normalized', 'like', "%{$escapedNormalized}%")
                         ->orWhere('alt_titles', 'like', "%{$escapedOriginal}%")
                         ->orWhere('alt_titles_normalized', 'like', "%{$escapedNormalized}%")
-                        ->orWhereHas('authors', function (Builder $a) use ($escapedOriginal) {
+                        ->orWhereHas('authors', function (Builder $a) use ($escapedOriginal, $normalizedSlug) {
                             $a->where('name', 'like', "%{$escapedOriginal}%");
+                            if ($normalizedSlug !== '') {
+                                $a->orWhere('slug', 'like', "%{$normalizedSlug}%");
+                            }
                         })
                         ->orWhereHas('genres', function (Builder $g) use ($escapedOriginal) {
                             $g->where('name', 'like', "%{$escapedOriginal}%");
@@ -98,6 +104,7 @@ class SearchService
     {
         $perPage = min(50, max(1, (int) ($params['per_page'] ?? 18)));
         $query   = Comic::query()
+            ->published()
             ->with([
                 'genres:id,name,slug',
                 'authors:id,name',
@@ -113,14 +120,21 @@ class SearchService
 
             $escapedOriginal   = $this->escapeLikeString($keyword);
             $escapedNormalized = $this->escapeLikeString($normalized);
+            $normalizedSlug    = Str::slug($normalized);
 
-            $query->where(function (Builder $q) use ($escapedOriginal, $escapedNormalized) {
+            $query->where(function (Builder $q) use ($escapedOriginal, $escapedNormalized, $normalizedSlug) {
                 $q->where('title', 'like', "%{$escapedOriginal}%")
                     ->orWhere('title_normalized', 'like', "%{$escapedNormalized}%")
                     ->orWhere('alt_titles', 'like', "%{$escapedOriginal}%")
                     ->orWhere('alt_titles_normalized', 'like', "%{$escapedNormalized}%")
                     ->orWhere('description', 'like', "%{$escapedOriginal}%")
-                    ->orWhereHas('authors', fn($a) => $a->where('name', 'like', "%{$escapedOriginal}%"))
+                    ->orWhere('description_normalized', 'like', "%{$escapedNormalized}%")
+                    ->orWhereHas('authors', function (Builder $a) use ($escapedOriginal, $normalizedSlug) {
+                        $a->where('name', 'like', "%{$escapedOriginal}%");
+                        if ($normalizedSlug !== '') {
+                            $a->orWhere('slug', 'like', "%{$normalizedSlug}%");
+                        }
+                    })
                     ->orWhereHas('genres', fn($g) => $g->where('name', 'like', "%{$escapedOriginal}%"))
                     ->orWhereHas('tags', fn($t) => $t->where('name', 'like', "%{$escapedOriginal}%"));
             });
@@ -198,7 +212,16 @@ class SearchService
         // 10. Lọc theo số chương tối thiểu (min_chapters)
         if (!empty($params['min_chapters']) && (int) $params['min_chapters'] > 0) {
             $minChap = (int) $params['min_chapters'];
-            $query->having('chapters_count', '>=', $minChap);
+
+            // Đếm số chương đã phát hành bằng WHERE EXISTS-count thay vì HAVING
+            // trên alias chapters_count: HAVING on a non-aggregate query không
+            // hợp lệ trên SQLite (DB dùng cho test/CI).
+            $query->whereHas(
+                'chapters',
+                fn (Builder $chapters) => $chapters->published(),
+                '>=',
+                $minChap
+            );
         }
 
         // 11. Sắp xếp kết quả (Sort)

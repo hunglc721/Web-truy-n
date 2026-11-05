@@ -55,6 +55,9 @@ class IntentParserTest extends TestCase
         $this->assertSame($result['preferences'], $dto->toArray());
         Http::assertSent(fn ($request) => $request['messages'][1]['content'] === 'tìm fantasy main mạnh không harem'
             && str_contains($request['messages'][0]['content'], 'JSON only')
+            && str_contains($request['messages'][0]['content'], 'diacritics')
+            && str_contains($request['messages'][0]['content'], 'slang')
+            && str_contains($request['messages'][0]['content'], 'exclusions take priority')
             && str_contains($request['messages'][0]['content'], 'Fantasy')
             && str_contains($request['messages'][0]['content'], 'Vampire'));
     }

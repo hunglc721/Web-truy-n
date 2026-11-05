@@ -70,6 +70,14 @@
     value = value.trim();
     if (busy || !value || value.length > (field === 'message' ? 4000 : 100)) return;
     const signature = `${field}:${value}`;
+    // Short client-held context for the agent; the server validates and never stores it.
+    const priorTurns = field !== 'message' ? [] : history
+      .filter(entry => entry && ['user', 'assistant'].includes(entry.role)
+        && ['text', 'follow_up'].includes(entry.type) && typeof entry.content === 'string' && entry.content.trim())
+      .slice(-6)
+      .map(entry => ({ role: entry.role, content: entry.content.slice(0, 500) }));
+    if (priorTurns.length && priorTurns[priorTurns.length - 1].role === 'user'
+      && priorTurns[priorTurns.length - 1].content === value.slice(0, 500)) priorTurns.pop();
     if (failedSubmission !== signature) bubble(value, 'user');
     error.hidden = true;
     setBusy(true);
@@ -81,14 +89,15 @@
         method: 'POST', credentials: 'same-origin', signal: controller.signal,
         headers: { 'Content-Type': 'application/json', Accept: 'application/json',
           'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '' },
-        body: JSON.stringify({ [field]: value, conversation_token: token }),
+        body: JSON.stringify({ [field]: value, conversation_token: token,
+          ...(priorTurns.length ? { turns: priorTurns } : {}) }),
       });
       if (!response.ok) {
         if (response.status === 404) saveToken(null);
         throw new Error('Chat request failed');
       }
       const data = await response.json();
-      if (!data || !['question', 'recommendations'].includes(data.type)
+      if (!data || !['question', 'recommendations', 'answer'].includes(data.type)
         || (data.type === 'recommendations' && !Array.isArray(data.recommendations))) throw new Error('Invalid response');
       saveToken(data.conversation_token);
       if (typeof data.message === 'string' && data.message.trim()) {

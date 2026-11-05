@@ -95,7 +95,7 @@ class RecommendationService
 
             // 5. Tìm truyện có cùng thể loại yêu thích (genre signal — trọng số cao hơn)
             if (!empty($preferredGenreIds)) {
-                $recommendations = Comic::whereHas('genres', function ($q) use ($preferredGenreIds) {
+                $recommendations = Comic::published()->whereHas('genres', function ($q) use ($preferredGenreIds) {
                         $q->whereIn('genres.id', $preferredGenreIds);
                     })
                     ->whereNotIn('id', $excludeIds)
@@ -111,7 +111,7 @@ class RecommendationService
                 $needed = $limit - $recommendations->count();
                 $alreadyIds = array_merge($excludeIds, $recommendations->pluck('id')->toArray());
 
-                $tagBased = Comic::whereHas('tags', function ($q) use ($preferredTagIds) {
+                $tagBased = Comic::published()->whereHas('tags', function ($q) use ($preferredTagIds) {
                         $q->whereIn('tags.id', $preferredTagIds);
                     })
                     ->whereNotIn('id', $alreadyIds)
@@ -153,6 +153,7 @@ class RecommendationService
 
             // 1. Ưu tiên lấy từ ma trận Item-based Collaborative Filtering (Co-occurrence)
             $collabRows = \App\Models\ComicRecommendation::where('comic_id', $comic->id)
+                ->whereHas('recommendedComic', fn($q) => $q->published())
                 ->with(['recommendedComic' => fn($q) => $q->with(['genres', 'latestChapter', 'tags', 'authors'])])
                 ->orderByDesc('score')
                 ->limit($limit)
@@ -181,7 +182,7 @@ class RecommendationService
             $tagIds   = $comic->tags->pluck('id')->toArray();
 
             if (!empty($genreIds)) {
-                $contentBased = Comic::whereNotIn('id', $excludeIds)
+                $contentBased = Comic::published()->whereNotIn('id', $excludeIds)
                     ->whereHas('genres', function ($q) use ($genreIds) {
                         $q->whereIn('genres.id', $genreIds);
                     })
@@ -197,7 +198,7 @@ class RecommendationService
             // 3. Bổ sung từ Tag signal nếu vẫn chưa đủ
             if ($recommendations->count() < $limit && !empty($tagIds)) {
                 $alreadyIds = array_merge([$comic->id], $recommendations->pluck('id')->toArray());
-                $tagBased   = Comic::whereNotIn('id', $alreadyIds)
+                $tagBased   = Comic::published()->whereNotIn('id', $alreadyIds)
                     ->whereHas('tags', function ($q) use ($tagIds) {
                         $q->whereIn('tags.id', $tagIds);
                     })
@@ -245,7 +246,7 @@ class RecommendationService
         $cacheKey    = "recommendations.guest.v{$version}.limit_{$limit}.ex_{$excludeHash}";
 
         return Cache::remember($cacheKey, self::TTL_GUEST, function () use ($limit, $excludeComicIds) {
-            $query = Comic::trending();
+            $query = Comic::published()->trending();
 
             if (!empty($excludeComicIds)) {
                 $query->whereNotIn('id', $excludeComicIds);
@@ -332,7 +333,7 @@ class RecommendationService
             return collect();
         }
 
-        $trending = Comic::trending()
+        $trending = Comic::published()->trending()
             ->whereNotIn('id', $excludeIds)
             ->with(['genres', 'latestChapter', 'tags', 'authors'])
             ->limit($needed)
@@ -342,7 +343,7 @@ class RecommendationService
             $stillNeeded   = $needed - $trending->count();
             $alreadyHasIds = array_merge($excludeIds, $trending->pluck('id')->toArray());
 
-            $extra = Comic::orderByDesc('views')
+            $extra = Comic::published()->orderByDesc('views')
                 ->whereNotIn('id', $alreadyHasIds)
                 ->with(['genres', 'latestChapter', 'tags', 'authors'])
                 ->limit($stillNeeded)

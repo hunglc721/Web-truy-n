@@ -59,6 +59,34 @@ test.describe('WebComics browser journeys', () => {
     expect(pageErrors).toEqual([]);
   });
 
+  test('tablet header keeps actions on screen and opens the menu', async ({ page }) => {
+    const pageErrors = watchPageErrors(page);
+
+    await page.setViewportSize({ width: 1024, height: 800 });
+    await gotoApp(page, '/');
+    await expectNoDocumentOverflow(page);
+
+    // Below 1200px the nav collapses into the off-canvas menu so the header
+    // actions never get pushed past the right edge.
+    await expect(page.locator('.main-nav')).toBeHidden();
+    const menuButton = page.locator('#mobile-menu-btn');
+    await expect(menuButton).toBeVisible();
+
+    const headerRight = await page.locator('.header-right').boundingBox();
+    expect(headerRight.x + headerRight.width, 'header actions overflow the viewport').toBeLessThanOrEqual(1025);
+
+    await menuButton.click();
+    await expect(menuButton).toHaveAttribute('aria-expanded', 'true');
+    await expect(page.locator('#mobile-menu')).toHaveClass(/open/);
+    await expect(page.locator('#mobile-menu nav a').first()).toBeVisible();
+
+    await page.keyboard.press('Escape');
+    await expect(menuButton).toHaveAttribute('aria-expanded', 'false');
+    await expect(page.locator('#mobile-menu')).not.toHaveClass(/open/);
+
+    expect(pageErrors).toEqual([]);
+  });
+
   test('comic detail and reader work without layout overflow', async ({ page }) => {
     const pageErrors = watchPageErrors(page);
 

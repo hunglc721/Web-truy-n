@@ -31,5 +31,6 @@
         <env name="MAIL_MAILER" value="log"/>
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="AI_CONVERSATIONAL_RESPONSE" value="false"/>
+        <env name="AI_AGENT_ENABLED" value="false"/>
     </php>
 </phpunit>

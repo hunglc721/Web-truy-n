@@ -24,7 +24,9 @@
   <meta name="theme-color" content="#ff5e36" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="mobile-web-app-capable" content="yes" />
+  @production
   <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests" />
+  @endproduction
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -294,10 +296,12 @@
           </div>
         </div>
         <button type="button" class="header-action-link" id="pwa-install-btn" style="display:none;background:rgba(255,94,54,.15);color:var(--primary);border:1px solid rgba(255,94,54,.3);border-radius:999px;padding:6px 14px;font-weight:700;cursor:pointer;align-items:center;gap:6px;">📲 Cài App</button>
+        @unless(auth()->check() && auth()->user()->canAccessAdmin())
         <a href="{{ route('publish.create') }}" class="header-action-link" id="publish-link" title="Đăng truyện cho tác giả & nhóm dịch">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
           <span>Đăng Truyện</span>
         </a>
+        @endunless
         <div class="header-divider"></div>
         <div class="nav-icon-group">
           <a class="icon-btn" id="library-btn" aria-label="Tủ truyện" title="Tủ truyện của bạn" href="{{ auth()->check() ? route('user.library') : route('login') }}">
@@ -312,7 +316,7 @@
           <a href="{{ route('register') }}" class="btn btn-download">Đăng Ký</a>
         @else
           @if(auth()->user()->canAccessAdmin())<a href="{{ route('admin.dashboard') }}" class="btn btn-login" style="background:linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%);color:#fff;border-color:transparent">🛡️ Quản Trị</a>@endif
-          <a href="{{ route('user.dashboard') }}" class="btn btn-login" style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="Khu vực thành viên của {{ auth()->user()->name }}">👤 {{ auth()->user()->name }}</a>
+          <a href="{{ route('user.dashboard') }}" class="btn btn-login header-user-link" title="Khu vực thành viên của {{ auth()->user()->name }}">👤 {{ auth()->user()->name }}</a>
           <form action="{{ route('logout') }}" method="POST" style="margin:0">@csrf<button type="submit" class="btn btn-download">Đăng Xuất</button></form>
         @endguest
         <button type="button" class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Mở menu" aria-expanded="false" aria-controls="mobile-menu">☰</button>

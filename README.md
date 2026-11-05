@@ -162,6 +162,30 @@ Conversational Response
 - giải thích ngắn vì sao truyện phù hợp;
 - giữ guardrail để AI không tự tạo comic ID, slug, title hay score.
 
+### Bounded agent (đọc-only)
+
+Khi bật `AI_AGENT_ENABLED=true` (cần provider hợp lệ), chatbot chuyển sang agent có giới hạn:
+
+```text
+User message + 6 lượt gần nhất (client giữ, server không lưu)
+    ↓
+Intent Parser (JSON schema đóng)
+    ↓
+Agent loop: LLM được gọi tối đa 3 vòng, 2 tool call
+    ├─ search_comics / get_comic / list_chapters / get_chapter
+    ├─ get_my_library / get_my_history (chỉ chính user đang đăng nhập)
+    └─ get_taxonomy
+    ↓
+Grounded validator (title/id/number phải có trong dữ liệu backend)
+    ↓
+Card + message thật, hoặc fallback template
+```
+
+- **Biết gì:** catalog đã publish, chapter đã publish (kèm text nếu có), genre/tag/status, và dữ liệu thư viện/lịch sử **của chính user**.
+- **Không biết:** truyện nháp/hẹn giờ, chapter tương lai, dữ liệu user khác, secret, schema DB, internet.
+- **Không làm được:** thêm/xoá library, follow, sửa dữ liệu, chạy SQL, đọc file.
+- Mọi câu trả lời sai grounding (bịa tên, bịa số, HTML/URL) đều bị thay bằng template; lỗi provider/protocol/budget cũng fallback.
+
 ### Quota & fallback
 
 - quota theo user / guest session / IP;
@@ -170,6 +194,7 @@ Conversational Response
 - cache kết quả parse;
 - timeout / 429 / 5xx / JSON lỗi đều có fallback;
 - rule-based parser tiếp quản khi AI unavailable;
+- agent dùng chung ngân sách `AI_MAX_CALLS` với parser và response;
 - automated tests dùng fake/mock provider, không đốt quota thật.
 
 Cấu hình qua `.env`:
@@ -186,6 +211,13 @@ AI_RETRY_TIMES=1
 AI_MAX_CALLS=10
 AI_RATE_LIMIT_DECAY=60
 AI_PARSE_CACHE_TTL=600
+AI_AGENT_ENABLED=false
+AI_AGENT_MAX_ROUNDS=3
+AI_AGENT_MAX_TOOL_CALLS=2
+AI_AGENT_HISTORY_TURNS=6
+AI_AGENT_MAX_OUTPUT_CHARS=600
+AI_AGENT_TEMPERATURE=0.3
+AI_AGENT_MAX_TOKENS=600
 ```
 
 ---

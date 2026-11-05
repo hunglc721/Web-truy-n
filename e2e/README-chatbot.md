@@ -50,3 +50,26 @@ Database vẫn chỉ lưu preference, không thêm raw chat. History không đ�
 Feature tests fake AI kiểm tra grounding, timeout, HTML, quota chung, exclude và thao tác nới tiêu chí.
 8 E2E cases trên desktop/mobile kiểm tra thứ tự hội thoại, ảnh/link, history không nhân đôi,
 quick reply cập nhật state, viewport thấp và XSS cả trước/sau reload. Provider luôn tắt trong E2E.
+
+## Bounded agent
+
+`AI_AGENT_ENABLED=true` (mặc định tắt) mới bật agent. Điều kiện bật: `AI_ENABLED=true`,
+provider `openai_compatible`, có `AI_API_KEY`, `AI_MODEL` và `AI_BASE_URL` https hợp lệ.
+Thiếu bất kỳ điều kiện nào thì endpoint chạy đúng luồng cũ, không phát sinh call.
+
+Agent chỉ có tool đọc: `search_comics`, `get_comic`, `list_chapters`, `get_chapter`,
+`get_my_library`, `get_my_history`, `get_taxonomy`. Không có tool ghi, không có internet,
+không truy vấn SQL từ model. `get_my_*` luôn lấy `user_id` từ auth, guest nhận `unauthorized`.
+
+Mỗi request tối đa `AI_AGENT_MAX_ROUNDS` vòng và `AI_AGENT_MAX_TOOL_CALLS` tool call,
+dùng chung ngân sách `AI_MAX_CALLS`. Output phải là JSON đúng contract; title/id/number
+phải xuất hiện trong dữ liệu backend, không HTML/URL, tối đa `AI_AGENT_MAX_OUTPUT_CHARS`.
+Sai protocol, sai grounding, hết quota hoặc provider lỗi → trả template cũ.
+
+`turns` do client gửi (tối đa 6, mỗi lượt ≤ 500 ký tự, role user/assistant) chỉ để làm context;
+server validate rồi dùng trong prompt, **không lưu** vào database. E2E vẫn chạy với agent tắt
+(`AI_MAX_CALLS=0`) nên bộ test browser hiện tại không phụ thuộc provider.
+
+Test mới: `ChatAgentTest` (tool loop, out-of-scope, grounding, injection, quota, validation)
+và `ChatToolRegistryTest` (published-only, chapter ẩn, scope user, args).
+

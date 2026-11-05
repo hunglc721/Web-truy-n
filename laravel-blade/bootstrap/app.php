@@ -20,7 +20,12 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        $middleware->trustProxies(at: '*');
+        // The replacement sanitises forwarded headers before Laravel trusts
+        // them; see app/Http/Middleware/TrustProxies.php and config/trustedproxy.php.
+        $middleware->replace(
+            \Illuminate\Http\Middleware\TrustProxies::class,
+            \App\Http\Middleware\TrustProxies::class,
+        );
         $middleware->prepend(\App\Http\Middleware\LocalNavigationProfile::class);
         $middleware->web(append: [
             \App\Http\Middleware\MaintenanceModeMiddleware::class,

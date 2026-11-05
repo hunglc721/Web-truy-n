@@ -1,0 +1,3315 @@
+{
+    "schema_version": 1,
+    "benchmark": "search",
+    "environment": {
+        "generated_at": "2026-11-02T16:44:41+07:00",
+        "app_env": "local",
+        "php_version": "8.3.33",
+        "laravel_version": "11.55.1",
+        "git_head": "f8d60f4",
+        "db_connection": "mysql",
+        "db_database": "web_truyen",
+        "db_server_version": "8.4.3",
+        "cache_driver": "array",
+        "iteration_default": 5,
+        "os": "Windows"
+    },
+    "results": [
+        {
+            "candidates": 100,
+            "case": "live:title_accented",
+            "cache": "cold",
+            "conditions": 0,
+            "result_count": 1,
+            "timing_ms": {
+                "min": 3.923,
+                "median": 4.014,
+                "p95": 5.251,
+                "mean": 4.359,
+                "max": 5.251,
+                "samples": [
+                    3.923,
+                    3.998,
+                    4.014,
+                    4.606,
+                    5.251
+                ]
+            },
+            "queries": 3,
+            "sql": {
+                "exists": 2,
+                "comics_selects": 1,
+                "writes": 0,
+                "distinct": 3,
+                "samples": [
+                    "select `id`, `title`, `slug`, `cover_image`, `status`, `country`, `avg_rating`, `views`, `is_original` from `comics` where `published_at` is not null and `published_at` <= ? and (`",
+                    "select `genres`.`id`, `genres`.`name`, `genres`.`slug`, `comic_genre`.`comic_id` as `pivot_comic_id`, `comic_genre`.`genre_id` as `pivot_genre_id`, `comic_genre`.`is_primary` as `p",
+                    "select `chapters`.* from `chapters` inner join (select max(`chapters`.`id`) as `id_aggregate`, min(`chapters`.`chapter_number`) as `chapter_number_aggregate`, `chapters`.`comic_id`"
+                ]
+            },
+            "seed": 80.7
+        },
+        {
+            "candidates": 100,
+            "case": "live:title_unaccented",
+            "cache": "cold",
+            "conditions": 0,
+            "result_count": 1,
+            "timing_ms": {
+                "min": 3.749,
+                "median": 3.771,
+                "p95": 5.386,
+                "mean": 4.287,
+                "max": 5.386,
+                "samples": [
+                    3.749,
+                    3.758,
+                    3.771,
+                    4.772,
+                    5.386
+                ]
+            },
+            "queries": 3,
+            "sql": {
+                "exists": 2,
+                "comics_selects": 1,
+                "writes": 0,
+                "distinct": 3,
+                "samples": [
+                    "select `id`, `title`, `slug`, `cover_image`, `status`, `country`, `avg_rating`, `views`, `is_original` from `comics` where `published_at` is not null and `published_at` <= ? and (`",
+                    "select `genres`.`id`, `genres`.`name`, `genres`.`slug`, `comic_genre`.`comic_id` as `pivot_comic_id`, `comic_genre`.`genre_id` as `pivot_genre_id`, `comic_genre`.`is_primary` as `p",
+                    "select `chapters`.* from `chapters` inner join (select max(`chapters`.`id`) as `id_aggregate`, min(`chapters`.`chapter_number`) as `chapter_number_aggregate`, `chapters`.`comic_id`"
+                ]
+            },
+            "seed": 80.7
+        },
+        {
+            "candidates": 100,
+            "case": "live:partial",
+            "cache": "cold",
+            "conditions": 0,
+            "result_count": 1,
+            "timing_ms": {
+                "min": 3.646,
+                "median": 3.959,
+                "p95": 5.433,
+                "mean": 4.242,
+                "max": 5.433,
+                "samples": [
+                    3.646,
+                    3.728,
+                    3.959,
+                    4.443,
+                    5.433
+                ]
+            },
+            "queries": 3,
+            "sql": {
+                "exists": 2,
+                "comics_selects": 1,
+                "writes": 0,
+                "distinct": 3,
+                "samples": [
+                    "select `id`, `title`, `slug`, `cover_image`, `status`, `country`, `avg_rating`, `views`, `is_original` from `comics` where `published_at` is not null and `published_at` <= ? and (`",
+                    "select `genres`.`id`, `genres`.`name`, `genres`.`slug`, `comic_genre`.`comic_id` as `pivot_comic_id`, `comic_genre`.`genre_id` as `pivot_genre_id`, `comic_genre`.`is_primary` as `p",
+                    "select `chapters`.* from `chapters` inner join (select max(`chapters`.`id`) as `id_aggregate`, min(`chapters`.`chapter_number`) as `chapter_number_aggregate`, `chapters`.`comic_id`"
+                ]
+            },
+            "seed": 80.7
+        },
+        {
+            "candidates": 100,
+            "case": "live:description_unaccented",
+            "cache": "cold",
+            "conditions": 0,
+            "result_count": 0,
+            "timing_ms": {
+                "min": 2.102,
+                "median": 2.215,
+                "p95": 3.427,
+                "mean": 2.496,
+                "max": 3.427,
+                "samples": [
+                    2.102,
+                    2.213,
+                    2.215,
+                    2.522,
+                    3.427
+                ]
+            },
+            "queries": 1,
+            "sql": {
+                "exists": 2,
+                "comics_selects": 1,
+                "writes": 0,
+                "distinct": 1,
+                "samples": [
+                    "select `id`, `title`, `slug`, `cover_image`, `status`, `country`, `avg_rating`, `views`, `is_original` from `comics` where `published_at` is not null and `published_at` <= ? and (`"
+                ]
+            },
+            "seed": 80.7
+        },
+        {
+            "candidates": 100,
+            "case": "live:author_unaccented",
+            "cache": "cold",
+            "conditions": 0,
+            "result_count": 5,
+            "timing_ms": {
+                "min": 4.208,
+                "median": 5.209,
+                "p95": 6.846,
+                "mean": 5.331,
+                "max": 6.846,
+                "samples": [
+                    4.208,
+                    4.607,
+                    5.209,
+                    5.785,
+                    6.846
+                ]
+            },
+            "queries": 3,
+            "sql": {
+                "exists": 2,
+                "comics_selects": 1,
+                "writes": 0,
+                "distinct": 3,
+                "samples": [
+                    "select `id`, `title`, `slug`, `cover_image`, `status`, `country`, `avg_rating`, `views`, `is_original` from `comics` where `published_at` is not null and `published_at` <= ? and (`",
+                    "select `genres`.`id`, `genres`.`name`, `genres`.`slug`, `comic_genre`.`comic_id` as `pivot_comic_id`, `comic_genre`.`genre_id` as `pivot_genre_id`, `comic_genre`.`is_primary` as `p",
+                    "select `chapters`.* from `chapters` inner join (select max(`chapters`.`id`) as `id_aggregate`, min(`chapters`.`chapter_number`) as `chapter_number_aggregate`, `chapters`.`comic_id`"
+                ]
+            },
+            "seed": 80.7
+        },
+        {
+            "candidates": 100,
+            "case": "live:genre",
+            "cache": "cold",
+            "conditions": 0,
+            "result_count": 8,
+            "timing_ms": {
+                "min": 4.523,
+                "median": 5.077,
+                "p95": 6.2,
+                "mean": 5.348,
+                "max": 6.2,
+                "samples": [
+                    4.523,
+                    4.819,
+                    5.077,
+                    6.121,
+                    6.2
+                ]
+            },
+            "queries": 3,
+            "sql": {
+                "exists": 2,
+                "comics_selects": 1,
+                "writes": 0,
+                "distinct": 3,
+                "samples": [
+                    "select `id`, `title`, `slug`, `cover_image`, `status`, `country`, `avg_rating`, `views`, `is_original` from `comics` where `published_at` is not null and `published_at` <= ? and (`",
+                    "select `genres`.`id`, `genres`.`name`, `genres`.`slug`, `comic_genre`.`comic_id` as `pivot_comic_id`, `comic_genre`.`genre_id` as `pivot_genre_id`, `comic_genre`.`is_primary` as `p",
+                    "select `chapters`.* from `chapters` inner join (select max(`chapters`.`id`) as `id_aggregate`, min(`chapters`.`chapter_number`) as `chapter_number_aggregate`, `chapters`.`comic_id`"
+                ]
+            },
+            "seed": 80.7
+        },
+        {
+            "candidates": 100,
+            "case": "live:short_input",
+            "cache": "cold",
+            "conditions": 0,
+            "result_count": 0,
+            "timing_ms": {
+                "min": 0,
+                "median": 0,
+                "p95": 0.001,
+                "mean": 0.001,
+                "max": 0.001,
+                "samples": [
+                    0,
+                    0,
+                    0,
+                    0.001,
+                    0.001
+                ]
+            },
+            "queries": 0,
+            "sql": {
+                "exists": 0,
+                "comics_selects": 0,
+                "writes": 0,
+                "distinct": 0,
+                "samples": []
+            },
+            "seed": 80.7
+        },
+        {
+            "candidates": 100,
+            "case": "live:title_accented",
+            "cache": "warm",
+            "conditions": 0,
+            "result_count": 1,
+            "timing_ms": {
+                "min": 0.014,
+                "median": 0.017,
+                "p95": 0.281,
+                "mean": 0.073,
+                "max": 0.281,
+                "samples": [
+                    0.014,
+                    0.015,
+                    0.017,
+                    0.037,
+                    0.281
+                ]
+            },
+            "queries": 0,
+            "sql": {
+                "exists": 0,
+                "comics_selects": 0,
+                "writes": 0,
+                "distinct": 0,
+                "samples": []
+            },
+            "seed": 80.7
+        },
+        {
+            "candidates": 100,
+            "case": "advanced:keyword_accented",
+            "cache": "none",
+            "conditions": 0,
+            "result_count": 1,
+            "timing_ms": {
+                "min": 11.038,
+                "median": 12.75,
+                "p95": 467.198,
+                "mean": 103.302,
+                "max": 467.198,
+                "samples": [
+                    11.038,
+                    12.389,
+                    12.75,
+                    13.133,
+                    467.198
+                ]
+            },
+            "queries": 7,
+            "sql": {
+                "exists": 6,
+                "comics_selects": 2,
+                "writes": 1,
+                "distinct": 7,
+                "samples": [
+                    "insert into search_keywords (keyword, keyword_normalized, hits, results_count, last_searched_at, created_at, updated_at) values (?, ?, ?, ?, ?, ?, ?) on duplicate key update hits =",
+                    "select count(*) as aggregate from `comics` where `published_at` is not null and `published_at` <= ? and (`title` like ? or `title_normalized` like ? or `alt_titles` like ? or `alt_",
+                    "select `comics`.*, (select count(*) from `chapters` where `comics`.`id` = `chapters`.`comic_id` and `published_at` is not null and `published_at` <= ? and `chapters`.`deleted_at` i",
+                    "select `genres`.`id`, `genres`.`name`, `genres`.`slug`, `comic_genre`.`comic_id` as `pivot_comic_id`, `comic_genre`.`genre_id` as `pivot_genre_id`, `comic_genre`.`is_primary` as `p",
+                    "select `authors`.`id`, `authors`.`name`, `comic_author`.`comic_id` as `pivot_comic_id`, `comic_author`.`author_id` as `pivot_author_id`, `comic_author`.`role` as `pivot_role` from "
+                ]
+            },
+            "seed": 80.7
+        },
+        {
+            "candidates": 100,
+            "case": "advanced:keyword_unaccented",
+            "cache": "none",
+            "conditions": 0,
+            "result_count": 1,
+            "timing_ms": {
+                "min": 11.095,
+                "median": 12.53,
+                "p95": 13.281,
+                "mean": 12.501,
+                "max": 13.281,
+                "samples": [
+                    11.095,
+                    12.449,
+                    12.53,
+                    13.152,
+                    13.281
+                ]
+            },
+            "queries": 7,
+            "sql": {
+                "exists": 6,
+                "comics_selects": 2,
+                "writes": 1,
+                "distinct": 7,
+                "samples": [
+                    "insert into search_keywords (keyword, keyword_normalized, hits, results_count, last_searched_at, created_at, updated_at) values (?, ?, ?, ?, ?, ?, ?) on duplicate key update hits =",
+                    "select count(*) as aggregate from `comics` where `published_at` is not null and `published_at` <= ? and (`title` like ? or `title_normalized` like ? or `alt_titles` like ? or `alt_",
+                    "select `comics`.*, (select count(*) from `chapters` where `comics`.`id` = `chapters`.`comic_id` and `published_at` is not null and `published_at` <= ? and `chapters`.`deleted_at` i",
+                    "select `genres`.`id`, `genres`.`name`, `genres`.`slug`, `comic_genre`.`comic_id` as `pivot_comic_id`, `comic_genre`.`genre_id` as `pivot_genre_id`, `comic_genre`.`is_primary` as `p",
+                    "select `authors`.`id`, `authors`.`name`, `comic_author`.`comic_id` as `pivot_comic_id`, `comic_author`.`author_id` as `pivot_author_id`, `comic_author`.`role` as `pivot_role` from "
+                ]
+            },
+            "seed": 80.7
+        },
+        {
+            "candidates": 100,
+            "case": "advanced:description_accented",
+            "cache": "none",
+            "conditions": 0,
+            "result_count": 18,
+            "timing_ms": {
+                "min": 13.617,
+                "median": 14.508,
+                "p95": 15.847,
+                "mean": 14.575,
+                "max": 15.847,
+                "samples": [
+                    13.617,
+                    14.321,
+                    14.508,
+                    14.582,
+                    15.847
+                ]
+            },
+            "queries": 7,
+            "sql": {
+                "exists": 6,
+                "comics_selects": 2,
+                "writes": 1,
+                "distinct": 7,
+                "samples": [
+                    "insert into search_keywords (keyword, keyword_normalized, hits, results_count, last_searched_at, created_at, updated_at) values (?, ?, ?, ?, ?, ?, ?) on duplicate key update hits =",
+                    "select count(*) as aggregate from `comics` where `published_at` is not null and `published_at` <= ? and (`title` like ? or `title_normalized` like ? or `alt_titles` like ? or `alt_",
+                    "select `comics`.*, (select count(*) from `chapters` where `comics`.`id` = `chapters`.`comic_id` and `published_at` is not null and `published_at` <= ? and `chapters`.`deleted_at` i",
+                    "select `genres`.`id`, `genres`.`name`, `genres`.`slug`, `comic_genre`.`comic_id` as `pivot_comic_id`, `comic_genre`.`genre_id` as `pivot_genre_id`, `comic_genre`.`is_primary` as `p",
+                    "select `authors`.`id`, `authors`.`name`, `comic_author`.`comic_id` as `pivot_comic_id`, `comic_author`.`author_id` as `pivot_author_id`, `comic_author`.`role` as `pivot_role` from "
+                ]
+            },
+            "seed": 80.7
+        },
+        {
+            "candidates": 100,
+            "case": "advanced:description_unaccented",
+            "cache": "none",
+            "conditions": 0,
+            "result_count": 18,
+            "timing_ms": {
+                "min": 12.534,
+                "median": 14.124,
+                "p95": 15.605,
+                "mean": 14.098,
+                "max": 15.605,
+                "samples": [
+                    12.534,
+                    13.737,
+                    14.124,
+                    14.491,
+                    15.605
+                ]
+            },
+            "queries": 7,
+            "sql": {
+                "exists": 6,
+                "comics_selects": 2,
+                "writes": 1,
+                "distinct": 7,
+                "samples": [
+                    "insert into search_keywords (keyword, keyword_normalized, hits, results_count, last_searched_at, created_at, updated_at) values (?, ?, ?, ?, ?, ?, ?) on duplicate key update hits =",
+                    "select count(*) as aggregate from `comics` where `published_at` is not null and `published_at` <= ? and (`title` like ? or `title_normalized` like ? or `alt_titles` like ? or `alt_",
+                    "select `comics`.*, (select count(*) from `chapters` where `comics`.`id` = `chapters`.`comic_id` and `published_at` is not null and `published_at` <= ? and `chapters`.`deleted_at` i",
+                    "select `genres`.`id`, `genres`.`name`, `genres`.`slug`, `comic_genre`.`comic_id` as `pivot_comic_id`, `comic_genre`.`genre_id` as `pivot_genre_id`, `comic_genre`.`is_primary` as `p",
+                    "select `authors`.`id`, `authors`.`name`, `comic_author`.`comic_id` as `pivot_comic_id`, `comic_author`.`author_id` as `pivot_author_id`, `comic_author`.`role` as `pivot_role` from "
+                ]
+            },
+            "seed": 80.7
+        },
+        {
+            "candidates": 100,
+            "case": "advanced:author_unaccented",
+            "cache": "none",
+            "conditions": 0,
+            "result_count": 5,
+            "timing_ms": {
+                "min": 12.8,
+                "median": 12.933,
+                "p95": 14.429,
+                "mean": 13.387,
+                "max": 14.429,
+                "samples": [
+                    12.8,
+                    12.892,
+                    12.933,
+                    13.88,
+                    14.429
+                ]
+            },
+            "queries": 7,
+            "sql": {
+                "exists": 6,
+                "comics_selects": 2,
+                "writes": 1,
+                "distinct": 7,
+                "samples": [
+                    "insert into search_keywords (keyword, keyword_normalized, hits, results_count, last_searched_at, created_at, updated_at) values (?, ?, ?, ?, ?, ?, ?) on duplicate key update hits =",
+                    "select count(*) as aggregate from `comics` where `published_at` is not null and `published_at` <= ? and (`title` like ? or `title_normalized` like ? or `alt_titles` like ? or `alt_",
+                    "select `comics`.*, (select count(*) from `chapters` where `comics`.`id` = `chapters`.`comic_id` and `published_at` is not null and `published_at` <= ? and `chapters`.`deleted_at` i",
+                    "select `genres`.`id`, `genres`.`name`, `genres`.`slug`, `comic_genre`.`comic_id` as `pivot_comic_id`, `comic_genre`.`genre_id` as `pivot_genre_id`, `comic_genre`.`is_primary` as `p",
+                    "select `authors`.`id`, `authors`.`name`, `comic_author`.`comic_id` as `pivot_comic_id`, `comic_author`.`author_id` as `pivot_author_id`, `comic_author`.`role` as `pivot_role` from "
+                ]
+            },
+            "seed": 80.7
+        },
+        {
+            "candidates": 100,
+            "case": "advanced:genres_and_3",
+            "cache": "none",
+            "conditions": 0,
+            "result_count": 0,
+            "timing_ms": {
+                "min": 1.076,
+                "median": 1.481,
+                "p95": 1.911,
+                "mean": 1.542,
+                "max": 1.911,
+                "samples": [
+                    1.076,
+                    1.368,
+                    1.481,
+                    1.874,
+                    1.911
+                ]
+            },
+            "queries": 1,
+            "sql": {
+                "exists": 3,
+                "comics_selects": 1,
+                "writes": 0,
+                "distinct": 1,
+                "samples": [
+                    "select count(*) as aggregate from `comics` where `published_at` is not null and `published_at` <= ? and exists (select * from `genres` inner join `comic_genre` on `genres`.`id` = `"
+                ]
+            },
+            "seed": 80.7
+        },
+        {
+            "candidates": 100,
+            "case": "advanced:genres_or_4",
+            "cache": "none",
+            "conditions": 0,
+            "result_count": 0,
+            "timing_ms": {
+                "min": 1.325,
+                "median": 1.488,
+                "p95": 1.604,
+                "mean": 1.473,
+                "max": 1.604,
+                "samples": [
+                    1.325,
+                    1.434,
+                    1.488,
+                    1.517,
+                    1.604
+                ]
+            },
+            "queries": 1,
+            "sql": {
+                "exists": 1,
+                "comics_selects": 1,
+                "writes": 0,
+                "distinct": 1,
+                "samples": [
+                    "select count(*) as aggregate from `comics` where `published_at` is not null and `published_at` <= ? and exists (select * from `genres` inner join `comic_genre` on `genres`.`id` = `"
+                ]
+            },
+            "seed": 80.7
+        },
+        {
+            "candidates": 100,
+            "case": "advanced:tags_and_3",
+            "cache": "none",
+            "conditions": 0,
+            "result_count": 0,
+            "timing_ms": {
+                "min": 0.937,
+                "median": 1.051,
+                "p95": 1.327,
+                "mean": 1.092,
+                "max": 1.327,
+                "samples": [
+                    0.937,
+                    0.964,
+                    1.051,
+                    1.184,
+                    1.327
+                ]
+            },
+            "queries": 1,
+            "sql": {
+                "exists": 3,
+                "comics_selects": 1,
+                "writes": 0,
+                "distinct": 1,
+                "samples": [
+                    "select count(*) as aggregate from `comics` where `published_at` is not null and `published_at` <= ? and exists (select * from `tags` inner join `comic_tag` on `tags`.`id` = `comic_"
+                ]
+            },
+            "seed": 80.7
+        },
+        {
+            "candidates": 100,
+            "case": "advanced:exclude_genres",
+            "cache": "none",
+            "conditions": 0,
+            "result_count": 18,
+            "timing_ms": {
+                "min": 11.927,
+                "median": 12.619,
+                "p95": 13.636,
+                "mean": 12.722,
+                "max": 13.636,
+                "samples": [
+                    11.927,
+                    12.28,
+                    12.619,
+                    13.149,
+                    13.636
+                ]
+            },
+            "queries": 6,
+            "sql": {
+                "exists": 2,
+                "comics_selects": 2,
+                "writes": 0,
+                "distinct": 6,
+                "samples": [
+                    "select count(*) as aggregate from `comics` where `published_at` is not null and `published_at` <= ? and not exists (select * from `genres` inner join `comic_genre` on `genres`.`id`",
+                    "select `comics`.*, (select count(*) from `chapters` where `comics`.`id` = `chapters`.`comic_id` and `published_at` is not null and `published_at` <= ? and `chapters`.`deleted_at` i",
+                    "select `genres`.`id`, `genres`.`name`, `genres`.`slug`, `comic_genre`.`comic_id` as `pivot_comic_id`, `comic_genre`.`genre_id` as `pivot_genre_id`, `comic_genre`.`is_primary` as `p",
+                    "select `authors`.`id`, `authors`.`name`, `comic_author`.`comic_id` as `pivot_comic_id`, `comic_author`.`author_id` as `pivot_author_id`, `comic_author`.`role` as `pivot_role` from ",
+                    "select `tags`.`id`, `tags`.`name`, `tags`.`slug`, `comic_tag`.`comic_id` as `pivot_comic_id`, `comic_tag`.`tag_id` as `pivot_tag_id` from `tags` inner join `comic_tag` on `tags`.`i"
+                ]
+            },
+            "seed": 80.7
+        },
+        {
+            "candidates": 100,
+            "case": "advanced:filters_combo",
+            "cache": "none",
+            "conditions": 0,
+            "result_count": 0,
+            "timing_ms": {
+                "min": 0.869,
+                "median": 1.093,
+                "p95": 1.244,
+                "mean": 1.054,
+                "max": 1.244,
+                "samples": [
+                    0.869,
+                    0.887,
+                    1.093,
+                    1.178,
+                    1.244
+                ]
+            },
+            "queries": 1,
+            "sql": {
+                "exists": 0,
+                "comics_selects": 1,
+                "writes": 0,
+                "distinct": 1,
+                "samples": [
+                    "select count(*) as aggregate from `comics` where `published_at` is not null and `published_at` <= ? and (`status` = ? or `status` = ?) and `country` = ? and `released_year` = ? and"
+                ]
+            },
+            "seed": 80.7
+        },
+        {
+            "candidates": 100,
+            "case": "advanced:min_chapters",
+            "cache": "none",
+            "conditions": 0,
+            "result_count": 18,
+            "timing_ms": {
+                "min": 10.975,
+                "median": 12.155,
+                "p95": 14.337,
+                "mean": 12.504,
+                "max": 14.337,
+                "samples": [
+                    10.975,
+                    11.549,
+                    12.155,
+                    13.504,
+                    14.337
+                ]
+            },
+            "queries": 6,
+            "sql": {
+                "exists": 0,
+                "comics_selects": 2,
+                "writes": 0,
+                "distinct": 6,
+                "samples": [
+                    "select count(*) as aggregate from `comics` where `published_at` is not null and `published_at` <= ? and (select count(*) from `chapters` where `comics`.`id` = `chapters`.`comic_id`",
+                    "select `comics`.*, (select count(*) from `chapters` where `comics`.`id` = `chapters`.`comic_id` and `published_at` is not null and `published_at` <= ? and `chapters`.`deleted_at` i",
+                    "select `genres`.`id`, `genres`.`name`, `genres`.`slug`, `comic_genre`.`comic_id` as `pivot_comic_id`, `comic_genre`.`genre_id` as `pivot_genre_id`, `comic_genre`.`is_primary` as `p",
+                    "select `authors`.`id`, `authors`.`name`, `comic_author`.`comic_id` as `pivot_comic_id`, `comic_author`.`author_id` as `pivot_author_id`, `comic_author`.`role` as `pivot_role` from ",
+                    "select `tags`.`id`, `tags`.`name`, `tags`.`slug`, `comic_tag`.`comic_id` as `pivot_comic_id`, `comic_tag`.`tag_id` as `pivot_tag_id` from `tags` inner join `comic_tag` on `tags`.`i"
+                ]
+            },
+            "seed": 80.7
+        },
+        {
+            "candidates": 100,
+            "case": "advanced:sort_latest",
+            "cache": "none",
+            "conditions": 0,
+            "result_count": 18,
+            "timing_ms": {
+                "min": 14.586,
+                "median": 15.432,
+                "p95": 15.834,
+                "mean": 15.29,
+                "max": 15.834,
+                "samples": [
+                    14.586,
+                    15.078,
+                    15.432,
+                    15.519,
+                    15.834
+                ]
+            },
+            "queries": 6,
+            "sql": {
+                "exists": 0,
+                "comics_selects": 2,
+                "writes": 0,
+                "distinct": 6,
+                "samples": [
+                    "select count(*) as aggregate from `comics` where `published_at` is not null and `published_at` <= ? and `comics`.`deleted_at` is null",
+                    "select `comics`.*, (select count(*) from `chapters` where `comics`.`id` = `chapters`.`comic_id` and `published_at` is not null and `published_at` <= ? and `chapters`.`deleted_at` i",
+                    "select `genres`.`id`, `genres`.`name`, `genres`.`slug`, `comic_genre`.`comic_id` as `pivot_comic_id`, `comic_genre`.`genre_id` as `pivot_genre_id`, `comic_genre`.`is_primary` as `p",
+                    "select `authors`.`id`, `authors`.`name`, `comic_author`.`comic_id` as `pivot_comic_id`, `comic_author`.`author_id` as `pivot_author_id`, `comic_author`.`role` as `pivot_role` from ",
+                    "select `tags`.`id`, `tags`.`name`, `tags`.`slug`, `comic_tag`.`comic_id` as `pivot_comic_id`, `comic_tag`.`tag_id` as `pivot_tag_id` from `tags` inner join `comic_tag` on `tags`.`i"
+                ]
+            },
+            "seed": 80.7
+        },
+        {
+            "candidates": 100,
+            "case": "advanced:sort_trending",
+            "cache": "none",
+            "conditions": 0,
+            "result_count": 18,
+            "timing_ms": {
+                "min": 11.401,
+                "median": 12.417,
+                "p95": 14.047,
+                "mean": 12.51,
+                "max": 14.047,
+                "samples": [
+                    11.401,
+                    12.097,
+                    12.417,
+                    12.589,
+                    14.047
+                ]
+            },
+            "queries": 6,
+            "sql": {
+                "exists": 0,
+                "comics_selects": 2,
+                "writes": 0,
+                "distinct": 6,
+                "samples": [
+                    "select count(*) as aggregate from `comics` where `published_at` is not null and `published_at` <= ? and `trending_rank` is not null and `comics`.`deleted_at` is null",
+                    "select `comics`.*, (select count(*) from `chapters` where `comics`.`id` = `chapters`.`comic_id` and `published_at` is not null and `published_at` <= ? and `chapters`.`deleted_at` i",
+                    "select `genres`.`id`, `genres`.`name`, `genres`.`slug`, `comic_genre`.`comic_id` as `pivot_comic_id`, `comic_genre`.`genre_id` as `pivot_genre_id`, `comic_genre`.`is_primary` as `p",
+                    "select `authors`.`id`, `authors`.`name`, `comic_author`.`comic_id` as `pivot_comic_id`, `comic_author`.`author_id` as `pivot_author_id`, `comic_author`.`role` as `pivot_role` from ",
+                    "select `tags`.`id`, `tags`.`name`, `tags`.`slug`, `comic_tag`.`comic_id` as `pivot_comic_id`, `comic_tag`.`tag_id` as `pivot_tag_id` from `tags` inner join `comic_tag` on `tags`.`i"
+                ]
+            },
+            "seed": 80.7
+        },
+        {
+            "candidates": 100,
+            "case": "advanced:sort_alphabetical",
+            "cache": "none",
+            "conditions": 0,
+            "result_count": 18,
+            "timing_ms": {
+                "min": 9.227,
+                "median": 10.272,
+                "p95": 11.636,
+                "mean": 10.334,
+                "max": 11.636,
+                "samples": [
+                    9.227,
+                    9.759,
+                    10.272,
+                    10.775,
+                    11.636
+                ]
+            },
+            "queries": 6,
+            "sql": {
+                "exists": 0,
+                "comics_selects": 2,
+                "writes": 0,
+                "distinct": 6,
+                "samples": [
+                    "select count(*) as aggregate from `comics` where `published_at` is not null and `published_at` <= ? and `comics`.`deleted_at` is null",
+                    "select `comics`.*, (select count(*) from `chapters` where `comics`.`id` = `chapters`.`comic_id` and `published_at` is not null and `published_at` <= ? and `chapters`.`deleted_at` i",
+                    "select `genres`.`id`, `genres`.`name`, `genres`.`slug`, `comic_genre`.`comic_id` as `pivot_comic_id`, `comic_genre`.`genre_id` as `pivot_genre_id`, `comic_genre`.`is_primary` as `p",
+                    "select `authors`.`id`, `authors`.`name`, `comic_author`.`comic_id` as `pivot_comic_id`, `comic_author`.`author_id` as `pivot_author_id`, `comic_author`.`role` as `pivot_role` from ",
+                    "select `tags`.`id`, `tags`.`name`, `tags`.`slug`, `comic_tag`.`comic_id` as `pivot_comic_id`, `comic_tag`.`tag_id` as `pivot_tag_id` from `tags` inner join `comic_tag` on `tags`.`i"
+                ]
+            },
+            "seed": 80.7
+        },
+        {
+            "candidates": 100,
+            "case": "advanced:per_page_50",
+            "cache": "none",
+            "conditions": 0,
+            "result_count": 50,
+            "timing_ms": {
+                "min": 19.431,
+                "median": 20.197,
+                "p95": 21.731,
+                "mean": 20.271,
+                "max": 21.731,
+                "samples": [
+                    19.431,
+                    19.748,
+                    20.197,
+                    20.246,
+                    21.731
+                ]
+            },
+            "queries": 6,
+            "sql": {
+                "exists": 0,
+                "comics_selects": 2,
+                "writes": 0,
+                "distinct": 6,
+                "samples": [
+                    "select count(*) as aggregate from `comics` where `published_at` is not null and `published_at` <= ? and `comics`.`deleted_at` is null",
+                    "select `comics`.*, (select count(*) from `chapters` where `comics`.`id` = `chapters`.`comic_id` and `published_at` is not null and `published_at` <= ? and `chapters`.`deleted_at` i",
+                    "select `genres`.`id`, `genres`.`name`, `genres`.`slug`, `comic_genre`.`comic_id` as `pivot_comic_id`, `comic_genre`.`genre_id` as `pivot_genre_id`, `comic_genre`.`is_primary` as `p",
+                    "select `authors`.`id`, `authors`.`name`, `comic_author`.`comic_id` as `pivot_comic_id`, `comic_author`.`author_id` as `pivot_author_id`, `comic_author`.`role` as `pivot_role` from ",
+                    "select `tags`.`id`, `tags`.`name`, `tags`.`slug`, `comic_tag`.`comic_id` as `pivot_comic_id`, `comic_tag`.`tag_id` as `pivot_tag_id` from `tags` inner join `comic_tag` on `tags`.`i"
+                ]
+            },
+            "seed": 80.7
+        },
+        {
+            "candidates": 500,
+            "case": "live:title_accented",
+            "cache": "cold",
+            "conditions": 0,
+            "result_count": 8,
+            "timing_ms": {
+                "min": 10.898,
+                "median": 12.477,
+                "p95": 12.843,
+                "mean": 12.098,
+                "max": 12.843,
+                "samples": [
+                    10.898,
+                    11.583,
+                    12.477,
+                    12.688,
+                    12.843
+                ]
+            },
+            "queries": 3,
+            "sql": {
+                "exists": 2,
+                "comics_selects": 1,
+                "writes": 0,
+                "distinct": 3,
+                "samples": [
+                    "select `id`, `title`, `slug`, `cover_image`, `status`, `country`, `avg_rating`, `views`, `is_original` from `comics` where `published_at` is not null and `published_at` <= ? and (`",
+                    "select `genres`.`id`, `genres`.`name`, `genres`.`slug`, `comic_genre`.`comic_id` as `pivot_comic_id`, `comic_genre`.`genre_id` as `pivot_genre_id`, `comic_genre`.`is_primary` as `p",
+                    "select `chapters`.* from `chapters` inner join (select max(`chapters`.`id`) as `id_aggregate`, min(`chapters`.`chapter_number`) as `chapter_number_aggregate`, `chapters`.`comic_id`"
+                ]
+            },
+            "seed": 250.196
+        },
+        {
+            "candidates": 500,
+            "case": "live:title_unaccented",
+            "cache": "cold",
+            "conditions": 0,
+            "result_count": 8,
+            "timing_ms": {
+                "min": 11.661,
+                "median": 12.487,
+                "p95": 13.066,
+                "mean": 12.402,
+                "max": 13.066,
+                "samples": [
+                    11.661,
+                    11.804,
+                    12.487,
+                    12.99,
+                    13.066
+                ]
+            },
+            "queries": 3,
+            "sql": {
+                "exists": 2,
+                "comics_selects": 1,
+                "writes": 0,
+                "distinct": 3,
+                "samples": [
+                    "select `id`, `title`, `slug`, `cover_image`, `status`, `country`, `avg_rating`, `views`, `is_original` from `comics` where `published_at` is not null and `published_at` <= ? and (`",
+                    "select `genres`.`id`, `genres`.`name`, `genres`.`slug`, `comic_genre`.`comic_id` as `pivot_comic_id`, `comic_genre`.`genre_id` as `pivot_genre_id`, `comic_genre`.`is_primary` as `p",
+                    "select `chapters`.* from `chapters` inner join (select max(`chapters`.`id`) as `id_aggregate`, min(`chapters`.`chapter_number`) as `chapter_number_aggregate`, `chapters`.`comic_id`"
+                ]
+            },
+            "seed": 250.196
+        },
+        {
+            "candidates": 500,
+            "case": "live:partial",
+            "cache": "cold",
+            "conditions": 0,
+            "result_count": 8,
+            "timing_ms": {
+                "min": 11.888,
+                "median": 12.366,
+                "p95": 12.561,
+                "mean": 12.3,
+                "max": 12.561,
+                "samples": [
+                    11.888,
+                    12.304,
+                    12.366,
+                    12.38,
+                    12.561
+                ]
+            },
+            "queries": 3,
+            "sql": {
+                "exists": 2,
+                "comics_selects": 1,
+                "writes": 0,
+                "distinct": 3,
+                "samples": [
+                    "select `id`, `title`, `slug`, `cover_image`, `status`, `country`, `avg_rating`, `views`, `is_original` from `comics` where `published_at` is not null and `published_at` <= ? and (`",
+                    "select `genres`.`id`, `genres`.`name`, `genres`.`slug`, `comic_genre`.`comic_id` as `pivot_comic_id`, `comic_genre`.`genre_id` as `pivot_genre_id`, `comic_genre`.`is_primary` as `p",
+                    "select `chapters`.* from `chapters` inner join (select max(`chapters`.`id`) as `id_aggregate`, min(`chapters`.`chapter_number`) as `chapter_number_aggregate`, `chapters`.`comic_id`"
+                ]
+            },
+            "seed": 250.196
+        },
+        {
+            "candidates": 500,
+            "case": "live:description_unaccented",
+            "cache": "cold",
+            "conditions": 0,
+            "result_count": 0,
+            "timing_ms": {
+                "min": 10.026,
+                "median": 10.717,
+                "p95": 12.283,
+                "mean": 10.911,
+                "max": 12.283,
+                "samples": [
+                    10.026,
+                    10.474,
+                    10.717,
+                    11.057,
+                    12.283
+                ]
+            },
+            "queries": 1,
+            "sql": {
+                "exists": 2,
+                "comics_selects": 1,
+                "writes": 0,
+                "distinct": 1,
+                "samples": [
+                    "select `id`, `title`, `slug`, `cover_image`, `status`, `country`, `avg_rating`, `views`, `is_original` from `comics` where `published_at` is not null and `published_at` <= ? and (`"
+                ]
+            },
+            "seed": 250.196
+        },
+        {
+            "candidates": 500,
+            "case": "live:author_unaccented",
+            "cache": "cold",
+            "conditions": 0,
+            "result_count": 8,
+            "timing_ms": {
+                "min": 6.033,
+                "median": 7.331,
+                "p95": 8.204,
+                "mean": 7.304,
+                "max": 8.204,
+                "samples": [
+                    6.033,
+                    6.908,
+                    7.331,
+                    8.044,
+                    8.204
+                ]
+            },
+            "queries": 3,
+            "sql": {
+                "exists": 2,
+                "comics_selects": 1,
+                "writes": 0,
+                "distinct": 3,
+                "samples": [
+                    "select `id`, `title`, `slug`, `cover_image`, `status`, `country`, `avg_rating`, `views`, `is_original` from `comics` where `published_at` is not null and `published_at` <= ? and (`",
+                    "select `genres`.`id`, `genres`.`name`, `genres`.`slug`, `comic_genre`.`comic_id` as `pivot_comic_id`, `comic_genre`.`genre_id` as `pivot_genre_id`, `comic_genre`.`is_primary` as `p",
+                    "select `chapters`.* from `chapters` inner join (select max(`chapters`.`id`) as `id_aggregate`, min(`chapters`.`chapter_number`) as `chapter_number_aggregate`, `chapters`.`comic_id`"
+                ]
+            },
+            "seed": 250.196
+        },
+        {
+            "candidates": 500,
+            "case": "live:genre",
+            "cache": "cold",
+            "conditions": 0,
+            "result_count": 8,
+            "timing_ms": {
+                "min": 4.54,
+                "median": 5.054,
+                "p95": 7.33,
+                "mean": 5.446,
+                "max": 7.33,
+                "samples": [
+                    4.54,
+                    4.555,
+                    5.054,
+                    5.75,
+                    7.33
+                ]
+            },
+            "queries": 3,
+            "sql": {
+                "exists": 2,
+                "comics_selects": 1,
+                "writes": 0,
+                "distinct": 3,
+                "samples": [
+                    "select `id`, `title`, `slug`, `cover_image`, `status`, `country`, `avg_rating`, `views`, `is_original` from `comics` where `published_at` is not null and `published_at` <= ? and (`",
+                    "select `genres`.`id`, `genres`.`name`, `genres`.`slug`, `comic_genre`.`comic_id` as `pivot_comic_id`, `comic_genre`.`genre_id` as `pivot_genre_id`, `comic_genre`.`is_primary` as `p",
+                    "select `chapters`.* from `chapters` inner join (select max(`chapters`.`id`) as `id_aggregate`, min(`chapters`.`chapter_number`) as `chapter_number_aggregate`, `chapters`.`comic_id`"
+                ]
+            },
+            "seed": 250.196
+        },
+        {
+            "candidates": 500,
+            "case": "live:short_input",
+            "cache": "cold",
+            "conditions": 0,
+            "result_count": 0,
+            "timing_ms": {
+                "min": 0,
+                "median": 0.001,
+                "p95": 0.001,
+                "mean": 0.001,
+                "max": 0.001,
+                "samples": [
+                    0,
+                    0,
+                    0.001,
+                    0.001,
+                    0.001
+                ]
+            },
+            "queries": 0,
+            "sql": {
+                "exists": 0,
+                "comics_selects": 0,
+                "writes": 0,
+                "distinct": 0,
+                "samples": []
+            },
+            "seed": 250.196
+        },
+        {
+            "candidates": 500,
+            "case": "live:title_accented",
+            "cache": "warm",
+            "conditions": 0,
+            "result_count": 8,
+            "timing_ms": {
+                "min": 0.013,
+                "median": 0.014,
+                "p95": 0.042,
+                "mean": 0.02,
+                "max": 0.042,
+                "samples": [
+                    0.013,
+                    0.013,
+                    0.014,
+                    0.018,
+                    0.042
+                ]
+            },
+            "queries": 0,
+            "sql": {
+                "exists": 0,
+                "comics_selects": 0,
+                "writes": 0,
+                "distinct": 0,
+                "samples": []
+            },
+            "seed": 250.196
+        },
+        {
+            "candidates": 500,
+            "case": "advanced:keyword_accented",
+            "cache": "none",
+            "conditions": 0,
+            "result_count": 10,
+            "timing_ms": {
+                "min": 47.813,
+                "median": 48.775,
+                "p95": 52.866,
+                "mean": 49.392,
+                "max": 52.866,
+                "samples": [
+                    47.813,
+                    48.618,
+                    48.775,
+                    48.887,
+                    52.866
+                ]
+            },
+            "queries": 7,
+            "sql": {
+                "exists": 6,
+                "comics_selects": 2,
+                "writes": 1,
+                "distinct": 7,
+                "samples": [
+                    "insert into search_keywords (keyword, keyword_normalized, hits, results_count, last_searched_at, created_at, updated_at) values (?, ?, ?, ?, ?, ?, ?) on duplicate key update hits =",
+                    "select count(*) as aggregate from `comics` where `published_at` is not null and `published_at` <= ? and (`title` like ? or `title_normalized` like ? or `alt_titles` like ? or `alt_",
+                    "select `comics`.*, (select count(*) from `chapters` where `comics`.`id` = `chapters`.`comic_id` and `published_at` is not null and `published_at` <= ? and `chapters`.`deleted_at` i",
+                    "select `genres`.`id`, `genres`.`name`, `genres`.`slug`, `comic_genre`.`comic_id` as `pivot_comic_id`, `comic_genre`.`genre_id` as `pivot_genre_id`, `comic_genre`.`is_primary` as `p",
+                    "select `authors`.`id`, `authors`.`name`, `comic_author`.`comic_id` as `pivot_comic_id`, `comic_author`.`author_id` as `pivot_author_id`, `comic_author`.`role` as `pivot_role` from "
+                ]
+            },
+            "seed": 250.196
+        },
+        {
+            "candidates": 500,
+            "case": "advanced:keyword_unaccented",
+            "cache": "none",
+            "conditions": 0,
+            "result_count": 10,
+            "timing_ms": {
+                "min": 48.584,
+                "median": 49.851,
+                "p95": 52.053,
+                "mean": 50.236,
+                "max": 52.053,
+                "samples": [
+                    48.584,
+                    48.896,
+                    49.851,
+                    51.794,
+                    52.053
+                ]
+            },
+            "queries": 7,
+            "sql": {
+                "exists": 6,
+                "comics_selects": 2,
+                "writes": 1,
+                "distinct": 7,
+                "samples": [
+                    "insert into search_keywords (keyword, keyword_normalized, hits, results_count, last_searched_at, created_at, updated_at) values (?, ?, ?, ?, ?, ?, ?) on duplicate key update hits =",
+                    "select count(*) as aggregate from `comics` where `published_at` is not null and `published_at` <= ? and (`title` like ? or `title_normalized` like ? or `alt_titles` like ? or `alt_",
+                    "select `comics`.*, (select count(*) from `chapters` where `comics`.`id` = `chapters`.`comic_id` and `published_at` is not null and `published_at` <= ? and `chapters`.`deleted_at` i",
+                    "select `genres`.`id`, `genres`.`name`, `genres`.`slug`, `comic_genre`.`comic_id` as `pivot_comic_id`, `comic_genre`.`genre_id` as `pivot_genre_id`, `comic_genre`.`is_primary` as `p",
+                    "select `authors`.`id`, `authors`.`name`, `comic_author`.`comic_id` as `pivot_comic_id`, `comic_author`.`author_id` as `pivot_author_id`, `comic_author`.`role` as `pivot_role` from "
+                ]
+            },
+            "seed": 250.196
+        },
+        {
+            "candidates": 500,
+            "case": "advanced:description_accented",
+            "cache": "none",
+            "conditions": 0,
+            "result_count": 18,
+            "timing_ms": {
+                "min": 14.635,
+                "median": 14.879,
+                "p95": 96.352,
+                "mean": 31.665,
+                "max": 96.352,
+                "samples": [
+                    14.635,
+                    14.727,
+                    14.879,
+                    17.732,
+                    96.352
+                ]
+            },
+            "queries": 7,
+            "sql": {
+                "exists": 6,
+                "comics_selects": 2,
+                "writes": 1,
+                "distinct": 7,
+                "samples": [
+                    "insert into search_keywords (keyword, keyword_normalized, hits, results_count, last_searched_at, created_at, updated_at) values (?, ?, ?, ?, ?, ?, ?) on duplicate key update hits =",
+                    "select count(*) as aggregate from `comics` where `published_at` is not null and `published_at` <= ? and (`title` like ? or `title_normalized` like ? or `alt_titles` like ? or `alt_",
+                    "select `comics`.*, (select count(*) from `chapters` where `comics`.`id` = `chapters`.`comic_id` and `published_at` is not null and `published_at` <= ? and `chapters`.`deleted_at` i",
+                    "select `genres`.`id`, `genres`.`name`, `genres`.`slug`, `comic_genre`.`comic_id` as `pivot_comic_id`, `comic_genre`.`genre_id` as `pivot_genre_id`, `comic_genre`.`is_primary` as `p",
+                    "select `authors`.`id`, `authors`.`name`, `comic_author`.`comic_id` as `pivot_comic_id`, `comic_author`.`author_id` as `pivot_author_id`, `comic_author`.`role` as `pivot_role` from "
+                ]
+            },
+            "seed": 250.196
+        },
+        {
+            "candidates": 500,
+            "case": "advanced:description_unaccented",
+            "cache": "none",
+            "conditions": 0,
+            "result_count": 18,
+            "timing_ms": {
+                "min": 15.289,
+                "median": 16.774,
+                "p95": 18.888,
+                "mean": 16.981,
+                "max": 18.888,
+                "samples": [
+                    15.289,
+                    16.615,
+                    16.774,
+                    17.34,
+                    18.888
+                ]
+            },
+            "queries": 7,
+            "sql": {
+                "exists": 6,
+                "comics_selects": 2,
+                "writes": 1,
+                "distinct": 7,
+                "samples": [
+                    "insert into search_keywords (keyword, keyword_normalized, hits, results_count, last_searched_at, created_at, updated_at) values (?, ?, ?, ?, ?, ?, ?) on duplicate key update hits =",
+                    "select count(*) as aggregate from `comics` where `published_at` is not null and `published_at` <= ? and (`title` like ? or `title_normalized` like ? or `alt_titles` like ? or `alt_",
+                    "select `comics`.*, (select count(*) from `chapters` where `comics`.`id` = `chapters`.`comic_id` and `published_at` is not null and `published_at` <= ? and `chapters`.`deleted_at` i",
+                    "select `genres`.`id`, `genres`.`name`, `genres`.`slug`, `comic_genre`.`comic_id` as `pivot_comic_id`, `comic_genre`.`genre_id` as `pivot_genre_id`, `comic_genre`.`is_primary` as `p",
+                    "select `authors`.`id`, `authors`.`name`, `comic_author`.`comic_id` as `pivot_comic_id`, `comic_author`.`author_id` as `pivot_author_id`, `comic_author`.`role` as `pivot_role` from "
+                ]
+            },
+            "seed": 250.196
+        },
+        {
+            "candidates": 500,
+            "case": "advanced:author_unaccented",
+            "cache": "none",
+            "conditions": 0,
+            "result_count": 18,
+            "timing_ms": {
+                "min": 46.043,
+                "median": 47.246,
+                "p95": 49.74,
+                "mean": 47.449,
+                "max": 49.74,
+                "samples": [
+                    46.043,
+                    46.76,
+                    47.246,
+                    47.458,
+                    49.74
+                ]
+            },
+            "queries": 7,
+            "sql": {
+                "exists": 6,
+                "comics_selects": 2,
+                "writes": 1,
+                "distinct": 7,
+                "samples": [
+                    "insert into search_keywords (keyword, keyword_normalized, hits, results_count, last_searched_at, created_at, updated_at) values (?, ?, ?, ?, ?, ?, ?) on duplicate key update hits =",
+                    "select count(*) as aggregate from `comics` where `published_at` is not null and `published_at` <= ? and (`title` like ? or `title_normalized` like ? or `alt_titles` like ? or `alt_",
+                    "select `comics`.*, (select count(*) from `chapters` where `comics`.`id` = `chapters`.`comic_id` and `published_at` is not null and `published_at` <= ? and `chapters`.`deleted_at` i",
+                    "select `genres`.`id`, `genres`.`name`, `genres`.`slug`, `comic_genre`.`comic_id` as `pivot_comic_id`, `comic_genre`.`genre_id` as `pivot_genre_id`, `comic_genre`.`is_primary` as `p",
+                    "select `authors`.`id`, `authors`.`name`, `comic_author`.`comic_id` as `pivot_comic_id`, `comic_author`.`author_id` as `pivot_author_id`, `comic_author`.`role` as `pivot_role` from "
+                ]
+            },
+            "seed": 250.196
+        },
+        {
+            "candidates": 500,
+            "case": "advanced:genres_and_3",
+            "cache": "none",
+            "conditions": 0,
+            "result_count": 0,
+            "timing_ms": {
+                "min": 1.723,
+                "median": 1.767,
+                "p95": 2.267,
+                "mean": 1.876,
+                "max": 2.267,
+                "samples": [
+                    1.723,
+                    1.765,
+                    1.767,
+                    1.861,
+                    2.267
+                ]
+            },
+            "queries": 1,
+            "sql": {
+                "exists": 3,
+                "comics_selects": 1,
+                "writes": 0,
+                "distinct": 1,
+                "samples": [
+                    "select count(*) as aggregate from `comics` where `published_at` is not null and `published_at` <= ? and exists (select * from `genres` inner join `comic_genre` on `genres`.`id` = `"
+                ]
+            },
+            "seed": 250.196
+        },
+        {
+            "candidates": 500,
+            "case": "advanced:genres_or_4",
+            "cache": "none",
+            "conditions": 0,
+            "result_count": 0,
+            "timing_ms": {
+                "min": 3.557,
+                "median": 4.065,
+                "p95": 4.271,
+                "mean": 3.934,
+                "max": 4.271,
+                "samples": [
+                    3.557,
+                    3.638,
+                    4.065,
+                    4.136,
+                    4.271
+                ]
+            },
+            "queries": 1,
+            "sql": {
+                "exists": 1,
+                "comics_selects": 1,
+                "writes": 0,
+                "distinct": 1,
+                "samples": [
+                    "select count(*) as aggregate from `comics` where `published_at` is not null and `published_at` <= ? and exists (select * from `genres` inner join `comic_genre` on `genres`.`id` = `"
+                ]
+            },
+            "seed": 250.196
+        },
+        {
+            "candidates": 500,
+            "case": "advanced:tags_and_3",
+            "cache": "none",
+            "conditions": 0,
+            "result_count": 0,
+            "timing_ms": {
+                "min": 1.054,
+                "median": 1.246,
+                "p95": 1.567,
+                "mean": 1.261,
+                "max": 1.567,
+                "samples": [
+                    1.054,
+                    1.062,
+                    1.246,
+                    1.375,
+                    1.567
+                ]
+            },
+            "queries": 1,
+            "sql": {
+                "exists": 3,
+                "comics_selects": 1,
+                "writes": 0,
+                "distinct": 1,
+                "samples": [
+                    "select count(*) as aggregate from `comics` where `published_at` is not null and `published_at` <= ? and exists (select * from `tags` inner join `comic_tag` on `tags`.`id` = `comic_"
+                ]
+            },
+            "seed": 250.196
+        },
+        {
+            "candidates": 500,
+            "case": "advanced:exclude_genres",
+            "cache": "none",
+            "conditions": 0,
+            "result_count": 18,
+            "timing_ms": {
+                "min": 13.493,
+                "median": 14.2,
+                "p95": 14.939,
+                "mean": 14.296,
+                "max": 14.939,
+                "samples": [
+                    13.493,
+                    14.072,
+                    14.2,
+                    14.776,
+                    14.939
+                ]
+            },
+            "queries": 6,
+            "sql": {
+                "exists": 2,
+                "comics_selects": 2,
+                "writes": 0,
+                "distinct": 6,
+                "samples": [
+                    "select count(*) as aggregate from `comics` where `published_at` is not null and `published_at` <= ? and not exists (select * from `genres` inner join `comic_genre` on `genres`.`id`",
+                    "select `comics`.*, (select count(*) from `chapters` where `comics`.`id` = `chapters`.`comic_id` and `published_at` is not null and `published_at` <= ? and `chapters`.`deleted_at` i",
+                    "select `genres`.`id`, `genres`.`name`, `genres`.`slug`, `comic_genre`.`comic_id` as `pivot_comic_id`, `comic_genre`.`genre_id` as `pivot_genre_id`, `comic_genre`.`is_primary` as `p",
+                    "select `authors`.`id`, `authors`.`name`, `comic_author`.`comic_id` as `pivot_comic_id`, `comic_author`.`author_id` as `pivot_author_id`, `comic_author`.`role` as `pivot_role` from ",
+                    "select `tags`.`id`, `tags`.`name`, `tags`.`slug`, `comic_tag`.`comic_id` as `pivot_comic_id`, `comic_tag`.`tag_id` as `pivot_tag_id` from `tags` inner join `comic_tag` on `tags`.`i"
+                ]
+            },
+            "seed": 250.196
+        },
+        {
+            "candidates": 500,
+            "case": "advanced:filters_combo",
+            "cache": "none",
+            "conditions": 0,
+            "result_count": 0,
+            "timing_ms": {
+                "min": 1.729,
+                "median": 2.201,
+                "p95": 2.976,
+                "mean": 2.289,
+                "max": 2.976,
+                "samples": [
+                    1.729,
+                    2.095,
+                    2.201,
+                    2.444,
+                    2.976
+                ]
+            },
+            "queries": 1,
+            "sql": {
+                "exists": 0,
+                "comics_selects": 1,
+                "writes": 0,
+                "distinct": 1,
+                "samples": [
+                    "select count(*) as aggregate from `comics` where `published_at` is not null and `published_at` <= ? and (`status` = ? or `status` = ?) and `country` = ? and `released_year` = ? and"
+                ]
+            },
+            "seed": 250.196
+        },
+        {
+            "candidates": 500,
+            "case": "advanced:min_chapters",
+            "cache": "none",
+            "conditions": 0,
+            "result_count": 18,
+            "timing_ms": {
+                "min": 13.781,
+                "median": 14.278,
+                "p95": 15.252,
+                "mean": 14.353,
+                "max": 15.252,
+                "samples": [
+                    13.781,
+                    14.021,
+                    14.278,
+                    14.431,
+                    15.252
+                ]
+            },
+            "queries": 6,
+            "sql": {
+                "exists": 0,
+                "comics_selects": 2,
+                "writes": 0,
+                "distinct": 6,
+                "samples": [
+                    "select count(*) as aggregate from `comics` where `published_at` is not null and `published_at` <= ? and (select count(*) from `chapters` where `comics`.`id` = `chapters`.`comic_id`",
+                    "select `comics`.*, (select count(*) from `chapters` where `comics`.`id` = `chapters`.`comic_id` and `published_at` is not null and `published_at` <= ? and `chapters`.`deleted_at` i",
+                    "select `genres`.`id`, `genres`.`name`, `genres`.`slug`, `comic_genre`.`comic_id` as `pivot_comic_id`, `comic_genre`.`genre_id` as `pivot_genre_id`, `comic_genre`.`is_primary` as `p",
+                    "select `authors`.`id`, `authors`.`name`, `comic_author`.`comic_id` as `pivot_comic_id`, `comic_author`.`author_id` as `pivot_author_id`, `comic_author`.`role` as `pivot_role` from ",
+                    "select `tags`.`id`, `tags`.`name`, `tags`.`slug`, `comic_tag`.`comic_id` as `pivot_comic_id`, `comic_tag`.`tag_id` as `pivot_tag_id` from `tags` inner join `comic_tag` on `tags`.`i"
+                ]
+            },
+            "seed": 250.196
+        },
+        {
+            "candidates": 500,
+            "case": "advanced:sort_latest",
+            "cache": "none",
+            "conditions": 0,
+            "result_count": 18,
+            "timing_ms": {
+                "min": 19.46,
+                "median": 19.792,
+                "p95": 49.783,
+                "mean": 26.288,
+                "max": 49.783,
+                "samples": [
+                    19.46,
+                    19.766,
+                    19.792,
+                    22.639,
+                    49.783
+                ]
+            },
+            "queries": 6,
+            "sql": {
+                "exists": 0,
+                "comics_selects": 2,
+                "writes": 0,
+                "distinct": 6,
+                "samples": [
+                    "select count(*) as aggregate from `comics` where `published_at` is not null and `published_at` <= ? and `comics`.`deleted_at` is null",
+                    "select `comics`.*, (select count(*) from `chapters` where `comics`.`id` = `chapters`.`comic_id` and `published_at` is not null and `published_at` <= ? and `chapters`.`deleted_at` i",
+                    "select `genres`.`id`, `genres`.`name`, `genres`.`slug`, `comic_genre`.`comic_id` as `pivot_comic_id`, `comic_genre`.`genre_id` as `pivot_genre_id`, `comic_genre`.`is_primary` as `p",
+                    "select `authors`.`id`, `authors`.`name`, `comic_author`.`comic_id` as `pivot_comic_id`, `comic_author`.`author_id` as `pivot_author_id`, `comic_author`.`role` as `pivot_role` from ",
+                    "select `tags`.`id`, `tags`.`name`, `tags`.`slug`, `comic_tag`.`comic_id` as `pivot_comic_id`, `comic_tag`.`tag_id` as `pivot_tag_id` from `tags` inner join `comic_tag` on `tags`.`i"
+                ]
+            },
+            "seed": 250.196
+        },
+        {
+            "candidates": 500,
+            "case": "advanced:sort_trending",
+            "cache": "none",
+            "conditions": 0,
+            "result_count": 18,
+            "timing_ms": {
+                "min": 12.891,
+                "median": 15.25,
+                "p95": 15.293,
+                "mean": 14.387,
+                "max": 15.293,
+                "samples": [
+                    12.891,
+                    13.22,
+                    15.25,
+                    15.279,
+                    15.293
+                ]
+            },
+            "queries": 6,
+            "sql": {
+                "exists": 0,
+                "comics_selects": 2,
+                "writes": 0,
+                "distinct": 6,
+                "samples": [
+                    "select count(*) as aggregate from `comics` where `published_at` is not null and `published_at` <= ? and `trending_rank` is not null and `comics`.`deleted_at` is null",
+                    "select `comics`.*, (select count(*) from `chapters` where `comics`.`id` = `chapters`.`comic_id` and `published_at` is not null and `published_at` <= ? and `chapters`.`deleted_at` i",
+                    "select `genres`.`id`, `genres`.`name`, `genres`.`slug`, `comic_genre`.`comic_id` as `pivot_comic_id`, `comic_genre`.`genre_id` as `pivot_genre_id`, `comic_genre`.`is_primary` as `p",
+                    "select `authors`.`id`, `authors`.`name`, `comic_author`.`comic_id` as `pivot_comic_id`, `comic_author`.`author_id` as `pivot_author_id`, `comic_author`.`role` as `pivot_role` from ",
+                    "select `tags`.`id`, `tags`.`name`, `tags`.`slug`, `comic_tag`.`comic_id` as `pivot_comic_id`, `comic_tag`.`tag_id` as `pivot_tag_id` from `tags` inner join `comic_tag` on `tags`.`i"
+                ]
+            },
+            "seed": 250.196
+        },
+        {
+            "candidates": 500,
+            "case": "advanced:sort_alphabetical",
+            "cache": "none",
+            "conditions": 0,
+            "result_count": 18,
+            "timing_ms": {
+                "min": 11.281,
+                "median": 12.031,
+                "p95": 12.627,
+                "mean": 11.942,
+                "max": 12.627,
+                "samples": [
+                    11.281,
+                    11.464,
+                    12.031,
+                    12.31,
+                    12.627
+                ]
+            },
+            "queries": 6,
+            "sql": {
+                "exists": 0,
+                "comics_selects": 2,
+                "writes": 0,
+                "distinct": 6,
+                "samples": [
+                    "select count(*) as aggregate from `comics` where `published_at` is not null and `published_at` <= ? and `comics`.`deleted_at` is null",
+                    "select `comics`.*, (select count(*) from `chapters` where `comics`.`id` = `chapters`.`comic_id` and `published_at` is not null and `published_at` <= ? and `chapters`.`deleted_at` i",
+                    "select `genres`.`id`, `genres`.`name`, `genres`.`slug`, `comic_genre`.`comic_id` as `pivot_comic_id`, `comic_genre`.`genre_id` as `pivot_genre_id`, `comic_genre`.`is_primary` as `p",
+                    "select `authors`.`id`, `authors`.`name`, `comic_author`.`comic_id` as `pivot_comic_id`, `comic_author`.`author_id` as `pivot_author_id`, `comic_author`.`role` as `pivot_role` from ",
+                    "select `tags`.`id`, `tags`.`name`, `tags`.`slug`, `comic_tag`.`comic_id` as `pivot_comic_id`, `comic_tag`.`tag_id` as `pivot_tag_id` from `tags` inner join `comic_tag` on `tags`.`i"
+                ]
+            },
+            "seed": 250.196
+        },
+        {
+            "candidates": 500,
+            "case": "advanced:per_page_50",
+            "cache": "none",
+            "conditions": 0,
+            "result_count": 50,
+            "timing_ms": {
+                "min": 21.613,
+                "median": 23.62,
+                "p95": 25.752,
+                "mean": 23.737,
+                "max": 25.752,
+                "samples": [
+                    21.613,
+                    22.962,
+                    23.62,
+                    24.739,
+                    25.752
+                ]
+            },
+            "queries": 6,
+            "sql": {
+                "exists": 0,
+                "comics_selects": 2,
+                "writes": 0,
+                "distinct": 6,
+                "samples": [
+                    "select count(*) as aggregate from `comics` where `published_at` is not null and `published_at` <= ? and `comics`.`deleted_at` is null",
+                    "select `comics`.*, (select count(*) from `chapters` where `comics`.`id` = `chapters`.`comic_id` and `published_at` is not null and `published_at` <= ? and `chapters`.`deleted_at` i",
+                    "select `genres`.`id`, `genres`.`name`, `genres`.`slug`, `comic_genre`.`comic_id` as `pivot_comic_id`, `comic_genre`.`genre_id` as `pivot_genre_id`, `comic_genre`.`is_primary` as `p",
+                    "select `authors`.`id`, `authors`.`name`, `comic_author`.`comic_id` as `pivot_comic_id`, `comic_author`.`author_id` as `pivot_author_id`, `comic_author`.`role` as `pivot_role` from ",
+                    "select `tags`.`id`, `tags`.`name`, `tags`.`slug`, `comic_tag`.`comic_id` as `pivot_comic_id`, `comic_tag`.`tag_id` as `pivot_tag_id` from `tags` inner join `comic_tag` on `tags`.`i"
+                ]
+            },
+            "seed": 250.196
+        },
+        {
+            "candidates": 1200,
+            "case": "live:title_accented",
+            "cache": "cold",
+            "conditions": 0,
+            "result_count": 8,
+            "timing_ms": {
+                "min": 8.069,
+                "median": 9.857,
+                "p95": 10.063,
+                "mean": 9.546,
+                "max": 10.063,
+                "samples": [
+                    8.069,
+                    9.781,
+                    9.857,
+                    9.959,
+                    10.063
+                ]
+            },
+            "queries": 3,
+            "sql": {
+                "exists": 2,
+                "comics_selects": 1,
+                "writes": 0,
+                "distinct": 3,
+                "samples": [
+                    "select `id`, `title`, `slug`, `cover_image`, `status`, `country`, `avg_rating`, `views`, `is_original` from `comics` where `published_at` is not null and `published_at` <= ? and (`",
+                    "select `genres`.`id`, `genres`.`name`, `genres`.`slug`, `comic_genre`.`comic_id` as `pivot_comic_id`, `comic_genre`.`genre_id` as `pivot_genre_id`, `comic_genre`.`is_primary` as `p",
+                    "select `chapters`.* from `chapters` inner join (select max(`chapters`.`id`) as `id_aggregate`, min(`chapters`.`chapter_number`) as `chapter_number_aggregate`, `chapters`.`comic_id`"
+                ]
+            },
+            "seed": 568.34
+        },
+        {
+            "candidates": 1200,
+            "case": "live:title_unaccented",
+            "cache": "cold",
+            "conditions": 0,
+            "result_count": 8,
+            "timing_ms": {
+                "min": 8.241,
+                "median": 9.235,
+                "p95": 10.085,
+                "mean": 9.226,
+                "max": 10.085,
+                "samples": [
+                    8.241,
+                    9.2,
+                    9.235,
+                    9.37,
+                    10.085
+                ]
+            },
+            "queries": 3,
+            "sql": {
+                "exists": 2,
+                "comics_selects": 1,
+                "writes": 0,
+                "distinct": 3,
+                "samples": [
+                    "select `id`, `title`, `slug`, `cover_image`, `status`, `country`, `avg_rating`, `views`, `is_original` from `comics` where `published_at` is not null and `published_at` <= ? and (`",
+                    "select `genres`.`id`, `genres`.`name`, `genres`.`slug`, `comic_genre`.`comic_id` as `pivot_comic_id`, `comic_genre`.`genre_id` as `pivot_genre_id`, `comic_genre`.`is_primary` as `p",
+                    "select `chapters`.* from `chapters` inner join (select max(`chapters`.`id`) as `id_aggregate`, min(`chapters`.`chapter_number`) as `chapter_number_aggregate`, `chapters`.`comic_id`"
+                ]
+            },
+            "seed": 568.34
+        },
+        {
+            "candidates": 1200,
+            "case": "live:partial",
+            "cache": "cold",
+            "conditions": 0,
+            "result_count": 8,
+            "timing_ms": {
+                "min": 7.822,
+                "median": 9.597,
+                "p95": 10.073,
+                "mean": 9.071,
+                "max": 10.073,
+                "samples": [
+                    7.822,
+                    8.259,
+                    9.597,
+                    9.604,
+                    10.073
+                ]
+            },
+            "queries": 3,
+            "sql": {
+                "exists": 2,
+                "comics_selects": 1,
+                "writes": 0,
+                "distinct": 3,
+                "samples": [
+                    "select `id`, `title`, `slug`, `cover_image`, `status`, `country`, `avg_rating`, `views`, `is_original` from `comics` where `published_at` is not null and `published_at` <= ? and (`",
+                    "select `genres`.`id`, `genres`.`name`, `genres`.`slug`, `comic_genre`.`comic_id` as `pivot_comic_id`, `comic_genre`.`genre_id` as `pivot_genre_id`, `comic_genre`.`is_primary` as `p",
+                    "select `chapters`.* from `chapters` inner join (select max(`chapters`.`id`) as `id_aggregate`, min(`chapters`.`chapter_number`) as `chapter_number_aggregate`, `chapters`.`comic_id`"
+                ]
+            },
+            "seed": 568.34
+        },
+        {
+            "candidates": 1200,
+            "case": "live:description_unaccented",
+            "cache": "cold",
+            "conditions": 0,
+            "result_count": 0,
+            "timing_ms": {
+                "min": 15.218,
+                "median": 16.424,
+                "p95": 18.026,
+                "mean": 16.311,
+                "max": 18.026,
+                "samples": [
+                    15.218,
+                    15.325,
+                    16.424,
+                    16.56,
+                    18.026
+                ]
+            },
+            "queries": 1,
+            "sql": {
+                "exists": 2,
+                "comics_selects": 1,
+                "writes": 0,
+                "distinct": 1,
+                "samples": [
+                    "select `id`, `title`, `slug`, `cover_image`, `status`, `country`, `avg_rating`, `views`, `is_original` from `comics` where `published_at` is not null and `published_at` <= ? and (`"
+                ]
+            },
+            "seed": 568.34
+        },
+        {
+            "candidates": 1200,
+            "case": "live:author_unaccented",
+            "cache": "cold",
+            "conditions": 0,
+            "result_count": 8,
+            "timing_ms": {
+                "min": 5.272,
+                "median": 5.72,
+                "p95": 7.104,
+                "mean": 5.957,
+                "max": 7.104,
+                "samples": [
+                    5.272,
+                    5.375,
+                    5.72,
+                    6.315,
+                    7.104
+                ]
+            },
+            "queries": 3,
+            "sql": {
+                "exists": 2,
+                "comics_selects": 1,
+                "writes": 0,
+                "distinct": 3,
+                "samples": [
+                    "select `id`, `title`, `slug`, `cover_image`, `status`, `country`, `avg_rating`, `views`, `is_original` from `comics` where `published_at` is not null and `published_at` <= ? and (`",
+                    "select `genres`.`id`, `genres`.`name`, `genres`.`slug`, `comic_genre`.`comic_id` as `pivot_comic_id`, `comic_genre`.`genre_id` as `pivot_genre_id`, `comic_genre`.`is_primary` as `p",
+                    "select `chapters`.* from `chapters` inner join (select max(`chapters`.`id`) as `id_aggregate`, min(`chapters`.`chapter_number`) as `chapter_number_aggregate`, `chapters`.`comic_id`"
+                ]
+            },
+            "seed": 568.34
+        },
+        {
+            "candidates": 1200,
+            "case": "live:genre",
+            "cache": "cold",
+            "conditions": 0,
+            "result_count": 8,
+            "timing_ms": {
+                "min": 4.033,
+                "median": 4.443,
+                "p95": 4.972,
+                "mean": 4.525,
+                "max": 4.972,
+                "samples": [
+                    4.033,
+                    4.271,
+                    4.443,
+                    4.905,
+                    4.972
+                ]
+            },
+            "queries": 3,
+            "sql": {
+                "exists": 2,
+                "comics_selects": 1,
+                "writes": 0,
+                "distinct": 3,
+                "samples": [
+                    "select `id`, `title`, `slug`, `cover_image`, `status`, `country`, `avg_rating`, `views`, `is_original` from `comics` where `published_at` is not null and `published_at` <= ? and (`",
+                    "select `genres`.`id`, `genres`.`name`, `genres`.`slug`, `comic_genre`.`comic_id` as `pivot_comic_id`, `comic_genre`.`genre_id` as `pivot_genre_id`, `comic_genre`.`is_primary` as `p",
+                    "select `chapters`.* from `chapters` inner join (select max(`chapters`.`id`) as `id_aggregate`, min(`chapters`.`chapter_number`) as `chapter_number_aggregate`, `chapters`.`comic_id`"
+                ]
+            },
+            "seed": 568.34
+        },
+        {
+            "candidates": 1200,
+            "case": "live:short_input",
+            "cache": "cold",
+            "conditions": 0,
+            "result_count": 0,
+            "timing_ms": {
+                "min": 0.001,
+                "median": 0.001,
+                "p95": 0.002,
+                "mean": 0.001,
+                "max": 0.002,
+                "samples": [
+                    0.001,
+                    0.001,
+                    0.001,
+                    0.001,
+                    0.002
+                ]
+            },
+            "queries": 0,
+            "sql": {
+                "exists": 0,
+                "comics_selects": 0,
+                "writes": 0,
+                "distinct": 0,
+                "samples": []
+            },
+            "seed": 568.34
+        },
+        {
+            "candidates": 1200,
+            "case": "live:title_accented",
+            "cache": "warm",
+            "conditions": 0,
+            "result_count": 8,
+            "timing_ms": {
+                "min": 0.014,
+                "median": 0.016,
+                "p95": 0.044,
+                "mean": 0.021,
+                "max": 0.044,
+                "samples": [
+                    0.014,
+                    0.014,
+                    0.016,
+                    0.018,
+                    0.044
+                ]
+            },
+            "queries": 0,
+            "sql": {
+                "exists": 0,
+                "comics_selects": 0,
+                "writes": 0,
+                "distinct": 0,
+                "samples": []
+            },
+            "seed": 568.34
+        },
+        {
+            "candidates": 1200,
+            "case": "advanced:keyword_accented",
+            "cache": "none",
+            "conditions": 0,
+            "result_count": 10,
+            "timing_ms": {
+                "min": 86.405,
+                "median": 87.357,
+                "p95": 90.567,
+                "mean": 88.101,
+                "max": 90.567,
+                "samples": [
+                    86.405,
+                    87.025,
+                    87.357,
+                    89.149,
+                    90.567
+                ]
+            },
+            "queries": 7,
+            "sql": {
+                "exists": 6,
+                "comics_selects": 2,
+                "writes": 1,
+                "distinct": 7,
+                "samples": [
+                    "insert into search_keywords (keyword, keyword_normalized, hits, results_count, last_searched_at, created_at, updated_at) values (?, ?, ?, ?, ?, ?, ?) on duplicate key update hits =",
+                    "select count(*) as aggregate from `comics` where `published_at` is not null and `published_at` <= ? and (`title` like ? or `title_normalized` like ? or `alt_titles` like ? or `alt_",
+                    "select `comics`.*, (select count(*) from `chapters` where `comics`.`id` = `chapters`.`comic_id` and `published_at` is not null and `published_at` <= ? and `chapters`.`deleted_at` i",
+                    "select `genres`.`id`, `genres`.`name`, `genres`.`slug`, `comic_genre`.`comic_id` as `pivot_comic_id`, `comic_genre`.`genre_id` as `pivot_genre_id`, `comic_genre`.`is_primary` as `p",
+                    "select `authors`.`id`, `authors`.`name`, `comic_author`.`comic_id` as `pivot_comic_id`, `comic_author`.`author_id` as `pivot_author_id`, `comic_author`.`role` as `pivot_role` from "
+                ]
+            },
+            "seed": 568.34
+        },
+        {
+            "candidates": 1200,
+            "case": "advanced:keyword_unaccented",
+            "cache": "none",
+            "conditions": 0,
+            "result_count": 10,
+            "timing_ms": {
+                "min": 84.576,
+                "median": 88.934,
+                "p95": 94.019,
+                "mean": 89.699,
+                "max": 94.019,
+                "samples": [
+                    84.576,
+                    87.221,
+                    88.934,
+                    93.746,
+                    94.019
+                ]
+            },
+            "queries": 7,
+            "sql": {
+                "exists": 6,
+                "comics_selects": 2,
+                "writes": 1,
+                "distinct": 7,
+                "samples": [
+                    "insert into search_keywords (keyword, keyword_normalized, hits, results_count, last_searched_at, created_at, updated_at) values (?, ?, ?, ?, ?, ?, ?) on duplicate key update hits =",
+                    "select count(*) as aggregate from `comics` where `published_at` is not null and `published_at` <= ? and (`title` like ? or `title_normalized` like ? or `alt_titles` like ? or `alt_",
+                    "select `comics`.*, (select count(*) from `chapters` where `comics`.`id` = `chapters`.`comic_id` and `published_at` is not null and `published_at` <= ? and `chapters`.`deleted_at` i",
+                    "select `genres`.`id`, `genres`.`name`, `genres`.`slug`, `comic_genre`.`comic_id` as `pivot_comic_id`, `comic_genre`.`genre_id` as `pivot_genre_id`, `comic_genre`.`is_primary` as `p",
+                    "select `authors`.`id`, `authors`.`name`, `comic_author`.`comic_id` as `pivot_comic_id`, `comic_author`.`author_id` as `pivot_author_id`, `comic_author`.`role` as `pivot_role` from "
+                ]
+            },
+            "seed": 568.34
+        },
+        {
+            "candidates": 1200,
+            "case": "advanced:description_accented",
+            "cache": "none",
+            "conditions": 0,
+            "result_count": 18,
+            "timing_ms": {
+                "min": 15.508,
+                "median": 16.448,
+                "p95": 17.494,
+                "mean": 16.542,
+                "max": 17.494,
+                "samples": [
+                    15.508,
+                    16.134,
+                    16.448,
+                    17.126,
+                    17.494
+                ]
+            },
+            "queries": 7,
+            "sql": {
+                "exists": 6,
+                "comics_selects": 2,
+                "writes": 1,
+                "distinct": 7,
+                "samples": [
+                    "insert into search_keywords (keyword, keyword_normalized, hits, results_count, last_searched_at, created_at, updated_at) values (?, ?, ?, ?, ?, ?, ?) on duplicate key update hits =",
+                    "select count(*) as aggregate from `comics` where `published_at` is not null and `published_at` <= ? and (`title` like ? or `title_normalized` like ? or `alt_titles` like ? or `alt_",
+                    "select `comics`.*, (select count(*) from `chapters` where `comics`.`id` = `chapters`.`comic_id` and `published_at` is not null and `published_at` <= ? and `chapters`.`deleted_at` i",
+                    "select `genres`.`id`, `genres`.`name`, `genres`.`slug`, `comic_genre`.`comic_id` as `pivot_comic_id`, `comic_genre`.`genre_id` as `pivot_genre_id`, `comic_genre`.`is_primary` as `p",
+                    "select `authors`.`id`, `authors`.`name`, `comic_author`.`comic_id` as `pivot_comic_id`, `comic_author`.`author_id` as `pivot_author_id`, `comic_author`.`role` as `pivot_role` from "
+                ]
+            },
+            "seed": 568.34
+        },
+        {
+            "candidates": 1200,
+            "case": "advanced:description_unaccented",
+            "cache": "none",
+            "conditions": 0,
+            "result_count": 18,
+            "timing_ms": {
+                "min": 16.174,
+                "median": 17.798,
+                "p95": 18.208,
+                "mean": 17.516,
+                "max": 18.208,
+                "samples": [
+                    16.174,
+                    17.429,
+                    17.798,
+                    17.971,
+                    18.208
+                ]
+            },
+            "queries": 7,
+            "sql": {
+                "exists": 6,
+                "comics_selects": 2,
+                "writes": 1,
+                "distinct": 7,
+                "samples": [
+                    "insert into search_keywords (keyword, keyword_normalized, hits, results_count, last_searched_at, created_at, updated_at) values (?, ?, ?, ?, ?, ?, ?) on duplicate key update hits =",
+                    "select count(*) as aggregate from `comics` where `published_at` is not null and `published_at` <= ? and (`title` like ? or `title_normalized` like ? or `alt_titles` like ? or `alt_",
+                    "select `comics`.*, (select count(*) from `chapters` where `comics`.`id` = `chapters`.`comic_id` and `published_at` is not null and `published_at` <= ? and `chapters`.`deleted_at` i",
+                    "select `genres`.`id`, `genres`.`name`, `genres`.`slug`, `comic_genre`.`comic_id` as `pivot_comic_id`, `comic_genre`.`genre_id` as `pivot_genre_id`, `comic_genre`.`is_primary` as `p",
+                    "select `authors`.`id`, `authors`.`name`, `comic_author`.`comic_id` as `pivot_comic_id`, `comic_author`.`author_id` as `pivot_author_id`, `comic_author`.`role` as `pivot_role` from "
+                ]
+            },
+            "seed": 568.34
+        },
+        {
+            "candidates": 1200,
+            "case": "advanced:author_unaccented",
+            "cache": "none",
+            "conditions": 0,
+            "result_count": 18,
+            "timing_ms": {
+                "min": 58.072,
+                "median": 60.538,
+                "p95": 62.512,
+                "mean": 60.499,
+                "max": 62.512,
+                "samples": [
+                    58.072,
+                    59.546,
+                    60.538,
+                    61.825,
+                    62.512
+                ]
+            },
+            "queries": 7,
+            "sql": {
+                "exists": 6,
+                "comics_selects": 2,
+                "writes": 1,
+                "distinct": 7,
+                "samples": [
+                    "insert into search_keywords (keyword, keyword_normalized, hits, results_count, last_searched_at, created_at, updated_at) values (?, ?, ?, ?, ?, ?, ?) on duplicate key update hits =",
+                    "select count(*) as aggregate from `comics` where `published_at` is not null and `published_at` <= ? and (`title` like ? or `title_normalized` like ? or `alt_titles` like ? or `alt_",
+                    "select `comics`.*, (select count(*) from `chapters` where `comics`.`id` = `chapters`.`comic_id` and `published_at` is not null and `published_at` <= ? and `chapters`.`deleted_at` i",
+                    "select `genres`.`id`, `genres`.`name`, `genres`.`slug`, `comic_genre`.`comic_id` as `pivot_comic_id`, `comic_genre`.`genre_id` as `pivot_genre_id`, `comic_genre`.`is_primary` as `p",
+                    "select `authors`.`id`, `authors`.`name`, `comic_author`.`comic_id` as `pivot_comic_id`, `comic_author`.`author_id` as `pivot_author_id`, `comic_author`.`role` as `pivot_role` from "
+                ]
+            },
+            "seed": 568.34
+        },
+        {
+            "candidates": 1200,
+            "case": "advanced:genres_and_3",
+            "cache": "none",
+            "conditions": 0,
+            "result_count": 0,
+            "timing_ms": {
+                "min": 1.298,
+                "median": 1.44,
+                "p95": 1.521,
+                "mean": 1.413,
+                "max": 1.521,
+                "samples": [
+                    1.298,
+                    1.359,
+                    1.44,
+                    1.447,
+                    1.521
+                ]
+            },
+            "queries": 1,
+            "sql": {
+                "exists": 3,
+                "comics_selects": 1,
+                "writes": 0,
+                "distinct": 1,
+                "samples": [
+                    "select count(*) as aggregate from `comics` where `published_at` is not null and `published_at` <= ? and exists (select * from `genres` inner join `comic_genre` on `genres`.`id` = `"
+                ]
+            },
+            "seed": 568.34
+        },
+        {
+            "candidates": 1200,
+            "case": "advanced:genres_or_4",
+            "cache": "none",
+            "conditions": 0,
+            "result_count": 0,
+            "timing_ms": {
+                "min": 0.762,
+                "median": 0.796,
+                "p95": 0.861,
+                "mean": 0.803,
+                "max": 0.861,
+                "samples": [
+                    0.762,
+                    0.796,
+                    0.796,
+                    0.802,
+                    0.861
+                ]
+            },
+            "queries": 1,
+            "sql": {
+                "exists": 1,
+                "comics_selects": 1,
+                "writes": 0,
+                "distinct": 1,
+                "samples": [
+                    "select count(*) as aggregate from `comics` where `published_at` is not null and `published_at` <= ? and exists (select * from `genres` inner join `comic_genre` on `genres`.`id` = `"
+                ]
+            },
+            "seed": 568.34
+        },
+        {
+            "candidates": 1200,
+            "case": "advanced:tags_and_3",
+            "cache": "none",
+            "conditions": 0,
+            "result_count": 0,
+            "timing_ms": {
+                "min": 1.056,
+                "median": 1.44,
+                "p95": 1.75,
+                "mean": 1.398,
+                "max": 1.75,
+                "samples": [
+                    1.056,
+                    1.259,
+                    1.44,
+                    1.485,
+                    1.75
+                ]
+            },
+            "queries": 1,
+            "sql": {
+                "exists": 3,
+                "comics_selects": 1,
+                "writes": 0,
+                "distinct": 1,
+                "samples": [
+                    "select count(*) as aggregate from `comics` where `published_at` is not null and `published_at` <= ? and exists (select * from `tags` inner join `comic_tag` on `tags`.`id` = `comic_"
+                ]
+            },
+            "seed": 568.34
+        },
+        {
+            "candidates": 1200,
+            "case": "advanced:exclude_genres",
+            "cache": "none",
+            "conditions": 0,
+            "result_count": 18,
+            "timing_ms": {
+                "min": 27.081,
+                "median": 27.552,
+                "p95": 28.617,
+                "mean": 27.784,
+                "max": 28.617,
+                "samples": [
+                    27.081,
+                    27.28,
+                    27.552,
+                    28.391,
+                    28.617
+                ]
+            },
+            "queries": 6,
+            "sql": {
+                "exists": 2,
+                "comics_selects": 2,
+                "writes": 0,
+                "distinct": 6,
+                "samples": [
+                    "select count(*) as aggregate from `comics` where `published_at` is not null and `published_at` <= ? and not exists (select * from `genres` inner join `comic_genre` on `genres`.`id`",
+                    "select `comics`.*, (select count(*) from `chapters` where `comics`.`id` = `chapters`.`comic_id` and `published_at` is not null and `published_at` <= ? and `chapters`.`deleted_at` i",
+                    "select `genres`.`id`, `genres`.`name`, `genres`.`slug`, `comic_genre`.`comic_id` as `pivot_comic_id`, `comic_genre`.`genre_id` as `pivot_genre_id`, `comic_genre`.`is_primary` as `p",
+                    "select `authors`.`id`, `authors`.`name`, `comic_author`.`comic_id` as `pivot_comic_id`, `comic_author`.`author_id` as `pivot_author_id`, `comic_author`.`role` as `pivot_role` from ",
+                    "select `tags`.`id`, `tags`.`name`, `tags`.`slug`, `comic_tag`.`comic_id` as `pivot_comic_id`, `comic_tag`.`tag_id` as `pivot_tag_id` from `tags` inner join `comic_tag` on `tags`.`i"
+                ]
+            },
+            "seed": 568.34
+        },
+        {
+            "candidates": 1200,
+            "case": "advanced:filters_combo",
+            "cache": "none",
+            "conditions": 0,
+            "result_count": 0,
+            "timing_ms": {
+                "min": 3.095,
+                "median": 4.162,
+                "p95": 4.953,
+                "mean": 3.953,
+                "max": 4.953,
+                "samples": [
+                    3.095,
+                    3.252,
+                    4.162,
+                    4.306,
+                    4.953
+                ]
+            },
+            "queries": 1,
+            "sql": {
+                "exists": 0,
+                "comics_selects": 1,
+                "writes": 0,
+                "distinct": 1,
+                "samples": [
+                    "select count(*) as aggregate from `comics` where `published_at` is not null and `published_at` <= ? and (`status` = ? or `status` = ?) and `country` = ? and `released_year` = ? and"
+                ]
+            },
+            "seed": 568.34
+        },
+        {
+            "candidates": 1200,
+            "case": "advanced:min_chapters",
+            "cache": "none",
+            "conditions": 0,
+            "result_count": 18,
+            "timing_ms": {
+                "min": 14.023,
+                "median": 15.244,
+                "p95": 15.984,
+                "mean": 15.113,
+                "max": 15.984,
+                "samples": [
+                    14.023,
+                    14.937,
+                    15.244,
+                    15.375,
+                    15.984
+                ]
+            },
+            "queries": 6,
+            "sql": {
+                "exists": 0,
+                "comics_selects": 2,
+                "writes": 0,
+                "distinct": 6,
+                "samples": [
+                    "select count(*) as aggregate from `comics` where `published_at` is not null and `published_at` <= ? and (select count(*) from `chapters` where `comics`.`id` = `chapters`.`comic_id`",
+                    "select `comics`.*, (select count(*) from `chapters` where `comics`.`id` = `chapters`.`comic_id` and `published_at` is not null and `published_at` <= ? and `chapters`.`deleted_at` i",
+                    "select `genres`.`id`, `genres`.`name`, `genres`.`slug`, `comic_genre`.`comic_id` as `pivot_comic_id`, `comic_genre`.`genre_id` as `pivot_genre_id`, `comic_genre`.`is_primary` as `p",
+                    "select `authors`.`id`, `authors`.`name`, `comic_author`.`comic_id` as `pivot_comic_id`, `comic_author`.`author_id` as `pivot_author_id`, `comic_author`.`role` as `pivot_role` from ",
+                    "select `tags`.`id`, `tags`.`name`, `tags`.`slug`, `comic_tag`.`comic_id` as `pivot_comic_id`, `comic_tag`.`tag_id` as `pivot_tag_id` from `tags` inner join `comic_tag` on `tags`.`i"
+                ]
+            },
+            "seed": 568.34
+        },
+        {
+            "candidates": 1200,
+            "case": "advanced:sort_latest",
+            "cache": "none",
+            "conditions": 0,
+            "result_count": 18,
+            "timing_ms": {
+                "min": 22.248,
+                "median": 24.62,
+                "p95": 25.433,
+                "mean": 24.303,
+                "max": 25.433,
+                "samples": [
+                    22.248,
+                    24.047,
+                    24.62,
+                    25.164,
+                    25.433
+                ]
+            },
+            "queries": 6,
+            "sql": {
+                "exists": 0,
+                "comics_selects": 2,
+                "writes": 0,
+                "distinct": 6,
+                "samples": [
+                    "select count(*) as aggregate from `comics` where `published_at` is not null and `published_at` <= ? and `comics`.`deleted_at` is null",
+                    "select `comics`.*, (select count(*) from `chapters` where `comics`.`id` = `chapters`.`comic_id` and `published_at` is not null and `published_at` <= ? and `chapters`.`deleted_at` i",
+                    "select `genres`.`id`, `genres`.`name`, `genres`.`slug`, `comic_genre`.`comic_id` as `pivot_comic_id`, `comic_genre`.`genre_id` as `pivot_genre_id`, `comic_genre`.`is_primary` as `p",
+                    "select `authors`.`id`, `authors`.`name`, `comic_author`.`comic_id` as `pivot_comic_id`, `comic_author`.`author_id` as `pivot_author_id`, `comic_author`.`role` as `pivot_role` from ",
+                    "select `tags`.`id`, `tags`.`name`, `tags`.`slug`, `comic_tag`.`comic_id` as `pivot_comic_id`, `comic_tag`.`tag_id` as `pivot_tag_id` from `tags` inner join `comic_tag` on `tags`.`i"
+                ]
+            },
+            "seed": 568.34
+        },
+        {
+            "candidates": 1200,
+            "case": "advanced:sort_trending",
+            "cache": "none",
+            "conditions": 0,
+            "result_count": 18,
+            "timing_ms": {
+                "min": 14.293,
+                "median": 14.959,
+                "p95": 16.926,
+                "mean": 15.169,
+                "max": 16.926,
+                "samples": [
+                    14.293,
+                    14.664,
+                    14.959,
+                    15.003,
+                    16.926
+                ]
+            },
+            "queries": 6,
+            "sql": {
+                "exists": 0,
+                "comics_selects": 2,
+                "writes": 0,
+                "distinct": 6,
+                "samples": [
+                    "select count(*) as aggregate from `comics` where `published_at` is not null and `published_at` <= ? and `trending_rank` is not null and `comics`.`deleted_at` is null",
+                    "select `comics`.*, (select count(*) from `chapters` where `comics`.`id` = `chapters`.`comic_id` and `published_at` is not null and `published_at` <= ? and `chapters`.`deleted_at` i",
+                    "select `genres`.`id`, `genres`.`name`, `genres`.`slug`, `comic_genre`.`comic_id` as `pivot_comic_id`, `comic_genre`.`genre_id` as `pivot_genre_id`, `comic_genre`.`is_primary` as `p",
+                    "select `authors`.`id`, `authors`.`name`, `comic_author`.`comic_id` as `pivot_comic_id`, `comic_author`.`author_id` as `pivot_author_id`, `comic_author`.`role` as `pivot_role` from ",
+                    "select `tags`.`id`, `tags`.`name`, `tags`.`slug`, `comic_tag`.`comic_id` as `pivot_comic_id`, `comic_tag`.`tag_id` as `pivot_tag_id` from `tags` inner join `comic_tag` on `tags`.`i"
+                ]
+            },
+            "seed": 568.34
+        },
+        {
+            "candidates": 1200,
+            "case": "advanced:sort_alphabetical",
+            "cache": "none",
+            "conditions": 0,
+            "result_count": 18,
+            "timing_ms": {
+                "min": 13.054,
+                "median": 15.101,
+                "p95": 16.03,
+                "mean": 14.682,
+                "max": 16.03,
+                "samples": [
+                    13.054,
+                    13.771,
+                    15.101,
+                    15.451,
+                    16.03
+                ]
+            },
+            "queries": 6,
+            "sql": {
+                "exists": 0,
+                "comics_selects": 2,
+                "writes": 0,
+                "distinct": 6,
+                "samples": [
+                    "select count(*) as aggregate from `comics` where `published_at` is not null and `published_at` <= ? and `comics`.`deleted_at` is null",
+                    "select `comics`.*, (select count(*) from `chapters` where `comics`.`id` = `chapters`.`comic_id` and `published_at` is not null and `published_at` <= ? and `chapters`.`deleted_at` i",
+                    "select `genres`.`id`, `genres`.`name`, `genres`.`slug`, `comic_genre`.`comic_id` as `pivot_comic_id`, `comic_genre`.`genre_id` as `pivot_genre_id`, `comic_genre`.`is_primary` as `p",
+                    "select `authors`.`id`, `authors`.`name`, `comic_author`.`comic_id` as `pivot_comic_id`, `comic_author`.`author_id` as `pivot_author_id`, `comic_author`.`role` as `pivot_role` from ",
+                    "select `tags`.`id`, `tags`.`name`, `tags`.`slug`, `comic_tag`.`comic_id` as `pivot_comic_id`, `comic_tag`.`tag_id` as `pivot_tag_id` from `tags` inner join `comic_tag` on `tags`.`i"
+                ]
+            },
+            "seed": 568.34
+        },
+        {
+            "candidates": 1200,
+            "case": "advanced:per_page_50",
+            "cache": "none",
+            "conditions": 0,
+            "result_count": 50,
+            "timing_ms": {
+                "min": 22.241,
+                "median": 22.578,
+                "p95": 24.341,
+                "mean": 22.994,
+                "max": 24.341,
+                "samples": [
+                    22.241,
+                    22.541,
+                    22.578,
+                    23.27,
+                    24.341
+                ]
+            },
+            "queries": 6,
+            "sql": {
+                "exists": 0,
+                "comics_selects": 2,
+                "writes": 0,
+                "distinct": 6,
+                "samples": [
+                    "select count(*) as aggregate from `comics` where `published_at` is not null and `published_at` <= ? and `comics`.`deleted_at` is null",
+                    "select `comics`.*, (select count(*) from `chapters` where `comics`.`id` = `chapters`.`comic_id` and `published_at` is not null and `published_at` <= ? and `chapters`.`deleted_at` i",
+                    "select `genres`.`id`, `genres`.`name`, `genres`.`slug`, `comic_genre`.`comic_id` as `pivot_comic_id`, `comic_genre`.`genre_id` as `pivot_genre_id`, `comic_genre`.`is_primary` as `p",
+                    "select `authors`.`id`, `authors`.`name`, `comic_author`.`comic_id` as `pivot_comic_id`, `comic_author`.`author_id` as `pivot_author_id`, `comic_author`.`role` as `pivot_role` from ",
+                    "select `tags`.`id`, `tags`.`name`, `tags`.`slug`, `comic_tag`.`comic_id` as `pivot_comic_id`, `comic_tag`.`tag_id` as `pivot_tag_id` from `tags` inner join `comic_tag` on `tags`.`i"
+                ]
+            },
+            "seed": 568.34
+        },
+        {
+            "candidates": 5000,
+            "case": "live:title_accented",
+            "cache": "cold",
+            "conditions": 0,
+            "result_count": 8,
+            "timing_ms": {
+                "min": 8.125,
+                "median": 9.986,
+                "p95": 11.192,
+                "mean": 9.91,
+                "max": 11.192,
+                "samples": [
+                    8.125,
+                    9.206,
+                    9.986,
+                    11.041,
+                    11.192
+                ]
+            },
+            "queries": 3,
+            "sql": {
+                "exists": 2,
+                "comics_selects": 1,
+                "writes": 0,
+                "distinct": 3,
+                "samples": [
+                    "select `id`, `title`, `slug`, `cover_image`, `status`, `country`, `avg_rating`, `views`, `is_original` from `comics` where `published_at` is not null and `published_at` <= ? and (`",
+                    "select `genres`.`id`, `genres`.`name`, `genres`.`slug`, `comic_genre`.`comic_id` as `pivot_comic_id`, `comic_genre`.`genre_id` as `pivot_genre_id`, `comic_genre`.`is_primary` as `p",
+                    "select `chapters`.* from `chapters` inner join (select max(`chapters`.`id`) as `id_aggregate`, min(`chapters`.`chapter_number`) as `chapter_number_aggregate`, `chapters`.`comic_id`"
+                ]
+            },
+            "seed": 4499.415
+        },
+        {
+            "candidates": 5000,
+            "case": "live:title_unaccented",
+            "cache": "cold",
+            "conditions": 0,
+            "result_count": 8,
+            "timing_ms": {
+                "min": 8.492,
+                "median": 9.825,
+                "p95": 11.575,
+                "mean": 9.979,
+                "max": 11.575,
+                "samples": [
+                    8.492,
+                    9.778,
+                    9.825,
+                    10.223,
+                    11.575
+                ]
+            },
+            "queries": 3,
+            "sql": {
+                "exists": 2,
+                "comics_selects": 1,
+                "writes": 0,
+                "distinct": 3,
+                "samples": [
+                    "select `id`, `title`, `slug`, `cover_image`, `status`, `country`, `avg_rating`, `views`, `is_original` from `comics` where `published_at` is not null and `published_at` <= ? and (`",
+                    "select `genres`.`id`, `genres`.`name`, `genres`.`slug`, `comic_genre`.`comic_id` as `pivot_comic_id`, `comic_genre`.`genre_id` as `pivot_genre_id`, `comic_genre`.`is_primary` as `p",
+                    "select `chapters`.* from `chapters` inner join (select max(`chapters`.`id`) as `id_aggregate`, min(`chapters`.`chapter_number`) as `chapter_number_aggregate`, `chapters`.`comic_id`"
+                ]
+            },
+            "seed": 4499.415
+        },
+        {
+            "candidates": 5000,
+            "case": "live:partial",
+            "cache": "cold",
+            "conditions": 0,
+            "result_count": 8,
+            "timing_ms": {
+                "min": 8.33,
+                "median": 9.791,
+                "p95": 10.237,
+                "mean": 9.472,
+                "max": 10.237,
+                "samples": [
+                    8.33,
+                    8.891,
+                    9.791,
+                    10.114,
+                    10.237
+                ]
+            },
+            "queries": 3,
+            "sql": {
+                "exists": 2,
+                "comics_selects": 1,
+                "writes": 0,
+                "distinct": 3,
+                "samples": [
+                    "select `id`, `title`, `slug`, `cover_image`, `status`, `country`, `avg_rating`, `views`, `is_original` from `comics` where `published_at` is not null and `published_at` <= ? and (`",
+                    "select `genres`.`id`, `genres`.`name`, `genres`.`slug`, `comic_genre`.`comic_id` as `pivot_comic_id`, `comic_genre`.`genre_id` as `pivot_genre_id`, `comic_genre`.`is_primary` as `p",
+                    "select `chapters`.* from `chapters` inner join (select max(`chapters`.`id`) as `id_aggregate`, min(`chapters`.`chapter_number`) as `chapter_number_aggregate`, `chapters`.`comic_id`"
+                ]
+            },
+            "seed": 4499.415
+        },
+        {
+            "candidates": 5000,
+            "case": "live:description_unaccented",
+            "cache": "cold",
+            "conditions": 0,
+            "result_count": 0,
+            "timing_ms": {
+                "min": 59.937,
+                "median": 62.327,
+                "p95": 63.342,
+                "mean": 61.7,
+                "max": 63.342,
+                "samples": [
+                    59.937,
+                    60.417,
+                    62.327,
+                    62.477,
+                    63.342
+                ]
+            },
+            "queries": 1,
+            "sql": {
+                "exists": 2,
+                "comics_selects": 1,
+                "writes": 0,
+                "distinct": 1,
+                "samples": [
+                    "select `id`, `title`, `slug`, `cover_image`, `status`, `country`, `avg_rating`, `views`, `is_original` from `comics` where `published_at` is not null and `published_at` <= ? and (`"
+                ]
+            },
+            "seed": 4499.415
+        },
+        {
+            "candidates": 5000,
+            "case": "live:author_unaccented",
+            "cache": "cold",
+            "conditions": 0,
+            "result_count": 8,
+            "timing_ms": {
+                "min": 5.41,
+                "median": 6.05,
+                "p95": 7.137,
+                "mean": 6.211,
+                "max": 7.137,
+                "samples": [
+                    5.41,
+                    5.477,
+                    6.05,
+                    6.979,
+                    7.137
+                ]
+            },
+            "queries": 3,
+            "sql": {
+                "exists": 2,
+                "comics_selects": 1,
+                "writes": 0,
+                "distinct": 3,
+                "samples": [
+                    "select `id`, `title`, `slug`, `cover_image`, `status`, `country`, `avg_rating`, `views`, `is_original` from `comics` where `published_at` is not null and `published_at` <= ? and (`",
+                    "select `genres`.`id`, `genres`.`name`, `genres`.`slug`, `comic_genre`.`comic_id` as `pivot_comic_id`, `comic_genre`.`genre_id` as `pivot_genre_id`, `comic_genre`.`is_primary` as `p",
+                    "select `chapters`.* from `chapters` inner join (select max(`chapters`.`id`) as `id_aggregate`, min(`chapters`.`chapter_number`) as `chapter_number_aggregate`, `chapters`.`comic_id`"
+                ]
+            },
+            "seed": 4499.415
+        },
+        {
+            "candidates": 5000,
+            "case": "live:genre",
+            "cache": "cold",
+            "conditions": 0,
+            "result_count": 8,
+            "timing_ms": {
+                "min": 5.426,
+                "median": 6.244,
+                "p95": 6.611,
+                "mean": 6.032,
+                "max": 6.611,
+                "samples": [
+                    5.426,
+                    5.529,
+                    6.244,
+                    6.348,
+                    6.611
+                ]
+            },
+            "queries": 3,
+            "sql": {
+                "exists": 2,
+                "comics_selects": 1,
+                "writes": 0,
+                "distinct": 3,
+                "samples": [
+                    "select `id`, `title`, `slug`, `cover_image`, `status`, `country`, `avg_rating`, `views`, `is_original` from `comics` where `published_at` is not null and `published_at` <= ? and (`",
+                    "select `genres`.`id`, `genres`.`name`, `genres`.`slug`, `comic_genre`.`comic_id` as `pivot_comic_id`, `comic_genre`.`genre_id` as `pivot_genre_id`, `comic_genre`.`is_primary` as `p",
+                    "select `chapters`.* from `chapters` inner join (select max(`chapters`.`id`) as `id_aggregate`, min(`chapters`.`chapter_number`) as `chapter_number_aggregate`, `chapters`.`comic_id`"
+                ]
+            },
+            "seed": 4499.415
+        },
+        {
+            "candidates": 5000,
+            "case": "live:short_input",
+            "cache": "cold",
+            "conditions": 0,
+            "result_count": 0,
+            "timing_ms": {
+                "min": 0,
+                "median": 0,
+                "p95": 0.001,
+                "mean": 0.001,
+                "max": 0.001,
+                "samples": [
+                    0,
+                    0,
+                    0,
+                    0.001,
+                    0.001
+                ]
+            },
+            "queries": 0,
+            "sql": {
+                "exists": 0,
+                "comics_selects": 0,
+                "writes": 0,
+                "distinct": 0,
+                "samples": []
+            },
+            "seed": 4499.415
+        },
+        {
+            "candidates": 5000,
+            "case": "live:title_accented",
+            "cache": "warm",
+            "conditions": 0,
+            "result_count": 8,
+            "timing_ms": {
+                "min": 0.014,
+                "median": 0.016,
+                "p95": 0.049,
+                "mean": 0.022,
+                "max": 0.049,
+                "samples": [
+                    0.014,
+                    0.014,
+                    0.016,
+                    0.019,
+                    0.049
+                ]
+            },
+            "queries": 0,
+            "sql": {
+                "exists": 0,
+                "comics_selects": 0,
+                "writes": 0,
+                "distinct": 0,
+                "samples": []
+            },
+            "seed": 4499.415
+        },
+        {
+            "candidates": 5000,
+            "case": "advanced:keyword_accented",
+            "cache": "none",
+            "conditions": 0,
+            "result_count": 18,
+            "timing_ms": {
+                "min": 321.78,
+                "median": 329.565,
+                "p95": 341.265,
+                "mean": 330.013,
+                "max": 341.265,
+                "samples": [
+                    321.78,
+                    322.063,
+                    329.565,
+                    335.391,
+                    341.265
+                ]
+            },
+            "queries": 7,
+            "sql": {
+                "exists": 6,
+                "comics_selects": 2,
+                "writes": 1,
+                "distinct": 7,
+                "samples": [
+                    "insert into search_keywords (keyword, keyword_normalized, hits, results_count, last_searched_at, created_at, updated_at) values (?, ?, ?, ?, ?, ?, ?) on duplicate key update hits =",
+                    "select count(*) as aggregate from `comics` where `published_at` is not null and `published_at` <= ? and (`title` like ? or `title_normalized` like ? or `alt_titles` like ? or `alt_",
+                    "select `comics`.*, (select count(*) from `chapters` where `comics`.`id` = `chapters`.`comic_id` and `published_at` is not null and `published_at` <= ? and `chapters`.`deleted_at` i",
+                    "select `genres`.`id`, `genres`.`name`, `genres`.`slug`, `comic_genre`.`comic_id` as `pivot_comic_id`, `comic_genre`.`genre_id` as `pivot_genre_id`, `comic_genre`.`is_primary` as `p",
+                    "select `authors`.`id`, `authors`.`name`, `comic_author`.`comic_id` as `pivot_comic_id`, `comic_author`.`author_id` as `pivot_author_id`, `comic_author`.`role` as `pivot_role` from "
+                ]
+            },
+            "seed": 4499.415
+        },
+        {
+            "candidates": 5000,
+            "case": "advanced:keyword_unaccented",
+            "cache": "none",
+            "conditions": 0,
+            "result_count": 18,
+            "timing_ms": {
+                "min": 320.159,
+                "median": 325.293,
+                "p95": 353.42,
+                "mean": 329.381,
+                "max": 353.42,
+                "samples": [
+                    320.159,
+                    321.712,
+                    325.293,
+                    326.319,
+                    353.42
+                ]
+            },
+            "queries": 7,
+            "sql": {
+                "exists": 6,
+                "comics_selects": 2,
+                "writes": 1,
+                "distinct": 7,
+                "samples": [
+                    "insert into search_keywords (keyword, keyword_normalized, hits, results_count, last_searched_at, created_at, updated_at) values (?, ?, ?, ?, ?, ?, ?) on duplicate key update hits =",
+                    "select count(*) as aggregate from `comics` where `published_at` is not null and `published_at` <= ? and (`title` like ? or `title_normalized` like ? or `alt_titles` like ? or `alt_",
+                    "select `comics`.*, (select count(*) from `chapters` where `comics`.`id` = `chapters`.`comic_id` and `published_at` is not null and `published_at` <= ? and `chapters`.`deleted_at` i",
+                    "select `genres`.`id`, `genres`.`name`, `genres`.`slug`, `comic_genre`.`comic_id` as `pivot_comic_id`, `comic_genre`.`genre_id` as `pivot_genre_id`, `comic_genre`.`is_primary` as `p",
+                    "select `authors`.`id`, `authors`.`name`, `comic_author`.`comic_id` as `pivot_comic_id`, `comic_author`.`author_id` as `pivot_author_id`, `comic_author`.`role` as `pivot_role` from "
+                ]
+            },
+            "seed": 4499.415
+        },
+        {
+            "candidates": 5000,
+            "case": "advanced:description_accented",
+            "cache": "none",
+            "conditions": 0,
+            "result_count": 18,
+            "timing_ms": {
+                "min": 20.991,
+                "median": 23.803,
+                "p95": 23.833,
+                "mean": 22.929,
+                "max": 23.833,
+                "samples": [
+                    20.991,
+                    22.195,
+                    23.803,
+                    23.824,
+                    23.833
+                ]
+            },
+            "queries": 7,
+            "sql": {
+                "exists": 6,
+                "comics_selects": 2,
+                "writes": 1,
+                "distinct": 7,
+                "samples": [
+                    "insert into search_keywords (keyword, keyword_normalized, hits, results_count, last_searched_at, created_at, updated_at) values (?, ?, ?, ?, ?, ?, ?) on duplicate key update hits =",
+                    "select count(*) as aggregate from `comics` where `published_at` is not null and `published_at` <= ? and (`title` like ? or `title_normalized` like ? or `alt_titles` like ? or `alt_",
+                    "select `comics`.*, (select count(*) from `chapters` where `comics`.`id` = `chapters`.`comic_id` and `published_at` is not null and `published_at` <= ? and `chapters`.`deleted_at` i",
+                    "select `genres`.`id`, `genres`.`name`, `genres`.`slug`, `comic_genre`.`comic_id` as `pivot_comic_id`, `comic_genre`.`genre_id` as `pivot_genre_id`, `comic_genre`.`is_primary` as `p",
+                    "select `authors`.`id`, `authors`.`name`, `comic_author`.`comic_id` as `pivot_comic_id`, `comic_author`.`author_id` as `pivot_author_id`, `comic_author`.`role` as `pivot_role` from "
+                ]
+            },
+            "seed": 4499.415
+        },
+        {
+            "candidates": 5000,
+            "case": "advanced:description_unaccented",
+            "cache": "none",
+            "conditions": 0,
+            "result_count": 18,
+            "timing_ms": {
+                "min": 21.134,
+                "median": 23.308,
+                "p95": 23.764,
+                "mean": 22.581,
+                "max": 23.764,
+                "samples": [
+                    21.134,
+                    21.278,
+                    23.308,
+                    23.424,
+                    23.764
+                ]
+            },
+            "queries": 7,
+            "sql": {
+                "exists": 6,
+                "comics_selects": 2,
+                "writes": 1,
+                "distinct": 7,
+                "samples": [
+                    "insert into search_keywords (keyword, keyword_normalized, hits, results_count, last_searched_at, created_at, updated_at) values (?, ?, ?, ?, ?, ?, ?) on duplicate key update hits =",
+                    "select count(*) as aggregate from `comics` where `published_at` is not null and `published_at` <= ? and (`title` like ? or `title_normalized` like ? or `alt_titles` like ? or `alt_",
+                    "select `comics`.*, (select count(*) from `chapters` where `comics`.`id` = `chapters`.`comic_id` and `published_at` is not null and `published_at` <= ? and `chapters`.`deleted_at` i",
+                    "select `genres`.`id`, `genres`.`name`, `genres`.`slug`, `comic_genre`.`comic_id` as `pivot_comic_id`, `comic_genre`.`genre_id` as `pivot_genre_id`, `comic_genre`.`is_primary` as `p",
+                    "select `authors`.`id`, `authors`.`name`, `comic_author`.`comic_id` as `pivot_comic_id`, `comic_author`.`author_id` as `pivot_author_id`, `comic_author`.`role` as `pivot_role` from "
+                ]
+            },
+            "seed": 4499.415
+        },
+        {
+            "candidates": 5000,
+            "case": "advanced:author_unaccented",
+            "cache": "none",
+            "conditions": 0,
+            "result_count": 18,
+            "timing_ms": {
+                "min": 177.682,
+                "median": 182.279,
+                "p95": 207.885,
+                "mean": 190.247,
+                "max": 207.885,
+                "samples": [
+                    177.682,
+                    180.494,
+                    182.279,
+                    202.897,
+                    207.885
+                ]
+            },
+            "queries": 7,
+            "sql": {
+                "exists": 6,
+                "comics_selects": 2,
+                "writes": 1,
+                "distinct": 7,
+                "samples": [
+                    "insert into search_keywords (keyword, keyword_normalized, hits, results_count, last_searched_at, created_at, updated_at) values (?, ?, ?, ?, ?, ?, ?) on duplicate key update hits =",
+                    "select count(*) as aggregate from `comics` where `published_at` is not null and `published_at` <= ? and (`title` like ? or `title_normalized` like ? or `alt_titles` like ? or `alt_",
+                    "select `comics`.*, (select count(*) from `chapters` where `comics`.`id` = `chapters`.`comic_id` and `published_at` is not null and `published_at` <= ? and `chapters`.`deleted_at` i",
+                    "select `genres`.`id`, `genres`.`name`, `genres`.`slug`, `comic_genre`.`comic_id` as `pivot_comic_id`, `comic_genre`.`genre_id` as `pivot_genre_id`, `comic_genre`.`is_primary` as `p",
+                    "select `authors`.`id`, `authors`.`name`, `comic_author`.`comic_id` as `pivot_comic_id`, `comic_author`.`author_id` as `pivot_author_id`, `comic_author`.`role` as `pivot_role` from "
+                ]
+            },
+            "seed": 4499.415
+        },
+        {
+            "candidates": 5000,
+            "case": "advanced:genres_and_3",
+            "cache": "none",
+            "conditions": 0,
+            "result_count": 0,
+            "timing_ms": {
+                "min": 1.017,
+                "median": 1.038,
+                "p95": 1.362,
+                "mean": 1.121,
+                "max": 1.362,
+                "samples": [
+                    1.017,
+                    1.031,
+                    1.038,
+                    1.156,
+                    1.362
+                ]
+            },
+            "queries": 1,
+            "sql": {
+                "exists": 3,
+                "comics_selects": 1,
+                "writes": 0,
+                "distinct": 1,
+                "samples": [
+                    "select count(*) as aggregate from `comics` where `published_at` is not null and `published_at` <= ? and exists (select * from `genres` inner join `comic_genre` on `genres`.`id` = `"
+                ]
+            },
+            "seed": 4499.415
+        },
+        {
+            "candidates": 5000,
+            "case": "advanced:genres_or_4",
+            "cache": "none",
+            "conditions": 0,
+            "result_count": 0,
+            "timing_ms": {
+                "min": 1.221,
+                "median": 1.601,
+                "p95": 2.063,
+                "mean": 1.645,
+                "max": 2.063,
+                "samples": [
+                    1.221,
+                    1.306,
+                    1.601,
+                    2.033,
+                    2.063
+                ]
+            },
+            "queries": 1,
+            "sql": {
+                "exists": 1,
+                "comics_selects": 1,
+                "writes": 0,
+                "distinct": 1,
+                "samples": [
+                    "select count(*) as aggregate from `comics` where `published_at` is not null and `published_at` <= ? and exists (select * from `genres` inner join `comic_genre` on `genres`.`id` = `"
+                ]
+            },
+            "seed": 4499.415
+        },
+        {
+            "candidates": 5000,
+            "case": "advanced:tags_and_3",
+            "cache": "none",
+            "conditions": 0,
+            "result_count": 0,
+            "timing_ms": {
+                "min": 1.186,
+                "median": 1.587,
+                "p95": 1.942,
+                "mean": 1.558,
+                "max": 1.942,
+                "samples": [
+                    1.186,
+                    1.354,
+                    1.587,
+                    1.723,
+                    1.942
+                ]
+            },
+            "queries": 1,
+            "sql": {
+                "exists": 3,
+                "comics_selects": 1,
+                "writes": 0,
+                "distinct": 1,
+                "samples": [
+                    "select count(*) as aggregate from `comics` where `published_at` is not null and `published_at` <= ? and exists (select * from `tags` inner join `comic_tag` on `tags`.`id` = `comic_"
+                ]
+            },
+            "seed": 4499.415
+        },
+        {
+            "candidates": 5000,
+            "case": "advanced:exclude_genres",
+            "cache": "none",
+            "conditions": 0,
+            "result_count": 18,
+            "timing_ms": {
+                "min": 14.197,
+                "median": 15.502,
+                "p95": 15.972,
+                "mean": 15.235,
+                "max": 15.972,
+                "samples": [
+                    14.197,
+                    14.809,
+                    15.502,
+                    15.696,
+                    15.972
+                ]
+            },
+            "queries": 6,
+            "sql": {
+                "exists": 2,
+                "comics_selects": 2,
+                "writes": 0,
+                "distinct": 6,
+                "samples": [
+                    "select count(*) as aggregate from `comics` where `published_at` is not null and `published_at` <= ? and not exists (select * from `genres` inner join `comic_genre` on `genres`.`id`",
+                    "select `comics`.*, (select count(*) from `chapters` where `comics`.`id` = `chapters`.`comic_id` and `published_at` is not null and `published_at` <= ? and `chapters`.`deleted_at` i",
+                    "select `genres`.`id`, `genres`.`name`, `genres`.`slug`, `comic_genre`.`comic_id` as `pivot_comic_id`, `comic_genre`.`genre_id` as `pivot_genre_id`, `comic_genre`.`is_primary` as `p",
+                    "select `authors`.`id`, `authors`.`name`, `comic_author`.`comic_id` as `pivot_comic_id`, `comic_author`.`author_id` as `pivot_author_id`, `comic_author`.`role` as `pivot_role` from ",
+                    "select `tags`.`id`, `tags`.`name`, `tags`.`slug`, `comic_tag`.`comic_id` as `pivot_comic_id`, `comic_tag`.`tag_id` as `pivot_tag_id` from `tags` inner join `comic_tag` on `tags`.`i"
+                ]
+            },
+            "seed": 4499.415
+        },
+        {
+            "candidates": 5000,
+            "case": "advanced:filters_combo",
+            "cache": "none",
+            "conditions": 0,
+            "result_count": 0,
+            "timing_ms": {
+                "min": 10.39,
+                "median": 10.707,
+                "p95": 11.519,
+                "mean": 10.802,
+                "max": 11.519,
+                "samples": [
+                    10.39,
+                    10.633,
+                    10.707,
+                    10.762,
+                    11.519
+                ]
+            },
+            "queries": 1,
+            "sql": {
+                "exists": 0,
+                "comics_selects": 1,
+                "writes": 0,
+                "distinct": 1,
+                "samples": [
+                    "select count(*) as aggregate from `comics` where `published_at` is not null and `published_at` <= ? and (`status` = ? or `status` = ?) and `country` = ? and `released_year` = ? and"
+                ]
+            },
+            "seed": 4499.415
+        },
+        {
+            "candidates": 5000,
+            "case": "advanced:min_chapters",
+            "cache": "none",
+            "conditions": 0,
+            "result_count": 18,
+            "timing_ms": {
+                "min": 23.155,
+                "median": 23.32,
+                "p95": 28.267,
+                "mean": 24.549,
+                "max": 28.267,
+                "samples": [
+                    23.155,
+                    23.211,
+                    23.32,
+                    24.791,
+                    28.267
+                ]
+            },
+            "queries": 6,
+            "sql": {
+                "exists": 0,
+                "comics_selects": 2,
+                "writes": 0,
+                "distinct": 6,
+                "samples": [
+                    "select count(*) as aggregate from `comics` where `published_at` is not null and `published_at` <= ? and (select count(*) from `chapters` where `comics`.`id` = `chapters`.`comic_id`",
+                    "select `comics`.*, (select count(*) from `chapters` where `comics`.`id` = `chapters`.`comic_id` and `published_at` is not null and `published_at` <= ? and `chapters`.`deleted_at` i",
+                    "select `genres`.`id`, `genres`.`name`, `genres`.`slug`, `comic_genre`.`comic_id` as `pivot_comic_id`, `comic_genre`.`genre_id` as `pivot_genre_id`, `comic_genre`.`is_primary` as `p",
+                    "select `authors`.`id`, `authors`.`name`, `comic_author`.`comic_id` as `pivot_comic_id`, `comic_author`.`author_id` as `pivot_author_id`, `comic_author`.`role` as `pivot_role` from ",
+                    "select `tags`.`id`, `tags`.`name`, `tags`.`slug`, `comic_tag`.`comic_id` as `pivot_comic_id`, `comic_tag`.`tag_id` as `pivot_tag_id` from `tags` inner join `comic_tag` on `tags`.`i"
+                ]
+            },
+            "seed": 4499.415
+        },
+        {
+            "candidates": 5000,
+            "case": "advanced:sort_latest",
+            "cache": "none",
+            "conditions": 0,
+            "result_count": 18,
+            "timing_ms": {
+                "min": 51.013,
+                "median": 52.249,
+                "p95": 53.205,
+                "mean": 52.123,
+                "max": 53.205,
+                "samples": [
+                    51.013,
+                    51.408,
+                    52.249,
+                    52.741,
+                    53.205
+                ]
+            },
+            "queries": 6,
+            "sql": {
+                "exists": 0,
+                "comics_selects": 2,
+                "writes": 0,
+                "distinct": 6,
+                "samples": [
+                    "select count(*) as aggregate from `comics` where `published_at` is not null and `published_at` <= ? and `comics`.`deleted_at` is null",
+                    "select `comics`.*, (select count(*) from `chapters` where `comics`.`id` = `chapters`.`comic_id` and `published_at` is not null and `published_at` <= ? and `chapters`.`deleted_at` i",
+                    "select `genres`.`id`, `genres`.`name`, `genres`.`slug`, `comic_genre`.`comic_id` as `pivot_comic_id`, `comic_genre`.`genre_id` as `pivot_genre_id`, `comic_genre`.`is_primary` as `p",
+                    "select `authors`.`id`, `authors`.`name`, `comic_author`.`comic_id` as `pivot_comic_id`, `comic_author`.`author_id` as `pivot_author_id`, `comic_author`.`role` as `pivot_role` from ",
+                    "select `tags`.`id`, `tags`.`name`, `tags`.`slug`, `comic_tag`.`comic_id` as `pivot_comic_id`, `comic_tag`.`tag_id` as `pivot_tag_id` from `tags` inner join `comic_tag` on `tags`.`i"
+                ]
+            },
+            "seed": 4499.415
+        },
+        {
+            "candidates": 5000,
+            "case": "advanced:sort_trending",
+            "cache": "none",
+            "conditions": 0,
+            "result_count": 18,
+            "timing_ms": {
+                "min": 14.025,
+                "median": 15.118,
+                "p95": 16.683,
+                "mean": 15.307,
+                "max": 16.683,
+                "samples": [
+                    14.025,
+                    14.848,
+                    15.118,
+                    15.859,
+                    16.683
+                ]
+            },
+            "queries": 6,
+            "sql": {
+                "exists": 0,
+                "comics_selects": 2,
+                "writes": 0,
+                "distinct": 6,
+                "samples": [
+                    "select count(*) as aggregate from `comics` where `published_at` is not null and `published_at` <= ? and `trending_rank` is not null and `comics`.`deleted_at` is null",
+                    "select `comics`.*, (select count(*) from `chapters` where `comics`.`id` = `chapters`.`comic_id` and `published_at` is not null and `published_at` <= ? and `chapters`.`deleted_at` i",
+                    "select `genres`.`id`, `genres`.`name`, `genres`.`slug`, `comic_genre`.`comic_id` as `pivot_comic_id`, `comic_genre`.`genre_id` as `pivot_genre_id`, `comic_genre`.`is_primary` as `p",
+                    "select `authors`.`id`, `authors`.`name`, `comic_author`.`comic_id` as `pivot_comic_id`, `comic_author`.`author_id` as `pivot_author_id`, `comic_author`.`role` as `pivot_role` from ",
+                    "select `tags`.`id`, `tags`.`name`, `tags`.`slug`, `comic_tag`.`comic_id` as `pivot_comic_id`, `comic_tag`.`tag_id` as `pivot_tag_id` from `tags` inner join `comic_tag` on `tags`.`i"
+                ]
+            },
+            "seed": 4499.415
+        },
+        {
+            "candidates": 5000,
+            "case": "advanced:sort_alphabetical",
+            "cache": "none",
+            "conditions": 0,
+            "result_count": 18,
+            "timing_ms": {
+                "min": 21.373,
+                "median": 21.79,
+                "p95": 24.26,
+                "mean": 22.29,
+                "max": 24.26,
+                "samples": [
+                    21.373,
+                    21.702,
+                    21.79,
+                    22.327,
+                    24.26
+                ]
+            },
+            "queries": 6,
+            "sql": {
+                "exists": 0,
+                "comics_selects": 2,
+                "writes": 0,
+                "distinct": 6,
+                "samples": [
+                    "select count(*) as aggregate from `comics` where `published_at` is not null and `published_at` <= ? and `comics`.`deleted_at` is null",
+                    "select `comics`.*, (select count(*) from `chapters` where `comics`.`id` = `chapters`.`comic_id` and `published_at` is not null and `published_at` <= ? and `chapters`.`deleted_at` i",
+                    "select `genres`.`id`, `genres`.`name`, `genres`.`slug`, `comic_genre`.`comic_id` as `pivot_comic_id`, `comic_genre`.`genre_id` as `pivot_genre_id`, `comic_genre`.`is_primary` as `p",
+                    "select `authors`.`id`, `authors`.`name`, `comic_author`.`comic_id` as `pivot_comic_id`, `comic_author`.`author_id` as `pivot_author_id`, `comic_author`.`role` as `pivot_role` from ",
+                    "select `tags`.`id`, `tags`.`name`, `tags`.`slug`, `comic_tag`.`comic_id` as `pivot_comic_id`, `comic_tag`.`tag_id` as `pivot_tag_id` from `tags` inner join `comic_tag` on `tags`.`i"
+                ]
+            },
+            "seed": 4499.415
+        },
+        {
+            "candidates": 5000,
+            "case": "advanced:per_page_50",
+            "cache": "none",
+            "conditions": 0,
+            "result_count": 50,
+            "timing_ms": {
+                "min": 24.969,
+                "median": 25.635,
+                "p95": 27.377,
+                "mean": 25.799,
+                "max": 27.377,
+                "samples": [
+                    24.969,
+                    25.067,
+                    25.635,
+                    25.949,
+                    27.377
+                ]
+            },
+            "queries": 6,
+            "sql": {
+                "exists": 0,
+                "comics_selects": 2,
+                "writes": 0,
+                "distinct": 6,
+                "samples": [
+                    "select count(*) as aggregate from `comics` where `published_at` is not null and `published_at` <= ? and `comics`.`deleted_at` is null",
+                    "select `comics`.*, (select count(*) from `chapters` where `comics`.`id` = `chapters`.`comic_id` and `published_at` is not null and `published_at` <= ? and `chapters`.`deleted_at` i",
+                    "select `genres`.`id`, `genres`.`name`, `genres`.`slug`, `comic_genre`.`comic_id` as `pivot_comic_id`, `comic_genre`.`genre_id` as `pivot_genre_id`, `comic_genre`.`is_primary` as `p",
+                    "select `authors`.`id`, `authors`.`name`, `comic_author`.`comic_id` as `pivot_comic_id`, `comic_author`.`author_id` as `pivot_author_id`, `comic_author`.`role` as `pivot_role` from ",
+                    "select `tags`.`id`, `tags`.`name`, `tags`.`slug`, `comic_tag`.`comic_id` as `pivot_comic_id`, `comic_tag`.`tag_id` as `pivot_tag_id` from `tags` inner join `comic_tag` on `tags`.`i"
+                ]
+            },
+            "seed": 4499.415
+        }
+    ],
+    "diagnostics": {
+        "per_size": {
+            "100": {
+                "cache_invalidation": {
+                    "query": "Truyện 1 Tu Tiên",
+                    "stale_after_update": true,
+                    "refreshed_after_flush": true,
+                    "ttl_seconds": 300
+                },
+                "description_column": {
+                    "accented": {
+                        "median_ms": 0.6,
+                        "queries": 1,
+                        "matches": 90
+                    },
+                    "normalized": {
+                        "median_ms": 0.417,
+                        "queries": 1,
+                        "matches": 90
+                    }
+                }
+            },
+            "500": {
+                "cache_invalidation": {
+                    "query": "Truyện 1 Tu Tiên",
+                    "stale_after_update": true,
+                    "refreshed_after_flush": true,
+                    "ttl_seconds": 300
+                },
+                "description_column": {
+                    "accented": {
+                        "median_ms": 0.755,
+                        "queries": 1,
+                        "matches": 450
+                    },
+                    "normalized": {
+                        "median_ms": 1.01,
+                        "queries": 1,
+                        "matches": 450
+                    }
+                }
+            },
+            "1200": {
+                "cache_invalidation": {
+                    "query": "Truyện 1 Tu Tiên",
+                    "stale_after_update": true,
+                    "refreshed_after_flush": true,
+                    "ttl_seconds": 300
+                },
+                "description_column": {
+                    "accented": {
+                        "median_ms": 1.45,
+                        "queries": 1,
+                        "matches": 1080
+                    },
+                    "normalized": {
+                        "median_ms": 1.478,
+                        "queries": 1,
+                        "matches": 1080
+                    }
+                }
+            },
+            "5000": {
+                "cache_invalidation": {
+                    "query": "Truyện 1 Tu Tiên",
+                    "stale_after_update": true,
+                    "refreshed_after_flush": true,
+                    "ttl_seconds": 300
+                },
+                "description_column": {
+                    "accented": {
+                        "median_ms": 5.677,
+                        "queries": 1,
+                        "matches": 4500
+                    },
+                    "normalized": {
+                        "median_ms": 5.049,
+                        "queries": 1,
+                        "matches": 4500
+                    }
+                }
+            }
+        },
+        "explain": {
+            "available": true,
+            "plans": {
+                "keyword_or_accented": {
+                    "query": "title/description keyword search with leading wildcard LIKE, sorted by views",
+                    "rows": [
+                        {
+                            "id": 1,
+                            "select_type": "SIMPLE",
+                            "table": "comics",
+                            "partitions": null,
+                            "type": "index",
+                            "possible_keys": null,
+                            "key": "comics_views_index",
+                            "key_len": "8",
+                            "ref": null,
+                            "rows": 18,
+                            "filtered": 1.1269084215164185,
+                            "Extra": "Using where; Backward index scan"
+                        }
+                    ]
+                },
+                "keyword_or_accented_without_order": {
+                    "query": "same keyword predicates without ORDER BY, exposing the full scan",
+                    "rows": [
+                        {
+                            "id": 1,
+                            "select_type": "SIMPLE",
+                            "table": "comics",
+                            "partitions": null,
+                            "type": "ALL",
+                            "possible_keys": null,
+                            "key": null,
+                            "key_len": null,
+                            "ref": null,
+                            "rows": 5031,
+                            "filtered": 1.126908540725708,
+                            "Extra": "Using where"
+                        }
+                    ]
+                },
+                "description_normalized_only": {
+                    "query": "description_normalized leading wildcard LIKE (the P9 column)",
+                    "rows": [
+                        {
+                            "id": 1,
+                            "select_type": "SIMPLE",
+                            "table": "comics",
+                            "partitions": null,
+                            "type": "ALL",
+                            "possible_keys": null,
+                            "key": null,
+                            "key_len": null,
+                            "ref": null,
+                            "rows": 5031,
+                            "filtered": 0.33326664566993713,
+                            "Extra": "Using where"
+                        }
+                    ]
+                }
+            }
+        }
+    },
+    "notes": [
+        "liveSearch is cached by normalized keyword + limit for 300 seconds; cold flushes the cache before every sample.",
+        "advancedSearch is not cached and records a search_keywords write when q is present.",
+        "min_chapters uses a published-chapter EXISTS count, not the chapters_count alias.",
+        "Synthetic comics are created inside a transaction that is always rolled back."
+    ]
+}

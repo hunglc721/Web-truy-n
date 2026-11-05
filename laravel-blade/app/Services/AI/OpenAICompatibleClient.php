@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Log;
 
 class OpenAICompatibleClient implements AIClientInterface
 {
-    public function complete(string $instruction, string $message): array
+    public function complete(string $instruction, string $message, array $options = []): array
     {
         $failure = fn (string $error) => ['success' => false, 'content' => null, 'error' => $error];
         if (! config('ai.enabled')) {
@@ -50,6 +50,7 @@ class OpenAICompatibleClient implements AIClientInterface
                         ['role' => 'user', 'content' => $message],
                     ],
                     'response_format' => ['type' => 'json_object'],
+                    ...$this->sampling($options),
                 ]);
         } catch (ConnectionException) {
             // Timeouts and connection failures expose no transport details or secrets.
@@ -71,5 +72,19 @@ class OpenAICompatibleClient implements AIClientInterface
         }
 
         return ['success' => true, 'content' => $content, 'error' => null];
+    }
+
+    /** @param array{temperature?: float, max_tokens?: int} $options */
+    private function sampling(array $options): array
+    {
+        $sampling = [];
+        if (isset($options['temperature']) && is_numeric($options['temperature'])) {
+            $sampling['temperature'] = max(0.0, min(1.0, (float) $options['temperature']));
+        }
+        if (isset($options['max_tokens']) && is_numeric($options['max_tokens'])) {
+            $sampling['max_tokens'] = max(16, min(4000, (int) $options['max_tokens']));
+        }
+
+        return $sampling;
     }
 }

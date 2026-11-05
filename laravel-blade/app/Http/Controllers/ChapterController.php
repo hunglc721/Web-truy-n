@@ -21,7 +21,10 @@ class ChapterController extends Controller
     public function show($comicSlug, $chapterSlug)
     {
         $isAdmin = auth()->check() && auth()->user()->isAdmin();
-        $comic = Comic::where('slug', $comicSlug)->firstOrFail();
+        $comic = Comic::where('slug', $comicSlug)
+            // A published chapter must not expose a draft/scheduled comic to readers.
+            ->when(!$isAdmin, fn ($query) => $query->published())
+            ->firstOrFail();
         $baseQuery = Chapter::where('comic_id', $comic->id);
 
         if (Chapter::isValidNumber($chapterSlug)) {

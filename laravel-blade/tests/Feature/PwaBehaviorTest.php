@@ -27,4 +27,18 @@ class PwaBehaviorTest extends TestCase
             ->assertDontSee('navigator.serviceWorker.getRegistrations()', false)
             ->assertDontSee('window.caches.delete', false);
     }
+
+    public function test_non_production_pages_do_not_upgrade_http_requests_to_https(): void
+    {
+        $this->get('/')->assertOk()
+            ->assertDontSee('upgrade-insecure-requests', false);
+    }
+
+    public function test_production_pages_upgrade_insecure_requests(): void
+    {
+        $this->app->instance('env', 'production');
+
+        $this->get('/')->assertOk()
+            ->assertSee('upgrade-insecure-requests', false);
+    }
 }

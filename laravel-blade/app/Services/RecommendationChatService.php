@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Data\RecommendationPreference;
 use App\Models\User;
+use App\Services\AI\Agent\ChatAgentService;
 use App\Services\AI\PreferenceParser;
 use Illuminate\Validation\ValidationException;
 
@@ -14,6 +15,7 @@ class RecommendationChatService
         private PreferenceParser $parser,
         private PreferenceRecommendationService $recommendations,
         private RecommendationResponseService $responses,
+        private ChatAgentService $agent,
     ) {}
 
     /** Identity and quota scopes come exclusively from the backend controller. */
@@ -53,6 +55,31 @@ class RecommendationChatService
                 'cover' => $comic->cover_url, 'score' => $result['score'],
                 'matched_reasons' => $result['matched_reasons'], 'url' => route('comics.show', $comic->slug)];
         })->all();
+
+        // Opt-in bounded agent: read-only tools, strict JSON protocol, grounded output.
+        // Any failure returns null and the deterministic responder below takes over.
+        if (! $isQuickReply) {
+            $agent = $this->agent->respond(
+                $input['message'],
+                $input['turns'] ?? [],
+                $user,
+                $data,
+                $results,
+                $scope,
+                $user === null ? $guestQuotaScopes : [],
+            );
+            if ($agent !== null) {
+                return [
+                    'type' => $agent['recommendations'] !== [] ? 'recommendations' : 'answer',
+                    'conversation_token' => $conversation->session_token,
+                    'preferences' => $data,
+                    'message' => $agent['message'],
+                    'recommendations' => $agent['recommendations'],
+                    'follow_up_message' => null,
+                    'quick_replies' => $agent['quick_replies'],
+                ];
+            }
+        }
 
         return ['type' => $question ? 'question' : 'recommendations', ...$base,
             ...$this->responses->generate($input['quick_reply'] ?? $input['message'], $data, $results, [
