@@ -130,13 +130,21 @@ test.describe('WebComics browser journeys', () => {
           'X-Requested-With': 'XMLHttpRequest',
         },
         credentials: 'same-origin',
-        redirect: 'follow',
+        // The admin layout ships a meta CSP with upgrade-insecure-requests. On
+        // the plain-HTTP E2E server that upgrades the redirect target of this
+        // POST (back() -> /admin) to https, so following it fails with
+        // "Failed to fetch". The notification is created before the redirect;
+        // the badge/toast assertions below still prove delivery.
+        redirect: 'manual',
         body,
       });
-      return { ok: response.ok, status: response.status };
+      return { ok: response.ok, status: response.status, type: response.type };
     }, { title: uniqueTitle });
 
-    expect(result.ok, `Admin notification request failed with HTTP ${result.status}`).toBeTruthy();
+    expect(
+      result.type === 'opaqueredirect' || result.ok,
+      `Admin notification request was not accepted (type=${result.type}, HTTP ${result.status})`,
+    ).toBeTruthy();
 
     await expect.poll(async () => {
       return badge.evaluate((node) => node.hidden ? 0 : Number.parseInt(node.textContent || '0', 10) || 0);
