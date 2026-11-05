@@ -72,9 +72,13 @@
         @error('link_url')<span class="invalid-feedback">{{ $message }}</span>@enderror
       </div>
 
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div class="form-group"><label class="form-label">Bắt đầu</label><input class="form-control" type="datetime-local" name="starts_at" value="{{ old('starts_at') }}"></div>
-        <div class="form-group"><label class="form-label">Kết thúc</label><input class="form-control" type="datetime-local" name="ends_at" value="{{ old('ends_at') }}"></div>
+      <div class="form-group">
+        <label class="form-label">Bắt đầu</label>
+        <input class="form-control" type="datetime-local" name="starts_at" value="{{ old('starts_at') }}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Kết thúc</label>
+        <input class="form-control" type="datetime-local" name="ends_at" value="{{ old('ends_at') }}">
       </div>
 
       <div style="display:flex;flex-direction:column;gap:9px;margin-bottom:18px;font-size:13px">
