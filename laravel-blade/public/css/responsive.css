@@ -6,6 +6,17 @@ body {
   overflow-x: hidden;
 }
 
+/* `overflow-x: hidden` turns `body` into a scroll container, which stops the
+   sticky site header from sticking to the viewport. `clip` trims accidental
+   horizontal overflow without creating a scroll container, so the header
+   stays visible while the page scrolls. Browsers without `clip` keep the
+   hidden fallback above. */
+@supports (overflow: clip) {
+  body {
+    overflow-x: clip;
+  }
+}
+
 img,
 video,
 svg {

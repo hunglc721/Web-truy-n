@@ -91,6 +91,22 @@ test.describe('WebComics browser journeys', () => {
     await expect(page.locator('#mobile-menu a[href$="/register"]')).toBeVisible();
   });
 
+  test('site header stays visible while scrolling', async ({ page }) => {
+    await gotoApp(page, '/genres');
+
+    const header = page.locator('#site-header');
+    await expect(header).toBeVisible();
+    const initial = await header.boundingBox();
+    expect(initial.y).toBeLessThanOrEqual(1);
+
+    await page.evaluate(() => window.scrollTo({ top: 1500, behavior: 'instant' }));
+    await expect.poll(() => page.evaluate(() => window.scrollY), { timeout: 5_000 }).toBeGreaterThan(500);
+
+    const scrolled = await header.boundingBox();
+    expect(scrolled.y, 'sticky header scrolled out of the viewport').toBeLessThanOrEqual(1);
+    expect(scrolled.y + scrolled.height).toBeGreaterThan(0);
+  });
+
   test('comic detail and reader work without layout overflow', async ({ page }) => {
     const pageErrors = watchPageErrors(page);
 
