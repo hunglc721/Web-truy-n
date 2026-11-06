@@ -59,6 +59,38 @@ test.describe('WebComics browser journeys', () => {
     expect(pageErrors).toEqual([]);
   });
 
+  test('desktop header keeps the register button inside the viewport', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name.includes('mobile'), 'Below 769px the mobile menu is the intended navigation.');
+    test.setTimeout(60_000);
+
+    await gotoApp(page, '/');
+    const register = page.locator('.header-right > a.btn-download');
+
+    for (const width of [1440, 1366, 1300, 1280, 1240, 1200, 1166, 1165, 1100, 1024, 900, 769]) {
+      await page.setViewportSize({ width, height: 900 });
+      await page.waitForTimeout(50);
+
+      await expect(register, `register button missing at ${width}px`).toBeVisible();
+      const box = await register.boundingBox();
+      expect(box, `register box missing at ${width}px`).not.toBeNull();
+      expect(box.x, `register left edge off-screen at ${width}px`).toBeGreaterThanOrEqual(0);
+      expect(box.x + box.width, `register right edge off-screen at ${width}px`).toBeLessThanOrEqual(width + 1);
+      await expectNoDocumentOverflow(page);
+    }
+
+    // Wide enough for the desktop nav: it stays visible and no hamburger is shown.
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await expect(page.locator('.main-nav')).toBeVisible();
+    await expect(page.locator('#mobile-menu-btn')).toBeHidden();
+
+    // Narrower widths keep login/register but move the nav into the existing menu.
+    await page.setViewportSize({ width: 1024, height: 900 });
+    await expect(page.locator('.main-nav')).toBeHidden();
+    await page.locator('#mobile-menu-btn').click();
+    await expect(page.locator('#mobile-menu')).toBeVisible();
+    await expect(page.locator('#mobile-menu a[href$="/register"]')).toBeVisible();
+  });
+
   test('comic detail and reader work without layout overflow', async ({ page }) => {
     const pageErrors = watchPageErrors(page);
 
