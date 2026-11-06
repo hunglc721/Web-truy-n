@@ -189,7 +189,18 @@ svg {
   border-color: var(--primary);
 }
 
-@media (max-width: 1200px) {
+/* The desktop header is wider than the viewport below ~1365px, which used to
+   push the primary auth buttons (including Đăng Ký) past the right edge.
+   Shed the secondary publish CTA first, then the nav, so login/register stay
+   reachable without switching the whole page to the mobile layout. */
+@media (max-width: 1366px) {
+  .header-action-link#publish-link,
+  .header-divider {
+    display: none;
+  }
+}
+
+@media (max-width: 1240px) {
   .header-left {
     gap: 16px;
   }
@@ -197,83 +208,22 @@ svg {
   .search-wrap {
     width: 180px;
   }
+
+  .nav-link {
+    padding: 6px 12px;
+    font-size: 13.5px;
+  }
 }
 
-@media (max-width: 1024px) {
-  .header-action-link#publish-link,
-  .header-divider {
+@media (max-width: 1165px) {
+  .main-nav {
     display: none;
   }
 
-  .footer-main-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 768px) {
-  :root {
-    --header-height: 64px;
-  }
-
-  .container,
-  .hero-content-wrap {
-    width: 100%;
-    padding-left: 14px;
-    padding-right: 14px;
-  }
-
-  .site-header {
-    height: var(--header-height);
-  }
-
-  .header-inner {
-    padding: 0 12px;
-    gap: 8px;
-  }
-
-  .header-left {
-    min-width: 0;
-    gap: 8px;
-  }
-
-  .logo-icon svg {
-    width: 34px;
-    height: 34px;
-  }
-
-  .logo-text {
-    font-size: 17px;
-    max-width: 145px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .main-nav,
-  .header-right > .search-wrap,
-  .header-right > .header-action-link,
-  .header-right > .btn,
-  .header-right > form,
-  .header-divider {
-    display: none !important;
-  }
-
-  .header-right {
-    margin-left: auto;
-    gap: 6px;
-  }
-
-  .nav-icon-group {
-    gap: 5px;
-  }
-
-  .icon-btn,
   .mobile-menu-btn {
     width: 40px;
     height: 40px;
     min-width: 40px;
-  }
-
-  .mobile-menu-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -360,6 +310,80 @@ svg {
 
   body.mobile-menu-open {
     overflow: hidden;
+  }
+}
+
+@media (max-width: 1024px) {
+  .header-action-link#publish-link,
+  .header-divider {
+    display: none;
+  }
+
+  .footer-main-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  :root {
+    --header-height: 64px;
+  }
+
+  .container,
+  .hero-content-wrap {
+    width: 100%;
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .site-header {
+    height: var(--header-height);
+  }
+
+  .header-inner {
+    padding: 0 12px;
+    gap: 8px;
+  }
+
+  .header-left {
+    min-width: 0;
+    gap: 8px;
+  }
+
+  .logo-icon svg {
+    width: 34px;
+    height: 34px;
+  }
+
+  .logo-text {
+    font-size: 17px;
+    max-width: 145px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .main-nav,
+  .header-right > .search-wrap,
+  .header-right > .header-action-link,
+  .header-right > .btn,
+  .header-right > form,
+  .header-divider {
+    display: none !important;
+  }
+
+  .header-right {
+    margin-left: auto;
+    gap: 6px;
+  }
+
+  .nav-icon-group {
+    gap: 5px;
+  }
+
+  .icon-btn {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
   }
 
   .banner-slider-section {
