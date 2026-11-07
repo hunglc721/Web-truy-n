@@ -7,6 +7,7 @@ $settings = AIProviderSettings::resolve([
     'api_key' => env('AI_API_KEY'),
     'gemini_api_key' => env('GEMINI_API_KEY'),
     'google_api_key' => env('GOOGLE_API_KEY'),
+    'google_ai_api_key' => env('GOOGLE_AI_API_KEY'),
     'base_url' => env('AI_BASE_URL'),
     'model' => env('AI_MODEL'),
     'gemini_model' => env('GEMINI_MODEL'),

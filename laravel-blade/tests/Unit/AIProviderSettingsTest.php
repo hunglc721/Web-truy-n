@@ -20,7 +20,7 @@ class AIProviderSettingsTest extends TestCase
 
     public function test_gemini_key_aliases_are_accepted(): void
     {
-        foreach (['gemini_api_key', 'google_api_key'] as $alias) {
+        foreach (['gemini_api_key', 'google_api_key', 'google_ai_api_key'] as $alias) {
             $settings = AIProviderSettings::resolve([$alias => 'AIza-alias-key']);
 
             $this->assertTrue($settings['gemini'], $alias);

@@ -28,7 +28,7 @@ final class AIProviderSettings
             $provider = 'openai_compatible';
         }
 
-        $apiKey = self::firstNonEmpty($values, ['api_key', 'gemini_api_key', 'google_api_key']);
+        $apiKey = self::firstNonEmpty($values, ['api_key', 'gemini_api_key', 'google_api_key', 'google_ai_api_key']);
         $baseUrl = trim((string) ($values['base_url'] ?? ''));
         $model = trim((string) ($values['model'] ?? ''));
 
