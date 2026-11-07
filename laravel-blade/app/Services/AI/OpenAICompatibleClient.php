@@ -16,7 +16,7 @@ class OpenAICompatibleClient implements AIClientInterface
             return $failure('ai_disabled');
         }
         $url = rtrim((string) config('ai.base_url'), '/');
-        if (config('ai.provider') !== 'openai_compatible') {
+        if (! in_array(config('ai.provider'), ['openai_compatible', 'gemini', 'google'], true)) {
             return $failure('unsupported_provider');
         }
         if (! config('ai.api_key') || ! config('ai.model') ||
@@ -33,6 +33,17 @@ class OpenAICompatibleClient implements AIClientInterface
                 'duration_ms' => (int) ((hrtime(true) - $started) / 1_000_000),
             ]);
         };
+        $payload = [
+            'model' => config('ai.model'),
+            'messages' => [
+                ['role' => 'system', 'content' => $instruction],
+                ['role' => 'user', 'content' => $message],
+            ],
+        ];
+        if (config('ai.json_mode', true)) {
+            $payload['response_format'] = ['type' => 'json_object'];
+        }
+
         try {
             $response = Http::withToken(config('ai.api_key'))->acceptJson()
                 ->timeout(max(1, min(60, (int) config('ai.timeout'))))
@@ -43,14 +54,7 @@ class OpenAICompatibleClient implements AIClientInterface
                         ($exception instanceof RequestException &&
                             ($exception->response->status() === 429 || $exception->response->serverError())),
                     throw: false)
-                ->post($url.'/chat/completions', [
-                    'model' => config('ai.model'),
-                    'messages' => [
-                        ['role' => 'system', 'content' => $instruction],
-                        ['role' => 'user', 'content' => $message],
-                    ],
-                    'response_format' => ['type' => 'json_object'],
-                ]);
+                ->post($url.'/chat/completions', $payload);
         } catch (ConnectionException) {
             // Timeouts and connection failures expose no transport details or secrets.
             $logFailure('connection_error');
