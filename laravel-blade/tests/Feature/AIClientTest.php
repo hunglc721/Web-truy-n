@@ -30,6 +30,16 @@ class AIClientTest extends TestCase
             && $request['response_format']['type'] === 'json_object');
     }
 
+    public function test_gemini_provider_alias_is_accepted_and_can_omit_json_mode(): void
+    {
+        Http::fake(['*' => Http::response(['choices' => [['message' => ['content' => '{}']]]])]);
+        config(['ai.provider' => 'gemini', 'ai.json_mode' => false]);
+
+        $this->assertTrue(app(AIClientInterface::class)->complete('JSON only', 'Xin chào')['success']);
+        Http::assertSent(fn ($request) => $request->url() === 'https://ai.example/v1/chat/completions'
+            && ! array_key_exists('response_format', $request->data()));
+    }
+
     #[DataProvider('httpErrors')]
     public function test_http_errors_are_controlled_with_bounded_retries(int $status, int $attempts): void
     {

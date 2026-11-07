@@ -1,13 +1,30 @@
 <?php
 
+use App\Support\AIProviderSettings;
+
+$settings = AIProviderSettings::resolve([
+    'provider' => env('AI_PROVIDER'),
+    'api_key' => env('AI_API_KEY'),
+    'gemini_api_key' => env('GEMINI_API_KEY'),
+    'google_api_key' => env('GOOGLE_API_KEY'),
+    'base_url' => env('AI_BASE_URL'),
+    'model' => env('AI_MODEL'),
+    'gemini_model' => env('GEMINI_MODEL'),
+]);
+
 return [
     'enabled' => (bool) env('AI_ENABLED', true),
     'conversational_response' => (bool) env('AI_CONVERSATIONAL_RESPONSE', true),
-    'provider' => env('AI_PROVIDER', 'openai_compatible'),
-    'api_key' => env('AI_API_KEY', ''),
-    'model' => env('AI_MODEL', ''),
+    'provider' => $settings['provider'],
+    'api_key' => $settings['api_key'],
+    'model' => $settings['model'],
     // API root including its version; the adapter appends /chat/completions.
-    'base_url' => env('AI_BASE_URL', ''),
+    'base_url' => $settings['base_url'],
+    'gemini' => $settings['gemini'],
+    // Gemini's OpenAI-compatible layer is used without OpenAI's json_object
+    // switch; the prompts already require raw JSON. Set AI_JSON_MODE=true to
+    // force the switch for providers that support it.
+    'json_mode' => (bool) env('AI_JSON_MODE', ! $settings['gemini']),
     'timeout' => (int) env('AI_TIMEOUT', 15),
     // Additional attempts, capped at two by the client.
     'retry_times' => (int) env('AI_RETRY_TIMES', 1),
