@@ -113,7 +113,7 @@ class RecommendationOperationsTest extends TestCase
         $parseKeys = array_values(array_filter($keys, fn ($key) => str_starts_with($key, 'ai:parse:')));
         $this->assertCount(2, $parseKeys);
         foreach ($parseKeys as $key) {
-            $this->assertMatchesRegularExpression('/^ai:parse:(enabled|disabled):[a-f0-9]{64}:[a-f0-9]{64}$/', $key);
+            $this->assertMatchesRegularExpression('/^ai:parse:(enabled|disabled):[a-f0-9]{64}:[a-f0-9]{64}:[a-f0-9]{64}$/', $key);
         }
         foreach ([$message, mb_strtolower($message), $scope, str_repeat('a', 64), 'SECRET_TEST_API_KEY'] as $marker) {
             $this->assertStringNotContainsString($marker, implode('|', $keys));

@@ -12,8 +12,12 @@ class PreferenceParser
     /**
      * The backend supplies a trusted user:<id>, conversation:<id>, or session:<id> scope.
      * source remains ai/fallback on cache hits; cached indicates no new provider call.
+     *
+     * @param  array  $previous  Current backend-owned preference state (for follow-up turns).
+     * @param  array  $history   Recent transcript, used only as model context.
      */
-    public function parseNaturalLanguage(string $message, string $scopeKey, array $quotaScopes = []): array
+    public function parseNaturalLanguage(string $message, string $scopeKey, array $quotaScopes = [],
+        array $previous = [], array $history = []): array
     {
         $normalized = mb_strtolower(trim(preg_replace('/\s+/u', ' ', $message) ?? ''));
         if ($normalized === '' || mb_strlen($message) > 4000 ||
@@ -21,8 +25,9 @@ class PreferenceParser
             return ['success' => false, 'preferences' => null, 'error' => 'invalid_input'];
         }
         $scopeHash = hash('sha256', $scopeKey);
+        $stateHash = hash('sha256', json_encode([$previous, $history], JSON_UNESCAPED_UNICODE));
         $enabled = (bool) config('ai.enabled');
-        $cacheKey = 'ai:parse:'.($enabled ? 'enabled:' : 'disabled:').$scopeHash.':'.hash('sha256', $normalized);
+        $cacheKey = 'ai:parse:'.($enabled ? 'enabled:' : 'disabled:').$scopeHash.':'.$stateHash.':'.hash('sha256', $normalized);
         if (($cached = Cache::get($cacheKey)) !== null) {
             return [...$cached, 'cached' => true];
         }
@@ -31,9 +36,10 @@ class PreferenceParser
         } elseif (! $this->quota->reserve([$scopeKey, ...$quotaScopes])) {
             $result = ['success' => false, 'error' => 'rate_limited'];
         } else {
-            $result = $this->ai->parse($normalized);
+            $result = $this->ai->parse($normalized, $previous, $history);
         }
         if ($result['success']) {
+            $result['preferences'] = $this->applyAdditiveIntent($normalized, $result['preferences'], $previous);
             $result += ['source' => 'ai', 'cached' => false];
         } else {
             $reason = in_array($result['error'], ['ai_disabled', 'rate_limited', 'connection_error', 'http_error',
@@ -44,7 +50,9 @@ class PreferenceParser
                 'provider' => config('ai.provider'), 'model' => config('ai.model'),
                 'reason' => $reason, 'fallback_used' => true,
             ]);
-            $result = ['success' => true, 'preferences' => $this->rules->parse($normalized),
+            $fallback = $this->rules->parse($normalized);
+            $result = ['success' => true,
+                'preferences' => $this->applyAdditiveIntent($normalized, $fallback, $previous),
                 'error' => null, 'source' => 'fallback', 'fallback_reason' => $reason, 'cached' => false];
         }
         $ttl = max(0, (int) config('ai.parse_cache_ttl'));
@@ -61,6 +69,33 @@ class PreferenceParser
 
         return ['success' => $delta !== null, 'preferences' => $delta,
             'error' => $delta === null ? 'invalid_quick_reply' : null, 'source' => 'quick_reply'];
+    }
+
+    /**
+     * "Thêm hài hước" must extend the current filter, not silently drop "School Life".
+     *
+     * Only additive wording triggers the union; replacement wording ("đổi sang",
+     * "chỉ", ...) keeps the delta semantics, and quick replies are unaffected.
+     */
+    private function applyAdditiveIntent(string $message, array $preferences, array $previous): array
+    {
+        $additive = '/(?<![\p{L}\p{N}])(?:thêm|nữa|cũng|kèm|bổ\s*sung|và)(?![\p{L}\p{N}])/iu';
+        $replacement = '/(?<![\p{L}\p{N}])(?:đổi(?:\s+(?:sang|thành))?|chuyển\s+sang|thay\s+vì|chỉ(?:\s+(?:còn|muốn|cần))?)(?![\p{L}\p{N}])/iu';
+        if ($previous === [] || preg_match($replacement, $message) || ! preg_match($additive, $message)) {
+            return $preferences;
+        }
+        foreach (['genres', 'themes', 'settings', 'character_traits', 'tones', 'relationships'] as $field) {
+            if (! empty($preferences[$field])) {
+                $preferences[$field] = array_values(array_unique([
+                    ...($previous[$field] ?? []), ...$preferences[$field],
+                ]));
+            }
+        }
+        if (($preferences['status'] ?? null) === null && ! empty($previous['status'])) {
+            $preferences['status'] = $previous['status'];
+        }
+
+        return $preferences;
     }
 
 }

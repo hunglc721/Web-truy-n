@@ -32,5 +32,8 @@ return [
     'max_calls' => (int) env('AI_MAX_CALLS', 10),
     'decay_seconds' => (int) env('AI_RATE_LIMIT_DECAY', 60),
     'parse_cache_ttl' => (int) env('AI_PARSE_CACHE_TTL', 600),
+    // Short transcript kept per conversation for multi-turn context (cache-backed).
+    'memory_turns' => (int) env('AI_MEMORY_TURNS', 8),
+    'memory_ttl' => (int) env('AI_MEMORY_TTL', 21600),
 
 ];

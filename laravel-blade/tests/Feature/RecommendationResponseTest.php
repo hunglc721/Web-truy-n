@@ -178,4 +178,126 @@ class RecommendationResponseTest extends TestCase
         $this->postJson('/api/recommendation/chat', ['message' => 'fantasy main thông minh không harem', 'conversation_token' => $response->json('conversation_token')])->assertOk();
         $this->postJson('/api/recommendation/chat', ['quick_reply' => 'Dark', 'conversation_token' => $response->json('conversation_token')])->assertOk();
     }
+
+    public function test_follow_up_turns_carry_preferences_and_history_into_the_model(): void
+    {
+        config(['ai.enabled' => true]);
+        $intent = fn (array $changes) => array_replace([
+            'genres' => [], 'themes' => [], 'settings' => [], 'character_traits' => [], 'tones' => [],
+            'relationships' => [], 'status' => null, 'exclude' => [], 'needs_more_info' => false,
+            'follow_up_question' => null,
+        ], $changes);
+        $reply = fn (string $message) => json_encode(['message' => $message, 'mentioned_titles' => []]);
+
+        $client = $this->mock(AIClientInterface::class);
+        $client->shouldReceive('complete')->once()->ordered()->andReturn(['success' => true, 'error' => null,
+            'content' => json_encode($intent(['genres' => ['Fantasy'], 'settings' => ['School'],
+                'character_traits' => ['Smart MC']]))]);
+        $client->shouldReceive('complete')->once()->ordered()->andReturn(['success' => true, 'error' => null,
+            'content' => $reply('Nghe hợp gu học đường đó nha. Mình tìm được Truyện thật cho bạn thử nè.')]);
+        $client->shouldReceive('complete')->once()->ordered()->andReturnUsing(function ($instruction, $input) use ($intent) {
+            $payload = json_decode($input, true);
+            // The parser sees the trusted current state plus the earlier dialogue.
+            $this->assertSame(['Fantasy'], $payload['previous_preferences']['genres']);
+            $this->assertSame(['School'], $payload['previous_preferences']['settings']);
+            $this->assertSame(['Smart MC'], $payload['previous_preferences']['character_traits']);
+            $this->assertSame('tôi thích truyện học đường main thông minh', $payload['recent_history'][0]['content']);
+            $this->assertSame('assistant', $payload['recent_history'][1]['role']);
+
+            return ['success' => true, 'error' => null,
+                'content' => json_encode($intent(['genres' => ['Fantasy'], 'tones' => ['Comedy']]))];
+        });
+        $client->shouldReceive('complete')->once()->ordered()->andReturnUsing(function ($instruction, $input) use ($reply) {
+            $payload = json_decode($input, true);
+            $this->assertSame('recommendations', $payload['mode']);
+            $this->assertCount(2, $payload['recent_history']);
+            $this->assertSame(['Fantasy'], $payload['taxonomy']['genres']);
+            $this->assertContains('Comedy', $payload['taxonomy']['tones']);
+
+            return ['success' => true, 'error' => null,
+                'content' => $reply('Thêm hài nhẹ thì Truyện thật vẫn là lựa chọn đầu tiên đó nha.')];
+        });
+
+        $first = $this->postJson('/api/recommendation/chat',
+            ['message' => 'tôi thích truyện học đường main thông minh'])->assertOk();
+        $second = $this->postJson('/api/recommendation/chat', ['message' => 'thêm hài hước nhẹ nhàng nữa nhé',
+            'conversation_token' => $first->json('conversation_token')])->assertOk();
+
+        // Adding a tone must not drop the previously selected genre or traits.
+        $second->assertJsonPath('preferences.genres', ['Fantasy'])
+            ->assertJsonPath('preferences.settings', ['School'])
+            ->assertJsonPath('preferences.character_traits', ['Smart MC'])
+            ->assertJsonPath('preferences.tones', ['Comedy']);
+        $this->assertStringContainsString('Truyện thật', $second->json('message'));
+    }
+
+    public function test_additive_wording_keeps_previous_criteria_without_ai(): void
+    {
+        $this->mock(AIClientInterface::class)->shouldNotReceive('complete');
+        $first = $this->postJson('/api/recommendation/chat',
+            ['message' => 'tôi thích fantasy main thông minh'])->assertOk();
+        $first->assertJsonPath('preferences.genres', ['Fantasy'])
+            ->assertJsonPath('preferences.character_traits', ['Smart MC']);
+
+        $second = $this->postJson('/api/recommendation/chat', ['message' => 'thêm hài hước nhẹ nhàng nữa nhé',
+            'conversation_token' => $first->json('conversation_token')])->assertOk();
+        $second->assertJsonPath('preferences.genres', ['Fantasy'])
+            ->assertJsonPath('preferences.character_traits', ['Smart MC'])
+            ->assertJsonPath('preferences.tones', ['Comedy']);
+    }
+
+    public function test_replacement_wording_drops_the_previous_dimension_without_ai(): void
+    {
+        Genre::create(['name' => 'Action']);
+        $this->mock(AIClientInterface::class)->shouldNotReceive('complete');
+        $first = $this->postJson('/api/recommendation/chat',
+            ['message' => 'tôi thích fantasy main thông minh'])->assertOk();
+        $second = $this->postJson('/api/recommendation/chat', ['message' => 'đổi sang action thôi',
+            'conversation_token' => $first->json('conversation_token')])->assertOk();
+        $second->assertJsonPath('preferences.genres', ['Action']);
+    }
+
+    public function test_vague_follow_up_keeps_the_current_results_instead_of_reasking(): void
+    {
+        $this->mock(AIClientInterface::class)->shouldNotReceive('complete');
+        $first = $this->postJson('/api/recommendation/chat',
+            ['message' => 'tôi thích fantasy main thông minh'])->assertOk();
+        $second = $this->postJson('/api/recommendation/chat', ['message' => 'cảm ơn nhé',
+            'conversation_token' => $first->json('conversation_token')])->assertOk();
+        $second->assertJsonPath('type', 'recommendations')
+            ->assertJsonPath('preferences.genres', ['Fantasy']);
+    }
+
+    public function test_transcript_does_not_leak_between_conversations(): void
+    {
+        config(['ai.enabled' => true]);
+        $client = $this->mock(AIClientInterface::class);
+        $client->shouldReceive('complete')->once()->ordered()->andReturn(['success' => true, 'error' => null,
+            'content' => json_encode(['genres' => ['Fantasy'], 'themes' => [], 'settings' => [],
+                'character_traits' => [], 'tones' => [], 'relationships' => [], 'status' => null,
+                'exclude' => [], 'needs_more_info' => false, 'follow_up_question' => null])]);
+        $client->shouldReceive('complete')->once()->ordered()->andReturn(['success' => true, 'error' => null,
+            'content' => json_encode(['message' => 'Truyện thật hợp gu fantasy nè.', 'mentioned_titles' => ['Truyện thật']])]);
+        $client->shouldReceive('complete')->once()->ordered()->andReturnUsing(function ($instruction, $input) {
+            $payload = json_decode($input, true);
+            $this->assertSame([], $payload['previous_preferences']['genres']);
+            $this->assertSame([], $payload['recent_history']);
+
+            return ['success' => true, 'error' => null, 'content' => json_encode([
+                'genres' => [], 'themes' => [], 'settings' => [], 'character_traits' => [], 'tones' => [],
+                'relationships' => [], 'status' => null, 'exclude' => [], 'needs_more_info' => true,
+                'follow_up_question' => 'Bạn muốn đọc thể loại nào?'])];
+        });
+        $client->shouldReceive('complete')->once()->ordered()->andReturnUsing(function ($instruction, $input) {
+            $this->assertSame([], json_decode($input, true)['recent_history']);
+
+            return ['success' => true, 'error' => null,
+                'content' => json_encode(['message' => 'Bạn muốn đọc thể loại nào?', 'mentioned_titles' => []])];
+        });
+
+        $first = $this->postJson('/api/recommendation/chat', ['message' => 'thích fantasy'])->assertOk();
+        $second = $this->postJson('/api/recommendation/chat', ['message' => 'alo'])->assertOk();
+        $this->assertNotSame($first->json('conversation_token'), $second->json('conversation_token'));
+        $second->assertJsonPath('type', 'question');
+    }
 }

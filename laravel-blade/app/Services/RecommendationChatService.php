@@ -14,6 +14,7 @@ class RecommendationChatService
         private PreferenceParser $parser,
         private PreferenceRecommendationService $recommendations,
         private RecommendationResponseService $responses,
+        private RecommendationChatMemory $memory,
     ) {}
 
     /** Identity and quota scopes come exclusively from the backend controller. */
@@ -24,9 +25,14 @@ class RecommendationChatService
         $previous = RecommendationPreference::fromArray($conversation->preferences_json)->toArray();
         $scope = $user !== null ? 'user:'.$user->id : 'conversation:'.$conversation->id;
         $isQuickReply = isset($input['quick_reply']);
+        $userMessage = (string) ($isQuickReply ? $input['quick_reply'] : $input['message']);
+        // Recent turns are advisory context for the model only; state still lives in the DTO.
+        $memoryScope = 'conversation:'.$conversation->id;
+        $history = $this->memory->recent($memoryScope);
         $parsed = $isQuickReply
             ? $this->parser->parseQuickReply($input['quick_reply'])
-            : $this->parser->parseNaturalLanguage($input['message'], $scope, $user === null ? $guestQuotaScopes : []);
+            : $this->parser->parseNaturalLanguage($userMessage, $scope,
+                $user === null ? $guestQuotaScopes : [], $previous, $history);
         if (! $parsed['success']) {
             throw ValidationException::withMessages([
                 $isQuickReply ? 'quick_reply' : 'message' => 'Lựa chọn hoặc nội dung không hợp lệ.',
@@ -45,7 +51,9 @@ class RecommendationChatService
         foreach (['themes', 'character_traits', 'settings', 'tones', 'relationships'] as $field) {
             $genreOnly = $genreOnly && $data[$field] === [];
         }
-        $question = $data['needs_more_info'] || ! $hasSignal || $genreOnly;
+        // A vague follow-up ("cảm ơn", "bộ nào vui nhất?") keeps the current results
+        // instead of resetting the chat to a clarifying question.
+        $question = ! $hasSignal || $genreOnly;
         $results = $question ? [] : $this->recommendations->recommend($preference, 5)->map(function (array $result) {
             $comic = $result['comic'];
 
@@ -55,12 +63,17 @@ class RecommendationChatService
         })->all();
 
         $response = ['type' => $question ? 'question' : 'recommendations', ...$base,
-            ...$this->responses->generate($input['quick_reply'] ?? $input['message'], $data, $results, [
+            ...$this->responses->generate($userMessage, $data, $results, [
                 'previous' => $previous, 'delta' => $parsed['preferences'], 'question' => $question,
                 'quick_reply' => $isQuickReply, 'parser_source' => $parsed['source'] ?? null,
                 'parser_cached' => $parsed['cached'] ?? false, 'scope' => $scope,
+                'history' => $history,
                 'quota_scopes' => $user === null ? $guestQuotaScopes : [],
             ])];
+
+        // Keep the transcript so the next turn can resolve "thêm", "cái đó", or a greeting.
+        $this->memory->append($memoryScope, 'user', $userMessage);
+        $this->memory->append($memoryScope, 'assistant', (string) ($response['message'] ?? ''));
 
         // Debug-only, non-secret diagnostics for diagnosing a fallback parser.
         // Hidden when APP_DEBUG is off so public responses keep their shape.
