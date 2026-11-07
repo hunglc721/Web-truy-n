@@ -54,12 +54,30 @@ class RecommendationChatService
                 'matched_reasons' => $result['matched_reasons'], 'url' => route('comics.show', $comic->slug)];
         })->all();
 
-        return ['type' => $question ? 'question' : 'recommendations', ...$base,
+        $response = ['type' => $question ? 'question' : 'recommendations', ...$base,
             ...$this->responses->generate($input['quick_reply'] ?? $input['message'], $data, $results, [
                 'previous' => $previous, 'delta' => $parsed['preferences'], 'question' => $question,
                 'quick_reply' => $isQuickReply, 'parser_source' => $parsed['source'] ?? null,
                 'parser_cached' => $parsed['cached'] ?? false, 'scope' => $scope,
                 'quota_scopes' => $user === null ? $guestQuotaScopes : [],
             ])];
+
+        // Debug-only, non-secret diagnostics for diagnosing a fallback parser.
+        // Hidden when APP_DEBUG is off so public responses keep their shape.
+        if (config('app.debug')) {
+            $response['ai_debug'] = [
+                'source' => $parsed['source'] ?? null,
+                'cached' => (bool) ($parsed['cached'] ?? false),
+                'fallback_reason' => $parsed['fallback_reason'] ?? null,
+                'enabled' => (bool) config('ai.enabled'),
+                'provider' => config('ai.provider'),
+                'gemini' => (bool) config('ai.gemini'),
+                'model' => config('ai.model'),
+                'base_url_host' => parse_url((string) config('ai.base_url'), PHP_URL_HOST) ?: null,
+                'key_set' => (bool) config('ai.api_key'),
+            ];
+        }
+
+        return $response;
     }
 }

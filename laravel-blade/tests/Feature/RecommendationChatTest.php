@@ -67,6 +67,21 @@ class RecommendationChatTest extends TestCase
             ->assertOk()->assertJsonPath('type', 'question')->assertJsonStructure(['message', 'quick_replies', 'conversation_token']);
     }
 
+    public function test_debug_responses_expose_safe_ai_diagnostics_only_when_debugging(): void
+    {
+        config(['app.debug' => true, 'ai.enabled' => false]);
+        $this->postJson('/api/recommendation/chat', ['message' => 'tìm truyện hay'])
+            ->assertOk()
+            ->assertJsonPath('ai_debug.fallback_reason', 'ai_disabled')
+            ->assertJsonPath('ai_debug.enabled', false)
+            ->assertJsonPath('ai_debug.key_set', false);
+
+        config(['app.debug' => false]);
+        $this->postJson('/api/recommendation/chat', ['message' => 'tìm truyện hay'])
+            ->assertOk()
+            ->assertJsonMissingPath('ai_debug');
+    }
+
     public function test_guest_quick_replies_reuse_state_without_ai(): void
     {
         $this->mock(AIClientInterface::class)->shouldNotReceive('complete');
