@@ -53,10 +53,16 @@ class IntentParserTest extends TestCase
         $this->assertSame([], $result['preferences']['relationships']);
         $dto = RecommendationPreference::fromArray($result['preferences']);
         $this->assertSame($result['preferences'], $dto->toArray());
-        Http::assertSent(fn ($request) => $request['messages'][1]['content'] === 'tìm fantasy main mạnh không harem'
-            && str_contains($request['messages'][0]['content'], 'JSON only')
-            && str_contains($request['messages'][0]['content'], 'Fantasy')
-            && str_contains($request['messages'][0]['content'], 'Vampire'));
+        Http::assertSent(function ($request) {
+            $payload = json_decode($request['messages'][1]['content'], true);
+            $this->assertSame('tìm fantasy main mạnh không harem', $payload['message']);
+            $this->assertSame([], $payload['previous_preferences']);
+            $this->assertSame([], $payload['recent_history']);
+
+            return str_contains($request['messages'][0]['content'], 'JSON only')
+                && str_contains($request['messages'][0]['content'], 'Fantasy')
+                && str_contains($request['messages'][0]['content'], 'Vampire');
+        });
     }
 
     public function test_vague_request_keeps_follow_up_question(): void
@@ -72,7 +78,7 @@ class IntentParserTest extends TestCase
     public function test_vietnamese_intent_with_mock_client(): void
     {
         $this->mock(AIClientInterface::class)->shouldReceive('complete')->once()
-            ->withArgs(fn (string $instruction, string $message) => $message === 'fantasy main bá không harem')
+            ->withArgs(fn (string $instruction, string $message) => json_decode($message, true)['message'] === 'fantasy main bá không harem')
             ->andReturn(['success' => true, 'content' => json_encode($this->preferences([
                 'genres' => ['Fantasy'], 'character_traits' => ['Overpowered MC'], 'exclude' => ['Harem'],
             ])), 'error' => null]);

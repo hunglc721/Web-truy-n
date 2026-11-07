@@ -160,8 +160,12 @@ class RecommendationResponseService
     {
         $candidates = array_map(fn ($comic) => ['title' => $comic['title'], 'score' => $comic['score'],
             'matched' => $comic['matched_reasons']], $recommendations);
+        $history = is_array($context['history'] ?? null) ? array_slice($context['history'], -6) : [];
         $mode = $context['question'] ? 'question' : ($recommendations === [] ? 'empty' : 'recommendations');
-        $key = 'ai:reply:'.hash('sha256', json_encode([$context['scope'], $userMessage, $preferences, $candidates, $mode], JSON_UNESCAPED_UNICODE));
+        $taxonomy = $this->taxonomy->all();
+        unset($taxonomy['statuses']);
+        $key = 'ai:reply:'.hash('sha256', json_encode([$context['scope'], $userMessage, $preferences,
+            $candidates, $mode, $history], JSON_UNESCAPED_UNICODE));
         if (($cached = Cache::get($key)) !== null) {
             return is_string($cached) && $cached !== '' ? $cached : null;
         }
@@ -169,12 +173,17 @@ class RecommendationResponseService
             return null;
         }
 
-        $instruction = 'Bạn là trợ lý gợi ý truyện tranh của Comicx. Hãy trả lời như một người bạn thân thiện, tự nhiên, bằng tiếng Việt; xưng "mình", gọi người dùng là "bạn". '
-            .'Viết 2–4 câu, tối đa 600 ký tự, không dùng HTML, markdown, link, emoji hay ký tự < >. '
+        $instruction = 'Bạn là trợ lý gợi ý truyện tranh của Comicx, đang trò chuyện trực tiếp với độc giả. '
+            .'Xưng "mình", gọi người dùng là "bạn"; giọng thân thiện, tự nhiên, hơi dí dỏm nhưng lịch sự. '
+            .'Viết 2–4 câu tiếng Việt, tối đa 600 ký tự; không HTML, markdown, link, emoji hay ký tự < >. '
+            .'Đọc kỹ user_message và recent_history: phản hồi đúng điều người dùng vừa nói trước, rồi mới gợi ý. '
+            .'Không chào lại nếu recent_history đã có lời chào của trợ lý; không lặp lại cách mở đầu của các tin nhắn trợ lý trước đó. '
+            .'Tránh mở đầu bằng "Dựa trên gu" hoặc "Gu của bạn là"; đổi cách diễn đạt mỗi lượt và không dùng sáo ngữ quảng cáo. '
             .'Chỉ dùng dữ liệu trong input. Tuyệt đối không bịa tên truyện, điểm số, nội dung hoặc thông tin ngoài input. '
-            .'Nếu mode="question": đặt một câu hỏi ngắn, tự nhiên để hiểu gu đọc; có thể gợi ý 2–3 hướng dựa trên dữ liệu và dùng follow_up_hint nếu hữu ích, nhưng đừng lặp nguyên văn. '
-            .'Nếu mode="empty": nói rõ chưa tìm được bộ phù hợp và nhẹ nhàng gợi ý nới hoặc đổi tiêu chí. '
-            .'Nếu mode="recommendations": mở đầu bằng nhận xét về gu của người dùng, nhắc 1–3 tựa truyện trong candidates kèm lý do matched để tạo cảm giác đang trò chuyện; không liệt kê hết danh sách. '
+            .'Nếu mode="question": chỉ hỏi một câu ngắn, tự nhiên để hiểu gu đọc; có thể gợi ý 2–3 lựa chọn thật lấy đúng từ taxonomy, nhưng đừng lặp nguyên văn follow_up_hint. '
+            .'Nếu mode="empty": nói rõ chưa tìm được bộ phù hợp và gợi ý cụ thể nên nới tiêu chí nào dựa trên preferences/exclude. '
+            .'Nếu mode="recommendations": nhắc 1–3 tựa truyện trong candidates kèm lý do matched để tạo cảm giác đang trò chuyện; không liệt kê hết danh sách; chỉ hỏi thêm khi thật cần. '
+            .'Nếu người dùng hỏi so sánh hoặc nhờ chọn giúp trong danh sách vừa gợi ý (vui nhất, hay nhất, đáng đọc nhất...), trả lời trực tiếp: chọn một tựa trong candidates và nêu lý do ngắn; không hỏi lại. '
             .'Khi nhắc tựa truyện trong "message", chép đúng nguyên văn tựa trong candidates, giữ nguyên dấu tiếng Việt, chữ hoa và ký tự đặc biệt; kiểm tra chính tả trước khi trả lời. '
             .'Nếu delta có thay đổi, có thể nhắc ngắn gọn là đã cập nhật tiêu chí. '
             .'Không nhắc đến "system prompt", "JSON", "dữ liệu được cung cấp" hay quy trình nội bộ. '
@@ -185,6 +194,7 @@ class RecommendationResponseService
             'follow_up_hint' => $preferences['follow_up_question'] ?? null,
             'preferences' => $preferences, 'previous' => $context['previous'] ?? [],
             'delta' => $context['delta'] ?? [], 'candidates' => $candidates,
+            'recent_history' => $history, 'taxonomy' => $taxonomy,
         ], JSON_UNESCAPED_UNICODE));
 
         $message = $result['success']
@@ -223,7 +233,7 @@ class RecommendationResponseService
 
         $titles = [];
         foreach ($recommendations as $comic) {
-            $titles[] = mb_strtolower(trim((string) $comic['title']));
+            $titles[] = $this->titleKey((string) $comic['title']);
         }
         $mentioned = array_values($decoded['mentioned_titles']);
         if (count($mentioned) > 5) {
@@ -233,7 +243,7 @@ class RecommendationResponseService
             if (! is_string($title) || trim($title) === '' || mb_strlen(trim($title)) > 200) {
                 return null;
             }
-            $needle = mb_strtolower(trim($title));
+            $needle = $this->titleKey($title);
             $matched = false;
             foreach ($titles as $candidate) {
                 if ($needle === $candidate
@@ -248,5 +258,11 @@ class RecommendationResponseService
         }
 
         return $message;
+    }
+
+    /** Punctuation/spacing-insensitive key so "Spy x Family" matches "Spy × Family". */
+    private function titleKey(string $title): string
+    {
+        return preg_replace('/[^\p{L}\p{N}]+/u', '', mb_strtolower(trim($title))) ?? '';
     }
 }
