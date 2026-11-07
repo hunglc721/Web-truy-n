@@ -78,7 +78,80 @@ class RecommendationResponseTest extends TestCase
         }
     }
 
-    public function test_grounded_ai_response_and_shared_budget(): void
+    public function test_natural_ai_question_reply_replaces_the_template(): void
+    {
+        config(['ai.enabled' => true]);
+        $intent = ['genres' => [], 'themes' => [], 'settings' => [], 'character_traits' => [],
+            'tones' => [], 'relationships' => [], 'status' => null, 'exclude' => [],
+            'needs_more_info' => true, 'follow_up_question' => 'Bạn thích thể loại nào?'];
+        $client = $this->mock(AIClientInterface::class);
+        $client->shouldReceive('complete')->once()->ordered()
+            ->andReturn(['success' => true, 'content' => json_encode($intent), 'error' => null]);
+        $client->shouldReceive('complete')->once()->ordered()->andReturnUsing(function ($instruction, $input) {
+            $payload = json_decode($input, true);
+            $this->assertSame('question', $payload['mode']);
+            $this->assertTrue($payload['question']);
+            $this->assertSame('Bạn thích thể loại nào?', $payload['follow_up_hint']);
+
+            return ['success' => true, 'content' => json_encode([
+                'message' => 'Chào bạn! Mình có thể gợi ý theo thể loại hoặc kiểu nhân vật. Bạn thích hành động, học đường hay main thông minh?',
+                'mentioned_titles' => [],
+            ]), 'error' => null];
+        });
+
+        $response = $this->postJson('/api/recommendation/chat', ['message' => 'alo'])->assertOk();
+        $response->assertJsonPath('type', 'question');
+        $this->assertStringContainsString('Chào bạn!', $response->json('message'));
+        $this->assertNull($response->json('follow_up_message'));
+    }
+
+    public function test_natural_ai_empty_result_reply_is_used_and_grounded(): void
+    {
+        config(['ai.enabled' => true]);
+        Comic::query()->delete();
+        $intent = app(RuleBasedPreferenceParser::class)->parse('fantasy main mạnh không harem');
+        $client = $this->mock(AIClientInterface::class);
+        $client->shouldReceive('complete')->once()->ordered()
+            ->andReturn(['success' => true, 'content' => json_encode($intent), 'error' => null]);
+        $client->shouldReceive('complete')->once()->ordered()->andReturnUsing(function ($instruction, $input) {
+            $payload = json_decode($input, true);
+            $this->assertSame('empty', $payload['mode']);
+            $this->assertSame([], $payload['candidates']);
+
+            return ['success' => true, 'content' => json_encode([
+                'message' => 'Hiện thư viện chưa có bộ nào khớp cả Fantasy lẫn main mạnh mà không có Harem. Bạn thử nới một tiêu chí nhé, ví dụ bỏ main mạnh hoặc cho phép Harem.',
+                'mentioned_titles' => [],
+            ]), 'error' => null];
+        });
+
+        $response = $this->postJson('/api/recommendation/chat', ['message' => 'fantasy main mạnh không harem'])->assertOk();
+        $this->assertStringContainsString('chưa có bộ nào', $response->json('message'));
+        $this->assertNull($response->json('follow_up_message'));
+    }
+
+    public function test_ai_cannot_name_a_comic_outside_the_candidates(): void
+    {
+        config(['ai.enabled' => true]);
+        $intent = app(RuleBasedPreferenceParser::class)->parse('fantasy main mạnh không harem');
+        $client = $this->mock(AIClientInterface::class);
+        $client->shouldReceive('complete')->once()->ordered()
+            ->andReturn(['success' => true, 'content' => json_encode($intent), 'error' => null]);
+        $client->shouldReceive('complete')->once()->ordered()->andReturn([
+            'success' => true,
+            'content' => json_encode([
+                'message' => 'Mình nghĩ bạn nên đọc Comic Bịa Không Có, rất hợp gu.',
+                'mentioned_titles' => ['Comic Bịa Không Có'],
+            ]),
+            'error' => null,
+        ]);
+
+        $response = $this->postJson('/api/recommendation/chat', ['message' => 'fantasy main mạnh không harem'])->assertOk();
+        $this->assertStringNotContainsString('Comic Bịa', $response->json('message'));
+        $this->assertStringContainsString('Harem', $response->json('message'));
+        $this->assertSame('Truyện thật', $response->json('recommendations.0.title'));
+    }
+
+    public function test_grounded_natural_ai_response_and_shared_budget(): void
     {
         config(['ai.enabled' => true, 'ai.max_calls' => 2]);
         $intent = app(RuleBasedPreferenceParser::class)->parse('fantasy main mạnh không harem');
@@ -87,9 +160,21 @@ class RecommendationResponseTest extends TestCase
         $client->shouldReceive('complete')->once()->ordered()->andReturnUsing(function ($instruction, $input) {
             $payload = json_decode($input, true);
             $this->assertSame('Truyện thật', $payload['candidates'][0]['title']);
-            return ['success' => true, 'content' => json_encode(['message' => $payload['approved_messages'][0]]), 'error' => null];
+            $this->assertSame('recommendations', $payload['mode']);
+            $this->assertContains('harem', array_map('mb_strtolower', $payload['preferences']['exclude']));
+
+            return ['success' => true, 'content' => json_encode([
+                'message' => 'Gu Fantasy + main mạnh của bạn khá rõ rồi. Mình thấy Truyện thật là lựa chọn sát nhất, bạn thử xem sao nhé. Nếu muốn, mình lọc thêm theo tông tối hoặc trạng thái hoàn thành.',
+                'mentioned_titles' => ['Truyện thật'],
+            ]), 'error' => null];
         });
+
         $response = $this->postJson('/api/recommendation/chat', ['message' => 'fantasy main mạnh không harem'])->assertOk();
+        $this->assertStringContainsString('Gu Fantasy', $response->json('message'));
+        $this->assertStringContainsString('Truyện thật', $response->json('message'));
+        $this->assertNull($response->json('follow_up_message'));
+
+        // The two-call budget is already spent, so later turns use the deterministic fallback.
         $this->postJson('/api/recommendation/chat', ['message' => 'fantasy main thông minh không harem', 'conversation_token' => $response->json('conversation_token')])->assertOk();
         $this->postJson('/api/recommendation/chat', ['quick_reply' => 'Dark', 'conversation_token' => $response->json('conversation_token')])->assertOk();
     }
