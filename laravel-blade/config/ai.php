@@ -22,10 +22,10 @@ return [
     // API root including its version; the adapter appends /chat/completions.
     'base_url' => $settings['base_url'],
     'gemini' => $settings['gemini'],
-    // Gemini's OpenAI-compatible layer is used without OpenAI's json_object
-    // switch; the prompts already require raw JSON. Set AI_JSON_MODE=true to
-    // force the switch for providers that support it.
-    'json_mode' => (bool) env('AI_JSON_MODE', ! $settings['gemini']),
+    // The json_object switch is supported by the Gemini OpenAI-compatible
+    // endpoint and improves JSON reliability. Set AI_JSON_MODE=false only for
+    // providers that reject it.
+    'json_mode' => (bool) env('AI_JSON_MODE', true),
     'timeout' => (int) env('AI_TIMEOUT', 15),
     // Additional attempts, capped at two by the client.
     'retry_times' => (int) env('AI_RETRY_TIMES', 1),

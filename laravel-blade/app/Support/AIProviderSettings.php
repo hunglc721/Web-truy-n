@@ -33,9 +33,12 @@ final class AIProviderSettings
         $model = trim((string) ($values['model'] ?? ''));
 
         // Only infer Gemini when the endpoint was not configured explicitly, so
-        // an AIza key pointed at a proxy keeps the operator's base URL.
+        // a Google key pointed at a proxy keeps the operator's base URL. Google
+        // AI Studio now issues both legacy (AIza...) and new (AQ....) keys.
+        $geminiKey = $apiKey !== ''
+            && (str_starts_with($apiKey, 'AIza') || str_starts_with($apiKey, 'AQ.'));
         $gemini = in_array($provider, ['gemini', 'google', 'google_gemini'], true)
-            || ($baseUrl === '' && $apiKey !== '' && str_starts_with($apiKey, 'AIza'));
+            || ($baseUrl === '' && $geminiKey);
 
         if ($gemini) {
             $provider = 'openai_compatible';

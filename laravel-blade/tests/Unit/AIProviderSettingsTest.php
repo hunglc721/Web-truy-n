@@ -18,6 +18,16 @@ class AIProviderSettingsTest extends TestCase
         $this->assertSame(AIProviderSettings::GEMINI_DEFAULT_MODEL, $settings['model']);
     }
 
+    public function test_aq_gemini_key_fills_endpoint_and_default_model(): void
+    {
+        $settings = AIProviderSettings::resolve(['api_key' => 'AQ.test-key']);
+
+        $this->assertTrue($settings['gemini']);
+        $this->assertSame('openai_compatible', $settings['provider']);
+        $this->assertSame(AIProviderSettings::GEMINI_BASE_URL, $settings['base_url']);
+        $this->assertSame(AIProviderSettings::GEMINI_DEFAULT_MODEL, $settings['model']);
+    }
+
     public function test_gemini_key_aliases_are_accepted(): void
     {
         foreach (['gemini_api_key', 'google_api_key', 'google_ai_api_key'] as $alias) {

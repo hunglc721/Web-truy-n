@@ -69,7 +69,8 @@ class RecommendationChatTest extends TestCase
 
     public function test_debug_responses_expose_safe_ai_diagnostics_only_when_debugging(): void
     {
-        config(['app.debug' => true, 'ai.enabled' => false]);
+        // Keep the assertion independent of a developer's local .env AI key.
+        config(['app.debug' => true, 'ai.enabled' => false, 'ai.api_key' => '']);
         $this->postJson('/api/recommendation/chat', ['message' => 'tìm truyện hay'])
             ->assertOk()
             ->assertJsonPath('ai_debug.fallback_reason', 'ai_disabled')
