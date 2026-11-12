@@ -75,19 +75,30 @@ test.describe('Reader convenience & smoothness', () => {
   test('comic detail keeps the server-rendered chapter list while hydrating', async ({ page }) => {
     await page.addInitScript(() => {
       window.__chapterListCleared = false;
+      window.__serverRowCount = null;
       document.addEventListener('DOMContentLoaded', () => {
         const list = document.getElementById('chapter-list');
         if (!list) return;
+        window.__serverRowCount = list.querySelectorAll('.chapter-row').length;
         new MutationObserver(() => {
           if (!list.querySelectorAll('.chapter-row').length) window.__chapterListCleared = true;
         }).observe(list, { childList: true });
       });
     });
 
-    await gotoApp(page, '/truyen/solo-leveling');
+    // reader-performance is created exclusively by ReaderE2ESeeder, so other specs
+    // cannot add chapters to it and change the server-rendered row count.
+    await gotoApp(page, '/truyen/reader-performance');
 
-    await expect(page.locator('#chapter-list .chapter-row')).toHaveCount(8);
-    await expect(page.locator('.chapter-catalog-status')).toContainText(/Hiển thị 8\/8 chapter/);
+    const rows = page.locator('#chapter-list .chapter-row');
+    await expect(rows.first()).toBeVisible();
+
+    const serverRowCount = await page.evaluate(() => window.__serverRowCount);
+    expect(serverRowCount).toBeGreaterThan(0);
+
+    await expect(rows).toHaveCount(serverRowCount);
+    await expect(page.locator('.chapter-catalog-status'))
+      .toContainText(new RegExp(`Hiển thị ${serverRowCount}/${serverRowCount} chapter`));
     await expect(page.locator('#chapter-list .roadmap-empty-state')).toHaveCount(0);
 
     expect(await page.evaluate(() => window.__chapterListCleared)).toBe(false);
