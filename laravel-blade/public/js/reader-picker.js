@@ -23,5 +23,20 @@
   dialog.addEventListener('click', event => { if (event.target === dialog) dialog.close(); });
   dialog.addEventListener('close', () => triggers.forEach(trigger => trigger.setAttribute('aria-expanded', 'false')));
   // Reader shortcuts must not navigate chapters while a modal has focus.
-  dialog.addEventListener('keydown', event => event.stopPropagation());
+  // Arrow keys move through the chapter list so the picker is usable without a mouse.
+  dialog.addEventListener('keydown', event => {
+    event.stopPropagation();
+    if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
+    const visible = links.filter(link => !link.hidden);
+    if (!visible.length) return;
+    event.preventDefault();
+    const currentIndex = visible.indexOf(document.activeElement);
+    let nextIndex;
+    if (event.key === 'ArrowDown') {
+      nextIndex = currentIndex < 0 || currentIndex >= visible.length - 1 ? 0 : currentIndex + 1;
+    } else {
+      nextIndex = currentIndex <= 0 ? visible.length - 1 : currentIndex - 1;
+    }
+    visible[nextIndex].focus();
+  });
 })();
