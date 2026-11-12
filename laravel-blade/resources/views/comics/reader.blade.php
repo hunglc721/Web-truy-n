@@ -903,8 +903,9 @@
   </div>
 
   {{-- Phím tắt nhắc nhở --}}
-  <div id="reader-hint-bar" style="text-align: center; padding: 8px 0; background: rgba(0,0,0,0.4); border-bottom: 1px solid rgba(255,255,255,0.05); transition: all 0.3s ease;">
-    <span class="hotkey-hint">💡 Phím tắt: <strong>←/→/A/D</strong> lật trang/chap • <strong>M</strong> đổi chế độ đọc • <strong>H</strong> ẩn giao diện • <strong>F</strong> toàn màn hình</span>
+  <div id="reader-hint-bar" style="padding: 8px 12px; background: rgba(0,0,0,0.4); border-bottom: 1px solid rgba(255,255,255,0.05); transition: all 0.3s ease;">
+    <span class="hotkey-hint" id="reader-hint-text">💡 <strong>←/→</strong> hoặc <strong>A/D</strong> lật trang · <strong>J/K</strong> cuộn · <strong>M</strong> cài đặt · <strong>H</strong> ẩn giao diện · <strong>F</strong> toàn màn hình</span>
+    <button type="button" id="reader-hint-dismiss" onclick="dismissReaderHint()" aria-label="Ẩn gợi ý phím tắt" title="Ẩn gợi ý">✕</button>
   </div>
 
   <!-- ── FLOATING SINGLE PAGE NAVIGATOR (Khi ở chế độ từng trang) ── -->
@@ -1282,7 +1283,7 @@
       <div class="reader-tab-pane" id="tab-pane-keybinds" role="tabpanel">
         <div class="setting-section">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-            <label class="setting-label" style="margin-bottom: 0;">QUẢN LÝ PHÍM TẮT (10 HÀNH ĐỘNG)</label>
+            <label class="setting-label" style="margin-bottom: 0;">QUẢN LÝ PHÍM TẮT (11 HÀNH ĐỘNG)</label>
             <button type="button" id="btn-reset-keybinds" onclick="resetAllKeybinds()" class="keybind-reset-row-btn" title="Đặt lại toàn bộ phím tắt mặc định" style="color: var(--primary); font-size: 11px; font-weight: 700; cursor: pointer; background: none; border: none;">
               ↺ Đặt lại mặc định
             </button>
@@ -1305,8 +1306,8 @@
         <div class="setting-section">
           <label class="setting-label">TỰ ĐỘNG SANG CHAP TIẾP THEO Ở TRANG CUỐI</label>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
-            <button type="button" class="setting-btn" id="btn-auto-advance-off" onclick="setAutoAdvanceChapter(false)" aria-pressed="false">Tắt</button>
-            <button type="button" class="setting-btn active" id="btn-auto-advance-on" onclick="setAutoAdvanceChapter(true)" aria-pressed="true">Bật</button>
+            <button type="button" class="setting-btn active" id="btn-auto-advance-off" onclick="setAutoAdvanceChapter(false)" aria-pressed="true">Tắt</button>
+            <button type="button" class="setting-btn" id="btn-auto-advance-on" onclick="setAutoAdvanceChapter(true)" aria-pressed="false">Bật</button>
           </div>
         </div>
 
@@ -1462,7 +1463,7 @@
   <!-- ── STICKY BOTTOM DOCK (FE-04 & Navigation) ── -->
   <div class="reader-bottom-dock" id="reader-bottom-dock">
     @if($prevChapter)
-      <a href="{{ route('chapters.show', [$comic->slug, $prevChapter->slug]) }}" class="reader-controls-btn" style="padding: 6px 12px; border-radius: 20px;" title="Chương trước">
+      <a href="{{ route('chapters.show', [$comic->slug, $prevChapter->slug]) }}" class="reader-controls-btn" id="dock-btn-prev-chap" style="padding: 6px 12px; border-radius: 20px;" title="Chương trước">
         ◀ Chap trước
       </a>
     @endif
@@ -1605,6 +1606,18 @@
     " title="Đóng">✕</button>
   </div>
 
+  <!-- ── 6. END-OF-CHAPTER TOAST (không tự chuyển chap khi tắt auto-advance) ── -->
+  <div id="reader-chapter-end-toast" role="status" aria-live="polite" hidden>
+    <span id="reader-chapter-end-text">🎉 Đã hết chương này.</span>
+    @if($nextChapter)
+      <a id="reader-chapter-end-next" href="{{ route('chapters.show', [$comic->slug, $nextChapter->slug]) }}">Chương tiếp theo →</a>
+    @else
+      <a id="reader-chapter-end-next" href="{{ route('comics.show', $comic->slug) }}" hidden>Xem danh sách chương</a>
+    @endif
+    <button type="button" class="reader-chapter-end-picker" data-open-chapter-picker aria-haspopup="dialog" aria-controls="reader-chapter-picker" aria-expanded="false">Chọn chương</button>
+    <button type="button" class="reader-chapter-end-close" onclick="dismissChapterEndToast()" aria-label="Đóng thông báo" title="Đóng">✕</button>
+  </div>
+
 </div>
 @endsection
 
@@ -1635,8 +1648,23 @@
     if (toast) toast.style.display = 'none';
   }
 
+  // Gợi ý phím tắt: có thể ẩn và ghi nhớ lựa chọn (giải phóng không gian đọc).
+  function dismissReaderHint() {
+    const bar = document.getElementById('reader-hint-bar');
+    if (bar) bar.style.display = 'none';
+    try { localStorage.setItem('reader_hint_hidden', '1'); } catch (_) {}
+  }
+
+  function restoreReaderHint() {
+    const bar = document.getElementById('reader-hint-bar');
+    if (!bar) return;
+    let hidden = false;
+    try { hidden = localStorage.getItem('reader_hint_hidden') === '1'; } catch (_) {}
+    if (hidden) bar.style.display = 'none';
+  }
+
   // ── READER STATE & PRESETS (⭐ KHUYẾN NGHỊ & ⚙ TÙY CHỈNH) ──
-  const RECOMMENDED_PRESET_VERSION = 1;
+  const RECOMMENDED_PRESET_VERSION = 2;
 
   const recommendedReaderSettings = {
     layout: 'vertical',            // 'vertical' | 'single' | 'double'
@@ -1662,7 +1690,7 @@
     night: false,
     brightness: 100,              // 30..100
     autoAdvanceChapter: false,
-    historyMode: 'push',          // 'none' | 'replace' | 'push'
+    historyMode: 'replace',       // 'none' | 'replace' | 'push' (replace = Back thoát reader ngay)
     tapTurnMode: 'direction',     // 'direction' | 'always_forward' | 'off'
     scrollTurnMode: 'both',       // 'off' | 'wheel' | 'keyboard' | 'both'
     dblClickFullscreen: true,
@@ -1686,7 +1714,8 @@
     chapter_backward: ['['],
     toggle_fullscreen: ['f', 'F'],
     cycle_fit_mode: ['w', 'W'],
-    toggle_direction: ['r', 'R']
+    toggle_direction: ['r', 'R'],
+    toggle_ui: ['h', 'H']
   };
 
   const keybindActionLabels = {
@@ -1699,7 +1728,8 @@
     chapter_backward: 'Chap trước',
     toggle_fullscreen: 'Bật/tắt toàn màn hình',
     cycle_fit_mode: 'Chuyển chế độ hiển thị ảnh',
-    toggle_direction: 'Đổi hướng đọc / lật trang đôi'
+    toggle_direction: 'Đổi hướng đọc / lật trang đôi',
+    toggle_ui: 'Ẩn/hiện giao diện'
   };
 
   let readerSettings = JSON.parse(JSON.stringify(defaultReaderSettings));
@@ -1762,18 +1792,25 @@
       }
     }
 
-    // Auto advance ở vertical mode khi cuộn tới cuối trang
-    if (readerSettings.layout === 'vertical' && readerSettings.autoAdvanceChapter && percent >= 99.8) {
-      if (!window.__autoAdvanceTriggered) {
-        window.__autoAdvanceTriggered = true;
-        setTimeout(() => {
-          advanceToNextChapter();
-        }, 600);
+    // Cuối chương ở chế độ cuộn dọc: tự chuyển chap nếu bật, ngược lại gợi ý chap kế.
+    if (readerSettings.layout === 'vertical' && percent >= 99.5) {
+      if (readerSettings.autoAdvanceChapter) {
+        if (!window.__autoAdvanceTriggered) {
+          window.__autoAdvanceTriggered = true;
+          setTimeout(() => {
+            advanceToNextChapter();
+          }, 600);
+        }
+      } else if (percent >= 99.8) {
+        showChapterEndToast();
       }
+    } else if (percent < 95) {
+      window.__autoAdvanceTriggered = false;
+      window.__chapterEndToastDismissed = false;
     }
 
     @guest
-    saveGuestReadingHistory(percent);
+    queueGuestHistorySave(percent);
     @endguest
   }
 
@@ -1997,31 +2034,24 @@
   function switchReaderTab(tabName) {
     const canonicalName = (tabName === 'fit' || tabName === 'image') ? 'image' : ((tabName === 'keys' || tabName === 'keybinds') ? 'keybinds' : tabName);
     readerSettings.activeTab = canonicalName;
-    const tabBtns = {
-      layout: document.getElementById('tab-btn-layout'),
-      image: document.getElementById('tab-btn-image') || document.getElementById('tab-btn-fit'),
-      keybinds: document.getElementById('tab-btn-keybinds') || document.getElementById('tab-btn-keys'),
-      behaviors: document.getElementById('tab-btn-behaviors')
-    };
 
-    Object.entries(tabBtns).forEach(([k, btn]) => {
-      if (k === canonicalName) {
-        btn?.classList.add('active');
-        btn?.setAttribute('aria-selected', 'true');
-      } else {
-        btn?.classList.remove('active');
-        btn?.setAttribute('aria-selected', 'false');
-      }
+    ['layout', 'image', 'keybinds', 'behaviors', 'other'].forEach((tab) => {
+      const btn = document.getElementById(`tab-btn-${tab}`);
+      const pane = document.getElementById(`tab-pane-${tab}`);
+      const isActive = tab === canonicalName;
+      btn?.classList.toggle('active', isActive);
+      btn?.setAttribute('aria-selected', isActive ? 'true' : 'false');
+      pane?.classList.toggle('active', isActive);
     });
 
-    const targetPane = document.getElementById(`tab-pane-${canonicalName}`) || document.getElementById(`tab-pane-${tabName}`);
+    const targetPane = document.getElementById(`tab-pane-${canonicalName}`);
     const panel = document.getElementById('reader-settings-panel');
     if (targetPane && panel) {
       const targetTop = targetPane.offsetTop - panel.offsetTop - 55;
       panel.scrollTo({ top: Math.max(0, targetTop), behavior: 'smooth' });
     }
 
-    if (canonicalName === 'keybinds' || tabName === 'keys') {
+    if (canonicalName === 'keybinds') {
       renderKeybindsList();
     }
   }
@@ -2076,7 +2106,7 @@
 
     // Behaviors
     setAutoAdvanceChapter(readerSettings.autoAdvanceChapter, false);
-    setHistoryMode(readerSettings.historyMode || 'push', false);
+    setHistoryMode(readerSettings.historyMode || 'replace', false);
     setTapTurnMode(readerSettings.tapTurnMode || 'direction', false);
     setScrollTurnMode(readerSettings.scrollTurnMode || 'both', false);
     setSwipeTurnMode(readerSettings.swipeTurn !== false, false);
@@ -2162,23 +2192,6 @@
     modal.classList.remove('is-open');
     if (backdrop) backdrop.classList.remove('is-open');
     document.body.classList.remove('reader-modal-open');
-  }
-
-  function switchReaderTab(tabName) {
-    const tabs = ['layout', 'image', 'keybinds', 'behaviors', 'other'];
-    tabs.forEach(t => {
-      const btn = document.getElementById(`tab-btn-${t}`);
-      const pane = document.getElementById(`tab-pane-${t}`);
-      if (t === tabName) {
-        btn?.classList.add('active');
-        btn?.setAttribute('aria-selected', 'true');
-        pane?.classList.add('active');
-      } else {
-        btn?.classList.remove('active');
-        btn?.setAttribute('aria-selected', 'false');
-        pane?.classList.remove('active');
-      }
-    });
   }
 
   function setSwipeTurnMode(val, persist = true) {
@@ -2893,14 +2906,14 @@
         <div>• <code>${getKeyList('scroll_up')}</code> / <code>${getKeyList('scroll_down')}</code>: Trang trước / Trang sau</div>
         <div>• <code>${getKeyList('chapter_backward')}</code> / <code>${getKeyList('chapter_forward')}</code>: Chap trước / Chap sau</div>
         <div>• <code>${getKeyList('toggle_direction')}</code>: Đổi hướng đọc • <code>${getKeyList('cycle_fit_mode')}</code>: Đổi chế độ ảnh</div>
-        <div>• <code>${getKeyList('toggle_menu')}</code>: Bật/tắt cài đặt • <code>${getKeyList('toggle_fullscreen')}</code>: Toàn màn hình</div>
+        <div>• <code>${getKeyList('toggle_menu')}</code>: Bật/tắt cài đặt • <code>${getKeyList('toggle_ui')}</code>: Ẩn/hiện giao diện • <code>${getKeyList('toggle_fullscreen')}</code>: Toàn màn hình</div>
       `;
     } else {
       box.innerHTML = `
         <div style="font-weight: 700; color: #fff; margin-bottom: 4px;">⌨️ Phím tắt (Cuộn dọc):</div>
         <div>• <code>${getKeyList('scroll_up')}</code> / <code>${getKeyList('scroll_down')}</code>: Cuộn mượt trang</div>
         <div>• <code>${getKeyList('chapter_backward')}</code> / <code>${getKeyList('chapter_forward')}</code> hoặc <code>${getKeyList('page_left')}</code> / <code>${getKeyList('page_right')}</code>: Chuyển Chap</div>
-        <div>• <code>${getKeyList('toggle_menu')}</code>: Cài đặt • <code>${getKeyList('toggle_fullscreen')}</code>: Toàn màn hình</div>
+        <div>• <code>${getKeyList('toggle_menu')}</code>: Cài đặt • <code>${getKeyList('toggle_ui')}</code>: Ẩn/hiện giao diện • <code>${getKeyList('toggle_fullscreen')}</code>: Toàn màn hình</div>
         <div>• <code>${getKeyList('cycle_fit_mode')}</code>: Chuyển chế độ ảnh • <code>Esc</code>: Đóng bảng cài đặt</div>
       `;
     }
@@ -2909,6 +2922,10 @@
   // ── TAB 4: HÀNH VI ĐỌC (Behaviors) ──
   function setAutoAdvanceChapter(val, persist = true) {
     readerSettings.autoAdvanceChapter = !!val;
+    if (val) {
+      dismissChapterEndToast();
+      window.__chapterEndToastDismissed = false;
+    }
     const btnOn = document.getElementById('btn-auto-advance-on');
     const btnOff = document.getElementById('btn-auto-advance-off');
     if (val) {
@@ -3154,18 +3171,73 @@
     setTimeout(updateProgress, 50);
   }
 
-  function advanceToNextChapter() {
+  function nextChapterHref() {
     const nextBtn = document.getElementById('btn-next-chap') || document.getElementById('footer-btn-next-chap') || document.getElementById('dock-btn-next-chap');
-    if (nextBtn && nextBtn.href && !nextBtn.classList.contains('disabled')) {
-      window.location.href = nextBtn.href;
+    return (nextBtn && nextBtn.href) ? nextBtn.href : null;
+  }
+
+  let chapterEndToastTimer = null;
+
+  function showChapterEndToast(message, force = false) {
+    if (window.__chapterEndToastDismissed && !force) return;
+    const toast = document.getElementById('reader-chapter-end-toast');
+    if (!toast) return;
+
+    const nextHref = nextChapterHref();
+    const text = document.getElementById('reader-chapter-end-text');
+    const nextLink = document.getElementById('reader-chapter-end-next');
+    const comicUrl = @json(route('comics.show', $comic->slug));
+
+    if (text) {
+      text.textContent = message || (nextHref
+        ? '🎉 Đã hết chương này. Đọc tiếp chương sau?'
+        : '🎉 Bạn đã đọc hết chương mới nhất!');
     }
+    if (nextLink) {
+      nextLink.href = nextHref || comicUrl;
+      nextLink.textContent = nextHref ? 'Chương tiếp theo →' : 'Xem danh sách chương';
+    }
+
+    toast.hidden = false;
+    toast.classList.add('is-open');
+    clearTimeout(chapterEndToastTimer);
+    chapterEndToastTimer = setTimeout(dismissChapterEndToast, 12000);
+  }
+
+  function dismissChapterEndToast() {
+    const toast = document.getElementById('reader-chapter-end-toast');
+    if (!toast) return;
+    window.__chapterEndToastDismissed = true;
+    clearTimeout(chapterEndToastTimer);
+    toast.classList.remove('is-open');
+    toast.hidden = true;
+  }
+
+  // Cuối chương: chỉ tự chuyển khi người đọc bật auto-advance.
+  function handleChapterBoundary() {
+    if (readerSettings.autoAdvanceChapter) {
+      advanceToNextChapter();
+      return;
+    }
+    showChapterEndToast(null, true);
+  }
+
+  function advanceToNextChapter() {
+    const href = nextChapterHref();
+    if (href) {
+      window.location.href = href;
+      return;
+    }
+    showChapterEndToast('🎉 Bạn đã đọc hết chương mới nhất!', true);
   }
 
   function goToPrevChapter() {
     const prevBtn = document.getElementById('btn-prev-chap');
     if (prevBtn && prevBtn.href && !prevBtn.classList.contains('disabled')) {
       window.location.href = prevBtn.href;
+      return;
     }
+    showChapterEndToast('📖 Đây là chương đầu tiên của truyện.', true);
   }
 
   function nextPage() {
@@ -3173,21 +3245,13 @@
       if (currentSinglePageIndex + 2 < totalPagesCount) {
         showPage(currentSinglePageIndex + 2);
       } else {
-        if (readerSettings.autoAdvanceChapter) {
-          advanceToNextChapter();
-        } else {
-          advanceToNextChapter();
-        }
+        handleChapterBoundary();
       }
     } else if (readerSettings.layout === 'single') {
       if (currentSinglePageIndex < totalPagesCount - 1) {
         showPage(currentSinglePageIndex + 1);
       } else {
-        if (readerSettings.autoAdvanceChapter) {
-          advanceToNextChapter();
-        } else {
-          advanceToNextChapter();
-        }
+        handleChapterBoundary();
       }
     }
   }
@@ -3266,35 +3330,54 @@
     }, { passive: true });
 
     // Tap turn page & double click
+    let centerTapTimer = null;
+
     containerSwipeEl.addEventListener('click', function(e) {
-      const isInteractive = e.target.closest('button, a, input, select, textarea, .reader-toolbar, .reader-settings-panel, .reader-settings-track, .reader-settings-backdrop, .reader-bottom-dock, #single-page-nav, #resume-scroll-toast, .broken-image-box');
+      const isInteractive = e.target.closest('button, a, input, select, textarea, .reader-toolbar, .reader-settings-panel, .reader-settings-track, .reader-settings-backdrop, .reader-bottom-dock, #single-page-nav, #resume-scroll-toast, #reader-chapter-end-toast, .broken-image-box');
       if (isInteractive) return;
 
       if (!e.target.closest('.comic-page-wrapper')) return;
 
-      if (readerSettings.layout === 'single' || readerSettings.layout === 'double') {
-        if (readerSettings.tapTurnMode === 'always_forward') {
+      const w = window.innerWidth;
+      const inCenterZone = e.clientX > w * 0.35 && e.clientX < w * 0.65;
+      const isPaged = readerSettings.layout === 'single' || readerSettings.layout === 'double';
+
+      if (isPaged && readerSettings.tapTurnMode === 'always_forward') {
+        // Vùng giữa chờ một nhịp để double-click toàn màn hình không lật 2 trang.
+        if (readerSettings.dblClickFullscreen && inCenterZone) {
+          clearTimeout(centerTapTimer);
+          centerTapTimer = setTimeout(() => { handleNavNext(); }, 260);
+        } else {
+          handleNavNext();
+        }
+        return;
+      }
+
+      if (isPaged && readerSettings.tapTurnMode === 'direction') {
+        if (e.clientX < w * 0.35) {
+          handleNavPrev();
+          return;
+        } else if (e.clientX > w * 0.65) {
           handleNavNext();
           return;
-        } else if (readerSettings.tapTurnMode === 'direction') {
-          const w = window.innerWidth;
-          const clickX = e.clientX;
-          if (clickX < w * 0.35) {
-            handleNavPrev();
-            return;
-          } else if (clickX > w * 0.65) {
-            handleNavNext();
-            return;
-          }
         }
       }
 
-      toggleUI();
+      // Chạm giữa: ẩn/hiện giao diện; hoãn nhẹ để double-click toàn màn hình không nhấp nháy.
+      if (readerSettings.dblClickFullscreen && isPaged && inCenterZone) {
+        clearTimeout(centerTapTimer);
+        centerTapTimer = setTimeout(toggleUI, 260);
+      } else {
+        toggleUI();
+      }
     });
 
     containerSwipeEl.addEventListener('dblclick', function(e) {
       if (!readerSettings.dblClickFullscreen) return;
       if (e.target.closest('button, a, input, select, textarea')) return;
+      // Trên thiết bị cảm ứng, double-tap dễ kích hoạt nhầm toàn màn hình khi lật trang.
+      if (window.matchMedia && window.matchMedia('(hover: none)').matches) return;
+      clearTimeout(centerTapTimer);
       toggleFullscreen();
     });
   }
@@ -3393,6 +3476,13 @@
       return;
     }
 
+    // Toggle giao diện (ẩn/hiện thanh công cụ)
+    if (isKeyMatched('toggle_ui', key)) {
+      e.preventDefault();
+      toggleUI();
+      return;
+    }
+
     // Cycle fit mode
     if (isKeyMatched('cycle_fit_mode', key)) {
       e.preventDefault();
@@ -3471,8 +3561,16 @@
     }
   });
 
-  // Cập nhật thanh tiến độ đọc (Progress Bar) & Guest history
-  window.addEventListener('scroll', updateProgress, { passive: true });
+  // Cập nhật thanh tiến độ đọc (Progress Bar) — gộp nhiều sự kiện scroll vào 1 frame.
+  let progressFrame = 0;
+  function scheduleProgressUpdate() {
+    if (progressFrame) return;
+    progressFrame = requestAnimationFrame(function() {
+      progressFrame = 0;
+      updateProgress();
+    });
+  }
+  window.addEventListener('scroll', scheduleProgressUpdate, { passive: true });
 
   function saveGuestReadingHistory(scrollPercent) {
     try {
@@ -3494,9 +3592,37 @@
     } catch (_) {}
   }
 
+  @guest
+  // Khách: ghi localStorage có debounce (trước đây ghi mỗi lần scroll gây giật).
+  let guestHistoryTimer = null;
+  let guestHistoryPercent = 0;
+
+  function queueGuestHistorySave(percent) {
+    guestHistoryPercent = percent;
+    if (guestHistoryTimer) return;
+    guestHistoryTimer = setTimeout(function() {
+      guestHistoryTimer = null;
+      saveGuestReadingHistory(guestHistoryPercent);
+    }, 1000);
+  }
+
+  function flushGuestHistorySave() {
+    if (!guestHistoryTimer) return;
+    clearTimeout(guestHistoryTimer);
+    guestHistoryTimer = null;
+    saveGuestReadingHistory(guestHistoryPercent);
+  }
+
+  window.addEventListener('pagehide', flushGuestHistorySave);
+  document.addEventListener('visibilitychange', function() {
+    if (document.visibilityState === 'hidden') flushGuestHistorySave();
+  });
+  @endguest
+
   // Khởi động các thiết lập ngay khi tải trang
   loadReaderSettings();
   applyAllReaderSettings();
+  restoreReaderHint();
 
   // Hash anchor jump
   if (window.location.hash && window.location.hash.startsWith('#page-')) {
@@ -3561,24 +3687,29 @@
       .catch(err => console.debug("Save history ping:", err));
     }
 
-    // Lắng nghe cuộn trang với throttle 25s
+    // Lắng nghe cuộn trang với throttle 25s (tính % tối đa 1 lần mỗi animation frame)
     let scrollTimeout;
+    let authScrollFrame = 0;
     window.addEventListener('scroll', function() {
-      const scrollPercent = calculateCurrentScrollPercent();
-      if (scrollPercent >= 5) {
-        isPendingSave = true;
-        const now = Date.now();
-        if (now - lastSavedTime >= THROTTLE_INTERVAL_MS) {
-          sendHistoryPing();
-        } else {
-          clearTimeout(scrollTimeout);
-          scrollTimeout = setTimeout(function() {
-            if (isPendingSave && Date.now() - lastSavedTime >= THROTTLE_INTERVAL_MS) {
-              sendHistoryPing();
-            }
-          }, THROTTLE_INTERVAL_MS - (now - lastSavedTime));
+      if (authScrollFrame) return;
+      authScrollFrame = requestAnimationFrame(function() {
+        authScrollFrame = 0;
+        const scrollPercent = calculateCurrentScrollPercent();
+        if (scrollPercent >= 5) {
+          isPendingSave = true;
+          const now = Date.now();
+          if (now - lastSavedTime >= THROTTLE_INTERVAL_MS) {
+            sendHistoryPing();
+          } else {
+            clearTimeout(scrollTimeout);
+            scrollTimeout = setTimeout(function() {
+              if (isPendingSave && Date.now() - lastSavedTime >= THROTTLE_INTERVAL_MS) {
+                sendHistoryPing();
+              }
+            }, THROTTLE_INTERVAL_MS - (now - lastSavedTime));
+          }
         }
-      }
+      });
     }, { passive: true });
 
     // Gửi beacon khi rời trang hoặc ẩn tab nếu có tiến độ chưa lưu

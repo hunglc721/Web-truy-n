@@ -101,7 +101,8 @@
 
     const status = document.createElement('div');
     status.className = 'chapter-catalog-status';
-    status.textContent = 'Đang tải danh sách chapter...';
+    status.setAttribute('aria-live', 'polite');
+    status.textContent = '';
 
     const actions = document.createElement('div');
     actions.className = 'chapter-catalog-actions';
@@ -172,12 +173,30 @@
       });
     };
 
+    const samePath = (href, url) => {
+      try {
+        return new URL(href, window.location.href).pathname === new URL(url, window.location.href).pathname;
+      } catch (_) {
+        return false;
+      }
+    };
+
+    // Server đã render sẵn 20 chapter mới nhất: giữ nguyên danh sách đó khi API trả về đúng
+    // dữ liệu tương tự, tránh nháy/giật danh sách lúc mở trang truyện.
+    const matchesServerRows = (items) => {
+      if (query || sort !== 'desc' || page !== 1) return false;
+      const rows = [...list.querySelectorAll('.chapter-row')];
+      if (!rows.length || rows.length !== items.length) return false;
+      return rows.every((row, index) => samePath(row.getAttribute('href'), items[index].url));
+    };
+
     const fetchPage = async ({ append = false } = {}) => {
       controller?.abort();
       controller = new AbortController();
 
       if (!append) page = 1;
-      status.textContent = 'Đang tải danh sách chapter...';
+      const isDefaultView = !query && sort === 'desc' && page === 1;
+      if (!isDefaultView) status.textContent = 'Đang tải danh sách chapter...';
       loadMore.disabled = true;
 
       const params = new URLSearchParams({
@@ -199,7 +218,9 @@
         const meta = payload.meta || {};
         lastPage = Number(meta.last_page || 1);
 
-        render(items, append);
+        if (!matchesServerRows(items)) {
+          render(items, append);
+        }
         status.textContent = meta.total
           ? `Hiển thị ${meta.to || items.length}/${meta.total} chapter${query ? ` cho “${query}”` : ''}.`
           : (query ? `Không có chapter cho “${query}”.` : 'Chưa có chapter.');

@@ -279,7 +279,7 @@ test.describe('Recommended Preset (⭐ Khuyến nghị) & Custom Mode (⚙ Tùy 
     const mode = await page.evaluate(() => localStorage.getItem('reader_settings_mode'));
     const version = await page.evaluate(() => localStorage.getItem('reader_preset_version'));
     expect(mode).toBe('recommended');
-    expect(version).toBe('1');
+    expect(version).toBe('2');
 
     await expectNoDocumentOverflow(page);
   });
